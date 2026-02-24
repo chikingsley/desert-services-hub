@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
+import { getEmailAccount } from "@/__tests__/helpers";
 import { aiDraftFollowUp } from "@/utils/ai/reply/draft-follow-up";
 import type { EmailForLLM } from "@/utils/types";
-import { getEmailAccount } from "@/__tests__/helpers";
 
 const TIMEOUT = 60_000;
 
@@ -40,7 +40,7 @@ describe.runIf(isAiTest)("aiDraftFollowUp", () => {
       }
       console.debug("Generated follow-up:\n", result);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 
   test(
@@ -62,7 +62,7 @@ describe.runIf(isAiTest)("aiDraftFollowUp", () => {
       }
       console.debug("Generated follow-up (with style):\n", result);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 });
 

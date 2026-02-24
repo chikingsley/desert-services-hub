@@ -1,26 +1,26 @@
-import type { EmailProvider } from "@/utils/email/types";
 import { format } from "date-fns/format";
 import { startOfWeek } from "date-fns/startOfWeek";
+import type { ResponseTimeQuery } from "@/app/api/user/stats/response-time/validation";
+import type { EmailProvider } from "@/utils/email/types";
 import type { Logger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
 import {
-  calculateResponseTimes,
-  calculateSummaryStats,
   calculateDistribution,
   calculateMedian,
+  calculateResponseTimes,
+  calculateSummaryStats,
+  type DistributionStats,
   type ResponseTimeEntry,
   type SummaryStats,
-  type DistributionStats,
 } from "./calculate";
-import type { ResponseTimeQuery } from "@/app/api/user/stats/response-time/validation";
 
 const MAX_SENT_MESSAGES = 50;
 
 interface TrendEntry {
+  count: number;
+  medianResponseTime: number;
   period: string;
   periodDate: Date;
-  medianResponseTime: number;
-  count: number;
 }
 
 export type ResponseTimeResponse = {
@@ -72,12 +72,12 @@ export async function getResponseTimeStats({
   });
 
   const cachedSentMessageIds = new Set(
-    cachedEntries.map((e) => e.sentMessageId),
+    cachedEntries.map((e) => e.sentMessageId)
   );
 
   // 3. Filter to uncached sent messages
   const uncachedMessages = sentMessages.filter(
-    (m) => !cachedSentMessageIds.has(m.id),
+    (m) => !cachedSentMessageIds.has(m.id)
   );
 
   // 4. Calculate response times only for uncached messages
@@ -86,7 +86,7 @@ export async function getResponseTimeStats({
     const { responseTimes: calculated } = await calculateResponseTimes(
       uncachedMessages,
       emailProvider,
-      logger,
+      logger
     );
 
     // 5. Store new calculations to DB
@@ -116,8 +116,12 @@ export async function getResponseTimeStats({
   // Filter to only include response times within the requested date range
   const allEntries = combinedEntries.filter((entry) => {
     const sentTime = entry.sentAt.getTime();
-    if (fromDate && sentTime < fromDate) return false;
-    if (toDate && sentTime > toDate) return false;
+    if (fromDate && sentTime < fromDate) {
+      return false;
+    }
+    if (toDate && sentTime > toDate) {
+      return false;
+    }
     return true;
   });
 

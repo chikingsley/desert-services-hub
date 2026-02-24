@@ -1,10 +1,10 @@
 interface MapControlsProps {
   isSatellite: boolean;
-  searchQuery: string;
-  searching: boolean;
-  onToggleSatellite: () => void;
-  onSearchQueryChange: (value: string) => void;
   onSearch: () => void;
+  onSearchQueryChange: (value: string) => void;
+  onToggleSatellite: () => void;
+  searching: boolean;
+  searchQuery: string;
 }
 
 export function MapControls({

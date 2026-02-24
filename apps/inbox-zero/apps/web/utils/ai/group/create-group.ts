@@ -1,12 +1,12 @@
+import type { gmail_v1 } from "@googleapis/gmail";
 import { stepCountIs, tool } from "ai";
 import { z } from "zod";
-import type { gmail_v1 } from "@googleapis/gmail";
-import { createGenerateText } from "@/utils/llms";
 import type { Group } from "@/generated/prisma/client";
 import { queryBatchMessages } from "@/utils/gmail/message";
+import { createGenerateText } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
 import { createScopedLogger } from "@/utils/logger";
-import { getModel } from "@/utils/llms/model";
 
 const logger = createScopedLogger("aiCreateGroup");
 
@@ -17,12 +17,12 @@ const generateGroupItemsSchema = z.object({
   senders: z
     .array(z.string())
     .describe(
-      "The senders in the group. Can also be part of the sender name like 'John Smith' or 'Acme Corp' or '@acme.com'.",
+      "The senders in the group. Can also be part of the sender name like 'John Smith' or 'Acme Corp' or '@acme.com'."
     ),
   subjects: z
     .array(z.string())
     .describe(
-      "The subjects in the group. Can also be part of the subject line like 'meeting' or 'reminder' or 'invoice #'.",
+      "The subjects in the group. Can also be part of the subject line like 'meeting' or 'reminder' or 'invoice #'."
     ),
 });
 
@@ -56,7 +56,7 @@ const listEmailsTool = (gmail: gmail_v1.Gmail) => ({
 export async function aiGenerateGroupItems(
   emailAccount: EmailAccountWithAI,
   gmail: gmail_v1.Gmail,
-  group: Pick<Group, "name" | "prompt">,
+  group: Pick<Group, "name" | "prompt">
 ): Promise<z.infer<typeof generateGroupItemsSchema>> {
   const system = `You are an AI assistant specializing in email management and organization.
 Your task is to create highly specific email groups based on user prompts and their actual email history.
@@ -104,7 +104,7 @@ Key guidelines:
   });
 
   const generateGroupItemsToolCalls = aiResponse.toolCalls.filter(
-    ({ toolName }) => toolName === GENERATE_GROUP_ITEMS,
+    ({ toolName }) => toolName === GENERATE_GROUP_ITEMS
   );
 
   const combinedArgs = generateGroupItemsToolCalls.reduce<
@@ -117,7 +117,7 @@ Key guidelines:
         subjects: [...acc.subjects, ...typedArgs.subjects],
       };
     },
-    { senders: [], subjects: [] },
+    { senders: [], subjects: [] }
   );
 
   return await verifyGroupItems(emailAccount, gmail, group, combinedArgs);
@@ -127,7 +127,7 @@ async function verifyGroupItems(
   emailAccount: EmailAccountWithAI,
   gmail: gmail_v1.Gmail,
   group: Pick<Group, "name" | "prompt">,
-  initialItems: z.infer<typeof generateGroupItemsSchema>,
+  initialItems: z.infer<typeof generateGroupItemsSchema>
 ): Promise<z.infer<typeof generateGroupItemsSchema>> {
   const system = `You are an AI assistant specializing in email management and organization.
 Your task is to identify and remove any incorrect or overly broad criteria from the generated email group.
@@ -174,7 +174,7 @@ Guidelines:
   });
 
   const verifyGroupItemsToolCalls = aiResponse.toolCalls.filter(
-    ({ toolName }) => toolName === VERIFY_GROUP_ITEMS,
+    ({ toolName }) => toolName === VERIFY_GROUP_ITEMS
   );
 
   if (verifyGroupItemsToolCalls.length === 0) {
@@ -192,10 +192,10 @@ Guidelines:
   // Remove the identified items from the initial lists
   const verifiedItems = {
     senders: initialItems.senders.filter(
-      (sender) => !verificationResult.removedSenders.includes(sender),
+      (sender) => !verificationResult.removedSenders.includes(sender)
     ),
     subjects: initialItems.subjects.filter(
-      (subject) => !verificationResult.removedSubjects.includes(subject),
+      (subject) => !verificationResult.removedSubjects.includes(subject)
     ),
   };
 

@@ -1,9 +1,9 @@
+import sumBy from "lodash/sumBy";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import sumBy from "lodash/sumBy";
-import prisma from "@/utils/prisma";
-import { withEmailAccount } from "@/utils/middleware";
 import { Prisma } from "@/generated/prisma/client";
+import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 const ruleStatsQuery = z.object({
   fromDate: z.coerce.number().nullish(),
@@ -79,5 +79,5 @@ export const GET = withEmailAccount(
 
     return NextResponse.json(result);
   },
-  { allowOrgAdmins: true },
+  { allowOrgAdmins: true }
 );

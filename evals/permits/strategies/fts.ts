@@ -16,7 +16,7 @@ const strategy: PermitRetrievalStrategy = {
          ORDER BY ts_rank_cd(search_vector, plainto_tsquery('english', $1)) DESC,
                   (status = 'Active')::int DESC,
                   expiration_date DESC NULLS LAST
-         LIMIT 20`,
+         LIMIT 20`
       )
       .all(query);
     return results.map((r) => r.id);

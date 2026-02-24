@@ -14,11 +14,11 @@ import { Button } from "@/apps/web/frontend/components/ui/button";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 interface Checkpoint {
+  context?: Record<string, unknown>;
+  createdAt: string;
   id: string;
   label: string;
-  context?: Record<string, unknown>;
   status: "pending" | "approved" | "declined";
-  createdAt: string;
 }
 
 interface CheckpointListResponse {

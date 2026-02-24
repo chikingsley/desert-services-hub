@@ -1,16 +1,16 @@
-import { isDefined, type ParsedMessage } from "@/utils/types";
-import type { Logger } from "@/utils/logger";
 import { processUserRequest } from "@/utils/ai/assistant/process-user-request";
-import { extractEmailAddress } from "@/utils/email";
-import prisma from "@/utils/prisma";
-import { emailToContent } from "@/utils/mail";
 import {
-  isAssistantEmail,
   getAssistantEmail,
+  isAssistantEmail,
 } from "@/utils/assistant/is-assistant-email";
 import { internalDateToDate } from "@/utils/date";
+import { extractEmailAddress } from "@/utils/email";
 import type { EmailProvider } from "@/utils/email/types";
 import { labelMessageAndSync } from "@/utils/label.server";
+import type { Logger } from "@/utils/logger";
+import { emailToContent } from "@/utils/mail";
+import prisma from "@/utils/prisma";
+import { isDefined, type ParsedMessage } from "@/utils/types";
 
 type ProcessAssistantEmailArgs = {
   emailAccountId: string;
@@ -45,7 +45,7 @@ export async function processAssistantEmail({
         provider,
         logger,
       }),
-    logger,
+    logger
   );
 }
 
@@ -80,7 +80,7 @@ async function processAssistantEmailInternal({
     await provider.replyToEmail(
       message,
       "Something went wrong. I couldn't read any messages.",
-      { replyTo: assistantEmail },
+      { replyTo: assistantEmail }
     );
     return;
   }
@@ -89,7 +89,7 @@ async function processAssistantEmailInternal({
     isAssistantEmail({
       userEmail,
       emailToCheck: m.headers.to,
-    }),
+    })
   );
 
   if (!firstMessageToAssistant) {
@@ -99,7 +99,7 @@ async function processAssistantEmailInternal({
     await provider.replyToEmail(
       message,
       "Something went wrong. I couldn't find the first message to the personal assistant.",
-      { replyTo: assistantEmail },
+      { replyTo: assistantEmail }
     );
     return;
   }
@@ -172,12 +172,12 @@ async function processAssistantEmailInternal({
   }
 
   const firstMessageToAssistantDate = internalDateToDate(
-    firstMessageToAssistant.internalDate,
+    firstMessageToAssistant.internalDate
   );
 
   const messages = threadMessages
     .filter(
-      (m) => internalDateToDate(m.internalDate) >= firstMessageToAssistantDate,
+      (m) => internalDateToDate(m.internalDate) >= firstMessageToAssistantDate
     )
     .map((m) => {
       const isAssistant = isAssistantEmail({
@@ -248,7 +248,7 @@ async function withProcessingLabels<T>(
   provider: EmailProvider,
   emailAccountId: string,
   fn: () => Promise<T>,
-  logger: Logger,
+  logger: Logger
 ): Promise<T> {
   // Get labels first so we can reuse them
   const results = await Promise.allSettled([

@@ -11,7 +11,7 @@ import {
 export function FinalCTA() {
   return (
     <div
-      className="bg-[url('/images/new-landing/buy-back-time-bg.png')] bg-cover bg-center bg-no-repeat"
+      className="bg-[url('/images/new-landing/buy-back-time-bg.png')] bg-center bg-cover bg-no-repeat"
       style={{ backgroundPosition: "center 44%" }}
     >
       <Section>
@@ -25,9 +25,9 @@ export function FinalCTA() {
         </SectionSubtitle>
         <SectionContent>
           <CallToAction
-            text="Get started for free"
             buttonSize="lg"
             className="mt-6"
+            text="Get started for free"
           />
         </SectionContent>
       </Section>

@@ -1,10 +1,10 @@
+import type { EstimateRow } from "@lib/db/types";
+import { z } from "zod";
 import {
   lineItemSchema,
   type NormalizedEstimateLineItem,
   normalizeCatalogLineItems,
 } from "@/packages/estimates/estimating/estimate-payload-validation-line-items";
-import type { EstimateRow } from "@lib/db/types";
-import { z } from "zod";
 
 const stringOrNullSchema = z.union([z.string(), z.null()]);
 
@@ -60,46 +60,46 @@ const updatePayloadSchema = z
 export interface NormalizedEstimateSection {
   id: string;
   name: string;
-  title?: string | null;
   show_subtotal?: boolean;
+  title?: string | null;
 }
 
 export interface NormalizedCreateEstimatePayload {
   base_number?: string;
-  takeoff_id?: string | null;
-  job_name?: string | null;
-  job_address?: string | null;
-  client_name?: string | null;
   client_address?: string | null;
   client_email?: string | null;
+  client_name?: string | null;
   client_phone?: string | null;
   estimator?: string | null;
   estimator_email?: string | null;
-  notes?: string | null;
-  status?: string;
   is_locked?: boolean;
-  total?: number;
-  sections?: NormalizedEstimateSection[];
+  job_address?: string | null;
+  job_name?: string | null;
   line_items?: NormalizedEstimateLineItem[];
+  notes?: string | null;
+  sections?: NormalizedEstimateSection[];
+  status?: string;
+  takeoff_id?: string | null;
+  total?: number;
 }
 
 export interface NormalizedUpdateEstimatePayload {
   base_number?: string | null;
-  takeoff_id?: string | null;
-  job_name?: string | null;
-  job_address?: string | null;
-  client_name?: string | null;
   client_address?: string | null;
   client_email?: string | null;
+  client_name?: string | null;
   client_phone?: string | null;
   estimator?: string | null;
   estimator_email?: string | null;
-  notes?: string | null;
-  status?: string | null;
   is_locked?: boolean;
-  total?: number;
-  sections?: NormalizedEstimateSection[];
+  job_address?: string | null;
+  job_name?: string | null;
   line_items?: NormalizedEstimateLineItem[];
+  notes?: string | null;
+  sections?: NormalizedEstimateSection[];
+  status?: string | null;
+  takeoff_id?: string | null;
+  total?: number;
 }
 
 export class EstimatePayloadValidationError extends Error {

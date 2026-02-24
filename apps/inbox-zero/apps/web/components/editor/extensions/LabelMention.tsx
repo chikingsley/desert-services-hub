@@ -1,8 +1,8 @@
-import { ReactRenderer } from "@tiptap/react";
 import { Mention } from "@tiptap/extension-mention";
 import { PluginKey } from "@tiptap/pm/state";
-import { MentionList, type MentionListRef } from "./MentionList";
+import { ReactRenderer } from "@tiptap/react";
 import type { EmailLabel } from "@/providers/EmailProvider";
+import { MentionList, type MentionListRef } from "./MentionList";
 
 const MAX_SUGGESTIONS = 10;
 
@@ -21,8 +21,8 @@ interface MarkdownNode {
 interface MarkdownItState {
   pos: number;
   posMax: number;
-  src: string;
   push: (type: string, tag: string, nesting: number) => MarkdownItToken;
+  src: string;
 }
 
 interface MarkdownItToken {
@@ -36,7 +36,7 @@ interface MarkdownItInstance {
     ruler: {
       push: (
         name: string,
-        fn: (state: MarkdownItState, silent: boolean) => boolean,
+        fn: (state: MarkdownItState, silent: boolean) => boolean
       ) => void;
     };
   };
@@ -61,14 +61,14 @@ export const createLabelMentionExtension = (labels: EmailLabel[]) => {
       items: ({ query }) => {
         const filteredLabels = labels
           .filter((label) =>
-            label.name.toLowerCase().includes(query.toLowerCase()),
+            label.name.toLowerCase().includes(query.toLowerCase())
           )
           .slice(0, MAX_SUGGESTIONS);
 
         // If there's a query and no exact match exists, add option to create new label
         // Case-insensitive comparison to prevent duplicate entries with different casing
         const exactMatchExists = labels.some(
-          (label) => label.name.toLowerCase() === query.toLowerCase(),
+          (label) => label.name.toLowerCase() === query.toLowerCase()
         );
 
         if (query && !exactMatchExists) {
@@ -132,7 +132,7 @@ export const createLabelMentionExtension = (labels: EmailLabel[]) => {
           onUpdate(props) {
             try {
               // More defensive checks to prevent race conditions
-              if (!component?.updateProps || !popup) {
+              if (!(component?.updateProps && popup)) {
                 console.warn("Mention component or popup not ready for update");
                 return;
               }
@@ -227,11 +227,15 @@ export const createLabelMentionExtension = (labels: EmailLabel[]) => {
                   const max = state.posMax;
 
                   // Check if we're at @[
-                  if (start + 2 >= max) return false;
-                  if (state.src.charCodeAt(start) !== 0x40 /* @ */)
+                  if (start + 2 >= max) {
                     return false;
-                  if (state.src.charCodeAt(start + 1) !== 0x5b /* [ */)
+                  }
+                  if (state.src.charCodeAt(start) !== 0x40 /* @ */) {
                     return false;
+                  }
+                  if (state.src.charCodeAt(start + 1) !== 0x5b /* [ */) {
+                    return false;
+                  }
 
                   // Find the closing ]
                   let pos = start + 2;
@@ -242,7 +246,9 @@ export const createLabelMentionExtension = (labels: EmailLabel[]) => {
                     pos++;
                   }
 
-                  if (pos >= max) return false;
+                  if (pos >= max) {
+                    return false;
+                  }
 
                   const labelName = state.src.slice(start + 2, pos);
 
@@ -270,13 +276,13 @@ export const createLabelMentionExtension = (labels: EmailLabel[]) => {
 
                   state.pos = pos + 1;
                   return true;
-                },
+                }
               );
 
               // Add renderer for mention tokens to create proper HTML structure
               markdownIt.renderer.rules.mention_open = (
                 tokens: MarkdownItToken[],
-                idx: number,
+                idx: number
               ) => {
                 const token = tokens[idx];
                 const id =

@@ -1,16 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, use } from "react";
-import useSWRInfinite from "swr/infinite";
 import { useSetAtom } from "jotai";
+import { use, useCallback, useEffect } from "react";
+import useSWRInfinite from "swr/infinite";
+import { BetaBanner } from "@/app/(app)/[emailAccountId]/mail/BetaBanner";
+import { PermissionsCheck } from "@/app/(app)/[emailAccountId]/PermissionsCheck";
+import type { ThreadsResponse } from "@/app/api/threads/route";
+import type { ThreadsQuery } from "@/app/api/threads/validation";
+import { ClientOnly } from "@/components/ClientOnly";
 import { List } from "@/components/email-list/EmailList";
 import { LoadingContent } from "@/components/LoadingContent";
-import type { ThreadsQuery } from "@/app/api/threads/validation";
-import type { ThreadsResponse } from "@/app/api/threads/route";
 import { refetchEmailListAtom } from "@/store/email";
-import { BetaBanner } from "@/app/(app)/[emailAccountId]/mail/BetaBanner";
-import { ClientOnly } from "@/components/ClientOnly";
-import { PermissionsCheck } from "@/app/(app)/[emailAccountId]/PermissionsCheck";
 
 export default function Mail(props: {
   searchParams: Promise<{ type?: string; labelId?: string }>;
@@ -19,9 +19,11 @@ export default function Mail(props: {
 
   const getKey = (
     pageIndex: number,
-    previousPageData: ThreadsResponse | null,
+    previousPageData: ThreadsResponse | null
   ) => {
-    if (previousPageData && !previousPageData.nextPageToken) return null;
+    if (previousPageData && !previousPageData.nextPageToken) {
+      return null;
+    }
 
     const query: ThreadsQuery = {};
 
@@ -61,13 +63,17 @@ export default function Mail(props: {
     (options?: { removedThreadIds?: string[] }) => {
       mutate(
         (currentData) => {
-          if (!currentData) return currentData;
-          if (!options?.removedThreadIds) return currentData;
+          if (!currentData) {
+            return currentData;
+          }
+          if (!options?.removedThreadIds) {
+            return currentData;
+          }
 
           return currentData.map((page) => ({
             ...page,
             threads: page.threads.filter(
-              (t) => !options?.removedThreadIds?.includes(t.id),
+              (t) => !options?.removedThreadIds?.includes(t.id)
             ),
           }));
         },
@@ -75,10 +81,10 @@ export default function Mail(props: {
           rollbackOnError: true,
           populateCache: true,
           revalidate: false,
-        },
+        }
       );
     },
-    [mutate],
+    [mutate]
   );
 
   // Set up the refetch function in the atom store
@@ -97,15 +103,15 @@ export default function Mail(props: {
       <ClientOnly>
         <BetaBanner />
       </ClientOnly>
-      <LoadingContent loading={isLoading && !data} error={error}>
+      <LoadingContent error={error} loading={isLoading && !data}>
         {allThreads && (
           <List
             emails={allThreads}
-            refetch={refetch}
-            type={searchParams.type}
-            showLoadMore={showLoadMore}
             handleLoadMore={handleLoadMore}
             isLoadingMore={isLoadingMore}
+            refetch={refetch}
+            showLoadMore={showLoadMore}
+            type={searchParams.type}
           />
         )}
       </LoadingContent>

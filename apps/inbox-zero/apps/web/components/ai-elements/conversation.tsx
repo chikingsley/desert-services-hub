@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { cn } from "@/utils/index";
-import { ArrowDownIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ArrowDownIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { useCallback } from "react";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/utils/index";
 
 export type ConversationProps = ComponentProps<typeof StickToBottom>;
 
@@ -48,7 +48,7 @@ export const ConversationEmptyState = ({
   <div
     className={cn(
       "flex size-full flex-col items-center justify-center gap-3 p-8 text-center",
-      className,
+      className
     )}
     {...props}
   >
@@ -84,13 +84,13 @@ export const ConversationScrollButton = ({
     <AnimatePresence>
       {!isAtBottom && (
         <motion.div
+          animate={{ opacity: 1, scale: 1 }}
           className={cn(
             "absolute bottom-4 left-[50%] translate-x-[-50%]",
-            wrapperClassName,
+            wrapperClassName
           )}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0.8 }}
           transition={{ duration: 0.15 }}
         >
           <Button

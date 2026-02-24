@@ -13,7 +13,9 @@ import type { Command } from "./types";
  */
 export function fuzzySearch(query: string, commands: Command[]): Command[] {
   const trimmedQuery = query.trim();
-  if (!trimmedQuery) return commands;
+  if (!trimmedQuery) {
+    return commands;
+  }
 
   const lowerQuery = trimmedQuery.toLowerCase();
 
@@ -24,12 +26,17 @@ export function fuzzySearch(query: string, commands: Command[]): Command[] {
 
     let score = 0;
 
-    if (label === lowerQuery) score = 100;
-    else if (label.startsWith(lowerQuery)) score = 90;
-    else if (label.includes(lowerQuery)) score = 70;
-    else if (description.includes(lowerQuery)) score = 50;
-    else if (keywords.includes(lowerQuery)) score = 40;
-    else {
+    if (label === lowerQuery) {
+      score = 100;
+    } else if (label.startsWith(lowerQuery)) {
+      score = 90;
+    } else if (label.includes(lowerQuery)) {
+      score = 70;
+    } else if (description.includes(lowerQuery)) {
+      score = 50;
+    } else if (keywords.includes(lowerQuery)) {
+      score = 40;
+    } else {
       // fuzzy match: all query characters appear in order within label
       let queryIdx = 0;
       for (const char of label) {
@@ -51,7 +58,7 @@ export function fuzzySearch(query: string, commands: Command[]): Command[] {
     .sort(
       (a, b) =>
         b.score - a.score ||
-        (a.command.priority ?? 50) - (b.command.priority ?? 50),
+        (a.command.priority ?? 50) - (b.command.priority ?? 50)
     )
     .map(({ command }) => command);
 }

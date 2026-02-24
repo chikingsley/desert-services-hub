@@ -1,7 +1,4 @@
 import { subMonths } from "date-fns/subMonths";
-import { createEmailProvider } from "@/utils/email/provider";
-import type { EmailProvider, EmailThread } from "@/utils/email/types";
-import type { Logger } from "@/utils/logger";
 import { createCalendarEventProviders } from "@/utils/calendar/event-provider";
 import type {
   CalendarEvent,
@@ -9,6 +6,9 @@ import type {
   CalendarEventProvider,
 } from "@/utils/calendar/event-types";
 import { extractDomainFromEmail } from "@/utils/email";
+import { createEmailProvider } from "@/utils/email/provider";
+import type { EmailProvider, EmailThread } from "@/utils/email/types";
+import type { Logger } from "@/utils/logger";
 
 const MAX_THREADS = 10;
 const MAX_MESSAGES_PER_THREAD = 10;
@@ -29,10 +29,10 @@ export interface InternalTeamMember {
 }
 
 export interface MeetingBriefingData {
+  emailThreads: EmailThread[];
   event: CalendarEvent;
   externalGuests: ExternalGuest[];
   internalTeamMembers: InternalTeamMember[];
-  emailThreads: EmailThread[];
   pastMeetings: CalendarEvent[];
 }
 
@@ -55,7 +55,7 @@ export async function gatherContextForEvent({
   const internalAttendees = getInternalTeamMembers(
     event,
     userEmail,
-    userDomain,
+    userDomain
   );
   const participantEmails = externalAttendees.map((a) => a.email);
 
@@ -133,7 +133,9 @@ async function fetchEmailThreadsWithParticipants({
   const allThreads: EmailThread[] = [];
 
   for (const email of participantEmails) {
-    if (allThreads.length >= maxThreads) break;
+    if (allThreads.length >= maxThreads) {
+      break;
+    }
 
     try {
       const threads = await emailProvider.getThreadsWithParticipant({
@@ -143,7 +145,9 @@ async function fetchEmailThreadsWithParticipants({
 
       // Add only new threads (dedupe by thread ID)
       for (const thread of threads) {
-        if (allThreads.length >= maxThreads) break;
+        if (allThreads.length >= maxThreads) {
+          break;
+        }
         if (!fetchedThreadIds.has(thread.id)) {
           fetchedThreadIds.add(thread.id);
           allThreads.push(thread);
@@ -163,7 +167,7 @@ async function fetchEmailThreadsWithParticipants({
 function getExternalAttendees(
   event: CalendarEvent,
   userEmail: string,
-  userDomain: string,
+  userDomain: string
 ): CalendarEventAttendee[] {
   const normalizedUserEmail = userEmail.trim().toLowerCase();
   const normalizedUserDomain = userDomain.trim().toLowerCase();
@@ -172,7 +176,9 @@ function getExternalAttendees(
     const normalizedAttendeeEmail = attendee.email.trim().toLowerCase();
     const attendeeDomain = extractDomainFromEmail(normalizedAttendeeEmail);
 
-    if (!attendeeDomain) return false;
+    if (!attendeeDomain) {
+      return false;
+    }
 
     return (
       attendeeDomain !== normalizedUserDomain &&
@@ -184,7 +190,7 @@ function getExternalAttendees(
 function getInternalTeamMembers(
   event: CalendarEvent,
   userEmail: string,
-  userDomain: string,
+  userDomain: string
 ): CalendarEventAttendee[] {
   const normalizedUserEmail = userEmail.trim().toLowerCase();
   const normalizedUserDomain = userDomain.trim().toLowerCase();
@@ -223,10 +229,14 @@ async function fetchPastMeetingsWithParticipants({
   const allMeetings: CalendarEvent[] = [];
 
   for (const email of participantEmails) {
-    if (allMeetings.length >= maxMeetings) break;
+    if (allMeetings.length >= maxMeetings) {
+      break;
+    }
 
     for (const provider of calendarProviders) {
-      if (allMeetings.length >= maxMeetings) break;
+      if (allMeetings.length >= maxMeetings) {
+        break;
+      }
 
       try {
         const events = await provider.fetchEventsWithAttendee({
@@ -238,7 +248,9 @@ async function fetchPastMeetingsWithParticipants({
 
         // Add only new events (dedupe by event ID)
         for (const event of events) {
-          if (allMeetings.length >= maxMeetings) break;
+          if (allMeetings.length >= maxMeetings) {
+            break;
+          }
           if (!fetchedEventIds.has(event.id)) {
             fetchedEventIds.add(event.id);
             allMeetings.push(event);
@@ -255,6 +267,6 @@ async function fetchPastMeetingsWithParticipants({
 
   // Sort by start time descending (most recent first)
   return allMeetings.sort(
-    (a, b) => b.startTime.getTime() - a.startTime.getTime(),
+    (a, b) => b.startTime.getTime() - a.startTime.getTime()
   );
 }

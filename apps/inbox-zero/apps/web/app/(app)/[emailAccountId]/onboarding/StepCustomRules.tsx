@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { NotepadTextIcon } from "lucide-react";
-import { PageHeading, TypographyP } from "@/components/Typography";
+import Image from "next/image";
+import { ContinueButton } from "@/app/(app)/[emailAccountId]/onboarding/ContinueButton";
 import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
 import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
-import { ContinueButton } from "@/app/(app)/[emailAccountId]/onboarding/ContinueButton";
+import { PageHeading, TypographyP } from "@/components/Typography";
 
 export function StepCustomRules({
   onNext,
@@ -17,41 +17,41 @@ export function StepCustomRules({
     <div className="relative">
       <div className="xl:pr-[50%]">
         <OnboardingWrapper className="py-0">
-          <IconCircle size="lg" className="mx-auto">
+          <IconCircle className="mx-auto" size="lg">
             <NotepadTextIcon className="size-6" />
           </IconCircle>
 
-          <div className="text-center mt-4 max-w-lg mx-auto">
+          <div className="mx-auto mt-4 max-w-lg text-center">
             <PageHeading>Custom rules</PageHeading>
             <TypographyP className="mt-2 text-left">
               We've set up the basics, but that's just the beginning. Your AI
               assistant can handle any email workflow you'd give to a human.
             </TypographyP>
             <TypographyP className="mt-2 text-left">For example:</TypographyP>
-            <ul className="list-disc list-inside space-y-1 text-left leading-7 text-muted-foreground ">
+            <ul className="list-inside list-disc space-y-1 text-left text-muted-foreground leading-7">
               <li>Forward receipts to your accountant</li>
               <li>Label newsletters and archive them after a week</li>
             </ul>
           </div>
 
-          <div className="flex w-full max-w-xs mx-auto">
+          <div className="mx-auto flex w-full max-w-xs">
             <ContinueButton
+              className="w-full"
               onClick={onNext}
               size="default"
-              className="w-full"
             />
           </div>
         </OnboardingWrapper>
       </div>
 
-      <div className="fixed top-0 right-0 w-1/2 h-screen bg-white items-center justify-center hidden xl:flex px-10">
-        <div className="rounded-2xl p-4 bg-slate-50 border border-slate-200">
+      <div className="fixed top-0 right-0 hidden h-screen w-1/2 items-center justify-center bg-white px-10 xl:flex">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <Image
-            src="/images/onboarding/custom-rules.png"
             alt="Custom rules"
-            width={1200}
-            height={800}
             className="rounded-xl border border-slate-200"
+            height={800}
+            src="/images/onboarding/custom-rules.png"
+            width={1200}
           />
         </div>
       </div>

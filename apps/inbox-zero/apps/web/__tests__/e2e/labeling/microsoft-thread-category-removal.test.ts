@@ -9,15 +9,15 @@
  * pnpm test-e2e microsoft-thread-category-removal
  */
 
-import { describe, test, expect, beforeAll, afterAll, vi } from "vitest";
-import prisma from "@/utils/prisma";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
+import { SystemType } from "@/generated/prisma/enums";
 import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
-import type { ParsedMessage } from "@/utils/types";
-import { getRuleLabel } from "@/utils/rule/consts";
-import { SystemType } from "@/generated/prisma/enums";
-import { removeConflictingThreadStatusLabels } from "@/utils/reply-tracker/label-helpers";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import { removeConflictingThreadStatusLabels } from "@/utils/reply-tracker/label-helpers";
+import { getRuleLabel } from "@/utils/rule/consts";
+import type { ParsedMessage } from "@/utils/types";
 import { findThreadWithMultipleMessages } from "./helpers";
 
 const RUN_E2E_TESTS = process.env.RUN_E2E_TESTS;
@@ -62,7 +62,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
       // Find a suitable test thread with 2+ messages
       const { threadId, messages } = await findThreadWithMultipleMessages(
         provider,
-        2,
+        2
       );
       testThreadId = threadId;
       testMessages = messages;
@@ -90,7 +90,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
       test("should remove categories from ALL messages in a thread", async () => {
         expect(
           testMessages.length,
-          "Test requires a thread with 2+ messages. Reply to an email in the test inbox to create one.",
+          "Test requires a thread with 2+ messages. Reply to an email in the test inbox to create one."
         ).toBeGreaterThanOrEqual(2);
 
         // Create test category
@@ -126,7 +126,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
       test("should remove multiple categories from all messages in a thread", async () => {
         expect(
           testMessages.length,
-          "Test requires a thread with 2+ messages. Reply to an email in the test inbox to create one.",
+          "Test requires a thread with 2+ messages. Reply to an email in the test inbox to create one."
         ).toBeGreaterThanOrEqual(2);
 
         // Create multiple test categories
@@ -180,7 +180,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
       test("should remove conflicting conversation status categories when applying a new status", async () => {
         expect(
           testMessages.length,
-          "Test requires a thread with 2+ messages. Reply to an email in the test inbox to create one.",
+          "Test requires a thread with 2+ messages. Reply to an email in the test inbox to create one."
         ).toBeGreaterThanOrEqual(2);
 
         // Create conversation status labels
@@ -190,7 +190,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
 
         const toReplyLabel = await provider.createLabel(toReplyLabelName);
         const awaitingReplyLabel = await provider.createLabel(
-          awaitingReplyLabelName,
+          awaitingReplyLabelName
         );
 
         // Apply "To Reply" to first message
@@ -232,5 +232,5 @@ describe.skipIf(!RUN_E2E_TESTS)(
         }
       }, 60_000);
     });
-  },
+  }
 );

@@ -1,44 +1,44 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import useSWR from "swr";
 import sortBy from "lodash/sortBy";
-import { toast } from "sonner";
-import Link from "next/link";
 import {
   ArchiveIcon,
+  BellOffIcon,
   CheckIcon,
   ChevronDownIcon,
   InboxIcon,
   MailIcon,
   MailOpenIcon,
   MailXIcon,
-  BellOffIcon,
   TrendingDownIcon,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import useSWR from "swr";
+import type { CategorizedSendersResponse } from "@/app/api/user/categorize/senders/categorized/route";
 import { EmailCell } from "@/components/EmailCell";
 import { LoadingContent } from "@/components/LoadingContent";
-import { cn } from "@/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useThreads } from "@/hooks/useThreads";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import {
   addToArchiveSenderQueue,
   useArchiveSenderStatus,
 } from "@/store/archive-sender-queue";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { useThreads } from "@/hooks/useThreads";
+import { cn } from "@/utils";
+import {
+  type ArchiveCandidate,
+  type ConfidenceLevel,
+  getArchiveCandidates,
+} from "@/utils/bulk-archive/get-archive-candidates";
 import { formatShortDate } from "@/utils/date";
 import { getEmailUrl } from "@/utils/url";
-import {
-  getArchiveCandidates,
-  type ConfidenceLevel,
-  type ArchiveCandidate,
-} from "@/utils/bulk-archive/get-archive-candidates";
-import type { CategorizedSendersResponse } from "@/app/api/user/categorize/senders/categorized/route";
 
 const confidenceConfig = {
   high: {
@@ -77,11 +77,13 @@ export function BulkArchiveTab() {
   const { emailAccountId, userEmail } = useAccount();
 
   const { data, error, isLoading } = useSWR<CategorizedSendersResponse>(
-    "/api/user/categorize/senders/categorized",
+    "/api/user/categorize/senders/categorized"
   );
 
   const emailGroups = useMemo(() => {
-    if (!data) return [];
+    if (!data) {
+      return [];
+    }
     const sorted = sortBy(data.senders, (sender) => sender.category?.name);
     return sorted.map((sender) => ({
       address: sender.email,
@@ -110,7 +112,7 @@ export function BulkArchiveTab() {
 
   const candidates = useMemo(
     () => getArchiveCandidates(emailGroups),
-    [emailGroups],
+    [emailGroups]
   );
 
   // Initialize selection when data loads
@@ -219,7 +221,7 @@ export function BulkArchiveTab() {
 
   if (error) {
     return (
-      <LoadingContent loading={false} error={error}>
+      <LoadingContent error={error} loading={false}>
         {null}
       </LoadingContent>
     );
@@ -232,23 +234,23 @@ export function BulkArchiveTab() {
           <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50">
             <CheckIcon className="size-8 text-green-600" />
           </div>
-          <h2 className="mb-2 text-xl font-semibold text-green-900 dark:text-green-100">
+          <h2 className="mb-2 font-semibold text-green-900 text-xl dark:text-green-100">
             Archive Started!
           </h2>
           <p className="mb-4 text-green-700 dark:text-green-300">
             {selectedCount} senders are being archived in the background.
           </p>
-          <p className="text-sm text-green-600 dark:text-green-400">
+          <p className="text-green-600 text-sm dark:text-green-400">
             Emails are archived, not deleted. You can find them in Gmail
             anytime.
           </p>
           <Button
-            variant="outline"
             className="mt-6"
             onClick={() => {
               setArchiveComplete(false);
               setSelectedSenders({});
             }}
+            variant="outline"
           >
             Done
           </Button>
@@ -264,7 +266,7 @@ export function BulkArchiveTab() {
           <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-muted">
             <InboxIcon className="size-8 text-muted-foreground" />
           </div>
-          <h2 className="mb-2 text-xl font-semibold">No Senders to Archive</h2>
+          <h2 className="mb-2 font-semibold text-xl">No Senders to Archive</h2>
           <p className="text-muted-foreground">
             Once our AI categorizes your senders, you&apos;ll see archive
             suggestions here.
@@ -284,7 +286,7 @@ export function BulkArchiveTab() {
               <ArchiveIcon className="size-6 text-muted-foreground" />
             </div>
             <div className="flex-1">
-              <h2 className="mb-1 text-xl font-semibold">Ready to Clean Up</h2>
+              <h2 className="mb-1 font-semibold text-xl">Ready to Clean Up</h2>
               <p className="mb-4 text-muted-foreground">
                 We found{" "}
                 <span className="font-medium text-foreground">
@@ -320,8 +322,8 @@ export function BulkArchiveTab() {
 
               <div className="flex flex-wrap gap-3">
                 <Button
-                  onClick={archiveSelected}
                   disabled={selectedCount === 0 || isArchiving}
+                  onClick={archiveSelected}
                 >
                   <ArchiveIcon className="mr-2 size-4" />
                   {isArchiving
@@ -345,8 +347,8 @@ export function BulkArchiveTab() {
             </span>
           </div>
           <Progress
-            value={(selectedCount / totalCount) * 100}
             className="mt-2 h-2"
+            value={(selectedCount / totalCount) * 100}
           />
         </div>
       </Card>
@@ -360,18 +362,20 @@ export function BulkArchiveTab() {
           const isExpanded = expandedSections[level];
           const selectedInSection = getSelectedInSection(level);
 
-          if (senders.length === 0) return null;
+          if (senders.length === 0) {
+            return null;
+          }
 
           return (
             <Card
-              key={level}
               className={cn("overflow-hidden", config.borderColor)}
+              key={level}
             >
               <div
                 className={cn(
                   "cursor-pointer p-4 transition-colors",
                   config.bgColor,
-                  config.hoverBgColor,
+                  config.hoverBgColor
                 )}
                 onClick={() => toggleSection(level)}
                 onKeyDown={(e) => {
@@ -388,7 +392,7 @@ export function BulkArchiveTab() {
                     <div
                       className={cn(
                         "flex size-10 items-center justify-center rounded-lg bg-white dark:bg-gray-900",
-                        config.color,
+                        config.color
                       )}
                     >
                       <Icon className="size-5" />
@@ -400,15 +404,13 @@ export function BulkArchiveTab() {
                           {senders.length}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {config.description}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Button
-                      variant="outline"
-                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (selectedInSection === senders.length) {
@@ -417,18 +419,20 @@ export function BulkArchiveTab() {
                           selectAllInSection(level);
                         }
                       }}
+                      size="sm"
+                      variant="outline"
                     >
                       {selectedInSection === senders.length
                         ? "Deselect All"
                         : "Select All"}
                     </Button>
-                    <span className="min-w-[60px] text-right text-sm text-muted-foreground">
+                    <span className="min-w-[60px] text-right text-muted-foreground text-sm">
                       {selectedInSection}/{senders.length}
                     </span>
                     <ChevronDownIcon
                       className={cn(
                         "size-5 text-muted-foreground transition-transform",
-                        isExpanded && "rotate-180",
+                        isExpanded && "rotate-180"
                       )}
                     />
                   </div>
@@ -439,15 +443,15 @@ export function BulkArchiveTab() {
                 <div className="divide-y border-t">
                   {senders.map((candidate) => (
                     <SenderRow
-                      key={candidate.address}
                       candidate={candidate}
-                      isSelected={!!selectedSenders[candidate.address]}
                       isExpanded={!!expandedSenders[candidate.address]}
-                      onToggleSelection={() =>
-                        toggleSenderSelection(candidate.address)
-                      }
+                      isSelected={!!selectedSenders[candidate.address]}
+                      key={candidate.address}
                       onToggleExpanded={() =>
                         toggleSenderExpanded(candidate.address)
+                      }
+                      onToggleSelection={() =>
+                        toggleSenderSelection(candidate.address)
                       }
                       userEmail={userEmail}
                     />
@@ -495,30 +499,30 @@ function SenderRow({
       >
         <Checkbox
           checked={isSelected}
+          className="size-5"
           onClick={(e) => {
             e.stopPropagation();
             onToggleSelection();
           }}
-          className="size-5"
         />
         <div className="min-w-0 flex-1">
           <EmailCell
-            emailAddress={candidate.address}
             className={cn(
               "flex flex-col",
-              !isSelected && "text-muted-foreground line-through",
+              !isSelected && "text-muted-foreground line-through"
             )}
+            emailAddress={candidate.address}
           />
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {candidate.reason}
           </span>
           <ArchiveStatus status={status} />
           <ChevronDownIcon
             className={cn(
               "size-5 text-muted-foreground transition-transform",
-              isExpanded && "rotate-180",
+              isExpanded && "rotate-180"
             )}
           />
         </div>
@@ -540,21 +544,21 @@ function ArchiveStatus({
     case "completed":
       if (status.threadsTotal) {
         return (
-          <span className="text-sm text-green-600">
+          <span className="text-green-600 text-sm">
             Archived {status.threadsTotal}!
           </span>
         );
       }
-      return <span className="text-sm text-muted-foreground">Archived</span>;
+      return <span className="text-muted-foreground text-sm">Archived</span>;
     case "processing":
       return (
-        <span className="text-sm text-blue-600">
+        <span className="text-blue-600 text-sm">
           {status.threadsTotal - status.threadIds.length} /{" "}
           {status.threadsTotal}
         </span>
       );
     case "pending":
-      return <span className="text-sm text-muted-foreground">Pending...</span>;
+      return <span className="text-muted-foreground text-sm">Pending...</span>;
     default:
       return null;
   }
@@ -585,7 +589,7 @@ function ExpandedEmails({
 
   if (error) {
     return (
-      <div className="border-t bg-muted/30 p-4 text-sm text-muted-foreground">
+      <div className="border-t bg-muted/30 p-4 text-muted-foreground text-sm">
         Error loading emails
       </div>
     );
@@ -593,7 +597,7 @@ function ExpandedEmails({
 
   if (!data?.threads.length) {
     return (
-      <div className="border-t bg-muted/30 p-4 text-sm text-muted-foreground">
+      <div className="border-t bg-muted/30 p-4 text-muted-foreground text-sm">
         No emails found
       </div>
     );
@@ -604,21 +608,23 @@ function ExpandedEmails({
       <div className="py-2">
         {data.threads.slice(0, 5).map((thread) => {
           const firstMessage = thread.messages[0];
-          if (!firstMessage) return null;
+          if (!firstMessage) {
+            return null;
+          }
           const subject = firstMessage.subject;
           const date = firstMessage.date;
           const snippet = thread.snippet || firstMessage.snippet;
 
           return (
-            <div key={thread.id} className="flex">
+            <div className="flex" key={thread.id}>
               <div className="flex items-center pl-[26px]">
                 <div className="h-full w-px bg-border" />
                 <div className="h-px w-4 bg-border" />
               </div>
               <Link
+                className="mr-2 flex flex-1 items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-muted/50"
                 href={getEmailUrl(thread.id, userEmail, provider)}
                 target="_blank"
-                className="mr-2 flex flex-1 items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-muted/50"
               >
                 <MailIcon className="size-4 shrink-0 text-muted-foreground" />
                 <span className="min-w-0 flex-1 truncate text-sm">
@@ -641,7 +647,7 @@ function ExpandedEmails({
                     </span>
                   )}
                 </span>
-                <span className="shrink-0 text-xs text-muted-foreground">
+                <span className="shrink-0 text-muted-foreground text-xs">
                   {formatShortDate(new Date(date))}
                 </span>
               </Link>

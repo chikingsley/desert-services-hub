@@ -25,9 +25,33 @@ export interface ShapeStyle {
  */
 export interface ShapeHighlightProps {
   /**
+   * react-rnd bounds on the highlight area.
+   */
+  bounds?: string | Element;
+
+  /**
+   * Custom color presets for the style panel.
+   */
+  colorPresets?: string[];
+
+  /**
+   * Custom delete icon. Replaces the default trash icon.
+   */
+  deleteIcon?: ReactNode;
+
+  /**
+   * For arrows: end point as percentage of bounding box (0-1).
+   */
+  endPoint?: { x: number; y: number };
+  /**
    * The highlight to be rendered as a {@link ShapeHighlight}.
    */
   highlight: ViewportHighlight;
+
+  /**
+   * Has the highlight been auto-scrolled into view?
+   */
+  isScrolledTo?: boolean;
 
   /**
    * A callback triggered whenever the highlight position or size changes.
@@ -37,24 +61,14 @@ export interface ShapeHighlightProps {
   onChange?(rect: LTWHP): void;
 
   /**
-   * Has the highlight been auto-scrolled into view?
-   */
-  isScrolledTo?: boolean;
-
-  /**
-   * react-rnd bounds on the highlight area.
-   */
-  bounds?: string | Element;
-
-  /**
    * A callback triggered on context menu.
    */
   onContextMenu?(event: MouseEvent<HTMLDivElement>): void;
 
   /**
-   * Event called when editing begins (drag or resize).
+   * Callback triggered when the delete button is clicked.
    */
-  onEditStart?(): void;
+  onDelete?(): void;
 
   /**
    * Event called when editing ends.
@@ -62,15 +76,25 @@ export interface ShapeHighlightProps {
   onEditEnd?(): void;
 
   /**
-   * Custom styling for the container.
+   * Event called when editing begins (drag or resize).
    */
-  style?: CSSProperties;
+  onEditStart?(): void;
+
+  /**
+   * Callback triggered when the style changes.
+   */
+  onStyleChange?(style: ShapeStyle): void;
 
   /**
    * The type of shape to render.
    * @default "rectangle"
    */
   shapeType?: ShapeType;
+
+  /**
+   * For arrows: start point as percentage of bounding box (0-1).
+   */
+  startPoint?: { x: number; y: number };
 
   /**
    * Stroke color for the shape.
@@ -85,39 +109,14 @@ export interface ShapeHighlightProps {
   strokeWidth?: number;
 
   /**
-   * Callback triggered when the style changes.
+   * Custom styling for the container.
    */
-  onStyleChange?(style: ShapeStyle): void;
-
-  /**
-   * Callback triggered when the delete button is clicked.
-   */
-  onDelete?(): void;
+  style?: CSSProperties;
 
   /**
    * Custom style icon. Replaces the default palette icon.
    */
   styleIcon?: ReactNode;
-
-  /**
-   * Custom delete icon. Replaces the default trash icon.
-   */
-  deleteIcon?: ReactNode;
-
-  /**
-   * Custom color presets for the style panel.
-   */
-  colorPresets?: string[];
-
-  /**
-   * For arrows: start point as percentage of bounding box (0-1).
-   */
-  startPoint?: { x: number; y: number };
-
-  /**
-   * For arrows: end point as percentage of bounding box (0-1).
-   */
-  endPoint?: { x: number; y: number };
 }
 
 // Default icons

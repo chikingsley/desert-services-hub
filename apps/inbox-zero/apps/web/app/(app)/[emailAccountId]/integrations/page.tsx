@@ -1,14 +1,14 @@
 "use client";
 
-import { PageWrapper } from "@/components/PageWrapper";
-import { PageHeader } from "@/components/PageHeader";
 import { Integrations } from "@/app/(app)/[emailAccountId]/integrations/Integrations";
-import { Button } from "@/components/ui/button";
-import { RequestAccessDialog } from "./RequestAccessDialog";
+import { PageHeader } from "@/components/PageHeader";
+import { PageWrapper } from "@/components/PageWrapper";
 import { usePremium } from "@/components/PremiumAlert";
+import { Button } from "@/components/ui/button";
+import { useIntegrationsEnabled } from "@/hooks/useFeatureFlags";
 import { hasTierAccess } from "@/utils/premium";
 import { IntegrationsPremiumAlert } from "./IntegrationsPremiumAlert";
-import { useIntegrationsEnabled } from "@/hooks/useFeatureFlags";
+import { RequestAccessDialog } from "./RequestAccessDialog";
 
 export default function IntegrationsPage() {
   const integrationsEnabled = useIntegrationsEnabled();
@@ -28,8 +28,8 @@ export default function IntegrationsPage() {
     <PageWrapper>
       <div className="flex items-center justify-between gap-2">
         <PageHeader
-          title="Integrations"
           description="Connect to external services to help the AI assistant draft better replies by accessing relevant data from your tools."
+          title="Integrations"
         />
         {hasAccess && (
           <div className="shrink-0">

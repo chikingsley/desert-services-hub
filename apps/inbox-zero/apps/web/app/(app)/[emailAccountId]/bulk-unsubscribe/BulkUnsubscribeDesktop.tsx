@@ -2,6 +2,13 @@
 
 import type React from "react";
 import {
+  ActionCell,
+  HeaderButton,
+} from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/common";
+import type { RowProps } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/types";
+import { ButtonCheckbox } from "@/components/ButtonCheckbox";
+import { DomainIcon } from "@/components/charts/DomainIcon";
+import {
   Table,
   TableBody,
   TableCell,
@@ -9,13 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  ActionCell,
-  HeaderButton,
-} from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/common";
-import type { RowProps } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/types";
-import { ButtonCheckbox } from "@/components/ButtonCheckbox";
-import { DomainIcon } from "@/components/charts/DomainIcon";
 import { extractDomainFromEmail } from "@/utils/email";
 
 export function BulkUnsubscribeDesktop({
@@ -47,26 +47,26 @@ export function BulkUnsubscribeDesktop({
             />
           </TableHead>
           <TableHead className="pl-8">
-            <span className="text-sm font-medium">From</span>
+            <span className="font-medium text-sm">From</span>
           </TableHead>
           <TableHead>
             <HeaderButton
-              sorted={sortColumn === "emails"}
+              onClick={() => onSort("emails")}
               sortDirection={
                 sortColumn === "emails" ? sortDirection : undefined
               }
-              onClick={() => onSort("emails")}
+              sorted={sortColumn === "emails"}
             >
               Emails
             </HeaderButton>
           </TableHead>
           <TableHead>
             <HeaderButton
-              sorted={sortColumn === "unread"}
+              onClick={() => onSort("unread")}
               sortDirection={
                 sortColumn === "unread" ? sortDirection : undefined
               }
-              onClick={() => onSort("unread")}
+              sorted={sortColumn === "unread"}
             >
               Read
             </HeaderButton>
@@ -101,12 +101,12 @@ export function BulkUnsubscribeRowDesktop({
 
   return (
     <TableRow
-      key={item.name}
-      className="hover:bg-transparent dark:hover:bg-transparent"
       aria-selected={selected || undefined}
+      className="hover:bg-transparent dark:hover:bg-transparent"
       data-selected={selected || undefined}
-      onMouseEnter={onSelectRow}
+      key={item.name}
       onDoubleClick={onDoubleClick}
+      onMouseEnter={onSelectRow}
     >
       <TableCell className="w-10 pr-0">
         <ButtonCheckbox
@@ -117,12 +117,12 @@ export function BulkUnsubscribeRowDesktop({
       <TableCell className="max-w-[250px] py-3 pl-8">
         <div className="flex items-center gap-2">
           <DomainIcon domain={domain} size={32} variant="circular" />
-          <div className="flex flex-col min-w-0">
-            <span className="font-medium truncate">
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate font-medium">
               {item.fromName || item.name}
             </span>
             {item.fromName && (
-              <span className="text-xs text-muted-foreground truncate">
+              <span className="truncate text-muted-foreground text-xs">
                 {item.name}
               </span>
             )}
@@ -138,19 +138,19 @@ export function BulkUnsubscribeRowDesktop({
         </span>
       </TableCell>
       <TableCell className="p-1">
-        <div className="flex justify-end items-center gap-2">
+        <div className="flex items-center justify-end gap-2">
           <ActionCell
-            item={item}
-            hasUnsubscribeAccess={hasUnsubscribeAccess}
-            mutate={mutate}
-            refetchPremium={refetchPremium}
-            onOpenNewsletter={onOpenNewsletter}
-            selected={selected}
-            labels={labels}
-            openPremiumModal={openPremiumModal}
-            userEmail={userEmail}
             emailAccountId={emailAccountId}
             filter={filter}
+            hasUnsubscribeAccess={hasUnsubscribeAccess}
+            item={item}
+            labels={labels}
+            mutate={mutate}
+            onOpenNewsletter={onOpenNewsletter}
+            openPremiumModal={openPremiumModal}
+            refetchPremium={refetchPremium}
+            selected={selected}
+            userEmail={userEmail}
           />
         </div>
       </TableCell>

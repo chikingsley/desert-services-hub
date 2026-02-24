@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   validateGmailLabelName,
   validateLabelNameBasic,
@@ -50,7 +50,7 @@ describe("validateLabelNameBasic", () => {
       const result = validateLabelNameBasic(" Work");
       expect(result.valid).toBe(false);
       expect(result.error).toBe(
-        "Label name cannot have leading or trailing spaces",
+        "Label name cannot have leading or trailing spaces"
       );
     });
 
@@ -58,7 +58,7 @@ describe("validateLabelNameBasic", () => {
       const result = validateLabelNameBasic("Work ");
       expect(result.valid).toBe(false);
       expect(result.error).toBe(
-        "Label name cannot have leading or trailing spaces",
+        "Label name cannot have leading or trailing spaces"
       );
     });
   });

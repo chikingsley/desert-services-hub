@@ -7,22 +7,22 @@ import { db } from "@lib/db/client";
 type BunProjectRequest = Request & { params: { id: string } };
 
 interface ProjectRow {
-  id: number;
-  name: string;
-  lifecycle_state: string | null;
   account_id: number | null;
+  id: number;
+  lifecycle_state: string | null;
+  name: string;
 }
 
 interface ContactRollupRow {
-  contact_id: number;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  title: string | null;
   account_id: number | null;
-  estimate_links: number;
+  contact_id: number;
+  email: string | null;
   email_links: number;
+  estimate_links: number;
+  name: string;
+  phone: string | null;
   sources: string[] | null;
+  title: string | null;
 }
 
 function parseProjectId(raw: string): number | null {

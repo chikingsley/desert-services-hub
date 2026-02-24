@@ -1,9 +1,9 @@
-import { cn } from "@/utils";
-import { type VariantProps, cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef } from "react";
+import { cn } from "@/utils";
 
 const tagVariants = cva(
-  "truncate rounded border-2 border-white px-2 py-0.5 text-center text-sm font-semibold shadow",
+  "truncate rounded border-2 border-white px-2 py-0.5 text-center font-semibold text-sm shadow",
   {
     variants: {
       variant: {
@@ -12,7 +12,7 @@ const tagVariants = cva(
         white: "bg-background text-primary",
       },
     },
-  },
+  }
 );
 
 export interface TagProps
@@ -38,6 +38,6 @@ export const Tag = forwardRef<HTMLDivElement, TagProps>(
         }}
       />
     );
-  },
+  }
 );
 Tag.displayName = "Tag";

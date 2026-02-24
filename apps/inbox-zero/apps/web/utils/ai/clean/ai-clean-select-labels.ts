@@ -1,7 +1,7 @@
 import { z } from "zod";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { getModel } from "@/utils/llms/model";
 import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
 
 const schema = z.object({ labels: z.array(z.string()).nullable() });
 

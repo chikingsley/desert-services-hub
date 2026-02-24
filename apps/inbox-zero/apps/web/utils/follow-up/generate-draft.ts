@@ -1,15 +1,15 @@
-import type { EmailProvider } from "@/utils/email/types";
-import type { Logger } from "@/utils/logger";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
 import { aiDraftFollowUp } from "@/utils/ai/reply/draft-follow-up";
-import { getWritingStyle } from "@/utils/user/get";
 import { internalDateToDate } from "@/utils/date";
-import { getEmailForLLM } from "@/utils/get-email-from-message";
 import { extractEmailAddress } from "@/utils/email";
-import { escapeHtml } from "@/utils/string";
+import type { EmailProvider } from "@/utils/email/types";
+import { captureException } from "@/utils/error";
+import { getEmailForLLM } from "@/utils/get-email-from-message";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
 import { withPrismaRetry } from "@/utils/prisma-retry";
-import { captureException } from "@/utils/error";
+import { escapeHtml } from "@/utils/string";
+import { getWritingStyle } from "@/utils/user/get";
 
 /**
  * Generates a follow-up draft for a thread that's awaiting a reply.
@@ -44,7 +44,7 @@ export async function generateFollowUpDraft({
       .find(
         (msg) =>
           extractEmailAddress(msg.headers.from).toLowerCase() !==
-          emailAccount.email.toLowerCase(),
+          emailAccount.email.toLowerCase()
       );
 
     // Find the user's last sent message (for cases where user initiated the thread)
@@ -54,7 +54,7 @@ export async function generateFollowUpDraft({
       .find(
         (msg) =>
           extractEmailAddress(msg.headers.from).toLowerCase() ===
-          emailAccount.email.toLowerCase(),
+          emailAccount.email.toLowerCase()
       );
 
     // Determine which message to use for drafting and the recipient
@@ -118,7 +118,7 @@ export async function generateFollowUpDraft({
         content: draftContent,
       },
       emailAccount.email,
-      undefined,
+      undefined
     );
 
     // Store draftId in tracker so dedup can detect existing drafts.
@@ -131,12 +131,12 @@ export async function generateFollowUpDraft({
             where: { id: trackerId },
             data: { followUpDraftId: draftId },
           }),
-        { logger },
+        { logger }
       );
     } catch (updateError) {
       logger.error(
         "Failed to update tracker with draftId, deleting orphaned draft",
-        { threadId, draftId, trackerId, error: updateError },
+        { threadId, draftId, trackerId, error: updateError }
       );
       captureException(updateError);
       try {
@@ -159,7 +159,7 @@ export async function generateFollowUpDraft({
     if (errorMessage.includes("Item type is invalid for creating a Reply")) {
       logger.info(
         "Skipping draft generation - message type doesn't support replies",
-        { threadId },
+        { threadId }
       );
       return;
     }

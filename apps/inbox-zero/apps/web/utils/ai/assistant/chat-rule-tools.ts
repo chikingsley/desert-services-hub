@@ -1,27 +1,27 @@
 import { type InferUITool, tool } from "ai";
 import { z } from "zod";
-import type { Logger } from "@/utils/logger";
-import { createRuleSchema } from "@/utils/ai/rule/create-rule-schema";
-import prisma from "@/utils/prisma";
-import { isDuplicateError } from "@/utils/prisma-helpers";
-import {
-  createRule,
-  partialUpdateRule,
-  updateRuleActions,
-} from "@/utils/rule/rule";
 import {
   ActionType,
   GroupItemType,
-  LogicalOperator,
+  type LogicalOperator,
 } from "@/generated/prisma/enums";
-import { saveLearnedPatterns } from "@/utils/rule/learned-patterns";
-import { posthogCaptureEvent } from "@/utils/posthog";
 import { filterNullProperties } from "@/utils";
 import {
   delayInMinutesSchema,
   updateRuleConditionSchema,
 } from "@/utils/actions/rule.validation";
+import { createRuleSchema } from "@/utils/ai/rule/create-rule-schema";
 import { isMicrosoftProvider } from "@/utils/email/provider-types";
+import type { Logger } from "@/utils/logger";
+import { posthogCaptureEvent } from "@/utils/posthog";
+import prisma from "@/utils/prisma";
+import { isDuplicateError } from "@/utils/prisma-helpers";
+import { saveLearnedPatterns } from "@/utils/rule/learned-patterns";
+import {
+  createRule,
+  partialUpdateRule,
+  updateRuleActions,
+} from "@/utils/rule/rule";
 
 const emptyInputSchema = z.object({}).describe("No parameters required");
 
@@ -127,7 +127,7 @@ export const getUserRulesAndSettingsTool = ({
           (emailAccount?.rules || []).map((rule) => [
             rule.name,
             rule.updatedAt.toISOString(),
-          ]),
+          ])
         ),
       });
 
@@ -467,7 +467,7 @@ export const updateRuleActionsTool = ({
             folderName: z.string().nullish(),
           }),
           delayInMinutes: delayInMinutesSchema,
-        }),
+        })
       ),
     }),
     execute: async ({ ruleName, actions }) => {
@@ -625,7 +625,7 @@ export const updateLearnedPatternsTool = ({
                 subject: z.string().optional(),
               })
               .optional(),
-          }),
+          })
         )
         .min(1, "At least one learned pattern is required"),
     }),
@@ -745,7 +745,7 @@ export const updateAboutTool = ({
         .enum(["replace", "append"])
         .default("replace")
         .describe(
-          "Use 'append' to add to existing instructions, 'replace' to overwrite entirely.",
+          "Use 'append' to add to existing instructions, 'replace' to overwrite entirely."
         ),
     }),
     execute: async ({ about, mode }) => {
@@ -755,7 +755,9 @@ export const updateAboutTool = ({
         select: { about: true },
       });
 
-      if (!existing) return { error: "Account not found" };
+      if (!existing) {
+        return { error: "Account not found" };
+      }
 
       const updatedAbout =
         mode === "append" && existing.about
@@ -854,7 +856,9 @@ function validateRuleWasReadRecently({
     return "Rules may be stale. Call getUserRulesAndSettings again immediately before updating the rule.";
   }
 
-  if (!currentRuleUpdatedAt) return null;
+  if (!currentRuleUpdatedAt) {
+    return null;
+  }
 
   const lastReadRuleUpdatedAt =
     ruleReadState.ruleUpdatedAtByName.get(ruleName) || null;

@@ -1,19 +1,19 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { toastError } from "@/components/Toast";
-import { captureException } from "@/utils/error";
+import { useState } from "react";
 import type { GetDriveAuthUrlResponse } from "@/app/api/google/drive/auth-url/route";
-import { fetchWithAccount } from "@/utils/fetch";
+import { toastError } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { captureException } from "@/utils/error";
+import { fetchWithAccount } from "@/utils/fetch";
 
 export function ConnectDrive() {
   const { emailAccountId } = useAccount();
@@ -37,7 +37,9 @@ export function ConnectDrive() {
 
       const data: GetDriveAuthUrlResponse = await response.json();
 
-      if (!data?.url) throw new Error("Invalid auth URL");
+      if (!data?.url) {
+        throw new Error("Invalid auth URL");
+      }
 
       window.location.href = data.url;
     } catch (error) {
@@ -67,7 +69,9 @@ export function ConnectDrive() {
 
       const data: GetDriveAuthUrlResponse = await response.json();
 
-      if (!data?.url) throw new Error("Invalid auth URL");
+      if (!data?.url) {
+        throw new Error("Invalid auth URL");
+      }
 
       window.location.href = data.url;
     } catch (error) {
@@ -84,43 +88,43 @@ export function ConnectDrive() {
 
   return (
     <>
-      <div className="flex gap-2 flex-wrap md:flex-nowrap">
+      <div className="flex flex-wrap gap-2 md:flex-nowrap">
         <Button
-          onClick={() => setGoogleDialogOpen(true)}
+          className="flex w-full items-center gap-2 md:w-auto"
           disabled={isConnectingGoogle || isConnectingMicrosoft}
           loading={isConnectingGoogle}
+          onClick={() => setGoogleDialogOpen(true)}
           variant="outline"
-          className="flex items-center gap-2 w-full md:w-auto"
         >
           <Image
-            src="/images/google.svg"
             alt="Google Drive"
-            width={16}
             height={16}
+            src="/images/google.svg"
             unoptimized
+            width={16}
           />
           {isConnectingGoogle ? "Connecting..." : "Add Google Drive"}
         </Button>
 
         <Button
-          onClick={handleConnectMicrosoft}
+          className="flex w-full items-center gap-2 md:w-auto"
           disabled={isConnectingGoogle || isConnectingMicrosoft}
           loading={isConnectingMicrosoft}
+          onClick={handleConnectMicrosoft}
           variant="outline"
-          className="flex items-center gap-2 w-full md:w-auto"
         >
           <Image
-            src="/images/microsoft.svg"
             alt="OneDrive"
-            width={16}
             height={16}
+            src="/images/microsoft.svg"
             unoptimized
+            width={16}
           />
           {isConnectingMicrosoft ? "Connecting..." : "Add OneDrive"}
         </Button>
       </div>
 
-      <Dialog open={googleDialogOpen} onOpenChange={setGoogleDialogOpen}>
+      <Dialog onOpenChange={setGoogleDialogOpen} open={googleDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Connect Google Drive</DialogTitle>
@@ -129,19 +133,19 @@ export function ConnectDrive() {
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-4 rounded-md border p-3">
               <div>
-                <p className="text-sm font-medium">Standard</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="font-medium text-sm">Standard</p>
+                <p className="text-muted-foreground text-xs">
                   You&apos;ll need to create new folders for filing
                 </p>
               </div>
               <Button
-                size="sm"
+                disabled={isConnectingGoogle}
+                loading={isConnectingGoogle}
                 onClick={() => {
                   setGoogleDialogOpen(false);
                   handleConnectGoogle("limited");
                 }}
-                disabled={isConnectingGoogle}
-                loading={isConnectingGoogle}
+                size="sm"
               >
                 Connect
               </Button>
@@ -149,24 +153,24 @@ export function ConnectDrive() {
 
             <div className="flex items-center justify-between gap-4 rounded-md border p-3">
               <div>
-                <p className="text-sm font-medium">Full access</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="font-medium text-sm">Full access</p>
+                <p className="text-muted-foreground text-xs">
                   Use your existing folders
                 </p>
-                <p className="mt-1 text-xs text-amber-600">
+                <p className="mt-1 text-amber-600 text-xs">
                   Google will show a warning — we&apos;re working on
                   verification
                 </p>
               </div>
               <Button
-                size="sm"
-                variant="outline"
+                disabled={isConnectingGoogle}
+                loading={isConnectingGoogle}
                 onClick={() => {
                   setGoogleDialogOpen(false);
                   handleConnectGoogle("full");
                 }}
-                disabled={isConnectingGoogle}
-                loading={isConnectingGoogle}
+                size="sm"
+                variant="outline"
               >
                 Connect
               </Button>

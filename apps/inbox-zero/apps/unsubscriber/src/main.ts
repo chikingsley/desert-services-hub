@@ -1,8 +1,9 @@
 /** biome-ignore-all lint/suspicious/noConsole: not used in production yet */
-import { chromium } from "playwright";
-import type { Page, Locator } from "playwright";
-import { z } from "zod";
+
 import { generateText } from "ai";
+import type { Locator, Page } from "playwright";
+import { chromium } from "playwright";
+import { z } from "zod";
 import { env } from "./env";
 import { getModel } from "./llm";
 
@@ -21,7 +22,7 @@ const pageAnalysisSchema = z.object({
       type: z.enum(["click", "fill", "select", "submit"]),
       selector: z.string(),
       value: z.string().optional(),
-    }),
+    })
   ),
   confirmationIndicator: z.string().nullable(),
 });
@@ -32,7 +33,7 @@ async function analyzePageWithAI(pageContent: string): Promise<PageAnalysis> {
   const contentToAnalyze = pageContent.slice(0, MAX_CONTENT_LENGTH);
   if (contentToAnalyze.length < pageContent.length) {
     console.warn(
-      `Page content exceeds ${MAX_CONTENT_LENGTH} characters. Truncated.`,
+      `Page content exceeds ${MAX_CONTENT_LENGTH} characters. Truncated.`
     );
   }
 
@@ -57,7 +58,7 @@ async function analyzePageWithAI(pageContent: string): Promise<PageAnalysis> {
     const { text: analysisText } = await Promise.race([
       generateText({ model, prompt }),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("AI analysis timeout")), AI_TIMEOUT),
+        setTimeout(() => reject(new Error("AI analysis timeout")), AI_TIMEOUT)
       ),
     ]);
 
@@ -68,7 +69,7 @@ async function analyzePageWithAI(pageContent: string): Promise<PageAnalysis> {
     console.error("Error in AI analysis:", error);
     console.error(
       "Raw AI response:",
-      error instanceof Error ? error.message : String(error),
+      error instanceof Error ? error.message : String(error)
     );
     throw new Error("Failed to generate or parse AI analysis");
   }
@@ -76,7 +77,7 @@ async function analyzePageWithAI(pageContent: string): Promise<PageAnalysis> {
 
 async function performUnsubscribeActions(
   page: Page,
-  actions: PageAnalysis["actions"],
+  actions: PageAnalysis["actions"]
 ) {
   for (const action of actions) {
     let retries = 0;
@@ -107,12 +108,12 @@ async function performUnsubscribeActions(
         console.warn(
           `Failed to perform action: ${action.type} on ${action.selector}. Retry ${
             retries + 1
-          }/${MAX_RETRIES}. Error: ${error instanceof Error ? error.message : String(error)}`,
+          }/${MAX_RETRIES}. Error: ${error instanceof Error ? error.message : String(error)}`
         );
         retries++;
         if (retries >= MAX_RETRIES) {
           console.error(
-            `Max retries reached for action: ${action.type} on ${action.selector}`,
+            `Max retries reached for action: ${action.type} on ${action.selector}`
           );
         } else {
           await page.waitForTimeout(RETRY_DELAY);
@@ -127,7 +128,7 @@ async function performUnsubscribeActions(
 
 async function performAction(
   locator: Locator,
-  action: PageAnalysis["actions"][number],
+  action: PageAnalysis["actions"][number]
 ) {
   switch (action.type) {
     case "click":
@@ -195,7 +196,7 @@ async function performFallbackUnsubscribe(page: Page): Promise<boolean> {
     } catch (error) {
       console.warn(
         `Error trying to click ${selector}:`,
-        error instanceof Error ? error.message : String(error),
+        error instanceof Error ? error.message : String(error)
       );
     }
   }
@@ -242,7 +243,7 @@ export async function autoUnsubscribe(url: string): Promise<boolean> {
 
     const confirmationFound = await checkConfirmation(
       page,
-      analysis.confirmationIndicator,
+      analysis.confirmationIndicator
     );
 
     if (confirmationFound) {
@@ -254,7 +255,7 @@ export async function autoUnsubscribe(url: string): Promise<boolean> {
     await takeScreenshotIfNotProduction(
       page,
       isProduction,
-      "final-state-screenshot.png",
+      "final-state-screenshot.png"
     );
     return false;
   } catch (error) {
@@ -262,7 +263,7 @@ export async function autoUnsubscribe(url: string): Promise<boolean> {
     await takeScreenshotIfNotProduction(
       page,
       isProduction,
-      "error-screenshot.png",
+      "error-screenshot.png"
     );
     return false;
   } finally {
@@ -291,10 +292,11 @@ async function waitForNetworkIdle(page: Page) {
 
 async function checkConfirmation(
   page: Page,
-  confirmationIndicator: string | null,
+  confirmationIndicator: string | null
 ): Promise<boolean> {
-  if (confirmationIndicator)
+  if (confirmationIndicator) {
     return page.locator(confirmationIndicator).isVisible();
+  }
 
   const finalContent = await page.content();
   const lowercaseContent = finalContent.toLowerCase();
@@ -307,7 +309,9 @@ async function checkConfirmation(
 async function takeScreenshotIfNotProduction(
   page: Page,
   isProduction: boolean,
-  filename: string,
+  filename: string
 ) {
-  if (!isProduction) await page.screenshot({ path: filename, fullPage: true });
+  if (!isProduction) {
+    await page.screenshot({ path: filename, fullPage: true });
+  }
 }

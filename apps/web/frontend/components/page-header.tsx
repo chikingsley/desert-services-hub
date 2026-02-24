@@ -12,11 +12,11 @@ import { Separator } from "@/apps/web/frontend/components/ui/separator";
 import { SidebarTrigger } from "@/apps/web/frontend/components/ui/sidebar";
 
 interface PageHeaderProps {
-  title: string;
-  description?: string;
+  actions?: React.ReactNode;
   breadcrumbs?: { label: string; href?: string }[];
   centerActions?: React.ReactNode;
-  actions?: React.ReactNode;
+  description?: string;
+  title: string;
 }
 
 export function PageHeader({

@@ -64,5 +64,5 @@ export const GET = withEmailAccount(
       messageIds: parsed.data.messageIds,
     });
     return NextResponse.json(result);
-  },
+  }
 );

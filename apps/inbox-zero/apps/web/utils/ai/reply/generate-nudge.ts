@@ -1,12 +1,12 @@
-import { createGenerateText } from "@/utils/llms";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailForLLM } from "@/utils/types";
 import { getEmailListPrompt, getTodayForLLM } from "@/utils/ai/helpers";
-import { getModel } from "@/utils/llms/model";
 import {
   PLAIN_TEXT_OUTPUT_INSTRUCTION,
   PROMPT_SECURITY_INSTRUCTIONS,
 } from "@/utils/ai/security";
+import { createGenerateText } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { EmailForLLM } from "@/utils/types";
 
 export async function aiGenerateNudge({
   messages,

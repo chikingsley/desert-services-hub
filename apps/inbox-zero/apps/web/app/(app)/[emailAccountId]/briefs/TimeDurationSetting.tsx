@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useForm, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
+import { useCallback, useState } from "react";
+import { type FieldErrors, useForm } from "react-hook-form";
 import { useDebounceCallback } from "usehooks-ts";
+import { LoadingMiniSpinner } from "@/components/Loading";
+import { toastError, toastSuccess } from "@/components/Toast";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -12,14 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toastError, toastSuccess } from "@/components/Toast";
 import { useAccount } from "@/providers/EmailAccountProvider";
-import { useAction } from "next-safe-action/hooks";
 import { updateMeetingBriefsMinutesBeforeAction } from "@/utils/actions/meeting-briefs";
-import { LoadingMiniSpinner } from "@/components/Loading";
 import {
-  updateMeetingBriefsMinutesBeforeBody,
   type UpdateMeetingBriefsMinutesBeforeBody,
+  updateMeetingBriefsMinutesBeforeBody,
 } from "@/utils/actions/meeting-briefs.validation";
 
 type Unit = "minutes" | "hours";
@@ -54,14 +54,14 @@ export function TimeDurationSetting({
     });
 
   const [value, setValue] = useState(
-    () => minutesToValueAndUnit(initialMinutes).value,
+    () => minutesToValueAndUnit(initialMinutes).value
   );
   const [unit, setUnit] = useState<Unit>(
-    () => minutesToValueAndUnit(initialMinutes).unit,
+    () => minutesToValueAndUnit(initialMinutes).unit
   );
 
   const { executeAsync, isExecuting } = useAction(
-    updateMeetingBriefsMinutesBeforeAction.bind(null, emailAccountId),
+    updateMeetingBriefsMinutesBeforeAction.bind(null, emailAccountId)
   );
 
   const onSubmit = useCallback(
@@ -79,15 +79,17 @@ export function TimeDurationSetting({
       });
       onSaved();
     },
-    [executeAsync, onSaved],
+    [executeAsync, onSaved]
   );
 
   const onError = useCallback(
     (errors: FieldErrors<UpdateMeetingBriefsMinutesBeforeBody>) => {
       const msg = errors.minutesBefore?.message;
-      if (msg) toastError({ description: msg });
+      if (msg) {
+        toastError({ description: msg });
+      }
     },
-    [],
+    []
   );
 
   const updateAndSubmit = useDebounceCallback((nextMinutesBefore: number) => {
@@ -104,23 +106,23 @@ export function TimeDurationSetting({
         {isExecuting && <LoadingMiniSpinner />}
       </div>
       <Input
-        type="number"
+        className="w-20"
         min={1}
-        value={value}
         onChange={(e) => {
           const nextValue = Number(e.target.value) || 1;
           setValue(nextValue);
           updateAndSubmit(valueAndUnitToMinutes(nextValue, unit));
         }}
-        className="w-20"
+        type="number"
+        value={value}
       />
       <Select
-        value={unit}
         onValueChange={(v) => {
           const nextUnit = v as Unit;
           setUnit(nextUnit);
           updateAndSubmit(valueAndUnitToMinutes(value, nextUnit));
         }}
+        value={unit}
       >
         <SelectTrigger className="w-24">
           <SelectValue />

@@ -15,44 +15,44 @@ import { Button } from "@/apps/web/frontend/components/ui/button";
 import { Input } from "@/apps/web/frontend/components/ui/input";
 
 export interface CatalogItemData {
-  id: string;
   code: string;
-  name: string;
-  description: string | null;
-  price: number;
-  unit: string;
-  notes: string | null;
   defaultQty: number;
+  description: string | null;
+  id: string;
   isActive: boolean;
   isTakeoffItem: boolean;
+  name: string;
+  notes: string | null;
+  price: number;
   sortOrder: number;
+  unit: string;
 }
 
 export interface SubcategoryData {
+  hidden: boolean;
   id: string;
+  items: CatalogItemData[];
   name: string;
   selectionMode: string;
-  hidden: boolean;
   sortOrder: number;
-  items: CatalogItemData[];
 }
 
 export interface CategoryData {
   id: string;
+  items: CatalogItemData[];
   name: string;
   selectionMode: string;
-  supportsTakeoff: boolean;
   sortOrder: number;
-  items: CatalogItemData[];
   subcategories: SubcategoryData[];
+  supportsTakeoff: boolean;
 }
 
 interface CatalogContentProps {
-  initialData: CategoryData[];
   initialBundles?: Bundle[];
+  initialData: CategoryData[];
+  onAddCategoryClick?: () => void;
   readOnly?: boolean;
   showAddCategory?: boolean;
-  onAddCategoryClick?: () => void;
 }
 
 export function CatalogContent({

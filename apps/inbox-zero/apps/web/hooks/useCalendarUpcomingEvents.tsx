@@ -3,6 +3,6 @@ import type { GetCalendarUpcomingEventsResponse } from "@/app/api/user/calendar/
 
 export function useCalendarUpcomingEvents() {
   return useSWR<GetCalendarUpcomingEventsResponse>(
-    "/api/user/calendar/upcoming-events",
+    "/api/user/calendar/upcoming-events"
   );
 }

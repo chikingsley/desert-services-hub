@@ -5,15 +5,15 @@ import { dirname } from "node:path";
 import { createUserContent, GoogleGenAI } from "@google/genai";
 
 interface BenchmarkResult {
-  permitId: string;
-  status: "scored" | "skipped" | "error";
-  metrics: { iou: number } | null;
   hints: {
     projectName: string | null;
     parcelRaw: string | null;
     address: string | null;
     city: string | null;
   };
+  metrics: { iou: number } | null;
+  permitId: string;
+  status: "scored" | "skipped" | "error";
 }
 
 interface BenchmarkInput {
@@ -21,45 +21,38 @@ interface BenchmarkInput {
 }
 
 interface PermitRow {
-  permitId: string;
-  projectId: number | null;
-  projectName: string | null;
   address: string | null;
   city: string | null;
   parcel: string | null;
+  permitId: string;
+  projectId: number | null;
+  projectName: string | null;
 }
 
 interface DocumentRow {
-  id: number;
-  fileName: string | null;
-  documentType: string | null;
-  emailId: number | null;
   attachmentId: number | null;
   createdAt: string | null;
+  documentType: string | null;
+  emailId: number | null;
+  fileName: string | null;
+  id: number;
 }
 
 interface ProbeExtraction {
   apn_candidates: string[];
-  coordinates: Array<{ lat: number; lng: number; context: string | null }>;
   apn_coordinate_pairs: Array<{
     apn: string;
     lat: number;
     lng: number;
     context: string | null;
   }>;
+  coordinates: Array<{ lat: number; lng: number; context: string | null }>;
   disturbed_acres: number | null;
-  site_address: string | null;
   notes: string[];
+  site_address: string | null;
 }
 
 interface PermitProbeResult {
-  permitId: string;
-  iou: number | null;
-  projectId: number | null;
-  projectName: string | null;
-  parcel: string | null;
-  docsAttempted: number;
-  docsSucceeded: number;
   docs: Array<{
     docId: number;
     fileName: string | null;
@@ -71,17 +64,24 @@ interface PermitProbeResult {
     error: string | null;
     extraction: ProbeExtraction | null;
   }>;
+  docsAttempted: number;
+  docsSucceeded: number;
+  iou: number | null;
+  parcel: string | null;
+  permitId: string;
+  projectId: number | null;
+  projectName: string | null;
 }
 
 interface CliArgs {
   benchmarkPath: string;
-  outPath: string;
-  maxPermits: number;
-  maxDocsPerPermit: number;
   maxDocBytes: number;
+  maxDocsPerPermit: number;
   maxIou: number;
-  permitIds: string[];
+  maxPermits: number;
   model: string;
+  outPath: string;
+  permitIds: string[];
 }
 
 const DEFAULT_CONTAINER = "supabase_db_desert-services-hub";

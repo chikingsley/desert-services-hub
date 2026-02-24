@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { withError } from "@/utils/middleware";
-import { validateApiKeyAndGetEmailProvider } from "@/utils/api-auth";
-import { getEmailAccountId } from "@/app/api/v1/helpers";
 import { getResponseTimeStats } from "@/app/api/user/stats/response-time/controller";
+import { getEmailAccountId } from "@/app/api/v1/helpers";
+import { validateApiKeyAndGetEmailProvider } from "@/utils/api-auth";
+import { withError } from "@/utils/middleware";
 import { responseTimeQuerySchema } from "./validation";
 
 export const GET = withError("v1/stats/response-time", async (request) => {
@@ -11,13 +11,13 @@ export const GET = withError("v1/stats/response-time", async (request) => {
 
   const { searchParams } = new URL(request.url);
   const queryResult = responseTimeQuerySchema.safeParse(
-    Object.fromEntries(searchParams),
+    Object.fromEntries(searchParams)
   );
 
   if (!queryResult.success) {
     return NextResponse.json(
       { error: "Invalid query parameters" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -32,7 +32,7 @@ export const GET = withError("v1/stats/response-time", async (request) => {
   if (!emailAccountId) {
     return NextResponse.json(
       { error: "Email account not found" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 

@@ -19,18 +19,18 @@ import {
 import { cn } from "@/lib/utils";
 
 export interface FacetOption {
+  count?: number;
   label: string;
   value: string;
-  count?: number;
 }
 
 interface FacetedMultiSelectProps {
-  title: string;
-  options: FacetOption[];
-  selectedValues: string[];
-  onApply: (values: string[]) => void;
   className?: string;
+  onApply: (values: string[]) => void;
+  options: FacetOption[];
   searchPlaceholder?: string;
+  selectedValues: string[];
+  title: string;
 }
 
 export function FacetedMultiSelect({

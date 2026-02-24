@@ -29,7 +29,7 @@ const strategy: RetrievalStrategy = {
          FROM emails e, plainto_tsquery('english', $1) q(query)
          WHERE e.search_vector @@ q.query AND e.project_id IS NOT NULL
          GROUP BY e.project_id
-         ORDER BY max_rank DESC, email_count DESC LIMIT 30`,
+         ORDER BY max_rank DESC, email_count DESC LIMIT 30`
       )
       .all(subject);
 
@@ -43,7 +43,7 @@ const strategy: RetrievalStrategy = {
         `SELECT psi.project_id, ts_rank(psi.search_vector, q.query) AS rank
          FROM project_search_index psi, plainto_tsquery('english', $1) q(query)
          WHERE psi.search_vector @@ q.query
-         ORDER BY rank DESC LIMIT 30`,
+         ORDER BY rank DESC LIMIT 30`
       )
       .all(subject);
 
@@ -66,7 +66,7 @@ const strategy: RetrievalStrategy = {
            lower($1)
          ) > 0.15
          GROUP BY pe.project_id
-         ORDER BY sim DESC LIMIT 20`,
+         ORDER BY sim DESC LIMIT 20`
       )
       .all(subject);
 
@@ -82,7 +82,7 @@ const strategy: RetrievalStrategy = {
          WHERE to_tsvector('english', COALESCE(d.summary, '')) @@ q.query
            AND d.project_id IS NOT NULL
          GROUP BY d.project_id
-         ORDER BY doc_count DESC LIMIT 20`,
+         ORDER BY doc_count DESC LIMIT 20`
       )
       .all(subject);
 
@@ -90,7 +90,9 @@ const strategy: RetrievalStrategy = {
       addScore(r.project_id, r.doc_count * 10);
     }
 
-    if (scores.size === 0) return [];
+    if (scores.size === 0) {
+      return [];
+    }
 
     // Take top 20 candidates
     const ranked = [...scores.entries()]
@@ -105,7 +107,7 @@ const strategy: RetrievalStrategy = {
       .query<{ project_id: number; raw_text: string }>(
         `SELECT project_id, LEFT(raw_text, 4000) AS raw_text
          FROM project_search_index
-         WHERE project_id IN (${placeholders})`,
+         WHERE project_id IN (${placeholders})`
       )
       .all(...projectIds);
 
@@ -113,7 +115,7 @@ const strategy: RetrievalStrategy = {
 
     // Build rich documents for reranker (up to 4000 chars each)
     const orderedDocs = projectIds.map(
-      (pid) => psiMap.get(pid) ?? `Project ${pid}`,
+      (pid) => psiMap.get(pid) ?? `Project ${pid}`
     );
 
     try {
@@ -127,10 +129,7 @@ const strategy: RetrievalStrategy = {
 
       return response.results.map((r) => projectIds[r.index]);
     } catch (err) {
-      console.warn(
-        `  Reranker failed for ${query._id}, using FTS order:`,
-        err,
-      );
+      console.warn(`  Reranker failed for ${query._id}, using FTS order:`, err);
       return projectIds;
     }
   },

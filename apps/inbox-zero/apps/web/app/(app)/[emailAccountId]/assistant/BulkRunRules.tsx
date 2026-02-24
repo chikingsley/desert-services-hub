@@ -1,26 +1,24 @@
 "use client";
 
-import { useReducer, useRef, useState } from "react";
+import { PauseIcon, PlayIcon, SquareIcon } from "lucide-react";
 import Link from "next/link";
-import { HistoryIcon, PauseIcon, PlayIcon, SquareIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SectionDescription } from "@/components/Typography";
+import { useReducer, useRef, useState } from "react";
+import { BulkProcessActivityLog } from "@/app/(app)/[emailAccountId]/assistant/BulkProcessActivityLog";
+import {
+  bulkRunReducer,
+  getProgressMessage,
+  initialBulkRunState,
+} from "@/app/(app)/[emailAccountId]/assistant/bulk-run-rules-reducer";
+import { SetDateDropdown } from "@/app/(app)/[emailAccountId]/assistant/SetDateDropdown";
+import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
 import type { ThreadsResponse } from "@/app/api/threads/route";
 import type { ThreadsQuery } from "@/app/api/threads/validation";
 import { LoadingContent } from "@/components/LoadingContent";
-import { runAiRules } from "@/utils/queue/email-actions";
-import {
-  pauseAiQueue,
-  resumeAiQueue,
-  clearAiQueue,
-} from "@/utils/queue/ai-queue";
-import { sleep } from "@/utils/sleep";
-import { toastError } from "@/components/Toast";
 import { PremiumAlertWithData, usePremium } from "@/components/PremiumAlert";
-import { SetDateDropdown } from "@/app/(app)/[emailAccountId]/assistant/SetDateDropdown";
-import { useThreads } from "@/hooks/useThreads";
-import { useBeforeUnload } from "@/hooks/useBeforeUnload";
-import { useAiQueueState, clearAiQueueAtom } from "@/store/ai-queue";
+import { toastError } from "@/components/Toast";
+import { Toggle } from "@/components/Toggle";
+import { SectionDescription } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -29,17 +27,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useBeforeUnload } from "@/hooks/useBeforeUnload";
+import { useThreads } from "@/hooks/useThreads";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { clearAiQueueAtom, useAiQueueState } from "@/store/ai-queue";
 import { fetchWithAccount } from "@/utils/fetch";
-import { Toggle } from "@/components/Toggle";
 import { hasTierAccess } from "@/utils/premium";
-import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
-import { BulkProcessActivityLog } from "@/app/(app)/[emailAccountId]/assistant/BulkProcessActivityLog";
 import {
-  bulkRunReducer,
-  getProgressMessage,
-  initialBulkRunState,
-} from "@/app/(app)/[emailAccountId]/assistant/bulk-run-rules-reducer";
+  clearAiQueue,
+  pauseAiQueue,
+  resumeAiQueue,
+} from "@/utils/queue/ai-queue";
+import { runAiRules } from "@/utils/queue/email-actions";
+import { sleep } from "@/utils/sleep";
 
 export function BulkRunRules() {
   const { emailAccountId } = useAccount();
@@ -67,7 +67,7 @@ export function BulkRunRules() {
 
   // Derived state
   const remaining = new Set(
-    [...state.processedThreadIds].filter((id) => queue.has(id)),
+    [...state.processedThreadIds].filter((id) => queue.has(id))
   ).size;
   const completed = state.processedThreadIds.size - remaining;
   const isProcessing = queue.size > 0;
@@ -105,7 +105,7 @@ export function BulkRunRules() {
         },
         (_completionStatus, count) => {
           dispatch({ type: "COMPLETE", count });
-        },
+        }
       );
     } catch (error) {
       console.error("Failed to start bulk processing:", error);
@@ -138,9 +138,9 @@ export function BulkRunRules() {
 
   return (
     <div>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog onOpenChange={setIsOpen} open={isOpen}>
         <DialogTrigger asChild>
-          <Button type="button" variant="outline" size="sm">
+          <Button size="sm" type="button" variant="outline">
             Process Past Emails
           </Button>
         </DialogTrigger>
@@ -152,7 +152,7 @@ export function BulkRunRules() {
               yet.
             </DialogDescription>
           </DialogHeader>
-          <LoadingContent loading={isLoading} error={error}>
+          <LoadingContent error={error} loading={isLoading}>
             {data && (
               <>
                 {progressMessage && (
@@ -168,41 +168,41 @@ export function BulkRunRules() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <SetDateDropdown
+                        disabled={isProcessing}
                         onChange={(date) => {
                           setStartDate(date);
                           dispatch({ type: "RESET" });
                         }}
-                        value={startDate}
                         placeholder="Set start date"
-                        disabled={isProcessing}
+                        value={startDate}
                       />
                       <SetDateDropdown
+                        disabled={isProcessing}
                         onChange={(date) => {
                           setEndDate(date);
                           dispatch({ type: "RESET" });
                         }}
-                        value={endDate}
                         placeholder="Set end date (optional)"
-                        disabled={isProcessing}
+                        value={endDate}
                       />
                     </div>
 
                     <div className="flex items-center justify-between gap-4">
                       <Toggle
-                        name="include-read"
-                        label="Include read emails"
-                        enabled={includeRead}
-                        onChange={(enabled) => setIncludeRead(enabled)}
                         disabled={isProcessing || !isBusinessPlusTier}
+                        enabled={includeRead}
+                        label="Include read emails"
+                        name="include-read"
+                        onChange={(enabled) => setIncludeRead(enabled)}
                       />
                       {!isBusinessPlusTier && hasAiAccess && (
                         <Link
+                          className="whitespace-nowrap text-primary text-sm hover:underline"
                           href="/settings"
                           onClick={(e) => {
                             e.preventDefault();
                             openModal();
                           }}
-                          className="text-sm text-primary hover:underline whitespace-nowrap"
                         >
                           Upgrade to Professional to enable
                         </Link>
@@ -212,32 +212,32 @@ export function BulkRunRules() {
                     {(state.status !== "idle" ||
                       state.processedThreadIds.size > 0) && (
                       <BulkProcessActivityLog
-                        threads={Array.from(state.fetchedThreads.values())}
-                        processedThreadIds={state.processedThreadIds}
                         aiQueue={queue}
-                        paused={isPaused}
                         loading={
                           state.status === "processing" &&
                           state.processedThreadIds.size === 0
                         }
+                        paused={isPaused}
+                        processedThreadIds={state.processedThreadIds}
+                        threads={Array.from(state.fetchedThreads.values())}
                       />
                     )}
 
                     {(state.status === "idle" || state.status === "stopped") &&
                       !isProcessing && (
                         <Button
-                          type="button"
                           disabled={
-                            !startDate || !emailAccountId || !hasAiAccess
+                            !(startDate && emailAccountId && hasAiAccess)
                           }
                           onClick={handleStart}
+                          type="button"
                         >
                           Process Emails
                         </Button>
                       )}
                     {isBusy && (
                       <div className="flex justify-end gap-2">
-                        <Button size="sm" onClick={handlePauseResume}>
+                        <Button onClick={handlePauseResume} size="sm">
                           {isPaused ? (
                             <>
                               <PlayIcon className="mr-1.5 h-3.5 w-3.5" />
@@ -251,9 +251,9 @@ export function BulkRunRules() {
                           )}
                         </Button>
                         <Button
-                          variant="outline"
-                          size="sm"
                           onClick={handleStop}
+                          size="sm"
+                          variant="outline"
                         >
                           <SquareIcon className="mr-1.5 h-3.5 w-3.5" />
                           Stop
@@ -262,7 +262,7 @@ export function BulkRunRules() {
                     )}
 
                     {state.runResult && state.runResult.count === 0 && (
-                      <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
+                      <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-blue-800 text-sm dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">
                         No {includeRead ? "" : "unread "}emails found in the
                         selected date range.
                       </div>
@@ -288,10 +288,7 @@ async function onRun(
     includeRead,
   }: { startDate: Date; endDate?: Date; includeRead?: boolean },
   onThreadsQueued: (threads: ThreadsResponse["threads"]) => void,
-  onComplete: (
-    status: "success" | "error" | "cancelled",
-    count: number,
-  ) => void,
+  onComplete: (status: "success" | "error" | "cancelled", count: number) => void
 ) {
   let nextPageToken = "";
   const LIMIT = 25;
@@ -310,7 +307,7 @@ async function onRun(
         limit: LIMIT,
         after: startDate,
         ...(endDate ? { before: endDate } : {}),
-        ...(!includeRead ? { isUnread: true } : {}),
+        ...(includeRead ? {} : { isUnread: true }),
         ...(nextPageToken ? { nextPageToken } : {}),
       };
 
@@ -362,7 +359,9 @@ async function onRun(
         return;
       }
 
-      if (!nextPageToken) break;
+      if (!nextPageToken) {
+        break;
+      }
 
       // avoid gmail api rate limits
       // ai takes longer anyway

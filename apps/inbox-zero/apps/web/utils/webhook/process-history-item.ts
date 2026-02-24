@@ -1,28 +1,28 @@
 import { after } from "next/server";
-import prisma from "@/utils/prisma";
+import type { EmailAccount } from "@/generated/prisma/client";
+import { NewsletterStatus } from "@/generated/prisma/enums";
 import { runRules } from "@/utils/ai/choose-rule/run-rules";
-import { categorizeSender } from "@/utils/categorize/senders/categorize";
 import { isAssistantEmail } from "@/utils/assistant/is-assistant-email";
 import { processAssistantEmail } from "@/utils/assistant/process-assistant-email";
-import { isFilebotEmail } from "@/utils/filebot/is-filebot-email";
-import { processFilingReply } from "@/utils/drive/handle-filing-reply";
+import { categorizeSender } from "@/utils/categorize/senders/categorize";
 import {
-  processAttachment,
   getExtractableAttachments,
+  processAttachment,
 } from "@/utils/drive/filing-engine";
-import { handleOutboundMessage } from "@/utils/reply-tracker/handle-outbound";
-import { cleanupThreadAIDrafts } from "@/utils/reply-tracker/draft-tracking";
-import { clearFollowUpLabel } from "@/utils/follow-up/labels";
-import { NewsletterStatus } from "@/generated/prisma/enums";
-import type { EmailAccount } from "@/generated/prisma/client";
+import { processFilingReply } from "@/utils/drive/handle-filing-reply";
 import { extractEmailAddress, extractNameFromEmail } from "@/utils/email";
-import { isIgnoredSender } from "@/utils/filter-ignored-senders";
 import type { EmailProvider } from "@/utils/email/types";
-import type { ParsedMessage, RuleWithActions } from "@/utils/types";
+import { captureException } from "@/utils/error";
+import { isFilebotEmail } from "@/utils/filebot/is-filebot-email";
+import { isIgnoredSender } from "@/utils/filter-ignored-senders";
+import { clearFollowUpLabel } from "@/utils/follow-up/labels";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { Logger } from "@/utils/logger";
 import { runWithBackgroundLoggerFlush } from "@/utils/logger-flush";
-import { captureException } from "@/utils/error";
+import prisma from "@/utils/prisma";
+import { cleanupThreadAIDrafts } from "@/utils/reply-tracker/draft-tracking";
+import { handleOutboundMessage } from "@/utils/reply-tracker/handle-outbound";
+import type { ParsedMessage, RuleWithActions } from "@/utils/types";
 
 export type SharedProcessHistoryOptions = {
   provider: EmailProvider;
@@ -47,7 +47,7 @@ export async function processHistoryItem(
     threadId?: string;
     message?: ParsedMessage;
   },
-  options: SharedProcessHistoryOptions,
+  options: SharedProcessHistoryOptions
 ) {
   const {
     provider,
@@ -193,7 +193,7 @@ export async function processHistoryItem(
           emailAccount,
           provider,
           undefined,
-          senderName !== sender ? senderName : undefined,
+          senderName !== sender ? senderName : undefined
         );
       }
     }
@@ -255,7 +255,7 @@ export async function processHistoryItem(
             }
           },
           extra: { operation: "process-attachments" },
-        }),
+        })
       );
     }
 
@@ -296,7 +296,7 @@ export async function processHistoryItem(
             }
           },
           extra: { operation: "cleanup-thread-ai-drafts" },
-        }),
+        })
       );
     }
   } catch (error: unknown) {

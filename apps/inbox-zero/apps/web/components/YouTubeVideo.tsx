@@ -16,14 +16,14 @@ export function YouTubeVideo(props: {
 }) {
   return (
     <YouTube
-      videoId={props.videoId}
-      title={props.title}
       className={cn("aspect-video h-full w-full rounded-lg", props.className)}
       iframeClassName={props.iframeClassName}
       opts={{
         ...props.opts,
         rel: 0,
       }}
+      title={props.title}
+      videoId={props.videoId}
     />
   );
 }

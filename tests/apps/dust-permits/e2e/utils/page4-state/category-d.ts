@@ -12,8 +12,8 @@ import type { ValidationHelpers } from "./helpers";
 
 export interface CategoryD1State {
   applies: boolean;
-  hasApplyWaterTop: boolean;
   hasApplyDustSuppressants: boolean;
+  hasApplyWaterTop: boolean;
   hasCeaseOperations: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
@@ -21,11 +21,11 @@ export interface CategoryD1State {
 
 export interface CategoryD2State {
   applies: boolean;
-  hasLimitSpeed: boolean;
-  hasApplyWaterTop: boolean;
   hasApplyDustSuppressants: boolean;
-  hasCoverHaulTrucks: boolean;
+  hasApplyWaterTop: boolean;
   hasCeaseOperations: boolean;
+  hasCoverHaulTrucks: boolean;
+  hasLimitSpeed: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
 }
@@ -39,23 +39,23 @@ export interface CategoryD3State {
 
 export interface CategoryD4State {
   applies: boolean;
-  hasApplyWater: boolean;
   hasApplyDustSuppressants: boolean;
-  hasSuppressantFrequency: boolean;
-  hasSuppressantAmount: boolean;
+  hasApplyWater: boolean;
   hasCeaseOperations: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
+  hasSuppressantAmount: boolean;
+  hasSuppressantFrequency: boolean;
 }
 
 export interface CategoryD5State {
   applies: boolean;
   hasCoverPiles: boolean;
-  hasMaintainMoisture: boolean;
   hasMaintainCrust: boolean;
-  hasWindBarriers: boolean;
+  hasMaintainMoisture: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
+  hasWindBarriers: boolean;
 }
 
 export function getCategoryDState(

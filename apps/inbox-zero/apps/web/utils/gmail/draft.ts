@@ -1,10 +1,10 @@
 import type { gmail_v1 } from "@googleapis/gmail";
-import { createScopedLogger } from "@/utils/logger";
-import { parseMessage } from "@/utils/gmail/message";
-import { GmailLabel } from "@/utils/gmail/label";
-import type { MessageWithPayload } from "@/utils/types";
 import { isGmailError } from "@/utils/error";
+import { GmailLabel } from "@/utils/gmail/label";
+import { parseMessage } from "@/utils/gmail/message";
 import { withGmailRetry } from "@/utils/gmail/retry";
+import { createScopedLogger } from "@/utils/logger";
+import type { MessageWithPayload } from "@/utils/types";
 
 const logger = createScopedLogger("gmail/draft");
 
@@ -16,7 +16,7 @@ export async function getDraft(draftId: string, gmail: gmail_v1.Gmail) {
         userId: "me",
         id: draftId,
         format: "full",
-      }),
+      })
     );
 
     logger.info("Draft API response received", {
@@ -45,7 +45,7 @@ export async function getDraft(draftId: string, gmail: gmail_v1.Gmail) {
           hasDraftLabel,
           hasSentLabel,
           labelIds,
-        },
+        }
       );
       return null;
     }
@@ -61,7 +61,9 @@ export async function getDraft(draftId: string, gmail: gmail_v1.Gmail) {
 }
 
 function isNotFoundError(error: unknown): boolean {
-  if (isGmailError(error) && error.code === 404) return true;
+  if (isGmailError(error) && error.code === 404) {
+    return true;
+  }
 
   // biome-ignore lint/suspicious/noExplicitAny: simple
   const err = error as any;
@@ -90,7 +92,7 @@ function isValidGmailDraftId(draftId: string): boolean {
 
 export async function sendDraft(
   gmail: gmail_v1.Gmail,
-  draftId: string,
+  draftId: string
 ): Promise<{ messageId: string; threadId: string }> {
   logger.info("Sending draft", { draftId });
 
@@ -100,13 +102,13 @@ export async function sendDraft(
       requestBody: {
         id: draftId,
       },
-    }),
+    })
   );
 
   const messageId = response.data.id;
   const threadId = response.data.threadId;
 
-  if (!messageId || !threadId) {
+  if (!(messageId && threadId)) {
     throw new Error("Failed to send draft: missing messageId or threadId");
   }
 
@@ -129,7 +131,7 @@ export async function deleteDraft(gmail: gmail_v1.Gmail, draftId: string) {
   if (!isValidGmailDraftId(draftId)) {
     logger.warn(
       "Draft ID does not match expected Gmail format (r-NNNNN). This may indicate an issue.",
-      { draftId },
+      { draftId }
     );
   }
 
@@ -147,7 +149,7 @@ export async function deleteDraft(gmail: gmail_v1.Gmail, draftId: string) {
       gmail.users.drafts.delete({
         userId: "me",
         id: draftId,
-      }),
+      })
     );
     if (response.status !== 200 && response.status !== 204) {
       logger.error("Unexpected response status from draft deletion", {

@@ -1,6 +1,5 @@
 "use client";
 
-import type { Catalog } from "@/packages/estimates/catalog/types";
 import { ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/apps/web/frontend/components/ui/button";
@@ -18,12 +17,13 @@ import {
   PopoverTrigger,
 } from "@/apps/web/frontend/components/ui/popover";
 import { cn } from "@/lib/utils";
+import type { Catalog } from "@/packages/estimates/catalog/types";
 
 interface SectionComboboxProps {
   catalog: Catalog;
-  onSelect: (categoryId: string) => void;
-  disabled?: boolean;
   className?: string;
+  disabled?: boolean;
+  onSelect: (categoryId: string) => void;
 }
 
 export function SectionCombobox({

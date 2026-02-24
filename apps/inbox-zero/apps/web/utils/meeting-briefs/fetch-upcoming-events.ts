@@ -29,14 +29,14 @@ export async function fetchUpcomingEvents({
         timeMin,
         timeMax,
         maxResults: MAX_EVENTS_PER_PROVIDER,
-      }),
-    ),
+      })
+    )
   );
 
   return results
     .filter(
       (result): result is PromiseFulfilledResult<CalendarEvent[]> =>
-        result.status === "fulfilled",
+        result.status === "fulfilled"
     )
     .flatMap((result) => result.value)
     .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
@@ -44,7 +44,7 @@ export async function fetchUpcomingEvents({
 
 export function filterEventsWithExternalGuests(
   events: CalendarEvent[],
-  userEmail: string,
+  userEmail: string
 ): CalendarEvent[] {
   const userDomain = extractDomainFromEmail(userEmail).toLowerCase();
   const normalizedUserEmail = userEmail.toLowerCase();
@@ -56,9 +56,9 @@ export function filterEventsWithExternalGuests(
         return false;
       }
       const attendeeDomain = extractDomainFromEmail(
-        attendee.email,
+        attendee.email
       ).toLowerCase();
       return attendeeDomain !== userDomain;
-    }),
+    })
   );
 }

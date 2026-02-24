@@ -1,10 +1,10 @@
 import { after, NextResponse } from "next/server";
-import { withError } from "@/utils/middleware";
-import { env } from "@/env";
 import { processHistoryForUser } from "@/app/api/google/webhook/process-history";
+import { env } from "@/env";
 import type { Logger } from "@/utils/logger";
-import { handleWebhookError } from "@/utils/webhook/error-handler";
 import { runWithBackgroundLoggerFlush } from "@/utils/logger-flush";
+import { withError } from "@/utils/middleware";
+import { handleWebhookError } from "@/utils/webhook/error-handler";
 import { getWebhookEmailAccount } from "@/utils/webhook/validate-webhook-account";
 
 export const maxDuration = 300;
@@ -22,7 +22,7 @@ export const POST = withError("google/webhook", async (request) => {
     logger.error("Invalid verification token");
     return NextResponse.json(
       { message: "Invalid verification token" },
-      { status: 403 },
+      { status: 403 }
     );
   }
 
@@ -43,7 +43,7 @@ export const POST = withError("google/webhook", async (request) => {
       logger,
       task: () => processWebhookAsync(decodedData, logger),
       extra: { url: "/api/google/webhook" },
-    }),
+    })
   );
 
   return NextResponse.json({ ok: true });
@@ -51,7 +51,7 @@ export const POST = withError("google/webhook", async (request) => {
 
 async function processWebhookAsync(
   decodedData: { emailAddress: string; historyId: number },
-  logger: Logger,
+  logger: Logger
 ) {
   try {
     await processHistoryForUser(decodedData, {}, logger);
@@ -59,7 +59,7 @@ async function processWebhookAsync(
     // Look up email account to get emailAccountId for error tracking
     const emailAccount = await getWebhookEmailAccount(
       { email: decodedData.emailAddress.toLowerCase() },
-      logger,
+      logger
     ).catch((lookupError) => {
       logger.error("Error getting email account for error handling", {
         lookupError,
@@ -79,7 +79,9 @@ async function processWebhookAsync(
 function decodeHistoryId(body: { message?: { data?: string } }) {
   const data = body?.message?.data;
 
-  if (!data) throw new Error("No data found");
+  if (!data) {
+    throw new Error("No data found");
+  }
 
   // data is base64url-encoded JSON
   const base64 = data.replace(/-/g, "+").replace(/_/g, "/");

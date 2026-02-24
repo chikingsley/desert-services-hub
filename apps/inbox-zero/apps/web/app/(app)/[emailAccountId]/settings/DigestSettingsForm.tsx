@@ -1,37 +1,37 @@
-import { useCallback, useEffect, useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { useAction } from "next-safe-action/hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
+import { useCallback, useEffect, useState } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import useSWR from "swr";
 import { z } from "zod";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import type { GetDigestScheduleResponse } from "@/app/api/user/digest-schedule/route";
+import type { GetDigestSettingsResponse } from "@/app/api/user/digest-settings/route";
+import { LoadingContent } from "@/components/LoadingContent";
+import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import { TimePicker } from "@/components/TimePicker";
 import { toastError, toastSuccess } from "@/components/Toast";
-import { getActionErrorMessage } from "@/utils/error";
-import { LoadingContent } from "@/components/LoadingContent";
+import { Button } from "@/components/ui/button";
+import { FormItem } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ActionType } from "@/generated/prisma/enums";
 import { useRules } from "@/hooks/useRules";
-import { MultiSelectFilter } from "@/components/MultiSelectFilter";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import {
   updateDigestItemsAction,
   updateDigestScheduleAction,
 } from "@/utils/actions/settings";
-import { ActionType } from "@/generated/prisma/enums";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import type { GetDigestSettingsResponse } from "@/app/api/user/digest-settings/route";
-import type { GetDigestScheduleResponse } from "@/app/api/user/digest-schedule/route";
-import { Skeleton } from "@/components/ui/skeleton";
+import { getActionErrorMessage } from "@/utils/error";
 import {
-  Select,
-  SelectItem,
-  SelectContent,
-  SelectTrigger,
-} from "@/components/ui/select";
-import { FormItem } from "@/components/ui/form";
-import {
+  bitmaskToDayOfWeek,
   createCanonicalTimeOfDay,
   dayOfWeekToBitmask,
-  bitmaskToDayOfWeek,
 } from "@/utils/schedule";
 
 const digestSettingsSchema = z.object({
@@ -86,7 +86,7 @@ export function DigestSettingsForm({ onSuccess }: { onSuccess?: () => void }) {
   const error = rulesError || digestError || scheduleError;
 
   const [selectedDigestItems, setSelectedDigestItems] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
 
   const {
@@ -120,7 +120,7 @@ export function DigestSettingsForm({ onSuccess }: { onSuccess?: () => void }) {
           description: getActionErrorMessage(error.error),
         });
       },
-    },
+    }
   );
 
   const { execute: executeSchedule } = useAction(
@@ -135,7 +135,7 @@ export function DigestSettingsForm({ onSuccess }: { onSuccess?: () => void }) {
           description: getActionErrorMessage(error.error),
         });
       },
-    },
+    }
   );
 
   // Initialize selected items and form data from API responses
@@ -233,7 +233,7 @@ export function DigestSettingsForm({ onSuccess }: { onSuccess?: () => void }) {
         });
       }
     },
-    [rules, executeItems, executeSchedule, onSuccess],
+    [rules, executeItems, executeSchedule, onSuccess]
   );
 
   // Create options for MultiSelectFilter
@@ -249,23 +249,23 @@ export function DigestSettingsForm({ onSuccess }: { onSuccess?: () => void }) {
   ];
 
   return (
-    <div className="grid lg:grid-cols-2 gap-8 h-full">
+    <div className="grid h-full gap-8 lg:grid-cols-2">
       <div className="space-y-6">
         <LoadingContent
-          loading={isLoading}
           error={error}
+          loading={isLoading}
           loadingComponent={<Skeleton className="min-h-[200px] w-full" />}
         >
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <Label>What to include in the digest email</Label>
               <div className="mt-3">
                 <MultiSelectFilter
-                  title="Digest Items"
+                  maxDisplayedValues={3}
                   options={digestOptions}
                   selectedValues={selectedDigestItems}
                   setSelectedValues={setSelectedDigestItems}
-                  maxDisplayedValues={3}
+                  title="Digest Items"
                 />
               </div>
             </div>
@@ -273,17 +273,17 @@ export function DigestSettingsForm({ onSuccess }: { onSuccess?: () => void }) {
             <div>
               <Label>Send the digest email</Label>
 
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
+              <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-3">
                 <FormItem>
                   <Label htmlFor="frequency-select">Every</Label>
                   <Select
-                    value={watchedValues.schedule}
                     onValueChange={(val) => setValue("schedule", val)}
+                    value={watchedValues.schedule}
                   >
                     <SelectTrigger id="frequency-select">
                       {watchedValues.schedule
                         ? frequencies.find(
-                            (f) => f.value === watchedValues.schedule,
+                            (f) => f.value === watchedValues.schedule
                           )?.label
                         : "Select..."}
                     </SelectTrigger>
@@ -301,13 +301,13 @@ export function DigestSettingsForm({ onSuccess }: { onSuccess?: () => void }) {
                   <FormItem>
                     <Label htmlFor="dayofweek-select">on</Label>
                     <Select
-                      value={watchedValues.dayOfWeek}
                       onValueChange={(val) => setValue("dayOfWeek", val)}
+                      value={watchedValues.dayOfWeek}
                     >
                       <SelectTrigger id="dayofweek-select">
                         {watchedValues.dayOfWeek
                           ? daysOfWeek.find(
-                              (d) => d.value === watchedValues.dayOfWeek,
+                              (d) => d.value === watchedValues.dayOfWeek
                             )?.label
                           : "Select..."}
                       </SelectTrigger>
@@ -325,13 +325,13 @@ export function DigestSettingsForm({ onSuccess }: { onSuccess?: () => void }) {
                 <TimePicker
                   id="time-picker"
                   label="at"
-                  value={watchedValues.time}
                   onChange={(value) => setValue("time", value)}
+                  value={watchedValues.time}
                 />
               </div>
             </div>
 
-            <Button type="submit" loading={isSubmitting} className="mt-4">
+            <Button className="mt-4" loading={isSubmitting} type="submit">
               Save
             </Button>
           </form>
@@ -351,7 +351,9 @@ function EmailPreview({
   const { data: rules } = useRules();
 
   const selectedDigestNames = Array.from(selectedDigestItems).map((itemId) => {
-    if (itemId === "cold-emails") return "Cold Emails";
+    if (itemId === "cold-emails") {
+      return "Cold Emails";
+    }
     return rules?.find((rule) => rule.id === itemId)?.name || itemId;
   });
 
@@ -361,25 +363,27 @@ function EmailPreview({
       : null,
     async (url: string) => {
       const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch preview");
+      if (!response.ok) {
+        throw new Error("Failed to fetch preview");
+      }
       return response.text();
     },
-    { keepPreviousData: true },
+    { keepPreviousData: true }
   );
 
   return (
     <div>
       <Label>Preview</Label>
-      <div className="mt-3 border rounded-lg overflow-hidden bg-slate-50">
+      <div className="mt-3 overflow-hidden rounded-lg border bg-slate-50">
         {selectedDigestNames.length > 0 && htmlContent ? (
           <iframe
-            title="Digest preview"
+            className="max-h-[700px] min-h-[700px] w-full bg-white"
             sandbox=""
-            className="w-full min-h-[700px] max-h-[700px] bg-white"
             srcDoc={htmlContent}
+            title="Digest preview"
           />
         ) : (
-          <div className="text-center text-slate-500 py-8">
+          <div className="py-8 text-center text-slate-500">
             <p>Select digest items to see a preview</p>
           </div>
         )}
@@ -389,10 +393,12 @@ function EmailPreview({
 }
 
 function getInitialScheduleProps(
-  digestSchedule?: GetDigestScheduleResponse | null,
+  digestSchedule?: GetDigestScheduleResponse | null
 ) {
   const initialSchedule = (() => {
-    if (!digestSchedule) return "daily";
+    if (!digestSchedule) {
+      return "daily";
+    }
     switch (digestSchedule.intervalDays) {
       case 1:
         return "daily";
@@ -408,7 +414,9 @@ function getInitialScheduleProps(
   })();
 
   const initialDayOfWeek = (() => {
-    if (!digestSchedule || digestSchedule.daysOfWeek == null) return "1";
+    if (!digestSchedule || digestSchedule.daysOfWeek == null) {
+      return "1";
+    }
     const dayOfWeek = bitmaskToDayOfWeek(digestSchedule.daysOfWeek);
     return dayOfWeek !== null ? dayOfWeek.toString() : "1";
   })();

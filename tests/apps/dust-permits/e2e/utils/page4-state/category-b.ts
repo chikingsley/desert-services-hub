@@ -9,36 +9,36 @@ import type { ValidationHelpers } from "./helpers";
 
 export interface CategoryB1State {
   applies: boolean;
-  hasPave: boolean;
-  hasPaveWhen: boolean;
-  hasGravel: boolean;
-  hasWater: boolean;
   hasDustSuppressants: boolean;
-  hasSuppressantFrequency: boolean;
-  hasSuppressantAmount: boolean;
+  hasGravel: boolean;
   hasLimitTrips: boolean;
   hasLimitTripsMax: boolean;
-  hasSpeedRestrictionMethod: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
+  hasPave: boolean;
+  hasPaveWhen: boolean;
+  hasSpeedRestrictionMethod: boolean;
+  hasSuppressantAmount: boolean;
+  hasSuppressantFrequency: boolean;
+  hasWater: boolean;
 }
 
 export interface CategoryB2State {
   applies: boolean;
-  hasPave: boolean;
-  hasPaveWhen: boolean;
-  hasGravel: boolean;
-  hasWater: boolean;
-  hasDustSuppressants: boolean;
-  hasSuppressantFrequency: boolean;
-  hasSuppressantAmount: boolean;
-  hasLimitTrips: boolean;
-  hasLimitTripsMax: boolean;
-  hasSpeedRestrictionMethod: boolean;
   hasCeaseOperations: boolean;
   hasCeaseOperationsAreaSpecification: boolean;
+  hasDustSuppressants: boolean;
+  hasGravel: boolean;
+  hasLimitTrips: boolean;
+  hasLimitTripsMax: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
+  hasPave: boolean;
+  hasPaveWhen: boolean;
+  hasSpeedRestrictionMethod: boolean;
+  hasSuppressantAmount: boolean;
+  hasSuppressantFrequency: boolean;
+  hasWater: boolean;
 }
 
 export function getCategoryBState(

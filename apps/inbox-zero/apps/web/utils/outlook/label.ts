@@ -1,13 +1,13 @@
-import type { OutlookClient } from "@/utils/outlook/client";
-import type { Logger } from "@/utils/logger";
 import { publishArchive, type TinybirdEmailAction } from "@inboxzero/tinybird";
-import { WELL_KNOWN_FOLDERS } from "./message";
-import { extractErrorInfo, withOutlookRetry } from "@/utils/outlook/retry";
-import { inboxZeroLabels, type InboxZeroLabel } from "@/utils/label";
 import type {
-  OutlookCategory,
   Message,
+  OutlookCategory,
 } from "@microsoft/microsoft-graph-types";
+import { type InboxZeroLabel, inboxZeroLabels } from "@/utils/label";
+import type { Logger } from "@/utils/logger";
+import type { OutlookClient } from "@/utils/outlook/client";
+import { extractErrorInfo, withOutlookRetry } from "@/utils/outlook/retry";
+import { WELL_KNOWN_FOLDERS } from "./message";
 
 // Outlook doesn't have system labels like Gmail, but we map common categories
 // Using same format as Gmail for consistency
@@ -98,7 +98,7 @@ export async function createLabel({
           displayName: name,
           color: outlookColor,
         }),
-      logger,
+      logger
     );
 
     client.invalidateCategoryMapCache();
@@ -106,19 +106,22 @@ export async function createLabel({
     return response;
   } catch (error) {
     let { errorMessage } = extractErrorInfo(error);
-    if (!errorMessage)
+    if (!errorMessage) {
       errorMessage = (error as any)?.message || "Unknown error";
+    }
     if (
       errorMessage.includes("already exists") ||
       errorMessage.includes("conflict with the current state")
     ) {
       logger.warn("Label already exists", { name });
       const label = await getLabel({ client, name });
-      if (label) return label;
+      if (label) {
+        return label;
+      }
       throw new Error(`Label conflict but not found: ${name}`);
     }
     throw new Error(
-      `Failed to create Outlook category "${name}": ${errorMessage}`,
+      `Failed to create Outlook category "${name}": ${errorMessage}`
     );
   }
 }
@@ -143,7 +146,7 @@ export async function getLabel(options: {
   return labels?.find(
     (label) =>
       label.displayName &&
-      normalizeLabel(label.displayName) === normalizedSearch,
+      normalizeLabel(label.displayName) === normalizedSearch
   );
 }
 
@@ -156,9 +159,13 @@ export async function getOrCreateLabel({
   name: string;
   logger: Logger;
 }) {
-  if (!name?.trim()) throw new Error("Label name cannot be empty");
+  if (!name?.trim()) {
+    throw new Error("Label name cannot be empty");
+  }
   const label = await getLabel({ client, name });
-  if (label) return label;
+  if (label) {
+    return label;
+  }
   const createdLabel = await createLabel({ client, name, logger });
   return createdLabel;
 }
@@ -172,10 +179,14 @@ export async function getOrCreateLabels({
   names: string[];
   logger: Logger;
 }): Promise<OutlookCategory[]> {
-  if (!names.length) return [];
+  if (!names.length) {
+    return [];
+  }
 
   const emptyNames = names.filter((name) => !name?.trim());
-  if (emptyNames.length) throw new Error("Label names cannot be empty");
+  if (emptyNames.length) {
+    throw new Error("Label names cannot be empty");
+  }
 
   const existingLabels = await getLabels(client);
   const normalizedNames = names.map(normalizeLabel);
@@ -190,10 +201,12 @@ export async function getOrCreateLabels({
   const results = await Promise.all(
     normalizedNames.map(async (normalizedName, index) => {
       const existingLabel = labelMap.get(normalizedName);
-      if (existingLabel) return existingLabel;
+      if (existingLabel) {
+        return existingLabel;
+      }
 
       return createLabel({ client, name: names[index], logger });
-    }),
+    })
   );
 
   return results;
@@ -216,7 +229,7 @@ export async function labelMessage({
       client.getClient().api(`/me/messages/${messageId}`).patch({
         categories,
       }),
-    logger,
+    logger
   );
 }
 
@@ -242,8 +255,8 @@ export async function labelThread({
 
   await Promise.all(
     messages.value.map((message) =>
-      labelMessage({ client, messageId: message.id!, categories, logger }),
-    ),
+      labelMessage({ client, messageId: message.id!, categories, logger })
+    )
   );
 }
 
@@ -277,12 +290,14 @@ export async function removeThreadLabel({
   await Promise.all(
     messages.value.map(
       async (message: { id: string; categories?: string[] }) => {
-        if (!message.categories || !message.categories.includes(categoryName)) {
+        if (
+          !(message.categories && message.categories.includes(categoryName))
+        ) {
           return; // Category not present, nothing to remove
         }
 
         const updatedCategories = message.categories.filter(
-          (cat) => cat !== categoryName,
+          (cat) => cat !== categoryName
         );
 
         try {
@@ -292,7 +307,7 @@ export async function removeThreadLabel({
                 .getClient()
                 .api(`/me/messages/${message.id}`)
                 .patch({ categories: updatedCategories }),
-            logger,
+            logger
           );
         } catch (error) {
           logger.warn("Failed to remove category from message", {
@@ -302,8 +317,8 @@ export async function removeThreadLabel({
             error,
           });
         }
-      },
-    ),
+      }
+    )
   );
 }
 
@@ -343,7 +358,7 @@ export async function archiveThread({
           folderId,
           threadId,
           error,
-        },
+        }
       );
       return;
     }
@@ -367,7 +382,7 @@ export async function archiveThread({
               client.getClient().api(`/me/messages/${message.id}/move`).post({
                 destinationId: folderId,
               }),
-            logger,
+            logger
           );
         } catch (error) {
           logger.warn("Failed to move message to folder", {
@@ -378,7 +393,7 @@ export async function archiveThread({
           });
           return null;
         }
-      }),
+      })
     );
 
     const publishPromise = publishArchive({
@@ -436,7 +451,7 @@ export async function archiveThread({
       // Filter messages by conversationId manually
       const threadMessages = messages.value.filter(
         (message: { conversationId: string }) =>
-          message.conversationId === threadId,
+          message.conversationId === threadId
       );
 
       if (threadMessages.length > 0) {
@@ -452,7 +467,7 @@ export async function archiveThread({
                     .post({
                       destinationId: folderId,
                     }),
-                logger,
+                logger
               );
             } catch (moveError) {
               // Log the error but don't fail the entire operation
@@ -465,7 +480,7 @@ export async function archiveThread({
               });
               return null;
             }
-          },
+          }
         );
 
         await Promise.allSettled(movePromises);
@@ -476,7 +491,7 @@ export async function archiveThread({
             client.getClient().api(`/me/messages/${threadId}/move`).post({
               destinationId: folderId,
             }),
-          logger,
+          logger
         );
       }
 
@@ -538,9 +553,9 @@ export async function markReadThread({
             client.getClient().api(`/me/messages/${message.id}`).patch({
               isRead: read,
             }),
-          logger,
-        ),
-      ),
+          logger
+        )
+      )
     );
   } catch (error) {
     // If the filter fails, try a different approach
@@ -560,7 +575,7 @@ export async function markReadThread({
       // Filter messages by conversationId manually
       const threadMessages = messages.value.filter(
         (message: { conversationId: string }) =>
-          message.conversationId === threadId,
+          message.conversationId === threadId
       );
 
       if (threadMessages.length > 0) {
@@ -572,9 +587,9 @@ export async function markReadThread({
                 client.getClient().api(`/me/messages/${message.id}`).patch({
                   isRead: read,
                 }),
-              logger,
-            ),
-          ),
+              logger
+            )
+          )
         );
       } else {
         // If no messages found, try treating threadId as a messageId
@@ -583,7 +598,7 @@ export async function markReadThread({
             client.getClient().api(`/me/messages/${threadId}`).patch({
               isRead: read,
             }),
-          logger,
+          logger
         );
       }
     } catch (directError) {
@@ -616,7 +631,7 @@ export async function markImportantMessage({
         .patch({
           importance: important ? "high" : "normal",
         }),
-    logger,
+    logger
   );
 }
 
@@ -634,7 +649,9 @@ export async function getOrCreateInboxZeroLabel({
 
   // Return label if it exists
   const label = labels?.find((label) => label.displayName === name);
-  if (label) return label;
+  if (label) {
+    return label;
+  }
 
   // Create label if it doesn't exist
   const createdLabel = await createLabel({ client, name, logger });

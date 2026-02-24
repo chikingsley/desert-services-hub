@@ -1,16 +1,16 @@
 import { env } from "@/env";
-import prisma from "@/utils/prisma";
-import type { Logger } from "@/utils/logger";
 import {
-  getCalendarOAuth2Client,
   fetchGoogleCalendars,
   getCalendarClientWithRefresh,
+  getCalendarOAuth2Client,
 } from "@/utils/calendar/client";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import type { CalendarOAuthProvider, CalendarTokens } from "../oauth-types";
 import { autoPopulateTimezone } from "../timezone-helpers";
 
 export function createGoogleCalendarProvider(
-  logger: Logger,
+  logger: Logger
 ): CalendarOAuthProvider {
   return {
     name: "google",
@@ -25,7 +25,7 @@ export function createGoogleCalendarProvider(
         throw new Error("Missing id_token from Google response");
       }
 
-      if (!access_token || !refresh_token) {
+      if (!(access_token && refresh_token)) {
         throw new Error("No refresh_token returned from Google");
       }
 
@@ -52,7 +52,7 @@ export function createGoogleCalendarProvider(
       accessToken: string,
       refreshToken: string,
       emailAccountId: string,
-      expiresAt: Date | null,
+      expiresAt: Date | null
     ): Promise<void> {
       try {
         const calendarClient = await getCalendarClientWithRefresh({
@@ -65,11 +65,13 @@ export function createGoogleCalendarProvider(
 
         const googleCalendars = await fetchGoogleCalendars(
           calendarClient,
-          logger,
+          logger
         );
 
         for (const googleCalendar of googleCalendars) {
-          if (!googleCalendar.id) continue;
+          if (!googleCalendar.id) {
+            continue;
+          }
 
           await prisma.calendar.upsert({
             where: {

@@ -1,7 +1,7 @@
-import { useSession } from "@/utils/auth-client";
 import { useParams } from "next/navigation";
-import { useOrgSWR } from "@/hooks/useOrgSWR";
 import type { EmailAccountFullResponse } from "@/app/api/user/email-account/route";
+import { useOrgSWR } from "@/hooks/useOrgSWR";
+import { useSession } from "@/utils/auth-client";
 
 export function useOrgAccess() {
   const { data: session } = useSession();
@@ -13,7 +13,7 @@ export function useOrgAccess() {
     isLoading,
     error,
   } = useOrgSWR<EmailAccountFullResponse>(
-    emailAccountId ? "/api/user/email-account" : null,
+    emailAccountId ? "/api/user/email-account" : null
   );
 
   if (!session?.user?.email) {

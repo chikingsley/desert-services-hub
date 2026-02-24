@@ -1,18 +1,18 @@
 "use server";
 
 import { z } from "zod";
-import prisma from "@/utils/prisma";
-import { sendEmailBody } from "@/utils/gmail/mail";
 import { actionClient } from "@/utils/actions/safe-action";
-import { SafeError } from "@/utils/error";
 import { createEmailProvider } from "@/utils/email/provider";
+import { SafeError } from "@/utils/error";
+import { sendEmailBody } from "@/utils/gmail/mail";
+import prisma from "@/utils/prisma";
 
 const isStatusOk = (status: number) => status >= 200 && status < 300;
 
 export const archiveThreadAction = actionClient
   .metadata({ name: "archiveThread" })
   .inputSchema(
-    z.object({ threadId: z.string(), labelId: z.string().optional() }),
+    z.object({ threadId: z.string(), labelId: z.string().optional() })
   )
   .action(
     async ({
@@ -28,9 +28,9 @@ export const archiveThreadAction = actionClient
       await emailProvider.archiveThreadWithLabel(
         threadId,
         emailAccount.email,
-        labelId,
+        labelId
       );
-    },
+    }
   );
 
 export const trashThreadAction = actionClient
@@ -48,7 +48,7 @@ export const trashThreadAction = actionClient
       });
 
       await emailProvider.trashThread(threadId, emailAccount.email, "user");
-    },
+    }
   );
 
 export const markReadThreadAction = actionClient
@@ -66,7 +66,7 @@ export const markReadThreadAction = actionClient
       });
 
       await emailProvider.markReadThread(threadId, read);
-    },
+    }
   );
 
 export const createAutoArchiveFilterAction = actionClient
@@ -76,7 +76,7 @@ export const createAutoArchiveFilterAction = actionClient
       from: z.string(),
       gmailLabelId: z.string().optional(),
       labelName: z.string().optional(),
-    }),
+    })
   )
   .action(
     async ({
@@ -94,7 +94,7 @@ export const createAutoArchiveFilterAction = actionClient
         gmailLabelId,
         labelName,
       });
-    },
+    }
   );
 
 export const createFilterAction = actionClient
@@ -124,7 +124,7 @@ export const createFilterAction = actionClient
         });
         throw new SafeError("Failed to create filter");
       }
-    },
+    }
   );
 
 export const deleteFilterAction = actionClient
@@ -150,13 +150,13 @@ export const deleteFilterAction = actionClient
         });
         throw new SafeError("Failed to delete filter");
       }
-    },
+    }
   );
 
 export const createLabelAction = actionClient
   .metadata({ name: "createLabel" })
   .inputSchema(
-    z.object({ name: z.string(), description: z.string().optional() }),
+    z.object({ name: z.string(), description: z.string().optional() })
   )
   .action(
     async ({
@@ -170,7 +170,7 @@ export const createLabelAction = actionClient
       });
       const label = await emailProvider.createLabel(name, description);
       return label;
-    },
+    }
   );
 
 export const updateLabelsAction = actionClient
@@ -183,9 +183,9 @@ export const updateLabelsAction = actionClient
           description: z.string().optional(),
           enabled: z.boolean(),
           gmailLabelId: z.string(),
-        }),
+        })
       ),
-    }),
+    })
   )
   .action(async ({ ctx: { emailAccountId }, parsedInput: { labels } }) => {
     const enabledLabels = labels.filter((label) => label.enabled);
@@ -238,5 +238,5 @@ export const sendEmailAction = actionClient
         messageId: result.messageId,
         threadId: result.threadId,
       };
-    },
+    }
   );

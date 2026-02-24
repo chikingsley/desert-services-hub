@@ -1,13 +1,13 @@
 "use server";
 
-import prisma from "@/utils/prisma";
-import { assessUser } from "@/utils/assess";
-import { aiAnalyzeWritingStyle } from "@/utils/ai/knowledge/writing-style";
-import { formatBulletList } from "@/utils/string";
-import { getEmailForLLM } from "@/utils/get-email-from-message";
 import { actionClient } from "@/utils/actions/safe-action";
+import { aiAnalyzeWritingStyle } from "@/utils/ai/knowledge/writing-style";
+import { assessUser } from "@/utils/assess";
 import { createEmailProvider } from "@/utils/email/provider";
 import { SafeError } from "@/utils/error";
+import { getEmailForLLM } from "@/utils/get-email-from-message";
+import prisma from "@/utils/prisma";
+import { formatBulletList } from "@/utils/string";
 
 // to help with onboarding and provide the best flow to new users
 export const assessAction = actionClient
@@ -24,7 +24,9 @@ export const assessAction = actionClient
       select: { behaviorProfile: true },
     });
 
-    if (emailAccount?.behaviorProfile) return { success: true, skipped: true };
+    if (emailAccount?.behaviorProfile) {
+      return { success: true, skipped: true };
+    }
 
     const result = await assessUser({ client: emailProvider, logger });
     await prisma.emailAccount.update({
@@ -53,9 +55,13 @@ export const analyzeWritingStyleAction = actionClient
       },
     });
 
-    if (!emailAccount) throw new SafeError("Email account not found");
+    if (!emailAccount) {
+      throw new SafeError("Email account not found");
+    }
 
-    if (emailAccount?.writingStyle) return { success: true, skipped: true };
+    if (emailAccount?.writingStyle) {
+      return { success: true, skipped: true };
+    }
 
     // fetch last 20 sent emails using the provider's getSentMessages method
     const emailProvider = await createEmailProvider({
@@ -68,12 +74,14 @@ export const analyzeWritingStyleAction = actionClient
     // analyze writing style
     const style = await aiAnalyzeWritingStyle({
       emails: sentMessages.map((email) =>
-        getEmailForLLM(email, { extractReply: true }),
+        getEmailForLLM(email, { extractReply: true })
       ),
       emailAccount: { ...emailAccount, account: { provider } },
     });
 
-    if (!style) return;
+    if (!style) {
+      return;
+    }
 
     // save writing style
     const writingStyle = [

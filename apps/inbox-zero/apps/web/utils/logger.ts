@@ -16,15 +16,21 @@ const colors = {
 } as const;
 
 export function createScopedLogger(scope: string) {
-  if (env.NEXT_PUBLIC_AXIOM_TOKEN) return createAxiomLogger(scope);
-  if (env.NEXT_PUBLIC_LOG_SCOPES && !env.NEXT_PUBLIC_LOG_SCOPES.includes(scope))
+  if (env.NEXT_PUBLIC_AXIOM_TOKEN) {
+    return createAxiomLogger(scope);
+  }
+  if (
+    env.NEXT_PUBLIC_LOG_SCOPES &&
+    !env.NEXT_PUBLIC_LOG_SCOPES.includes(scope)
+  ) {
     return createNullLogger();
+  }
 
   const createLogger = (fields: Record<string, unknown> = {}) => {
     const formatMessage = (
       level: LogLevel,
       message: string,
-      args: unknown[],
+      args: unknown[]
     ) => {
       const allArgs = [...args].map(hashSensitiveFields);
       if (Object.keys(fields).length > 0) {
@@ -66,7 +72,9 @@ export function createScopedLogger(scope: string) {
         message: string,
         ...args: Array<unknown> | [() => unknown] | [() => unknown[]]
       ) => {
-        if (!env.ENABLE_DEBUG_LOGS) return;
+        if (!env.ENABLE_DEBUG_LOGS) {
+          return;
+        }
         const first = args[0];
         const resolved = typeof first === "function" ? first() : args;
         const finalArgs = Array.isArray(resolved) ? resolved : [resolved];
@@ -88,19 +96,21 @@ function createAxiomLogger(scope: string) {
     error: (message: string, args?: Record<string, unknown>) =>
       log.error(
         message,
-        hashSensitiveFields({ scope, ...fields, ...formatError(args) }),
+        hashSensitiveFields({ scope, ...fields, ...formatError(args) })
       ),
     warn: (message: string, args?: Record<string, unknown>) =>
       log.warn(message, hashSensitiveFields({ scope, ...fields, ...args })),
     trace: (
       message: string,
-      args?: Record<string, unknown> | (() => Record<string, unknown>),
+      args?: Record<string, unknown> | (() => Record<string, unknown>)
     ) => {
-      if (!env.ENABLE_DEBUG_LOGS) return;
+      if (!env.ENABLE_DEBUG_LOGS) {
+        return;
+      }
       const resolved = typeof args === "function" ? args() : args;
       log.debug(
         message,
-        hashSensitiveFields({ scope, ...fields, ...resolved }),
+        hashSensitiveFields({ scope, ...fields, ...resolved })
       );
     },
     with: (newFields: Record<string, unknown>) =>
@@ -123,8 +133,12 @@ function createNullLogger() {
 }
 
 function formatError(args?: Record<string, unknown>) {
-  if (env.NODE_ENV !== "production") return args;
-  if (!args?.error) return args;
+  if (env.NODE_ENV !== "production") {
+    return args;
+  }
+  if (!args?.error) {
+    return args;
+  }
 
   const error = args.error;
   const errorMessage = getSimpleErrorMessage(error) ?? "Unknown error";
@@ -166,7 +180,7 @@ function getSimpleErrorMessage(error: unknown): string | undefined {
     return error.message;
   }
 
-  if (!hasMessageField(error) && !hasNestedErrorField(error)) {
+  if (!(hasMessageField(error) || hasNestedErrorField(error))) {
     return undefined;
   }
 
@@ -224,7 +238,9 @@ const CONTENT_FIELD_NAMES = new Set(["text", "body", "content"]);
 function hashSensitiveFields<T>(obj: T, depth = 0): T {
   // Prevent infinite recursion and excessive processing
   const MAX_DEPTH = 10;
-  if (depth > MAX_DEPTH) return obj;
+  if (depth > MAX_DEPTH) {
+    return obj;
+  }
 
   if (obj === null || obj === undefined) {
     return obj;
@@ -277,7 +293,9 @@ function hashSensitiveFields<T>(obj: T, depth = 0): T {
 }
 
 function isPlainObject(obj: unknown): obj is Record<string, unknown> {
-  if (typeof obj !== "object" || obj === null) return false;
+  if (typeof obj !== "object" || obj === null) {
+    return false;
+  }
   const proto = Object.getPrototypeOf(obj);
   return proto === Object.prototype || proto === null;
 }

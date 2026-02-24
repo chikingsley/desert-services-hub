@@ -3,40 +3,40 @@
 
 // Line item for estimates (used by catalog functions)
 export interface LineItem {
+  cost: number;
+  description: string;
   id: string;
   item: string; // catalog code e.g. "SWPPP-001"
-  description: string;
   qty: number;
-  uom: string;
-  cost: number;
-  total: number;
   sectionId?: string;
+  total: number;
+  uom: string;
 }
 
 export interface CatalogItem {
   code: string;
-  name: string;
+  defaultQty?: number;
   description: string;
+  name: string;
+  notes?: string;
   price: number;
   unit: string;
-  notes?: string;
-  defaultQty?: number;
 }
 
 export type SelectionMode = "pick-one" | "pick-many";
 
 export interface CatalogSubcategory {
+  hidden?: boolean;
   id: string;
+  items: CatalogItem[];
   name: string;
   selectionMode?: SelectionMode;
-  hidden?: boolean;
-  items: CatalogItem[];
 }
 
 export interface CatalogCategory {
   id: string;
-  name: string;
   items?: CatalogItem[];
+  name: string;
   subcategories?: CatalogSubcategory[];
 }
 
@@ -52,11 +52,11 @@ export interface TakeoffBundleItem {
 }
 
 export interface TakeoffBundle {
-  id: string;
-  name: string;
-  description: string;
-  unit: "LF" | "SF" | "Each";
-  toolType: "count" | "linear" | "area";
   color: string;
+  description: string;
+  id: string;
   items: TakeoffBundleItem[];
+  name: string;
+  toolType: "count" | "linear" | "area";
+  unit: "LF" | "SF" | "Each";
 }

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export function useToggleSelect(items: { id: string }[]) {
   const [selected, setSelected] = useState<Map<string, boolean>>(new Map());
@@ -33,7 +33,7 @@ export function useToggleSelect(items: { id: string }[]) {
 
       lastClickedIndexRef.current = currentIndex;
     },
-    [items],
+    [items]
   );
 
   const onToggleSelectAll = useCallback(() => {

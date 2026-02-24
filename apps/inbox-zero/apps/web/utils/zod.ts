@@ -2,8 +2,12 @@ import { z } from "zod";
 
 // Parses boolean env vars: "false" → false, any other value → true, unset → uses .default()
 export const booleanString = z.preprocess((val) => {
-  if (!val) return undefined;
-  if (String(val).toLowerCase() === "false") return false;
+  if (!val) {
+    return undefined;
+  }
+  if (String(val).toLowerCase() === "false") {
+    return false;
+  }
   return true;
 }, z.boolean().optional());
 
@@ -16,8 +20,12 @@ export const booleanString = z.preprocess((val) => {
 export const preprocessBooleanLike = (val: unknown): unknown => {
   if (typeof val === "string") {
     const lowerVal = val.toLowerCase().trim();
-    if (lowerVal === "true" || lowerVal === "yes") return true;
-    if (lowerVal === "false" || lowerVal === "no") return false;
+    if (lowerVal === "true" || lowerVal === "yes") {
+      return true;
+    }
+    if (lowerVal === "false" || lowerVal === "no") {
+      return false;
+    }
   }
   return val;
 };

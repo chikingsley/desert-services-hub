@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+import { ActionType } from "@/generated/prisma/enums";
 import {
+  actionInputs,
   getActionFields,
   sanitizeActionFields,
-  actionInputs,
 } from "./action-item";
-import { ActionType } from "@/generated/prisma/enums";
 
 describe("actionInputs", () => {
   it("has configuration for all action types", () => {
@@ -27,7 +27,7 @@ describe("actionInputs", () => {
 
   it("DRAFT_EMAIL has subject, content, to, cc, bcc fields", () => {
     const fieldNames = actionInputs[ActionType.DRAFT_EMAIL].fields.map(
-      (f) => f.name,
+      (f) => f.name
     );
     expect(fieldNames).toContain("subject");
     expect(fieldNames).toContain("content");

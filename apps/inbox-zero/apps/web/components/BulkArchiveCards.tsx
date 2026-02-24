@@ -1,14 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
-import { useQueryState } from "nuqs";
 import groupBy from "lodash/groupBy";
 import { CheckIcon, ChevronDownIcon, MailIcon, PencilIcon } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { useQueryState } from "nuqs";
+import { useMemo, useState } from "react";
+import {
+  type BulkActionType,
+  getActionLabels,
+} from "@/app/(app)/[emailAccountId]/bulk-archive/BulkArchiveSettingsModal";
 import { ButtonCheckbox } from "@/components/ButtonCheckbox";
-import { Skeleton } from "@/components/ui/skeleton";
+import { getCategoryStyle } from "@/components/bulk-archive/categoryIcons";
+import { EmailCell } from "@/components/EmailCell";
+import { ButtonLoader } from "@/components/Loading";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -22,13 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { EmailCell } from "@/components/EmailCell";
-import { changeSenderCategoryAction } from "@/utils/actions/categorize";
-import { toastError, toastSuccess } from "@/components/Toast";
-import { ButtonLoader } from "@/components/Loading";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useThreads } from "@/hooks/useThreads";
-import { formatShortDate } from "@/utils/date";
-import { cn } from "@/utils";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import {
   addToArchiveSenderQueue,
   useArchiveSenderStatus,
@@ -37,16 +40,13 @@ import {
   addToMarkReadSenderQueue,
   useMarkReadSenderStatus,
 } from "@/store/mark-read-sender-queue";
-import {
-  type BulkActionType,
-  getActionLabels,
-} from "@/app/(app)/[emailAccountId]/bulk-archive/BulkArchiveSettingsModal";
-import { getEmailUrl } from "@/utils/url";
-import type { CategoryWithRules } from "@/utils/category.server";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { getCategoryStyle } from "@/components/bulk-archive/categoryIcons";
-import { defaultCategory } from "@/utils/categories";
+import { cn } from "@/utils";
+import { changeSenderCategoryAction } from "@/utils/actions/categorize";
 import type { EmailGroup } from "@/utils/bulk-archive/get-archive-candidates";
+import { defaultCategory } from "@/utils/categories";
+import type { CategoryWithRules } from "@/utils/category.server";
+import { formatShortDate } from "@/utils/date";
+import { getEmailUrl } from "@/utils/url";
 
 export function BulkArchiveCards({
   emailGroups,
@@ -80,14 +80,14 @@ export function BulkArchiveCards({
         acc[category.name] = category;
         return acc;
       },
-      {},
+      {}
     );
   }, [categories]);
 
   // Get the names of default categories to determine which categories to show as separate tabs
   const defaultCategoryNames = useMemo(
     () => new Set<string>(Object.values(defaultCategory).map((c) => c.name)),
-    [],
+    []
   );
 
   const groupedEmails = useMemo(() => {
@@ -120,10 +120,18 @@ export function BulkArchiveCards({
   // Sort categories alphabetically, but always put Other and Uncategorized last
   const sortedCategoryEntries = useMemo(() => {
     return Object.entries(groupedEmails).sort(([a], [b]) => {
-      if (a === "Uncategorized") return 1;
-      if (b === "Uncategorized") return -1;
-      if (a === defaultCategory.OTHER.name) return 1;
-      if (b === defaultCategory.OTHER.name) return -1;
+      if (a === "Uncategorized") {
+        return 1;
+      }
+      if (b === "Uncategorized") {
+        return -1;
+      }
+      if (a === defaultCategory.OTHER.name) {
+        return 1;
+      }
+      if (b === defaultCategory.OTHER.name) {
+        return -1;
+      }
       return a.localeCompare(b);
     });
   }, [groupedEmails]);
@@ -133,7 +141,7 @@ export function BulkArchiveCards({
       initializeSenders(categoryName);
     }
     setExpandedCategory(
-      expandedCategory === categoryName ? null : categoryName,
+      expandedCategory === categoryName ? null : categoryName
     );
   };
 
@@ -169,7 +177,9 @@ export function BulkArchiveCards({
 
   const areAllSelectedInCategory = (categoryName: string) => {
     const senders = groupedEmails[categoryName] || [];
-    if (senders.length === 0) return false;
+    if (senders.length === 0) {
+      return false;
+    }
     return senders.every((s) => selectedSenders[s.address] !== false);
   };
 
@@ -213,12 +223,12 @@ export function BulkArchiveCards({
 
   const handleCategoryAction = async (
     categoryName: string,
-    e: React.MouseEvent,
+    e: React.MouseEvent
   ) => {
     e.stopPropagation();
     const senders = groupedEmails[categoryName] || [];
     const selectedToProcess = senders.filter(
-      (s) => selectedSenders[s.address] !== false,
+      (s) => selectedSenders[s.address] !== false
     );
 
     setLoadingCategories((prev) => ({ ...prev, [categoryName]: true }));
@@ -256,19 +266,20 @@ export function BulkArchiveCards({
 
         // Get default category info if no category exists
         const defaultCat = Object.values(defaultCategory).find(
-          (c) => c.name === categoryName,
+          (c) => c.name === categoryName
         );
 
         // Skip if no category found and not a default category (but allow Uncategorized)
-        if (!category && !defaultCat && categoryName !== "Uncategorized")
+        if (!(category || defaultCat) && categoryName !== "Uncategorized") {
           return null;
+        }
 
         const isExpanded = expandedCategory === categoryName;
         const isArchived = archivedCategories[categoryName];
         const isLoading = loadingCategories[categoryName];
 
         return (
-          <Card key={categoryName} className="overflow-hidden">
+          <Card className="overflow-hidden" key={categoryName}>
             {/* Category header - clickable to expand */}
             <div
               className="cursor-pointer p-4 transition-colors hover:bg-muted/50"
@@ -286,15 +297,15 @@ export function BulkArchiveCards({
                 <div className="flex items-center gap-3">
                   <div
                     className={cn(
-                      "shrink-0 p-px rounded-lg shadow-sm bg-gradient-to-b",
+                      "shrink-0 rounded-lg bg-gradient-to-b p-px shadow-sm",
                       categoryStyle.borderColor,
-                      isArchived && "opacity-50",
+                      isArchived && "opacity-50"
                     )}
                   >
                     <div
                       className={cn(
                         "flex size-9 items-center justify-center rounded-[7px] bg-gradient-to-b",
-                        categoryStyle.gradient,
+                        categoryStyle.gradient
                       )}
                     >
                       <CategoryIcon
@@ -306,12 +317,12 @@ export function BulkArchiveCards({
                     <h2
                       className={cn(
                         "font-medium",
-                        isArchived && "text-muted-foreground line-through",
+                        isArchived && "text-muted-foreground line-through"
                       )}
                     >
                       {categoryName}
                     </h2>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       {senders.length} senders
                       {isArchived && " archived"}
                       {!isArchived &&
@@ -324,15 +335,15 @@ export function BulkArchiveCards({
                   {isArchived ? (
                     <div className="flex items-center gap-2 text-green-600">
                       <CheckIcon className="size-5" />
-                      <span className="text-sm font-medium">
+                      <span className="font-medium text-sm">
                         {actionLabels.completedLabel}
                       </span>
                     </div>
                   ) : (
                     <Button
+                      disabled={isLoading}
                       onClick={(e) => handleCategoryAction(categoryName, e)}
                       size="sm"
-                      disabled={isLoading}
                     >
                       {isLoading ? (
                         <ButtonLoader />
@@ -342,7 +353,7 @@ export function BulkArchiveCards({
                       {isExpanded
                         ? actionLabels.countLabel(
                             getSelectedCount(categoryName),
-                            senders.length,
+                            senders.length
                           )
                         : actionLabels.allLabel}
                     </Button>
@@ -350,7 +361,7 @@ export function BulkArchiveCards({
                   <ChevronDownIcon
                     className={cn(
                       "size-5 text-muted-foreground transition-transform",
-                      isExpanded && "rotate-180",
+                      isExpanded && "rotate-180"
                     )}
                   />
                 </div>
@@ -362,7 +373,7 @@ export function BulkArchiveCards({
               <div className="border-t">
                 <div className="divide-y">
                   {senders.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-muted-foreground">
+                    <div className="p-4 text-center text-muted-foreground text-sm">
                       No senders in this category
                     </div>
                   ) : (
@@ -372,31 +383,31 @@ export function BulkArchiveCards({
                         <ButtonCheckbox
                           checked={areAllSelectedInCategory(categoryName)}
                           indeterminate={areSomeSelectedInCategory(
-                            categoryName,
+                            categoryName
                           )}
                           onChange={() =>
                             toggleSelectAllInCategory(categoryName)
                           }
                         />
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-muted-foreground text-sm">
                           {getSelectedCount(categoryName)} of {senders.length}{" "}
                           selected
                         </span>
                       </div>
                       {senders.map((sender) => (
                         <SenderRow
-                          key={sender.address}
-                          sender={sender}
+                          categories={categories}
+                          emailAccountId={emailAccountId}
                           isExpanded={!!expandedSenders[sender.address]}
                           isSelected={selectedSenders[sender.address] !== false}
+                          key={sender.address}
+                          onCategoryChange={onCategoryChange}
                           onToggle={() => toggleSender(sender.address)}
                           onToggleSelection={() =>
                             toggleSenderSelection(sender.address)
                           }
+                          sender={sender}
                           userEmail={userEmail}
-                          categories={categories}
-                          emailAccountId={emailAccountId}
-                          onCategoryChange={onCategoryChange}
                         />
                       ))}
                     </>
@@ -457,9 +468,9 @@ function SenderRow({
         />
         <div className="min-w-0 flex-1">
           <EmailCell
+            className="flex flex-col"
             emailAddress={sender.address}
             name={sender.name}
-            className="flex flex-col"
           />
         </div>
         <div className="mr-2 text-right">
@@ -469,13 +480,13 @@ function SenderRow({
           />
         </div>
         <Button
-          variant="ghost"
-          size="icon"
           className="size-8 text-muted-foreground hover:text-foreground"
           onClick={(e) => {
             e.stopPropagation();
             setEditDialogOpen(true);
           }}
+          size="icon"
+          variant="ghost"
         >
           <PencilIcon className="size-4" />
           <span className="sr-only">Edit category</span>
@@ -483,7 +494,7 @@ function SenderRow({
         <ChevronDownIcon
           className={cn(
             "size-5 text-muted-foreground transition-transform",
-            isExpanded && "rotate-180",
+            isExpanded && "rotate-180"
           )}
         />
       </div>
@@ -495,12 +506,12 @@ function SenderRow({
 
       {/* Edit category dialog */}
       <EditCategoryDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        sender={sender}
         categories={categories}
         emailAccountId={emailAccountId}
         onCategoryChange={onCategoryChange}
+        onOpenChange={setEditDialogOpen}
+        open={editDialogOpen}
+        sender={sender}
       />
     </div>
   );
@@ -522,12 +533,14 @@ function EditCategoryDialog({
   onCategoryChange?: () => Promise<unknown>;
 }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState(
-    sender.category?.id || "",
+    sender.category?.id || ""
   );
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
-    if (!selectedCategoryId) return;
+    if (!selectedCategoryId) {
+      return;
+    }
 
     setIsLoading(true);
     const result = await changeSenderCategoryAction(emailAccountId, {
@@ -547,7 +560,7 @@ function EditCategoryDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{sender.name || sender.address}</DialogTitle>
@@ -556,13 +569,13 @@ function EditCategoryDialog({
           <div className="flex items-center justify-between gap-8">
             <div className="space-y-1">
               <p className="font-medium">Category</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Choose which category this sender belongs to
               </p>
             </div>
             <Select
-              value={selectedCategoryId}
               onValueChange={setSelectedCategoryId}
+              value={selectedCategoryId}
             >
               <SelectTrigger className="w-[180px] shrink-0">
                 <SelectValue placeholder="Select category" />
@@ -578,13 +591,13 @@ function EditCategoryDialog({
           </div>
           <div className="flex justify-end gap-2">
             <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
               disabled={isLoading}
+              onClick={() => onOpenChange(false)}
+              variant="outline"
             >
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={isLoading}>
+            <Button disabled={isLoading} onClick={handleSave}>
               {isLoading ? "Saving..." : "Save"}
             </Button>
           </div>
@@ -606,7 +619,7 @@ function SenderStatus({
     switch (archiveStatus.status) {
       case "completed":
         return (
-          <span className="text-sm text-green-600">
+          <span className="text-green-600 text-sm">
             {archiveStatus.threadsTotal
               ? `Archived ${archiveStatus.threadsTotal}!`
               : "Archived"}
@@ -614,14 +627,14 @@ function SenderStatus({
         );
       case "processing":
         return (
-          <span className="text-sm text-blue-600">
+          <span className="text-blue-600 text-sm">
             {archiveStatus.threadsTotal - archiveStatus.threadIds.length} /{" "}
             {archiveStatus.threadsTotal}
           </span>
         );
       case "pending":
         return (
-          <span className="text-sm text-muted-foreground">Pending...</span>
+          <span className="text-muted-foreground text-sm">Pending...</span>
         );
     }
   }
@@ -631,7 +644,7 @@ function SenderStatus({
     switch (markReadStatus.status) {
       case "completed":
         return (
-          <span className="text-sm text-green-600">
+          <span className="text-green-600 text-sm">
             {markReadStatus.threadsTotal
               ? `Marked ${markReadStatus.threadsTotal} read!`
               : "Marked read"}
@@ -639,14 +652,14 @@ function SenderStatus({
         );
       case "processing":
         return (
-          <span className="text-sm text-blue-600">
+          <span className="text-blue-600 text-sm">
             {markReadStatus.threadsTotal - markReadStatus.threadIds.length} /{" "}
             {markReadStatus.threadsTotal}
           </span>
         );
       case "pending":
         return (
-          <span className="text-sm text-muted-foreground">Pending...</span>
+          <span className="text-muted-foreground text-sm">Pending...</span>
         );
     }
   }
@@ -679,7 +692,7 @@ function ExpandedEmails({
 
   if (error) {
     return (
-      <div className="border-t bg-muted/30 p-4 text-sm text-muted-foreground">
+      <div className="border-t bg-muted/30 p-4 text-muted-foreground text-sm">
         Error loading emails
       </div>
     );
@@ -687,7 +700,7 @@ function ExpandedEmails({
 
   if (!data?.threads.length) {
     return (
-      <div className="border-t bg-muted/30 p-4 text-sm text-muted-foreground">
+      <div className="border-t bg-muted/30 p-4 text-muted-foreground text-sm">
         No emails found
       </div>
     );
@@ -698,22 +711,24 @@ function ExpandedEmails({
       <div className="py-2">
         {data.threads.slice(0, 5).map((thread) => {
           const firstMessage = thread.messages[0];
-          if (!firstMessage) return null;
+          if (!firstMessage) {
+            return null;
+          }
           const subject = firstMessage.subject;
           const date = firstMessage.date;
           const snippet = thread.snippet || firstMessage.snippet;
 
           return (
-            <div key={thread.id} className="flex">
+            <div className="flex" key={thread.id}>
               <div className="flex items-center pl-[26px]">
                 <div className="h-full w-px bg-border" />
                 <div className="h-px w-4 bg-border" />
               </div>
               <Link
-                href={getEmailUrl(thread.id, userEmail, provider)}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="mr-2 flex flex-1 items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-muted/50"
+                href={getEmailUrl(thread.id, userEmail, provider)}
+                rel="noopener noreferrer"
+                target="_blank"
               >
                 <MailIcon className="size-4 shrink-0 text-muted-foreground" />
                 <span className="min-w-0 flex-1 truncate text-sm">
@@ -737,7 +752,7 @@ function ExpandedEmails({
                     </span>
                   )}
                 </span>
-                <span className="shrink-0 text-xs text-muted-foreground">
+                <span className="shrink-0 text-muted-foreground text-xs">
                   {formatShortDate(new Date(date))}
                 </span>
               </Link>

@@ -1,8 +1,8 @@
 import { EmailFirehose } from "@/app/(app)/[emailAccountId]/clean/EmailFirehose";
 import { PreviewBatch } from "@/app/(app)/[emailAccountId]/clean/PreviewBatch";
 import { Card } from "@/components/ui/card";
-import type { getThreadsByJobId } from "@/utils/redis/clean";
 import type { CleanupJob } from "@/generated/prisma/client";
+import type { getThreadsByJobId } from "@/utils/redis/clean";
 
 export function CleanRun({
   isPreviewBatch,
@@ -22,9 +22,9 @@ export function CleanRun({
       {isPreviewBatch && <PreviewBatch job={job} />}
       <Card className="p-6">
         <EmailFirehose
-          threads={threads.filter((t) => t.status !== "processing")}
-          stats={{ total, done }}
           action={job.action}
+          stats={{ total, done }}
+          threads={threads.filter((t) => t.status !== "processing")}
         />
       </Card>
     </div>

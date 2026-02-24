@@ -7,7 +7,10 @@
  * 1. cleanCompanyByName works (was broken before)
  * 2. cleanCompany with name + website works
  */
-import { cleanCompany, cleanCompanyByName } from "@/packages/enrichment/pdl/company";
+import {
+  cleanCompany,
+  cleanCompanyByName,
+} from "@/packages/enrichment/pdl/company";
 
 async function main() {
   console.log("=== PDL Company Cleaner Test ===\n");

@@ -1,13 +1,13 @@
-import type { EmailProvider, EmailLabel } from "@/utils/email/types";
+import { ActionType } from "@/generated/prisma/enums";
+import type { EmailLabel, EmailProvider } from "@/utils/email/types";
+import { labelMessageAndSync } from "@/utils/label.server";
 import type { Logger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
-import { ActionType } from "@/generated/prisma/enums";
+import { getRuleLabel } from "@/utils/rule/consts";
 import {
   CONVERSATION_STATUS_TYPES,
   type ConversationStatus,
 } from "./conversation-status-config";
-import { getRuleLabel } from "@/utils/rule/consts";
-import { labelMessageAndSync } from "@/utils/label.server";
 
 export type LabelIds = Record<
   ConversationStatus,
@@ -43,7 +43,9 @@ export async function removeConflictingThreadStatusLabels({
   const providerLabelIds = new Set(providerLabels.map((l) => l.id));
 
   for (const type of CONVERSATION_STATUS_TYPES) {
-    if (type === systemType) continue;
+    if (type === systemType) {
+      continue;
+    }
 
     let label = dbLabels[type as ConversationStatus];
 
@@ -57,7 +59,7 @@ export async function removeConflictingThreadStatusLabels({
       label = { labelId: null, label: null };
     }
 
-    if (!label.labelId && !label.label) {
+    if (!(label.labelId || label.label)) {
       const l = providerLabels.find((l) => l.name === getRuleLabel(type));
       if (!l?.id) {
         continue;
@@ -82,7 +84,7 @@ export async function removeConflictingThreadStatusLabels({
     logger.error("Failed to remove conflicting thread labels", {
       removeLabelIds,
       error,
-    }),
+    })
   );
 
   logger.info("Removed conflicting thread status labels", {
@@ -154,7 +156,7 @@ export async function applyThreadStatusLabel({
         labelId: targetLabel.labelId,
         labelName: targetLabel.label,
         error,
-      }),
+      })
     );
   };
 
@@ -175,7 +177,7 @@ export async function applyThreadStatusLabel({
 }
 
 export async function getLabelsFromDb(
-  emailAccountId: string,
+  emailAccountId: string
 ): Promise<LabelIds> {
   const rules = await prisma.rule.findMany({
     where: {
@@ -199,7 +201,9 @@ export async function getLabelsFromDb(
   };
 
   for (const rule of rules) {
-    if (!rule.systemType) continue;
+    if (!rule.systemType) {
+      continue;
+    }
     const labelAction = rule.actions.find((a) => a.type === ActionType.LABEL);
     if (labelAction?.labelId || labelAction?.label) {
       dbLabels[rule.systemType as ConversationStatus] = {

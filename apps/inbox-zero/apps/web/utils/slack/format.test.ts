@@ -1,24 +1,24 @@
-import { describe, expect, it } from "vitest";
 import { markdownToSlackMrkdwn } from "@inboxzero/slack";
+import { describe, expect, it } from "vitest";
 
 describe("markdownToSlackMrkdwn", () => {
   it("converts bold **text** to *text*", () => {
     expect(markdownToSlackMrkdwn("**Hello**")).toBe("*Hello*");
     expect(markdownToSlackMrkdwn("This is **bold** text")).toBe(
-      "This is *bold* text",
+      "This is *bold* text"
     );
   });
 
   it("converts escaped bold markdown to Slack bold", () => {
     expect(markdownToSlackMrkdwn("\\*\\*Hello\\*\\*")).toBe("*Hello*");
     expect(markdownToSlackMrkdwn("This is \\*\\*bold\\*\\* text")).toBe(
-      "This is *bold* text",
+      "This is *bold* text"
     );
   });
 
   it("converts Markdown links to Slack links", () => {
     expect(markdownToSlackMrkdwn("[Click here](https://example.com)")).toBe(
-      "<https://example.com|Click here>",
+      "<https://example.com|Click here>"
     );
   });
 
@@ -42,8 +42,8 @@ describe("markdownToSlackMrkdwn", () => {
   it("handles bold inside bullet points", () => {
     expect(
       markdownToSlackMrkdwn(
-        "*   **Organize with Labels:** Automatically label emails",
-      ),
+        "*   **Organize with Labels:** Automatically label emails"
+      )
     ).toBe("• *Organize with Labels:* Automatically label emails");
   });
 

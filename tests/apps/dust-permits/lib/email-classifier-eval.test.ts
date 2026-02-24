@@ -32,16 +32,16 @@ const ACCURACY_THRESHOLDS = {
 // =============================================================================
 
 interface EvalResult {
-  email: LabeledEmail;
-  keywordFilterPassed: boolean;
-  keywordFilterCorrect: boolean;
   classificationResult?: {
     isDustPermit: boolean;
     intent: EmailIntent;
   };
-  isDustPermitCorrect?: boolean;
-  intentCorrect?: boolean;
+  email: LabeledEmail;
   error?: string;
+  intentCorrect?: boolean;
+  isDustPermitCorrect?: boolean;
+  keywordFilterCorrect: boolean;
+  keywordFilterPassed: boolean;
 }
 
 async function isEndpointAvailable(): Promise<boolean> {

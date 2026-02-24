@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { motion } from "motion/react";
+import { useState } from "react";
 import { cn } from "@/utils";
 
 export function ExpandableText({
@@ -26,10 +26,10 @@ export function ExpandableText({
       <div className="relative overflow-hidden">
         {/* Always render the full text but add a mask when collapsed */}
         <motion.div
-          initial={{ height: "4rem" }}
           animate={{ height: isExpanded ? "auto" : "4rem" }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
           className={isExpanded ? "" : "overflow-hidden"}
+          initial={{ height: "4rem" }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
         >
           {text}
         </motion.div>
@@ -41,12 +41,12 @@ export function ExpandableText({
       </div>
 
       <motion.button
-        type="button"
+        className="mt-1 flex items-center text-muted-foreground text-xs hover:text-primary"
         onClick={(e) => {
           e.stopPropagation();
           setIsExpanded(!isExpanded);
         }}
-        className="mt-1 flex items-center text-xs text-muted-foreground hover:text-primary"
+        type="button"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >

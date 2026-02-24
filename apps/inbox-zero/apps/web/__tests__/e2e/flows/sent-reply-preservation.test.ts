@@ -14,24 +14,24 @@
  * RUN_E2E_FLOW_TESTS=true pnpm test-e2e sent-reply-deletion
  */
 
-import { describe, test, expect, beforeAll, afterEach } from "vitest";
+import { afterEach, beforeAll, describe, expect, test } from "vitest";
 import { shouldRunFlowTests, TIMEOUTS } from "./config";
-import { initializeFlowTests, setupFlowTest } from "./setup";
-import { generateTestSummary } from "./teardown";
+import type { TestAccount } from "./helpers/accounts";
 import {
   sendTestEmail,
   sendTestReply,
   TEST_EMAIL_SCENARIOS,
 } from "./helpers/email";
+import { clearLogs, logStep, setTestStartTime } from "./helpers/logging";
 import {
+  waitForDraftSendLog,
   waitForExecutedRule,
   waitForMessageInInbox,
   waitForReplyInInbox,
-  waitForDraftSendLog,
   waitForThreadMessageCount,
 } from "./helpers/polling";
-import { logStep, clearLogs, setTestStartTime } from "./helpers/logging";
-import type { TestAccount } from "./helpers/accounts";
+import { initializeFlowTests, setupFlowTest } from "./setup";
+import { generateTestSummary } from "./teardown";
 
 describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
   let gmail: TestAccount;
@@ -109,7 +109,7 @@ describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
       });
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       expect(draftAction).toBeDefined();
@@ -180,7 +180,7 @@ describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
 
       // Verify thread in Gmail has 2 messages (initial + reply)
       let gmailThreadMessages = await gmail.emailProvider.getThreadMessages(
-        gmailReceived.threadId,
+        gmailReceived.threadId
       );
 
       logStep("Gmail thread before follow-up", {
@@ -192,7 +192,7 @@ describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
 
       // Find User B's sent reply in the thread
       const userBReplyInThread = gmailThreadMessages.find(
-        (m) => m.id === userBReply.messageId,
+        (m) => m.id === userBReply.messageId
       );
       expect(userBReplyInThread).toBeDefined();
 
@@ -282,7 +282,7 @@ describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
       logStep("Step 7: Direct verification of User B's sent reply");
 
       const sentReplyMessage = await gmail.emailProvider.getMessage(
-        userBReply.messageId,
+        userBReply.messageId
       );
       expect(sentReplyMessage).toBeDefined();
       expect(sentReplyMessage.id).toBe(userBReply.messageId);
@@ -294,7 +294,7 @@ describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
 
       logStep("=== Test PASSED ===");
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   test(
@@ -355,7 +355,7 @@ describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
       });
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       expect(draftAction).toBeDefined();
@@ -422,7 +422,7 @@ describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
 
       // Verify thread in Outlook has messages
       let outlookThreadMessages = await outlook.emailProvider.getThreadMessages(
-        outlookReceived.threadId,
+        outlookReceived.threadId
       );
 
       logStep("Outlook thread before follow-up", {
@@ -490,7 +490,7 @@ describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
 
       // Find User B's sent reply by its exact messageId
       const userBReplyInThread = outlookThreadMessages.find(
-        (m) => m.id === userBReply.messageId,
+        (m) => m.id === userBReply.messageId
       );
 
       expect(userBReplyInThread).toBeDefined();
@@ -521,7 +521,7 @@ describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
       logStep("Step 7: Direct verification of User B's sent reply");
 
       const sentReplyMessage = await outlook.emailProvider.getMessage(
-        userBReplyInThread!.id,
+        userBReplyInThread!.id
       );
       expect(sentReplyMessage).toBeDefined();
 
@@ -532,7 +532,7 @@ describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
 
       logStep("=== Test PASSED ===");
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   test(
@@ -572,7 +572,7 @@ describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
       });
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
       expect(draftAction?.draftId).toBeTruthy();
       const aiDraftId = draftAction!.draftId!;
@@ -638,19 +638,19 @@ describe.skipIf(!shouldRunFlowTests())("Sent Reply Preservation", () => {
 
       // Verify User B's sent reply exists
       const userBReplyExists = threadMessages.some(
-        (m) => m.id === userBReply.messageId,
+        (m) => m.id === userBReply.messageId
       );
 
       expect(userBReplyExists).toBe(true);
 
       // Direct verification
       const sentReply = await gmail.emailProvider.getMessage(
-        userBReply.messageId,
+        userBReply.messageId
       );
       expect(sentReply).toBeDefined();
 
       logStep("=== Test PASSED ===");
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 });

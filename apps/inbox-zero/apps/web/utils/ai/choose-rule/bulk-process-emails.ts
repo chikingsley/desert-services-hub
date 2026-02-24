@@ -1,8 +1,8 @@
-import prisma from "@/utils/prisma";
-import { createEmailProvider } from "@/utils/email/provider";
 import { runRules } from "@/utils/ai/choose-rule/run-rules";
-import type { Logger } from "@/utils/logger";
+import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import type { ParsedMessage } from "@/utils/types";
 
 export async function bulkProcessInboxEmails({

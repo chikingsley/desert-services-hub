@@ -37,8 +37,8 @@ import { cn } from "@/lib/utils";
 interface ContractCardProps {
   contract: PipelineContract;
   index: number;
-  onSelect: (contract: PipelineContract) => void;
   onAdvance: (contract: PipelineContract) => void;
+  onSelect: (contract: PipelineContract) => void;
 }
 
 type DragState =

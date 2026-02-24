@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  calculateResponseTimes,
-  calculateSummaryStats,
-  calculateDistribution,
-} from "./calculate";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createScopedLogger } from "@/utils/logger";
 import { getMockMessage as getMockMessageHelper } from "../../../../../__tests__/helpers";
+import {
+  calculateDistribution,
+  calculateResponseTimes,
+  calculateSummaryStats,
+} from "./calculate";
 
 vi.mock("server-only", () => ({}));
 
@@ -18,8 +18,7 @@ describe("Response Time Stats", () => {
     beforeEach(() => {
       mockEmailProvider = {
         getThreadMessages: vi.fn(),
-        isSentMessage: (message: any) =>
-          message.labelIds?.includes("SENT") || false,
+        isSentMessage: (message: any) => message.labelIds?.includes("SENT"),
         name: "google",
       };
     });
@@ -54,7 +53,7 @@ describe("Response Time Stats", () => {
       const result = await calculateResponseTimes(
         [sentMsg],
         mockEmailProvider,
-        logger,
+        logger
       );
 
       expect(result.responseTimes).toHaveLength(1);
@@ -103,7 +102,7 @@ describe("Response Time Stats", () => {
       const result = await calculateResponseTimes(
         [sentMsg, getMockMessageHelper({ threadId, id: "s2" })],
         mockEmailProvider,
-        logger,
+        logger
       );
 
       // calculateResponseTimes processes unique threads from the input list.
@@ -144,7 +143,7 @@ describe("Response Time Stats", () => {
       const result = await calculateResponseTimes(
         [sentMsg],
         mockEmailProvider,
-        logger,
+        logger
       );
 
       expect(result.responseTimes).toHaveLength(1);
@@ -174,7 +173,7 @@ describe("Response Time Stats", () => {
       const result = await calculateResponseTimes(
         [sentMsg], // s1 is in the list
         mockEmailProvider,
-        logger,
+        logger
       );
 
       expect(result.responseTimes).toHaveLength(1);

@@ -23,7 +23,7 @@ export function processSWRResponse<
   TApiError extends { error: string } = { error: string }, // Assume API error shape
   TSWRError = Error, // Assume SWR error type
 >(
-  swrResult: SWRResponse<TData | TApiError, TSWRError>,
+  swrResult: SWRResponse<TData | TApiError, TSWRError>
 ): SWRResponse<TData | null, NormalizedError> {
   const swrError = swrResult.error as TSWRError | undefined; // Cast for type checking
   const data = swrResult.data as TData | TApiError | undefined; // Cast for type checking

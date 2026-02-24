@@ -1,24 +1,24 @@
+import clsx from "clsx";
+import Link from "next/link";
 import {
   type ForwardedRef,
-  type MouseEventHandler,
   forwardRef,
+  type MouseEventHandler,
   useCallback,
   useMemo,
 } from "react";
-import Link from "next/link";
-import clsx from "clsx";
 import { ActionButtons } from "@/components/ActionButtons";
-import { PlanBadge } from "@/components/PlanBadge";
-import type { Thread } from "@/components/email-list/types";
-import { extractNameFromEmail, participant } from "@/utils/email";
 import { Checkbox } from "@/components/Checkbox";
-import { EmailDate } from "@/components/email-list/EmailDate";
-import { decodeSnippet } from "@/utils/gmail/decode";
-import { useIsInAiQueue } from "@/store/ai-queue";
-import { Button } from "@/components/ui/button";
-import { findCtaLink } from "@/utils/parse/parseHtml.client";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { EmailDate } from "@/components/email-list/EmailDate";
+import type { Thread } from "@/components/email-list/types";
+import { PlanBadge } from "@/components/PlanBadge";
+import { Button } from "@/components/ui/button";
+import { useIsInAiQueue } from "@/store/ai-queue";
 import { internalDateToDate } from "@/utils/date";
+import { extractNameFromEmail, participant } from "@/utils/email";
+import { decodeSnippet } from "@/utils/gmail/decode";
+import { findCtaLink } from "@/utils/parse/parseHtml.client";
 
 export const EmailListItem = forwardRef(
   (
@@ -36,7 +36,7 @@ export const EmailListItem = forwardRef(
       onArchive: (thread: Thread) => void;
       refetch: () => void;
     },
-    ref: ForwardedRef<HTMLLIElement>,
+    ref: ForwardedRef<HTMLLIElement>
   ) => {
     const { provider, thread, splitView, onSelected } = props;
 
@@ -48,17 +48,19 @@ export const EmailListItem = forwardRef(
 
     const preventPropagation = useCallback(
       (e: React.MouseEvent | React.KeyboardEvent) => e.stopPropagation(),
-      [],
+      []
     );
 
     const onRowSelected = useCallback(
       () => onSelected(props.thread.id!),
-      [onSelected, props.thread.id],
+      [onSelected, props.thread.id]
     );
 
     const isPlanning = useIsInAiQueue(props.thread.id);
 
-    if (!lastMessage) return null;
+    if (!lastMessage) {
+      return null;
+    }
 
     const decodedSnippet = decodeSnippet(thread.snippet || lastMessage.snippet);
 
@@ -67,14 +69,17 @@ export const EmailListItem = forwardRef(
     return (
       <ErrorBoundary extra={{ props, cta, decodedSnippet }}>
         <li
-          ref={ref}
           className={clsx("group relative cursor-pointer border-l-4 py-3", {
-            "hover:bg-slate-50 dark:hover:bg-slate-950":
-              !props.selected && !props.opened,
+            "hover:bg-slate-50 dark:hover:bg-slate-950": !(
+              props.selected || props.opened
+            ),
             "bg-blue-50 dark:bg-blue-950": props.selected,
             "bg-blue-100 dark:bg-blue-900": props.opened,
-            "bg-slate-100 dark:bg-background":
-              !isUnread && !props.selected && !props.opened,
+            "bg-slate-100 dark:bg-background": !(
+              isUnread ||
+              props.selected ||
+              props.opened
+            ),
           })}
           onClick={props.onClick}
           onKeyDown={(e) => {
@@ -83,6 +88,7 @@ export const EmailListItem = forwardRef(
               props.onClick(e as any);
             }
           }}
+          ref={ref}
         >
           <div className="px-4">
             <div className="mx-auto flex">
@@ -92,7 +98,7 @@ export const EmailListItem = forwardRef(
                   "flex flex-1 items-center overflow-hidden whitespace-nowrap text-sm leading-6",
                   {
                     "font-semibold": isUnread,
-                  },
+                  }
                 )}
               >
                 <div
@@ -108,7 +114,7 @@ export const EmailListItem = forwardRef(
 
                 <div className="ml-4 w-48 min-w-0 overflow-hidden truncate text-foreground">
                   {extractNameFromEmail(
-                    participant(lastMessage, props.userEmail),
+                    participant(lastMessage, props.userEmail)
                   )}{" "}
                   {thread.messages.length > 1 ? (
                     <span className="font-normal">
@@ -120,10 +126,10 @@ export const EmailListItem = forwardRef(
                   <>
                     {cta && (
                       <Button
-                        variant="outline"
-                        size="xs"
-                        className="ml-2"
                         asChild
+                        className="ml-2"
+                        size="xs"
+                        variant="outline"
                       >
                         <Link href={cta.ctaLink} target="_blank">
                           {cta.ctaText}
@@ -133,7 +139,7 @@ export const EmailListItem = forwardRef(
                     <div className="ml-2 min-w-0 overflow-hidden text-foreground">
                       {lastMessage.headers.subject}
                     </div>
-                    <div className="ml-4 mr-6 flex flex-1 items-center overflow-hidden truncate font-normal leading-5 text-muted-foreground">
+                    <div className="mr-6 ml-4 flex flex-1 items-center overflow-hidden truncate font-normal text-muted-foreground leading-5">
                       {decodedSnippet}
                     </div>
                   </>
@@ -150,15 +156,15 @@ export const EmailListItem = forwardRef(
                     onKeyDown={preventPropagation}
                   >
                     <ActionButtons
-                      threadId={thread.id!}
-                      shadow
                       isPlanning={isPlanning}
-                      onPlanAiAction={() => props.onPlanAiAction(thread)}
                       onArchive={() => {
                         props.onArchive(thread);
                         props.closePanel();
                       }}
+                      onPlanAiAction={() => props.onPlanAiAction(thread)}
                       refetch={props.refetch}
+                      shadow
+                      threadId={thread.id!}
                     />
                   </div>
                   <EmailDate
@@ -179,11 +185,11 @@ export const EmailListItem = forwardRef(
                 <div className="min-w-0 overflow-hidden font-medium text-foreground">
                   {lastMessage.headers.subject}
                 </div>
-                <div className="mr-6 mt-0.5 flex flex-1 items-center overflow-hidden truncate pl-1 font-normal leading-5 text-muted-foreground">
+                <div className="mt-0.5 mr-6 flex flex-1 items-center overflow-hidden truncate pl-1 font-normal text-muted-foreground leading-5">
                   {decodedSnippet}
                 </div>
                 {cta && (
-                  <Button variant="outline" size="xs" className="mt-2" asChild>
+                  <Button asChild className="mt-2" size="xs" variant="outline">
                     <Link href={cta.ctaLink} target="_blank">
                       {cta.ctaText}
                     </Link>
@@ -195,7 +201,7 @@ export const EmailListItem = forwardRef(
         </li>
       </ErrorBoundary>
     );
-  },
+  }
 );
 
 EmailListItem.displayName = "EmailListItem";

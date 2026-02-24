@@ -6,7 +6,7 @@ export const INTERNAL_API_KEY_HEADER = "x-api-key";
 export function getInternalApiUrl(): string {
   const url = env.INTERNAL_API_URL || env.NEXT_PUBLIC_BASE_URL;
 
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+  if (!(url.startsWith("http://") || url.startsWith("https://"))) {
     return `https://${url}`;
   }
 
@@ -15,7 +15,7 @@ export function getInternalApiUrl(): string {
 
 export const isValidInternalApiKey = (
   headers: Headers,
-  logger: Logger,
+  logger: Logger
 ): boolean => {
   if (!env.INTERNAL_API_KEY) {
     logger.error("No internal API key set");

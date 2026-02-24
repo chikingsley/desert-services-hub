@@ -5,8 +5,8 @@ import { resolve } from "node:path";
 
 interface Finding {
   doc: string;
-  token: string;
   resolvedPath: string;
+  token: string;
 }
 
 const repoRoot = process.cwd();

@@ -14,7 +14,7 @@ export function ErrorPage(props: {
   button?: React.ReactNode;
 }) {
   return (
-    <div className="pb-40 pt-60">
+    <div className="pt-60 pb-40">
       <Card className="mx-auto max-w-lg text-center">
         <CardHeader>
           <CardTitle>{props.title}</CardTitle>

@@ -10,53 +10,53 @@ import type { SelectorMap } from "@/form-data";
 import type { ValidationHelpers } from "./helpers";
 
 export interface CategoryC1State {
-  hasPreWater: boolean;
-  hasPhaseWork: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
+  hasPhaseWork: boolean;
+  hasPreWater: boolean;
 }
 
 export interface CategoryC2State {
-  hasVisiblyMoist: boolean;
   hasAstm: boolean;
-  hasSuppressants: boolean;
-  hasSuppressantFrequency: boolean;
-  hasSuppressantAmount: boolean;
-  hasWindBarriers: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
+  hasSuppressantAmount: boolean;
+  hasSuppressantFrequency: boolean;
+  hasSuppressants: boolean;
+  hasVisiblyMoist: boolean;
+  hasWindBarriers: boolean;
 }
 
 export interface CategoryC3State {
   hasApplyWater: boolean;
-  hasSurfaceGravel: boolean;
-  hasSuppressants: boolean;
-  hasSuppressantFrequency: boolean;
-  hasSuppressantAmount: boolean;
   hasCoverTarps: boolean;
-  hasVegetative: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
+  hasSuppressantAmount: boolean;
+  hasSuppressantFrequency: boolean;
+  hasSuppressants: boolean;
+  hasSurfaceGravel: boolean;
+  hasVegetative: boolean;
 }
 
 export interface CategoryC4State {
-  hasPave: boolean;
-  hasPaveWhen: boolean;
-  hasGravel: boolean;
-  hasSuppressants: boolean;
-  hasSuppressantFrequency: boolean;
-  hasSuppressantAmount: boolean;
-  hasVegetative: boolean;
-  hasRestrictAccess: boolean;
   hasApplyWaterPrevent: boolean;
   hasApplyWaterPreventMethods: boolean;
   hasApplyWaterPreventOtherText: boolean;
+  hasGravel: boolean;
+  hasOther: boolean;
+  hasOtherDescription: boolean;
+  hasPave: boolean;
+  hasPaveWhen: boolean;
   hasPreventAccess: boolean;
   hasPreventAccessMethods: boolean;
   hasPreventAccessOtherText: boolean;
   hasRestoreVegetation: boolean;
-  hasOther: boolean;
-  hasOtherDescription: boolean;
+  hasRestrictAccess: boolean;
+  hasSuppressantAmount: boolean;
+  hasSuppressantFrequency: boolean;
+  hasSuppressants: boolean;
+  hasVegetative: boolean;
 }
 
 function getCategoryC1State(

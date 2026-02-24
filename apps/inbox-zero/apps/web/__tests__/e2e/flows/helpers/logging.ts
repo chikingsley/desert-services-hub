@@ -14,24 +14,26 @@ export function setTestStartTime(): void {
 }
 
 function getElapsedTime(): string {
-  if (!testStartTimestamp) return "";
+  if (!testStartTimestamp) {
+    return "";
+  }
   const elapsed = Date.now() - testStartTimestamp;
   return `+${(elapsed / 1000).toFixed(1)}s`;
 }
 
 interface WebhookPayload {
-  timestamp: Date;
-  provider: "google" | "microsoft";
   payload: unknown;
+  provider: "google" | "microsoft";
+  timestamp: Date;
 }
 
 interface ApiCall {
-  timestamp: Date;
-  method: string;
+  duration: number;
   endpoint: string;
+  method: string;
   request?: unknown;
   response?: unknown;
-  duration: number;
+  timestamp: Date;
 }
 
 // In-memory log storage for current test run
@@ -43,7 +45,7 @@ const apiCallLog: ApiCall[] = [];
  */
 export function logWebhook(
   provider: "google" | "microsoft",
-  payload: unknown,
+  payload: unknown
 ): void {
   const entry: WebhookPayload = {
     timestamp: new Date(),
@@ -53,7 +55,7 @@ export function logWebhook(
   webhookLog.push(entry);
   console.log(
     `[E2E-${E2E_RUN_ID}] Webhook received from ${provider}:`,
-    JSON.stringify(payload, null, 2),
+    JSON.stringify(payload, null, 2)
   );
 }
 
@@ -65,7 +67,7 @@ export function logApiCall(
   endpoint: string,
   request: unknown,
   response: unknown,
-  duration: number,
+  duration: number
 ): void {
   const entry: ApiCall = {
     timestamp: new Date(),
@@ -80,7 +82,7 @@ export function logApiCall(
   // Only log detailed info in verbose mode
   if (process.env.E2E_VERBOSE === "true") {
     console.log(
-      `[E2E-${E2E_RUN_ID}] API ${method} ${endpoint} (${duration}ms)`,
+      `[E2E-${E2E_RUN_ID}] API ${method} ${endpoint} (${duration}ms)`
     );
   }
 }
@@ -123,7 +125,7 @@ export function logStep(step: string, details?: Record<string, unknown>): void {
 export function logAssertion(
   name: string,
   passed: boolean,
-  details?: string,
+  details?: string
 ): void {
   const status = passed ? "PASS" : "FAIL";
   const detailStr = details ? ` (${details})` : "";
@@ -141,7 +143,7 @@ export function logTestSummary(
     webhooksReceived: number;
     apiCalls: number;
     error?: string;
-  },
+  }
 ): void {
   console.log(`\n[E2E-${E2E_RUN_ID}] ===== Test Summary: ${testName} =====`);
   console.log(`  Status: ${result.passed ? "PASSED" : "FAILED"}`);

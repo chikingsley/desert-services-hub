@@ -1,9 +1,9 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import type { LanguageModelUsage } from "ai";
-import { OPENROUTER_MODEL_PRICING } from "@/utils/llms/pricing.generated";
-import { calculateUsageCost, saveAiUsage } from "./usage";
 import { publishAiCall } from "@inboxzero/tinybird-ai-analytics";
+import type { LanguageModelUsage } from "ai";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { OPENROUTER_MODEL_PRICING } from "@/utils/llms/pricing.generated";
 import { saveUsage } from "@/utils/redis/usage";
+import { calculateUsageCost, saveAiUsage } from "./usage";
 
 vi.mock("@inboxzero/tinybird-ai-analytics", () => ({
   publishAiCall: vi.fn().mockResolvedValue(undefined),
@@ -31,7 +31,9 @@ describe("calculateUsageCost", () => {
     const pricing = OPENROUTER_MODEL_PRICING["gpt-5.1"];
 
     expect(pricing).toBeDefined();
-    if (!pricing) throw new Error("Expected pricing for gpt-5.1");
+    if (!pricing) {
+      throw new Error("Expected pricing for gpt-5.1");
+    }
 
     const usage: LanguageModelUsage = {
       inputTokens: 1000,
@@ -74,7 +76,9 @@ describe("calculateUsageCost", () => {
     const model = "openai/gpt-5.1:online";
     const baseModel = "gpt-5.1";
     const pricing = OPENROUTER_MODEL_PRICING[baseModel];
-    if (!pricing) throw new Error("Expected pricing for gpt-5.1");
+    if (!pricing) {
+      throw new Error("Expected pricing for gpt-5.1");
+    }
 
     const usage: LanguageModelUsage = {
       inputTokens: 500,
@@ -97,7 +101,9 @@ describe("calculateUsageCost", () => {
     const provider = "openrouter";
     const model = "openai/gpt-5.1";
     const pricing = OPENROUTER_MODEL_PRICING["gpt-5.1"];
-    if (!pricing) throw new Error("Expected pricing for gpt-5.1");
+    if (!pricing) {
+      throw new Error("Expected pricing for gpt-5.1");
+    }
 
     const usage: LanguageModelUsage = {
       inputTokens: 100,
@@ -117,7 +123,9 @@ describe("calculateUsageCost", () => {
     const provider = "openrouter";
     const model = "openai/gpt-5.1";
     const pricing = OPENROUTER_MODEL_PRICING["gpt-5.1"];
-    if (!pricing) throw new Error("Expected pricing for gpt-5.1");
+    if (!pricing) {
+      throw new Error("Expected pricing for gpt-5.1");
+    }
 
     const usage: LanguageModelUsage = {
       inputTokens: undefined as unknown as number,
@@ -149,7 +157,7 @@ describe("calculateUsageCost", () => {
         provider: "openai",
         model: "model-that-does-not-exist",
         usage,
-      }),
+      })
     ).toBe(0);
   });
 });
@@ -184,7 +192,7 @@ describe("saveAiUsage", () => {
         userId: "user@example.com",
         cachedInputTokens: 300,
         reasoningTokens: 25,
-      }),
+      })
     );
 
     expect(saveUsage).toHaveBeenCalledTimes(1);
@@ -197,7 +205,7 @@ describe("saveAiUsage", () => {
           model: "openai/gpt-5.1",
           usage,
         }),
-      }),
+      })
     );
   });
 });

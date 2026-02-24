@@ -1,32 +1,32 @@
-import { Suspense } from "react";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { PenIcon, SparklesIcon } from "lucide-react";
 import sortBy from "lodash/sortBy";
-import prisma from "@/utils/prisma";
+import { PenIcon, SparklesIcon } from "lucide-react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { ArchiveProgress } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/ArchiveProgress";
+import { PermissionsCheck } from "@/app/(app)/[emailAccountId]/PermissionsCheck";
+import { CategorizeSendersProgress } from "@/app/(app)/[emailAccountId]/smart-categories/CategorizeProgress";
+import { CategorizeWithAiButton } from "@/app/(app)/[emailAccountId]/smart-categories/CategorizeWithAiButton";
+import { CreateCategoryButton } from "@/app/(app)/[emailAccountId]/smart-categories/CreateCategoryButton";
+import { Uncategorized } from "@/app/(app)/[emailAccountId]/smart-categories/Uncategorized";
 import { ClientOnly } from "@/components/ClientOnly";
 import { GroupedTable } from "@/components/GroupedTable";
+import { PremiumAlertWithData } from "@/components/PremiumAlert";
 import { TopBar } from "@/components/TopBar";
-import { CreateCategoryButton } from "@/app/(app)/[emailAccountId]/smart-categories/CreateCategoryButton";
-import { getUserCategoriesWithRules } from "@/utils/category.server";
-import { CategorizeWithAiButton } from "@/app/(app)/[emailAccountId]/smart-categories/CategorizeWithAiButton";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardTitle,
-  CardHeader,
   CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Uncategorized } from "@/app/(app)/[emailAccountId]/smart-categories/Uncategorized";
-import { PermissionsCheck } from "@/app/(app)/[emailAccountId]/PermissionsCheck";
-import { ArchiveProgress } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/ArchiveProgress";
-import { PremiumAlertWithData } from "@/components/PremiumAlert";
-import { Button } from "@/components/ui/button";
-import { CategorizeSendersProgress } from "@/app/(app)/[emailAccountId]/smart-categories/CategorizeProgress";
-import { getCategorizationProgress } from "@/utils/redis/categorization-progress";
-import { prefixPath } from "@/utils/path";
+import { getUserCategoriesWithRules } from "@/utils/category.server";
 import { checkUserOwnsEmailAccount } from "@/utils/email-account";
+import { prefixPath } from "@/utils/path";
+import prisma from "@/utils/prisma";
+import { getCategorizationProgress } from "@/utils/redis/categorization-progress";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -56,8 +56,9 @@ export default async function CategoriesPage({
     getCategorizationProgress({ emailAccountId }),
   ]);
 
-  if (!(senders.length > 0 || categories.length > 0))
+  if (!(senders.length > 0 || categories.length > 0)) {
     redirect(prefixPath(emailAccountId, "/smart-categories/setup"));
+  }
 
   return (
     <>
@@ -90,7 +91,7 @@ export default async function CategoriesPage({
                   variant: "outline",
                 }}
               />
-              <Button variant="outline" asChild>
+              <Button asChild variant="outline">
                 <Link
                   href={prefixPath(emailAccountId, "/smart-categories/setup")}
                 >
@@ -102,7 +103,7 @@ export default async function CategoriesPage({
             </div>
           </TopBar>
 
-          <TabsContent value="categories" className="m-0">
+          <TabsContent className="m-0" value="categories">
             {senders.length === 0 && (
               <Card className="m-4">
                 <CardHeader>
@@ -120,27 +121,25 @@ export default async function CategoriesPage({
 
             <ClientOnly>
               <GroupedTable
+                categories={categories}
                 emailGroups={sortBy(
                   senders,
-                  (sender) => sender.category?.name,
+                  (sender) => sender.category?.name
                 ).map((sender) => ({
                   address: sender.email,
                   category:
                     categories.find(
-                      (category) => category.id === sender.category?.id,
+                      (category) => category.id === sender.category?.id
                     ) || null,
                 }))}
-                categories={categories}
               />
             </ClientOnly>
           </TabsContent>
 
-          <TabsContent value="uncategorized" className="m-0">
+          <TabsContent className="m-0" value="uncategorized">
             <Uncategorized
+              autoCategorizeSenders={emailAccount?.autoCategorizeSenders}
               categories={categories}
-              autoCategorizeSenders={
-                emailAccount?.autoCategorizeSenders || false
-              }
             />
           </TabsContent>
         </Tabs>

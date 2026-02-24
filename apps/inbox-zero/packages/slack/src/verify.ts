@@ -4,7 +4,7 @@ export function verifySlackSignature(
   signingSecret: string,
   timestamp: string,
   body: string,
-  signature: string,
+  signature: string
 ): boolean {
   const sigBasestring = `v0:${timestamp}:${body}`;
   const mySignature = `v0=${crypto

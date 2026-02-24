@@ -1,7 +1,7 @@
 import { ThreadTrackerType } from "@/generated/prisma/enums";
-import { ReplyTrackerEmails } from "./ReplyTrackerEmails";
-import { getPaginatedThreadTrackers } from "./fetch-trackers";
 import type { TimeRange } from "./date-filter";
+import { getPaginatedThreadTrackers } from "./fetch-trackers";
+import { ReplyTrackerEmails } from "./ReplyTrackerEmails";
 
 export async function NeedsAction({
   emailAccountId,
@@ -25,12 +25,12 @@ export async function NeedsAction({
 
   return (
     <ReplyTrackerEmails
-      trackers={trackers}
       emailAccountId={emailAccountId}
-      userEmail={userEmail}
-      type={ThreadTrackerType.NEEDS_ACTION}
-      totalPages={totalPages}
       isAnalyzing={isAnalyzing}
+      totalPages={totalPages}
+      trackers={trackers}
+      type={ThreadTrackerType.NEEDS_ACTION}
+      userEmail={userEmail}
     />
   );
 }

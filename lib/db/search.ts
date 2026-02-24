@@ -26,9 +26,7 @@ export function likeWhere(
 ): { clause: string; params: string[]; nextIndex: number } {
   const pattern = `%${query}%`;
   return {
-    clause: columns
-      .map((c, i) => `${c} ILIKE $${startIndex + i}`)
-      .join(" OR "),
+    clause: columns.map((c, i) => `${c} ILIKE $${startIndex + i}`).join(" OR "),
     params: columns.map(() => pattern),
     nextIndex: startIndex + columns.length,
   };

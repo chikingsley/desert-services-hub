@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { withEmailAccount } from "@/utils/middleware";
 import { getMicrosoftDriveOAuth2Url } from "@/utils/drive/client";
 import { DRIVE_STATE_COOKIE_NAME } from "@/utils/drive/constants";
+import { withEmailAccount } from "@/utils/middleware";
 import {
   generateOAuthState,
   oauthStateCookieOptions,

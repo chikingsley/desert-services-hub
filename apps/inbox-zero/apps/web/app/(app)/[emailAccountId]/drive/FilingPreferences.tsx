@@ -1,8 +1,8 @@
 "use client";
 
 import { useAccount } from "@/providers/EmailAccountProvider";
-import { FilingRulesForm } from "./FilingRulesForm";
 import { AllowedFolders } from "./AllowedFolders";
+import { FilingRulesForm } from "./FilingRulesForm";
 
 export function FilingPreferences() {
   const { emailAccountId } = useAccount();

@@ -5,7 +5,7 @@ type LoggerFlushExtra = Record<string, unknown>;
 
 export async function flushLoggerSafely(
   logger: Logger,
-  extra?: LoggerFlushExtra,
+  extra?: LoggerFlushExtra
 ) {
   try {
     await logger.flush();

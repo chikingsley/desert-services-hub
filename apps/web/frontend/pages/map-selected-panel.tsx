@@ -2,10 +2,10 @@ import type { LowestPoint, ParcelInfo } from "./map-helpers";
 import { metersToFeet } from "./map-helpers";
 
 interface MapSelectedPanelProps {
-  selected: ParcelInfo;
-  lowestPoint: LowestPoint | null;
   findingLowestPoint: boolean;
+  lowestPoint: LowestPoint | null;
   onClear: () => void;
+  selected: ParcelInfo;
 }
 
 export function MapSelectedPanel({

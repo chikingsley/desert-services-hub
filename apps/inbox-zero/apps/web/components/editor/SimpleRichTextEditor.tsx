@@ -1,23 +1,23 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import { Markdown } from "tiptap-markdown";
 import { Placeholder } from "@tiptap/extension-placeholder";
-import { useImperativeHandle, forwardRef } from "react";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { forwardRef, useImperativeHandle } from "react";
+import { Markdown } from "tiptap-markdown";
+import type { EmailLabel } from "@/providers/EmailProvider";
 import { cn } from "@/utils";
 import { createLabelMentionExtension } from "./extensions/LabelMention";
-import type { EmailLabel } from "@/providers/EmailProvider";
 import "./SimpleRichTextEditor.css";
 
 interface SimpleRichTextEditorProps {
-  placeholder?: string;
   className?: string;
   defaultValue?: string;
-  minHeight?: number;
-  userLabels?: EmailLabel[];
-  onClearContents?: () => void;
   editable?: boolean;
+  minHeight?: number;
+  onClearContents?: () => void;
+  placeholder?: string;
+  userLabels?: EmailLabel[];
 }
 
 export interface SimpleRichTextEditorRef {
@@ -39,7 +39,7 @@ export const SimpleRichTextEditor = forwardRef<
       onClearContents,
       editable = true,
     },
-    ref,
+    ref
   ) => {
     const editor = useEditor({
       editable,
@@ -89,19 +89,19 @@ export const SimpleRichTextEditor = forwardRef<
       editorProps: {
         attributes: {
           class: cn(
-            "p-3 max-w-none focus:outline-none max-w-none simple-rich-editor",
+            "simple-rich-editor max-w-none max-w-none p-3 focus:outline-none",
             "prose prose-sm",
             "prose-headings:font-title prose-headings:text-foreground",
-            "prose-p:text-foreground prose-li:text-foreground",
-            "prose-strong:text-foreground prose-strong:font-semibold",
-            "prose-ul:text-foreground prose-ol:text-foreground",
+            "prose-li:text-foreground prose-p:text-foreground",
+            "prose-strong:font-semibold prose-strong:text-foreground",
+            "prose-ol:text-foreground prose-ul:text-foreground",
             "[&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
             // Placeholder styles
             "[&_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
             "[&_p.is-editor-empty:first-child::before]:float-left",
             "[&_p.is-editor-empty:first-child::before]:text-muted-foreground",
             "[&_p.is-editor-empty:first-child::before]:pointer-events-none",
-            "[&_p.is-editor-empty:first-child::before]:h-0",
+            "[&_p.is-editor-empty:first-child::before]:h-0"
           ),
           style: `min-height: ${minHeight}px`,
           ...(placeholder && { "data-placeholder": placeholder }),
@@ -136,7 +136,7 @@ export const SimpleRichTextEditor = forwardRef<
           return editor?.storage.markdown.getMarkdown() || "";
         },
       }),
-      [editor],
+      [editor]
     );
 
     return (
@@ -146,7 +146,7 @@ export const SimpleRichTextEditor = forwardRef<
             "rounded-md border border-input bg-background",
             editable &&
               "focus-within:border-ring focus-within:ring-1 focus-within:ring-ring",
-            !editable && "bg-muted/30 cursor-not-allowed",
+            !editable && "cursor-not-allowed bg-muted/30"
           )}
           style={{ minHeight }}
         >
@@ -154,5 +154,5 @@ export const SimpleRichTextEditor = forwardRef<
         </div>
       </div>
     );
-  },
+  }
 );

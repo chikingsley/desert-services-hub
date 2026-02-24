@@ -1,19 +1,19 @@
 "use server";
 
-import prisma from "@/utils/prisma";
 import { GroupItemSource } from "@/generated/prisma/enums";
-import { emailToContent } from "@/utils/mail";
-import { isColdEmail } from "@/utils/cold-email/is-cold-email";
 import {
   coldEmailBlockerBody,
   markNotColdEmailBody,
 } from "@/utils/actions/cold-email.validation";
 import { actionClient } from "@/utils/actions/safe-action";
-import { SafeError } from "@/utils/error";
+import { getColdEmailRule } from "@/utils/cold-email/cold-email-rule";
+import { isColdEmail } from "@/utils/cold-email/is-cold-email";
+import { internalDateToDate } from "@/utils/date";
 import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
-import { getColdEmailRule } from "@/utils/cold-email/cold-email-rule";
-import { internalDateToDate } from "@/utils/date";
+import { SafeError } from "@/utils/error";
+import { emailToContent } from "@/utils/mail";
+import prisma from "@/utils/prisma";
 import { saveLearnedPattern } from "@/utils/rule/learned-patterns";
 
 export const markNotColdEmailAction = actionClient
@@ -49,19 +49,21 @@ export const markNotColdEmailAction = actionClient
         }),
         removeColdEmailLabelFromSender(emailProvider, sender, coldEmailRule),
       ]);
-    },
+    }
   );
 
 async function removeColdEmailLabelFromSender(
   emailProvider: EmailProvider,
   sender: string,
-  coldEmailRule: { actions: { labelId: string | null }[] },
+  coldEmailRule: { actions: { labelId: string | null }[] }
 ) {
   const labelIds = coldEmailRule.actions
     .map((action) => action.labelId)
     .filter((id): id is string => Boolean(id));
 
-  if (labelIds.length === 0) return;
+  if (labelIds.length === 0) {
+    return;
+  }
 
   const { threads } = await emailProvider.getThreadsWithQuery({
     query: { fromEmail: sender },
@@ -98,11 +100,15 @@ export const testColdEmailAction = actionClient
         },
       });
 
-      if (!emailAccount) throw new SafeError("Email account not found");
+      if (!emailAccount) {
+        throw new SafeError("Email account not found");
+      }
 
       const coldEmailRule = await getColdEmailRule(emailAccountId);
 
-      if (!coldEmailRule) throw new SafeError("Cold email rule not found");
+      if (!coldEmailRule) {
+        throw new SafeError("Cold email rule not found");
+      }
 
       const emailProvider = await createEmailProvider({
         emailAccountId,
@@ -133,5 +139,5 @@ export const testColdEmailAction = actionClient
       });
 
       return response;
-    },
+    }
   );

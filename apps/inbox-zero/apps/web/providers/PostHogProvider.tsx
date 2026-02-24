@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
-import { useSession } from "@/utils/auth-client";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { env } from "@/env";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { useSession } from "@/utils/auth-client";
 
 // based on: https://posthog.com/docs/libraries/next-js
 
@@ -34,10 +34,11 @@ export function PostHogIdentify() {
   const { emailAccount } = useAccount();
 
   useEffect(() => {
-    if (session?.user.email)
+    if (session?.user.email) {
       posthog.identify(session.user.email, {
         email: session.user.email,
       });
+    }
   }, [session?.user.email]);
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export function PostHogIdentify() {
         {},
         {
           default_email_account_provider: emailAccount?.account?.provider,
-        },
+        }
       );
     }
   }, [emailAccount]);

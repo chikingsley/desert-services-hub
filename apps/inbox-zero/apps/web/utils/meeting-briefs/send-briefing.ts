@@ -1,20 +1,20 @@
-import { render } from "@react-email/render";
-import { env } from "@/env";
-import { createEmailProvider } from "@/utils/email/provider";
 import { sendMeetingBriefingEmail } from "@inboxzero/resend";
 import MeetingBriefingEmail, {
-  generateMeetingBriefingSubject,
-  type MeetingBriefingEmailProps,
   type BriefingContent,
+  generateMeetingBriefingSubject,
   type InternalTeamMember,
+  type MeetingBriefingEmailProps,
 } from "@inboxzero/resend/emails/meeting-briefing";
 import { sendMeetingBriefingToSlack } from "@inboxzero/slack";
+import { render } from "@react-email/render";
+import { env } from "@/env";
 import { MessagingProvider } from "@/generated/prisma/enums";
 import type { CalendarEvent } from "@/utils/calendar/event-types";
-import type { Logger } from "@/utils/logger";
-import { createUnsubscribeToken } from "@/utils/unsubscribe";
 import { formatTimeInUserTimezone } from "@/utils/date";
+import { createEmailProvider } from "@/utils/email/provider";
+import type { Logger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
+import { createUnsubscribeToken } from "@/utils/unsubscribe";
 
 export async function sendBriefing({
   event,
@@ -79,12 +79,14 @@ export async function sendBriefing({
         provider,
         formattedTime,
         logger,
-      }),
+      })
     );
   }
 
   for (const channel of channels) {
-    if (!channel.accessToken || !channel.channelId) continue;
+    if (!(channel.accessToken && channel.channelId)) {
+      continue;
+    }
 
     switch (channel.provider) {
       case MessagingProvider.SLACK:
@@ -98,7 +100,7 @@ export async function sendBriefing({
             eventUrl: event.eventUrl ?? undefined,
             briefingContent: briefingContentWithTeam,
             logger,
-          }),
+          })
         );
         break;
     }

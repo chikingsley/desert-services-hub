@@ -1,12 +1,12 @@
 import { z } from "zod";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { createScopedLogger } from "@/utils/logger";
-import type { EmailForLLM } from "@/utils/types";
-import { stringifyEmailSimple } from "@/utils/stringify-email";
-import { getModel } from "@/utils/llms/model";
-import { createGenerateObject } from "@/utils/llms";
 import { getUserInfoPrompt } from "@/utils/ai/helpers";
 import { PROMPT_SECURITY_INSTRUCTIONS } from "@/utils/ai/security";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { createScopedLogger } from "@/utils/logger";
+import { stringifyEmailSimple } from "@/utils/stringify-email";
+import type { EmailForLLM } from "@/utils/types";
 
 const logger = createScopedLogger("summarize-digest-email");
 
@@ -25,7 +25,9 @@ export async function aiSummarizeEmailForDigest({
   messageToSummarize: EmailForLLM;
 }): Promise<AISummarizeResult | null> {
   // If messageToSummarize somehow is null/undefined, default to null.
-  if (!messageToSummarize) return null;
+  if (!messageToSummarize) {
+    return null;
+  }
 
   const userMessageForPrompt = messageToSummarize;
 

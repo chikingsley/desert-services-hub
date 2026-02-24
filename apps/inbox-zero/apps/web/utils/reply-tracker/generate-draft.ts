@@ -1,25 +1,25 @@
-import type { ParsedMessage } from "@/utils/types";
-import { escapeHtml } from "@/utils/string";
-import { internalDateToDate } from "@/utils/date";
-import { getEmailForLLM } from "@/utils/get-email-from-message";
-import { extractEmailAddress, extractEmailAddresses } from "@/utils/email";
+import { aiGetCalendarAvailability } from "@/utils/ai/calendar/availability";
+import { aiExtractRelevantKnowledge } from "@/utils/ai/knowledge/extract";
+import { aiExtractFromEmailHistory } from "@/utils/ai/knowledge/extract-from-email-history";
+import { mcpAgent } from "@/utils/ai/mcp/mcp-agent";
 import { aiDraftReply } from "@/utils/ai/reply/draft-reply";
-import { getReply, saveReply } from "@/utils/redis/reply";
-import { getWritingStyle } from "@/utils/user/get";
+import { aiCollectReplyContext } from "@/utils/ai/reply/reply-context-collector";
+import { internalDateToDate } from "@/utils/date";
+import { extractEmailAddress, extractEmailAddresses } from "@/utils/email";
+import type { EmailProvider } from "@/utils/email/types";
+import { getEmailForLLM } from "@/utils/get-email-from-message";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { Logger } from "@/utils/logger";
-import prisma from "@/utils/prisma";
-import { aiExtractRelevantKnowledge } from "@/utils/ai/knowledge/extract";
-import { stringifyEmail } from "@/utils/stringify-email";
-import { aiExtractFromEmailHistory } from "@/utils/ai/knowledge/extract-from-email-history";
-import type { EmailProvider } from "@/utils/email/types";
-import { aiCollectReplyContext } from "@/utils/ai/reply/reply-context-collector";
-import { aiGetCalendarAvailability } from "@/utils/ai/calendar/availability";
-import { mcpAgent } from "@/utils/ai/mcp/mcp-agent";
 import {
-  getMeetingContext,
   formatMeetingContextForPrompt,
+  getMeetingContext,
 } from "@/utils/meeting-briefs/recipient-context";
+import prisma from "@/utils/prisma";
+import { getReply, saveReply } from "@/utils/redis/reply";
+import { escapeHtml } from "@/utils/string";
+import { stringifyEmail } from "@/utils/stringify-email";
+import type { ParsedMessage } from "@/utils/types";
+import { getWritingStyle } from "@/utils/user/get";
 
 /**
  * Fetches thread messages and generates draft content in one step
@@ -29,7 +29,7 @@ export async function fetchMessagesAndGenerateDraft(
   threadId: string,
   client: EmailProvider,
   testMessage: ParsedMessage | undefined,
-  logger: Logger,
+  logger: Logger
 ): Promise<string> {
   const { threadMessages, previousConversationMessages } = testMessage
     ? { threadMessages: [testMessage], previousConversationMessages: null }
@@ -40,7 +40,7 @@ export async function fetchMessagesAndGenerateDraft(
     threadMessages,
     previousConversationMessages,
     client,
-    logger,
+    logger
   );
 
   if (typeof result !== "string") {
@@ -71,7 +71,7 @@ export async function fetchMessagesAndGenerateDraft(
  */
 async function fetchThreadAndConversationMessages(
   threadId: string,
-  client: EmailProvider,
+  client: EmailProvider
 ): Promise<{
   threadMessages: ParsedMessage[];
   previousConversationMessages: ParsedMessage[] | null;
@@ -79,7 +79,7 @@ async function fetchThreadAndConversationMessages(
   const threadMessages = await client.getThreadMessages(threadId);
   const previousConversationMessages =
     await client.getPreviousConversationMessages(
-      threadMessages.map((msg) => msg.id),
+      threadMessages.map((msg) => msg.id)
     );
 
   return {
@@ -93,11 +93,13 @@ async function generateDraftContent(
   threadMessages: ParsedMessage[],
   previousConversationMessages: ParsedMessage[] | null,
   emailProvider: EmailProvider,
-  logger: Logger,
+  logger: Logger
 ) {
   const lastMessage = threadMessages.at(-1);
 
-  if (!lastMessage) throw new Error("No message provided");
+  if (!lastMessage) {
+    throw new Error("No message provided");
+  }
 
   // Check Redis cache for reply
   const reply = await getReply({
@@ -105,7 +107,9 @@ async function generateDraftContent(
     messageId: lastMessage.id,
   });
 
-  if (reply) return reply;
+  if (reply) {
+    return reply;
+  }
 
   const messages = threadMessages.map((msg, index) => ({
     date: internalDateToDate(msg.internalDate),
@@ -127,7 +131,7 @@ async function generateDraftContent(
   // 2a. Extract relevant knowledge
   const lastMessageContent = stringifyEmail(
     messages[messages.length - 1],
-    10_000,
+    10_000
   );
   const [
     knowledgeResult,
@@ -160,7 +164,7 @@ async function generateDraftContent(
         ...extractEmailAddresses(lastMessage.headers.to),
         ...extractEmailAddresses(lastMessage.headers.cc ?? ""),
       ].filter(
-        (email) => email.toLowerCase() !== emailAccount.email.toLowerCase(),
+        (email) => email.toLowerCase() !== emailAccount.email.toLowerCase()
       ),
       logger,
     }),
@@ -203,7 +207,7 @@ async function generateDraftContent(
     mcpContext: mcpResult?.response || null,
     meetingContext: formatMeetingContextForPrompt(
       upcomingMeetings,
-      emailAccount.timezone,
+      emailAccount.timezone
     ),
   });
 

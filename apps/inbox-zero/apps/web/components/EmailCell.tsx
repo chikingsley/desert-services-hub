@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { extractNameFromEmail, extractEmailAddress } from "@/utils/email";
+import { extractEmailAddress, extractNameFromEmail } from "@/utils/email";
 
 export const EmailCell = memo(function EmailCell({
   emailAddress,
@@ -18,7 +18,7 @@ export const EmailCell = memo(function EmailCell({
     <div className={className}>
       <div>{displayName}</div>
       {showEmail && (
-        <div className="text-xs text-muted-foreground">{email}</div>
+        <div className="text-muted-foreground text-xs">{email}</div>
       )}
     </div>
   );

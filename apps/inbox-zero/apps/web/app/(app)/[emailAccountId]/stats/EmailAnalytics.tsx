@@ -1,16 +1,16 @@
 "use client";
 
-import useSWR from "swr";
+import { Mail, Send } from "lucide-react";
 import type { DateRange } from "react-day-picker";
+import useSWR from "swr";
+import { BarListCard } from "@/app/(app)/[emailAccountId]/stats/BarListCard";
+import { getDateRangeParams } from "@/app/(app)/[emailAccountId]/stats/params";
 import type { RecipientsResponse } from "@/app/api/user/stats/recipients/route";
 import type { SendersResponse } from "@/app/api/user/stats/senders/route";
 import { LoadingContent } from "@/components/LoadingContent";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getDateRangeParams } from "@/app/(app)/[emailAccountId]/stats/params";
-import { getGmailSearchUrl } from "@/utils/url";
 import { useAccount } from "@/providers/EmailAccountProvider";
-import { BarListCard } from "@/app/(app)/[emailAccountId]/stats/BarListCard";
-import { Mail, Send } from "lucide-react";
+import { getGmailSearchUrl } from "@/utils/url";
 
 export function EmailAnalytics(props: {
   dateRange?: DateRange | undefined;
@@ -24,7 +24,7 @@ export function EmailAnalytics(props: {
     `/api/user/stats/senders?${new URLSearchParams(params as any)}`,
     {
       refreshInterval: props.refreshInterval,
-    },
+    }
   );
 
   const {
@@ -35,7 +35,7 @@ export function EmailAnalytics(props: {
     `/api/user/stats/recipients?${new URLSearchParams(params as any)}`,
     {
       refreshInterval: props.refreshInterval,
-    },
+    }
   );
 
   function formatEmailItem(item: { name: string; value: number }) {
@@ -47,18 +47,17 @@ export function EmailAnalytics(props: {
   }
 
   return (
-    <div className="grid gap-2 sm:gap-4 sm:grid-cols-2">
+    <div className="grid gap-2 sm:grid-cols-2 sm:gap-4">
       <LoadingContent
-        loading={isLoading}
         error={error}
+        loading={isLoading}
         loadingComponent={<Skeleton className="h-[377px] rounded" />}
       >
         {data && (
           <BarListCard
             icon={
-              <Mail className="size-4 text-neutral-500 translate-y-[-0.5px]" />
+              <Mail className="size-4 translate-y-[-0.5px] text-neutral-500" />
             }
-            title="Received"
             tabs={[
               {
                 id: "emailAddress",
@@ -71,28 +70,29 @@ export function EmailAnalytics(props: {
                 data: data.mostActiveSenderDomains.map(formatEmailItem),
               },
             ]}
+            title="Received"
           />
         )}
       </LoadingContent>
       <LoadingContent
-        loading={isLoadingRecipients}
         error={errorRecipients}
+        loading={isLoadingRecipients}
         loadingComponent={<Skeleton className="h-[377px] w-full rounded" />}
       >
         {dataRecipients && (
           <BarListCard
             icon={<Send className="size-4 text-neutral-500" />}
-            title="Sent"
             tabs={[
               {
                 id: "emailAddress",
                 label: "Email address",
                 data:
                   dataRecipients.mostActiveRecipientEmails.map(
-                    formatEmailItem,
+                    formatEmailItem
                   ) || [],
               },
             ]}
+            title="Sent"
           />
         )}
       </LoadingContent>

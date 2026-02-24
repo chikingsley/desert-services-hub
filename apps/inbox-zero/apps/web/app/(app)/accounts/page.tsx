@@ -1,18 +1,23 @@
 "use client";
 
-import { useAction } from "next-safe-action/hooks";
+import { MoreVertical, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { Trash2, MoreVertical } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
 import { useEffect } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { AddAccount } from "@/app/(app)/accounts/AddAccount";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { LoadingContent } from "@/components/LoadingContent";
+import { PageHeader } from "@/components/PageHeader";
+import { PageWrapper } from "@/components/PageWrapper";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardTitle,
-  CardHeader,
   CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -22,15 +27,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAccounts } from "@/hooks/useAccounts";
 import { deleteEmailAccountAction } from "@/utils/actions/user";
-import { toastSuccess, toastError } from "@/components/Toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { prefixPath } from "@/utils/path";
-import { AddAccount } from "@/app/(app)/accounts/AddAccount";
-import { PageHeader } from "@/components/PageHeader";
-import { PageWrapper } from "@/components/PageWrapper";
-import { logOut } from "@/utils/user";
 import { getAndClearAuthErrorCookie } from "@/utils/auth-cookies";
 import { getActionErrorMessage } from "@/utils/error";
+import { prefixPath } from "@/utils/path";
+import { logOut } from "@/utils/user";
 
 export default function AccountsPage() {
   const { data, isLoading, error, mutate } = useAccounts();
@@ -40,12 +40,12 @@ export default function AccountsPage() {
     <PageWrapper>
       <PageHeader title="Accounts" />
 
-      <LoadingContent loading={isLoading} error={error}>
+      <LoadingContent error={error} loading={isLoading}>
         <div className="grid grid-cols-1 gap-4 py-6 lg:grid-cols-2 xl:grid-cols-3">
           {data?.emailAccounts.map((emailAccount) => (
             <AccountItem
-              key={emailAccount.id}
               emailAccount={emailAccount}
+              key={emailAccount.id}
               onAccountDeleted={mutate}
             />
           ))}
@@ -70,7 +70,7 @@ function AccountItem({
   onAccountDeleted: () => void;
 }) {
   return (
-    <Link href={prefixPath(emailAccount.id, "/automation")} className="block">
+    <Link className="block" href={prefixPath(emailAccount.id, "/automation")}>
       <Card className="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-900">
         <AccountHeader
           emailAccount={emailAccount}
@@ -112,12 +112,12 @@ function AccountHeader({
       </div>
       <div
         onClick={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.stopPropagation();
           }
         }}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         <AccountOptionsDropdown
           emailAccount={emailAccount}
@@ -162,36 +162,36 @@ function AccountOptionsDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button size="icon" variant="ghost">
           <MoreVertical className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
         <ConfirmDialog
-          trigger={
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e?.preventDefault();
-                e?.stopPropagation?.();
-              }}
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-2 text-destructive focus:text-destructive"
-              disabled={isExecuting}
-            >
-              <Trash2 className="size-4" />
-              Delete
-            </DropdownMenuItem>
-          }
-          title="Delete Account"
+          confirmText="Delete"
           description={
             emailAccount.isPrimary
               ? `Are you sure you want to delete "${emailAccount.email}"? This is your primary account. You will be logged out and need to log in again. Your oldest remaining account will become your new primary account. All data for "${emailAccount.email}" will be permanently deleted from Inbox Zero.`
               : `Are you sure you want to delete "${emailAccount.email}"? This will delete all data for it on Inbox Zero.`
           }
-          confirmText="Delete"
           onConfirm={() => {
             execute({ emailAccountId: emailAccount.id });
           }}
+          title="Delete Account"
+          trigger={
+            <DropdownMenuItem
+              className="flex items-center gap-2 text-destructive focus:text-destructive"
+              disabled={isExecuting}
+              onClick={(e) => e.stopPropagation()}
+              onSelect={(e) => {
+                e?.preventDefault();
+                e?.stopPropagation?.();
+              }}
+            >
+              <Trash2 className="size-4" />
+              Delete
+            </DropdownMenuItem>
+          }
         />
       </DropdownMenuContent>
     </DropdownMenu>

@@ -46,8 +46,8 @@ export interface BuildingConnectedAuthStatusResponse {
   manualAuthTimeoutMs: number;
   pid: number | null;
   running: boolean;
-  startUrl: string;
   startedAt: string | null;
+  startUrl: string;
   stateExists: boolean;
   stateFileSize: number | null;
   stateLastModifiedAt: string | null;

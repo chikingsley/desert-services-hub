@@ -1,4 +1,4 @@
-import { initDataset, type Dataset } from "braintrust";
+import { type Dataset, initDataset } from "braintrust";
 import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("braintrust");
@@ -14,7 +14,9 @@ export class Braintrust {
   }
 
   insertToDataset(data: { id: string; input: unknown; expected?: unknown }) {
-    if (!this.dataset) return;
+    if (!this.dataset) {
+      return;
+    }
 
     try {
       this.dataset.insert(data);

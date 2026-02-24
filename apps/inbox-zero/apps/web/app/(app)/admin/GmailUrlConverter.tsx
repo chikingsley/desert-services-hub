@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { useAction } from "next-safe-action/hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
+import { useCallback } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { Input } from "@/components/Input";
+import { toastError, toastSuccess } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,11 +14,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { toastSuccess, toastError } from "@/components/Toast";
 import { adminConvertGmailUrlAction } from "@/utils/actions/admin";
 import {
-  convertGmailUrlBody,
   type ConvertGmailUrlBody,
+  convertGmailUrlBody,
 } from "@/utils/actions/admin.validation";
 import { internalDateToDate } from "@/utils/date";
 
@@ -50,7 +50,7 @@ export function GmailUrlConverter() {
     (data) => {
       convertUrl(data);
     },
-    [convertUrl],
+    [convertUrl]
   );
 
   return (
@@ -64,22 +64,22 @@ export function GmailUrlConverter() {
       <CardContent className="space-y-4">
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <Input
-            type="text"
-            name="rfc822MessageId"
+            error={errors.rfc822MessageId}
             label="RFC822 Message-ID"
+            name="rfc822MessageId"
             placeholder="<abc123@email.example.com>"
             registerProps={register("rfc822MessageId")}
-            error={errors.rfc822MessageId}
+            type="text"
           />
           <Input
-            type="email"
-            name="email"
+            error={errors.email}
             label="Email Address"
+            name="email"
             placeholder="user@example.com"
             registerProps={register("email")}
-            error={errors.email}
+            type="email"
           />
-          <Button type="submit" loading={isExecuting}>
+          <Button loading={isExecuting} type="submit">
             Lookup
           </Button>
         </form>
@@ -87,14 +87,14 @@ export function GmailUrlConverter() {
         {result.data && (
           <div className="space-y-2">
             <div>
-              <span className="text-sm font-medium">Thread ID: </span>
+              <span className="font-medium text-sm">Thread ID: </span>
               <code className="text-sm">{result.data.threadId}</code>
             </div>
             <div>
-              <span className="text-sm font-medium">Messages: </span>
+              <span className="font-medium text-sm">Messages: </span>
               <div className="space-y-1">
                 {result.data.messages.map((msg) => (
-                  <div key={msg.id} className="text-sm">
+                  <div className="text-sm" key={msg.id}>
                     <code>{msg.id}</code>
                     {msg.date && (
                       <span className="ml-2 text-muted-foreground">

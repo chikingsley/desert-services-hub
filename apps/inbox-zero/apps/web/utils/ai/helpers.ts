@@ -45,7 +45,7 @@ ${rules
     (rule) => `<rule>
   <name>${rule.name}</name>
   <criteria>${rule.instructions}</criteria>
-</rule>`,
+</rule>`
   )
   .join("\n")}
 </user_rules>`;

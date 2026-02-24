@@ -15,8 +15,8 @@ import type { LTWHP, ViewportHighlight } from "../types";
  * Style options for freetext highlight appearance.
  */
 export interface FreetextStyle {
-  color?: string;
   backgroundColor?: string;
+  color?: string;
   fontFamily?: string;
   fontSize?: string;
 }
@@ -28,35 +28,15 @@ export interface FreetextStyle {
  */
 export interface FreetextHighlightProps {
   /**
-   * The highlight to be rendered as a {@link FreetextHighlight}.
+   * Background color.
    */
-  highlight: ViewportHighlight;
+  backgroundColor?: string;
 
   /**
-   * A callback triggered whenever the highlight position changes (drag).
-   *
-   * @param rect - The updated highlight area.
+   * Custom background color presets for the style panel.
+   * Default: ["#ffffc8", "#ffcdd2", "#c8e6c9", "#bbdefb", "#e1bee7"]
    */
-  onChange?(rect: LTWHP): void;
-
-  /**
-   * A callback triggered whenever the text content changes.
-   *
-   * @param text - The new text content.
-   */
-  onTextChange?(text: string): void;
-
-  /**
-   * A callback triggered whenever the style changes.
-   *
-   * @param style - The new style options.
-   */
-  onStyleChange?(style: FreetextStyle): void;
-
-  /**
-   * Has the highlight been auto-scrolled into view?
-   */
-  isScrolledTo?: boolean;
+  backgroundColorPresets?: string[];
 
   /**
    * react-rnd bounds on the highlight area.
@@ -64,44 +44,14 @@ export interface FreetextHighlightProps {
   bounds?: string | Element;
 
   /**
-   * A callback triggered on context menu.
-   */
-  onContextMenu?(event: MouseEvent<HTMLDivElement>): void;
-
-  /**
-   * Event called when editing begins (drag or text edit).
-   */
-  onEditStart?(): void;
-
-  /**
-   * Event called when editing ends.
-   */
-  onEditEnd?(): void;
-
-  /**
-   * Custom styling for the container.
-   */
-  style?: CSSProperties;
-
-  /**
    * Text color.
    */
   color?: string;
 
   /**
-   * Background color.
+   * Custom delete icon. Replaces the default trash icon.
    */
-  backgroundColor?: string;
-
-  /**
-   * Font family.
-   */
-  fontFamily?: string;
-
-  /**
-   * Font size (e.g., "14px").
-   */
-  fontSize?: string;
+  deleteIcon?: ReactNode;
 
   /**
    * Custom drag icon. Receives default icon as child if not provided.
@@ -114,21 +64,35 @@ export interface FreetextHighlightProps {
   editIcon?: ReactNode;
 
   /**
-   * Custom style/settings icon. Receives default icon as child if not provided.
+   * Font family.
    */
-  styleIcon?: ReactNode;
+  fontFamily?: string;
 
   /**
-   * Custom background color presets for the style panel.
-   * Default: ["#ffffc8", "#ffcdd2", "#c8e6c9", "#bbdefb", "#e1bee7"]
+   * Font size (e.g., "14px").
    */
-  backgroundColorPresets?: string[];
+  fontSize?: string;
+  /**
+   * The highlight to be rendered as a {@link FreetextHighlight}.
+   */
+  highlight: ViewportHighlight;
 
   /**
-   * Custom text color presets for the style panel.
-   * Default: ["#333333", "#d32f2f", "#1976d2", "#388e3c", "#7b1fa2"]
+   * Has the highlight been auto-scrolled into view?
    */
-  textColorPresets?: string[];
+  isScrolledTo?: boolean;
+
+  /**
+   * A callback triggered whenever the highlight position changes (drag).
+   *
+   * @param rect - The updated highlight area.
+   */
+  onChange?(rect: LTWHP): void;
+
+  /**
+   * A callback triggered on context menu.
+   */
+  onContextMenu?(event: MouseEvent<HTMLDivElement>): void;
 
   /**
    * Callback triggered when the delete button is clicked.
@@ -136,9 +100,44 @@ export interface FreetextHighlightProps {
   onDelete?(): void;
 
   /**
-   * Custom delete icon. Replaces the default trash icon.
+   * Event called when editing ends.
    */
-  deleteIcon?: ReactNode;
+  onEditEnd?(): void;
+
+  /**
+   * Event called when editing begins (drag or text edit).
+   */
+  onEditStart?(): void;
+
+  /**
+   * A callback triggered whenever the style changes.
+   *
+   * @param style - The new style options.
+   */
+  onStyleChange?(style: FreetextStyle): void;
+
+  /**
+   * A callback triggered whenever the text content changes.
+   *
+   * @param text - The new text content.
+   */
+  onTextChange?(text: string): void;
+
+  /**
+   * Custom styling for the container.
+   */
+  style?: CSSProperties;
+
+  /**
+   * Custom style/settings icon. Receives default icon as child if not provided.
+   */
+  styleIcon?: ReactNode;
+
+  /**
+   * Custom text color presets for the style panel.
+   * Default: ["#333333", "#d32f2f", "#1976d2", "#388e3c", "#7b1fa2"]
+   */
+  textColorPresets?: string[];
 }
 
 /**

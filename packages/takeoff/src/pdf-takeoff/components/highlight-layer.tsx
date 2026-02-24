@@ -25,6 +25,17 @@ const EMPTY_ID = "empty-id";
  */
 export interface HighlightLayerProps {
   /**
+   * The Highlight container that should be used to render highlights for this layer.
+   * It will be given appropriate context for a single highlight, allowing it to render
+   * a single {@link TextHighlight}, {@link AreaHighlight}, etc., in the correct place.
+   */
+  children: ReactNode;
+
+  /**
+   * Group of DOM refs for all the highlights on this layer.
+   */
+  highlightBindings: HighlightBindings;
+  /**
    * Highlights and GhostHighlights organised by page number.
    */
   highlightsByPage: { [pageNumber: number]: Array<Highlight | GhostHighlight> };
@@ -43,18 +54,6 @@ export interface HighlightLayerProps {
    * The PDFViewer instance containing the HighlightLayer
    */
   viewer: PDFViewer;
-
-  /**
-   * Group of DOM refs for all the highlights on this layer.
-   */
-  highlightBindings: HighlightBindings;
-
-  /**
-   * The Highlight container that should be used to render highlights for this layer.
-   * It will be given appropriate context for a single highlight, allowing it to render
-   * a single {@link TextHighlight}, {@link AreaHighlight}, etc., in the correct place.
-   */
-  children: ReactNode;
 }
 
 /**

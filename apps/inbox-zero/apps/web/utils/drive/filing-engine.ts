@@ -1,31 +1,28 @@
-import prisma from "@/utils/prisma";
 import type { DriveConnection } from "@/generated/prisma/client";
-import type { EmailProvider } from "@/utils/email/types";
-import type { ParsedMessage, Attachment } from "@/utils/types";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { Logger } from "@/utils/logger";
-import { createDriveProviderWithRefresh } from "@/utils/drive/provider";
-import { createAndSaveFilingFolder } from "@/utils/drive/folder-utils";
+import { analyzeDocument } from "@/utils/ai/document-filing/analyze-document";
 import {
   extractTextFromDocument,
   isExtractableMimeType,
 } from "@/utils/drive/document-extraction";
-import { analyzeDocument } from "@/utils/ai/document-filing/analyze-document";
 import {
-  sendFiledNotification,
   sendAskNotification,
+  sendFiledNotification,
 } from "@/utils/drive/filing-notifications";
 import { sendFilingSlackNotifications } from "@/utils/drive/filing-slack-notifications";
+import { createAndSaveFilingFolder } from "@/utils/drive/folder-utils";
+import { createDriveProviderWithRefresh } from "@/utils/drive/provider";
+import type { EmailProvider } from "@/utils/email/types";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import type { Attachment, ParsedMessage } from "@/utils/types";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface FilingResult {
-  success: boolean;
-  skipped?: boolean;
-  skipReason?: string;
-  filingId?: string; // Available for both filed and skipped items (for feedback)
+  error?: string;
   filing?: {
     id: string;
     filename: string;
@@ -35,19 +32,22 @@ export interface FilingResult {
     confidence: number | null;
     provider: string;
   };
-  error?: string;
+  filingId?: string; // Available for both filed and skipped items (for feedback)
+  skipped?: boolean;
+  skipReason?: string;
+  success: boolean;
 }
 
 export interface ProcessAttachmentOptions {
+  attachment: Attachment;
   emailAccount: EmailAccountWithAI & {
     filingEnabled: boolean;
     filingPrompt: string | null;
     email: string;
   };
-  message: ParsedMessage;
-  attachment: Attachment;
   emailProvider: EmailProvider;
   logger: Logger;
+  message: ParsedMessage;
   sendNotification?: boolean;
 }
 
@@ -80,7 +80,7 @@ export async function processAttachment({
 
   try {
     // Validate filing is enabled with a prompt
-    if (!emailAccount.filingEnabled || !emailAccount.filingPrompt) {
+    if (!(emailAccount.filingEnabled && emailAccount.filingPrompt)) {
       log.info("Filing not enabled or no prompt configured");
       return { success: false, error: "Filing not enabled" };
     }
@@ -102,7 +102,7 @@ export async function processAttachment({
     log.info("Downloading attachment");
     const attachmentData = await emailProvider.getAttachment(
       message.id,
-      attachment.attachmentId,
+      attachment.attachmentId
     );
     const buffer = Buffer.from(attachmentData.data, "base64");
 
@@ -111,7 +111,7 @@ export async function processAttachment({
     const extraction = await extractTextFromDocument(
       buffer,
       attachment.mimeType,
-      { logger: log },
+      { logger: log }
     );
 
     if (!extraction) {
@@ -198,7 +198,7 @@ export async function processAttachment({
     // Step 6: Create folder if needed
     const driveProvider = await createDriveProviderWithRefresh(
       driveConnection,
-      log,
+      log
     );
     let targetFolderId = folderId;
     let targetFolderPath = folderPath;
@@ -326,10 +326,10 @@ export async function processAttachment({
  * Get all extractable attachments from a message.
  */
 export function getExtractableAttachments(
-  message: ParsedMessage,
+  message: ParsedMessage
 ): Attachment[] {
   return (message.attachments || []).filter((a) =>
-    isExtractableMimeType(a.mimeType),
+    isExtractableMimeType(a.mimeType)
   );
 }
 
@@ -338,11 +338,11 @@ export function getExtractableAttachments(
 // ============================================================================
 
 interface FolderWithConnection {
+  driveConnectionId: string;
+  driveProvider: string;
   id: string;
   name: string;
   path: string;
-  driveConnectionId: string;
-  driveProvider: string;
 }
 
 interface FolderTarget {
@@ -360,14 +360,14 @@ function resolveFolderTarget(
   },
   folders: FolderWithConnection[],
   connections: DriveConnection[],
-  logger: Logger,
+  logger: Logger
 ): FolderTarget {
   if (analysis.action === "use_existing" && analysis.folderId) {
     // Find the folder in our list
     const folder = folders.find((f) => f.id === analysis.folderId);
     if (folder) {
       const connection = connections.find(
-        (c) => c.id === folder.driveConnectionId,
+        (c) => c.id === folder.driveConnectionId
       );
       if (connection) {
         return {

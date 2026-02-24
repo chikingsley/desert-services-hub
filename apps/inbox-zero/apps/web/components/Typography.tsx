@@ -7,11 +7,11 @@ const PageHeading = forwardRef<
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <h1
-    ref={ref}
     className={cn(
-      "font-title text-2xl leading-7 text-primary dark:text-foreground sm:truncate lg:text-3xl",
-      className,
+      "font-title text-2xl text-primary leading-7 sm:truncate lg:text-3xl dark:text-foreground",
+      className
     )}
+    ref={ref}
     {...props}
   />
 ));
@@ -22,8 +22,8 @@ const PageSubHeading = forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
   <p
-    ref={ref}
     className={cn("text-muted-foreground text-sm", className)}
+    ref={ref}
     {...props}
   />
 ));
@@ -34,8 +34,8 @@ const SectionHeader = forwardRef<
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <h4
+    className={cn("font-title text-base text-foreground leading-7", className)}
     ref={ref}
-    className={cn("font-title text-base leading-7 text-foreground", className)}
     {...props}
   />
 ));
@@ -46,11 +46,11 @@ const SectionDescription = forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
   <p
-    ref={ref}
     className={cn(
-      "mt-1 text-sm leading-6 text-slate-700 dark:text-foreground",
-      className,
+      "mt-1 text-slate-700 text-sm leading-6 dark:text-foreground",
+      className
     )}
+    ref={ref}
     {...props}
   />
 ));
@@ -61,8 +61,8 @@ const MessageText = forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
   <p
+    className={cn("text-slate-700 text-sm dark:text-foreground", className)}
     ref={ref}
-    className={cn("text-sm text-slate-700 dark:text-foreground", className)}
     {...props}
   />
 ));
@@ -73,8 +73,8 @@ const TypographyH3 = forwardRef<
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <h3
-    ref={ref}
     className={cn("scroll-m-20 font-title text-2xl", className)}
+    ref={ref}
     {...props}
   />
 ));
@@ -84,7 +84,7 @@ const TypographyH4 = forwardRef<
   HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
-  <h4 ref={ref} className={cn("font-title text-lg", className)} {...props} />
+  <h4 className={cn("font-title text-lg", className)} ref={ref} {...props} />
 ));
 TypographyH4.displayName = "TypographyH4";
 
@@ -93,8 +93,8 @@ const TypographyP = forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
   <p
+    className={cn("text-muted-foreground leading-7", className)}
     ref={ref}
-    className={cn("leading-7 text-muted-foreground", className)}
     {...props}
   />
 ));
@@ -105,8 +105,8 @@ const MutedText = forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
   <p
+    className={cn("text-muted-foreground text-sm", className)}
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
 ));
@@ -117,15 +117,15 @@ const TextLink = forwardRef<HTMLAnchorElement, LinkProps>(
   ({ className, ...props }, ref) => {
     return (
       <Link
-        ref={ref}
         className={cn(
           "font-semibold text-blue-600 hover:underline dark:text-primary",
-          className,
+          className
         )}
+        ref={ref}
         {...props}
       />
     );
-  },
+  }
 );
 
 TextLink.displayName = "TextLink";

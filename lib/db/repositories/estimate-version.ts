@@ -1,10 +1,10 @@
 import { db } from "@lib/db/client";
 
 interface EstimateVersionStateRow {
+  created_at: string;
   id: string;
   is_current: number;
   version_number: number;
-  created_at: string;
 }
 
 interface EnsureEstimateVersionOptions {

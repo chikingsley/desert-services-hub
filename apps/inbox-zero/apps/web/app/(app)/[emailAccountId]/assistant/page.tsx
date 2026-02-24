@@ -1,13 +1,13 @@
-import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import prisma from "@/utils/prisma";
+import { Suspense } from "react";
 import { PermissionsCheck } from "@/app/(app)/[emailAccountId]/PermissionsCheck";
+import { Chat } from "@/components/assistant-chat/chat";
 import { EmailProvider } from "@/providers/EmailProvider";
 import { ASSISTANT_ONBOARDING_COOKIE } from "@/utils/cookies";
-import { prefixPath } from "@/utils/path";
-import { Chat } from "@/components/assistant-chat/chat";
 import { checkUserOwnsEmailAccount } from "@/utils/email-account";
+import { prefixPath } from "@/utils/path";
+import prisma from "@/utils/prisma";
 
 export const maxDuration = 300; // Applies to the actions
 
@@ -40,7 +40,7 @@ export default async function AssistantPage({
       <Suspense>
         <PermissionsCheck />
 
-        <div className="flex h-[calc(100vh-theme(spacing.9)-theme(spacing.14)-env(safe-area-inset-bottom))] md:h-screen flex-col">
+        <div className="flex h-[calc(100vh-theme(spacing.9)-theme(spacing.14)-env(safe-area-inset-bottom))] flex-col md:h-screen">
           <Chat open />
         </div>
       </Suspense>

@@ -1,16 +1,16 @@
-import prisma from "@/utils/prisma";
+import type { Category } from "@/generated/prisma/client";
 import { aiCategorizeSenders } from "@/utils/ai/categorize-sender/ai-categorize-senders";
-import { defaultCategory, type SenderCategory } from "@/utils/categories";
+import { aiCategorizeSender } from "@/utils/ai/categorize-sender/ai-categorize-single-sender";
 import { isNewsletterSender } from "@/utils/ai/group/find-newsletters";
 import { isReceiptSender } from "@/utils/ai/group/find-receipts";
-import { aiCategorizeSender } from "@/utils/ai/categorize-sender/ai-categorize-single-sender";
-import type { Category } from "@/generated/prisma/client";
+import { defaultCategory, type SenderCategory } from "@/utils/categories";
 import { getUserCategories } from "@/utils/category.server";
+import { extractEmailAddress } from "@/utils/email";
+import type { EmailProvider } from "@/utils/email/types";
+import { SafeError } from "@/utils/error";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
 import { createScopedLogger } from "@/utils/logger";
-import { extractEmailAddress } from "@/utils/email";
-import { SafeError } from "@/utils/error";
-import type { EmailProvider } from "@/utils/email/types";
+import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("categorize/senders");
 
@@ -19,16 +19,18 @@ export async function categorizeSender(
   emailAccount: EmailAccountWithAI,
   provider: EmailProvider,
   userCategories?: Pick<Category, "id" | "name" | "description">[],
-  senderName?: string | null,
+  senderName?: string | null
 ) {
   const categories =
     userCategories ||
     (await getUserCategories({ emailAccountId: emailAccount.id }));
-  if (categories.length === 0) return { categoryId: undefined };
+  if (categories.length === 0) {
+    return { categoryId: undefined };
+  }
 
   const previousEmails = await provider.getThreadsFromSenderWithSubject(
     senderAddress,
-    3,
+    3
   );
 
   const aiResult = await aiCategorizeSender({
@@ -137,14 +139,16 @@ export async function updateCategoryForSender({
 // TODO: what if user doesn't have all these categories set up?
 // Use static rules to categorize senders if we can, before sending to LLM
 function preCategorizeSendersWithStaticRules(
-  senders: string[],
+  senders: string[]
 ): { sender: string; category: SenderCategory | undefined }[] {
   return senders.map((sender) => {
-    if (isNewsletterSender(sender))
+    if (isNewsletterSender(sender)) {
       return { sender, category: defaultCategory.NEWSLETTER.name };
+    }
 
-    if (isReceiptSender(sender))
+    if (isReceiptSender(sender)) {
       return { sender, category: defaultCategory.RECEIPT.name };
+    }
 
     return { sender, category: undefined };
   });
@@ -156,7 +160,9 @@ export async function getCategories({
   emailAccountId: string;
 }) {
   const categories = await getUserCategories({ emailAccountId });
-  if (categories.length === 0) throw new SafeError("No categories found");
+  if (categories.length === 0) {
+    throw new SafeError("No categories found");
+  }
   return { categories };
 }
 
@@ -170,7 +176,7 @@ export async function categorizeWithAi({
   categories: Pick<Category, "name" | "description">[];
 }) {
   const categorizedSenders = preCategorizeSendersWithStaticRules(
-    Array.from(sendersWithEmails.keys()),
+    Array.from(sendersWithEmails.keys())
   );
 
   const sendersToCategorizeWithAi = categorizedSenders

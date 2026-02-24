@@ -8,14 +8,19 @@ import type { LTWHP } from "../types";
  */
 export interface CountMarkerHighlightProps {
   /**
-   * Position of the marker in viewport coordinates.
-   */
-  position: LTWHP;
-
-  /**
    * Color of the marker.
    */
   color: string;
+
+  /**
+   * Has the marker been auto-scrolled into view?
+   */
+  isScrolledTo?: boolean;
+
+  /**
+   * Whether this marker is currently selected.
+   */
+  isSelected?: boolean;
 
   /**
    * Label text to display in the marker.
@@ -28,16 +33,6 @@ export interface CountMarkerHighlightProps {
   number?: number;
 
   /**
-   * Whether this marker is currently selected.
-   */
-  isSelected?: boolean;
-
-  /**
-   * Has the marker been auto-scrolled into view?
-   */
-  isScrolledTo?: boolean;
-
-  /**
    * Callback triggered on click.
    */
   onClick?(event: MouseEvent<HTMLDivElement>): void;
@@ -46,6 +41,10 @@ export interface CountMarkerHighlightProps {
    * Callback triggered on context menu.
    */
   onContextMenu?(event: MouseEvent<HTMLDivElement>): void;
+  /**
+   * Position of the marker in viewport coordinates.
+   */
+  position: LTWHP;
 
   /**
    * Custom styling for the container.

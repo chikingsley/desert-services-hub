@@ -1,6 +1,6 @@
 .MouseSelection {
   position: absolute;
-  border: 1px dashed #333;
   background: rgba(153, 193, 218, 255);
+  border: 1px dashed #333;
   mix-blend-mode: multiply;
 }

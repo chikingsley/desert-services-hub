@@ -16,15 +16,14 @@ import type { ScaledPosition, ViewportPosition } from "../types";
  */
 export interface CountCanvasProps {
   /**
-   * Whether count mode is active.
-   */
-  isActive: boolean;
-
-  /**
    * Color for the count marker.
    * @default "#22c55e"
    */
   color?: string;
+  /**
+   * Whether count mode is active.
+   */
+  isActive: boolean;
 
   /**
    * Size of the count marker.
@@ -33,9 +32,9 @@ export interface CountCanvasProps {
   markerSize?: number;
 
   /**
-   * The PDF viewer instance.
+   * Callback when count mode is cancelled.
    */
-  viewer: InstanceType<typeof TPDFViewer>;
+  onCancel: () => void;
 
   /**
    * Callback when a count marker is placed.
@@ -45,9 +44,9 @@ export interface CountCanvasProps {
   onPlace: (position: ScaledPosition) => void;
 
   /**
-   * Callback when count mode is cancelled.
+   * The PDF viewer instance.
    */
-  onCancel: () => void;
+  viewer: InstanceType<typeof TPDFViewer>;
 }
 
 /**

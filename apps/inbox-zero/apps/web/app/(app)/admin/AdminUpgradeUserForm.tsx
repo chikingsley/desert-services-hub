@@ -1,29 +1,28 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useAction } from "next-safe-action/hooks";
-import { type SubmitHandler, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/Input";
-import { Label } from "@/components/Input";
-import { adminChangePremiumStatusAction } from "@/utils/actions/premium";
+import { useAction } from "next-safe-action/hooks";
+import { useCallback, useState } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import {
-  changePremiumStatusSchema,
   type ChangePremiumStatusOptions,
+  changePremiumStatusSchema,
 } from "@/app/(app)/admin/validation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toastError, toastSuccess } from "@/components/Toast";
-import type { PremiumTier } from "@/generated/prisma/enums";
 import { tiers } from "@/app/(app)/premium/config";
+import { Input, Label } from "@/components/Input";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { PremiumTier } from "@/generated/prisma/enums";
 import { cn } from "@/utils";
+import { adminChangePremiumStatusAction } from "@/utils/actions/premium";
 
 type TierKey = "STARTER" | "PLUS" | "PROFESSIONAL" | "LIFETIME";
 
@@ -38,16 +37,18 @@ const tierOptions: { key: TierKey; name: string; features: string }[] = [
 
 function buildPremiumTier(
   tierKey: TierKey,
-  billingPeriod: "MONTHLY" | "ANNUALLY",
+  billingPeriod: "MONTHLY" | "ANNUALLY"
 ): PremiumTier {
-  if (tierKey === "LIFETIME") return "LIFETIME";
+  if (tierKey === "LIFETIME") {
+    return "LIFETIME";
+  }
   return `${tierKey}_${billingPeriod}` as PremiumTier;
 }
 
 export const AdminUpgradeUserForm = () => {
   const [selectedTier, setSelectedTier] = useState<TierKey>("STARTER");
   const [billingPeriod, setBillingPeriod] = useState<"MONTHLY" | "ANNUALLY">(
-    "ANNUALLY",
+    "ANNUALLY"
   );
 
   const { execute: changePremiumStatus, isExecuting } = useAction(
@@ -61,7 +62,7 @@ export const AdminUpgradeUserForm = () => {
           description: `Error changing premium status: ${error.serverError}`,
         });
       },
-    },
+    }
   );
 
   const {
@@ -84,7 +85,7 @@ export const AdminUpgradeUserForm = () => {
         emailAccountsAccess: data.emailAccountsAccess || undefined,
       });
     },
-    [changePremiumStatus],
+    [changePremiumStatus]
   );
 
   const period = buildPremiumTier(selectedTier, billingPeriod);
@@ -92,34 +93,34 @@ export const AdminUpgradeUserForm = () => {
   return (
     <form className="max-w-sm space-y-4">
       <Input
-        type="email"
-        name="email"
-        label="Email"
-        registerProps={register("email", { required: true })}
         error={errors.email}
+        label="Email"
+        name="email"
+        registerProps={register("email", { required: true })}
+        type="email"
       />
       <Input
-        type="number"
-        name="lemonSqueezyCustomerId"
+        error={errors.lemonSqueezyCustomerId}
         label="Lemon Squeezy Customer Id"
+        name="lemonSqueezyCustomerId"
         registerProps={register("lemonSqueezyCustomerId", {
           valueAsNumber: true,
         })}
-        error={errors.lemonSqueezyCustomerId}
+        type="number"
       />
       <Input
-        type="number"
-        name="emailAccountsAccess"
-        label="Seats"
-        registerProps={register("emailAccountsAccess", { valueAsNumber: true })}
         error={errors.emailAccountsAccess}
+        label="Seats"
+        name="emailAccountsAccess"
+        registerProps={register("emailAccountsAccess", { valueAsNumber: true })}
+        type="number"
       />
 
       <div>
-        <Label name="plan" label="Plan" />
+        <Label label="Plan" name="plan" />
         <Select
-          value={selectedTier}
           onValueChange={(v) => setSelectedTier(v as TierKey)}
+          value={selectedTier}
         >
           <SelectTrigger className="mt-1">
             <SelectValue />
@@ -127,11 +128,11 @@ export const AdminUpgradeUserForm = () => {
           <SelectContent>
             {tierOptions.map((tier) => (
               <SelectPrimitive.Item
+                className="relative flex w-full cursor-default select-none items-start rounded-sm py-2 pr-2 pl-8 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                 key={tier.key}
                 value={tier.key}
-                className="relative flex w-full cursor-default select-none items-start rounded-sm py-2 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
               >
-                <span className="absolute left-2 top-2.5 flex h-3.5 w-3.5 items-center justify-center">
+                <span className="absolute top-2.5 left-2 flex h-3.5 w-3.5 items-center justify-center">
                   <SelectPrimitive.ItemIndicator>
                     <Check className="h-4 w-4" />
                   </SelectPrimitive.ItemIndicator>
@@ -140,7 +141,7 @@ export const AdminUpgradeUserForm = () => {
                   <SelectPrimitive.ItemText>
                     {tier.name}
                   </SelectPrimitive.ItemText>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-muted-foreground text-xs">
                     {tier.features}
                   </div>
                 </div>
@@ -152,19 +153,19 @@ export const AdminUpgradeUserForm = () => {
 
       {selectedTier !== "LIFETIME" && (
         <div>
-          <Label name="billingPeriod" label="Billing period" />
+          <Label label="Billing period" name="billingPeriod" />
           <div className="mt-1 flex gap-1 rounded-md border border-input p-1">
             {(["MONTHLY", "ANNUALLY"] as const).map((bp) => (
               <button
-                key={bp}
-                type="button"
-                onClick={() => setBillingPeriod(bp)}
                 className={cn(
-                  "flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors",
+                  "flex-1 rounded px-3 py-1.5 font-medium text-sm transition-colors",
                   billingPeriod === bp
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground",
+                    : "text-muted-foreground hover:text-foreground"
                 )}
+                key={bp}
+                onClick={() => setBillingPeriod(bp)}
+                type="button"
               >
                 {bp === "MONTHLY" ? "Monthly" : "Annual"}
               </button>
@@ -174,15 +175,14 @@ export const AdminUpgradeUserForm = () => {
       )}
 
       <Input
-        type="number"
-        name="count"
-        label="Months/Years"
-        registerProps={register("count", { valueAsNumber: true })}
         error={errors.count}
+        label="Months/Years"
+        name="count"
+        registerProps={register("count", { valueAsNumber: true })}
+        type="number"
       />
       <div className="space-x-2">
         <Button
-          type="button"
           loading={isExecuting}
           onClick={() => {
             onSubmit({
@@ -194,12 +194,11 @@ export const AdminUpgradeUserForm = () => {
               upgrade: true,
             });
           }}
+          type="button"
         >
           Upgrade
         </Button>
         <Button
-          type="button"
-          variant="destructive"
           loading={isExecuting}
           onClick={() => {
             onSubmit({
@@ -209,6 +208,8 @@ export const AdminUpgradeUserForm = () => {
               upgrade: false,
             });
           }}
+          type="button"
+          variant="destructive"
         >
           Downgrade
         </Button>

@@ -1,8 +1,8 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import { applyThreadStatusLabel } from "./label-helpers";
-import type { EmailProvider } from "@/utils/email/types";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import prisma from "@/utils/__mocks__/prisma";
+import type { EmailProvider } from "@/utils/email/types";
 import { createScopedLogger } from "@/utils/logger";
+import { applyThreadStatusLabel } from "./label-helpers";
 
 const logger = createScopedLogger("test");
 
@@ -80,7 +80,7 @@ describe("applyThreadStatusLabel", () => {
         "label-awaiting-reply",
         "label-fyi",
         "label-actioned",
-      ]),
+      ])
     );
 
     // Verify it doesn't remove the target label
@@ -107,7 +107,7 @@ describe("applyThreadStatusLabel", () => {
 
     expect(mockProvider.removeThreadLabels).toHaveBeenCalledWith(
       threadId,
-      expect.arrayContaining(["label-to-reply", "label-fyi", "label-actioned"]),
+      expect.arrayContaining(["label-to-reply", "label-fyi", "label-actioned"])
     );
 
     expect(mockProvider.labelMessage).toHaveBeenCalledWith({
@@ -132,7 +132,7 @@ describe("applyThreadStatusLabel", () => {
         "label-to-reply",
         "label-awaiting-reply",
         "label-actioned",
-      ]),
+      ])
     );
 
     expect(mockProvider.labelMessage).toHaveBeenCalledWith({
@@ -157,7 +157,7 @@ describe("applyThreadStatusLabel", () => {
         "label-to-reply",
         "label-awaiting-reply",
         "label-fyi",
-      ]),
+      ])
     );
 
     expect(mockProvider.labelMessage).toHaveBeenCalledWith({
@@ -168,7 +168,7 @@ describe("applyThreadStatusLabel", () => {
 
   test("handles errors gracefully", async () => {
     vi.mocked(mockProvider.removeThreadLabels).mockRejectedValueOnce(
-      new Error("Failed to remove labels"),
+      new Error("Failed to remove labels")
     );
 
     // Should not throw
@@ -180,7 +180,7 @@ describe("applyThreadStatusLabel", () => {
         systemType: "TO_REPLY",
         provider: mockProvider,
         logger,
-      }),
+      })
     ).resolves.not.toThrow();
   });
 
@@ -223,7 +223,7 @@ describe("applyThreadStatusLabel", () => {
         "label-awaiting-reply",
         "label-fyi", // From provider labels, not DB
         "label-actioned",
-      ]),
+      ])
     );
   });
 
@@ -321,7 +321,7 @@ describe("applyThreadStatusLabel", () => {
     const labelPromise = vi.fn().mockResolvedValue(undefined);
 
     vi.mocked(mockProvider.removeThreadLabels).mockImplementation(
-      removePromise,
+      removePromise
     );
     vi.mocked(mockProvider.labelMessage).mockImplementation(labelPromise);
 

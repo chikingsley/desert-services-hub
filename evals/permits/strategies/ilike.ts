@@ -17,7 +17,7 @@ const strategy: PermitRetrievalStrategy = {
             OR id ILIKE $1
          ORDER BY (status = 'Active')::int DESC,
                   expiration_date DESC NULLS LAST
-         LIMIT 20`,
+         LIMIT 20`
       )
       .all(pattern);
     return results.map((r) => r.id);

@@ -1,7 +1,7 @@
-import { NextResponse, after } from "next/server";
-import { withError } from "@/utils/middleware";
-import { env } from "@/env";
 import { verifySlackSignature } from "@inboxzero/slack";
+import { after, NextResponse } from "next/server";
+import { env } from "@/env";
+import { withError } from "@/utils/middleware";
 import { processSlackEvent } from "@/utils/slack/process-slack-event";
 
 export const maxDuration = 120;
@@ -12,7 +12,7 @@ export const POST = withError("slack/events", async (request) => {
   if (!env.SLACK_SIGNING_SECRET) {
     return NextResponse.json(
       { error: "Slack not configured" },
-      { status: 503 },
+      { status: 503 }
     );
   }
 
@@ -35,7 +35,7 @@ export const POST = withError("slack/events", async (request) => {
       env.SLACK_SIGNING_SECRET,
       timestamp,
       rawBody,
-      signature,
+      signature
     )
   ) {
     logger.warn("Invalid Slack signature");

@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { slugify, extractTextFromPortableTextBlock } from "./text";
 import type { PortableTextBlock } from "@portabletext/react";
+import { describe, expect, it } from "vitest";
+import { extractTextFromPortableTextBlock, slugify } from "./text";
 
 describe("slugify", () => {
   describe("basic transformations", () => {

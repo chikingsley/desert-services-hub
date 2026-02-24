@@ -1,8 +1,8 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
-import { Tooltip } from "@/components/Tooltip";
 import type { ReactNode } from "react";
+import { Tooltip } from "@/components/Tooltip";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export function RuleSteps({
   children,
@@ -18,17 +18,17 @@ export function RuleSteps({
   addButtonTooltip?: string;
 }) {
   return (
-    <Card className="p-4 space-y-2 border-none shadow-none bg-gray-50 dark:bg-gray-900">
+    <Card className="space-y-2 border-none bg-gray-50 p-4 shadow-none dark:bg-gray-900">
       {children}
       <div>
-        <Tooltip hide={!addButtonTooltip} content={addButtonTooltip || ""}>
+        <Tooltip content={addButtonTooltip || ""} hide={!addButtonTooltip}>
           <span>
             <Button
-              variant="ghost"
-              size="sm"
-              onClick={onAdd}
               disabled={addButtonDisabled}
               Icon={PlusIcon}
+              onClick={onAdd}
+              size="sm"
+              variant="ghost"
             >
               {addButtonLabel}
             </Button>

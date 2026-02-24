@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryState, parseAsString } from "nuqs";
+import { parseAsString, useQueryState } from "nuqs";
+import { useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { TypographyH3 } from "@/components/Typography";
-import { Input } from "@/components/Input";
-import { useStep } from "@/app/(app)/[emailAccountId]/clean/useStep";
-import { Toggle } from "@/components/Toggle";
 import { useSkipSettings } from "@/app/(app)/[emailAccountId]/clean/useSkipSettings";
+import { useStep } from "@/app/(app)/[emailAccountId]/clean/useStep";
+import { Input } from "@/components/Input";
+import { Toggle } from "@/components/Toggle";
+import { TypographyH3 } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
 
 const schema = z.object({ instructions: z.string().optional() });
 
@@ -37,33 +37,33 @@ export function CleanInstructionsStep() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="text-center">
+    <form className="text-center" onSubmit={handleSubmit(onSubmit)}>
       <TypographyH3>Which emails should stay in your inbox?</TypographyH3>
 
       <div className="mt-4 grid gap-4">
         <Toggle
-          name="reply"
           enabled={skipStates.skipReply}
-          onChange={(value) => setSkipStates({ skipReply: value })}
           labelRight="Emails needing replies"
+          name="reply"
+          onChange={(value) => setSkipStates({ skipReply: value })}
         />
         <Toggle
-          name="starred"
           enabled={skipStates.skipStarred}
-          onChange={(value) => setSkipStates({ skipStarred: value })}
           labelRight="Starred emails"
+          name="starred"
+          onChange={(value) => setSkipStates({ skipStarred: value })}
         />
         <Toggle
-          name="calendar"
           enabled={skipStates.skipCalendar}
-          onChange={(value) => setSkipStates({ skipCalendar: value })}
           labelRight="Future events"
+          name="calendar"
+          onChange={(value) => setSkipStates({ skipCalendar: value })}
         />
         <Toggle
-          name="receipt"
           enabled={skipStates.skipReceipt}
-          onChange={(value) => setSkipStates({ skipReceipt: value })}
           labelRight="Payment receipts"
+          name="receipt"
+          onChange={(value) => setSkipStates({ skipReceipt: value })}
         />
         {/* <Toggle
           name="attachment"
@@ -72,33 +72,33 @@ export function CleanInstructionsStep() {
           labelRight="Emails with attachments"
         /> */}
         <Toggle
-          name="conversation"
           enabled={skipStates.skipConversation}
-          onChange={(value) => setSkipStates({ skipConversation: value })}
           labelRight="Conversations"
+          name="conversation"
+          onChange={(value) => setSkipStates({ skipConversation: value })}
           tooltipText="Email threads where you sent a reply"
         />
         <Toggle
-          name="custom"
           enabled={showCustom}
-          onChange={(value) => setShowCustom(value)}
           labelRight="Custom"
+          name="custom"
+          onChange={(value) => setShowCustom(value)}
         />
       </div>
 
       {showCustom && (
         <div className="mt-4">
           <Input
-            type="text"
             autosizeTextarea
-            rows={3}
+            error={errors.instructions}
             name="instructions"
-            registerProps={register("instructions")}
             placeholder={`Example:
 
 I work as a freelance designer. Don't archive emails from clients.
 I'm in the middle of a building project, keep those emails too.`}
-            error={errors.instructions}
+            registerProps={register("instructions")}
+            rows={3}
+            type="text"
           />
         </div>
       )}

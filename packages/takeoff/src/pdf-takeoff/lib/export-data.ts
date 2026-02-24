@@ -10,16 +10,16 @@ import { type MeasurementSummary, summarizeByItem } from "./measurements";
  * Takeoff export data structure.
  */
 export interface TakeoffExportData {
-  /** Export timestamp */
-  exportedAt: string;
-  /** Source PDF name */
-  pdfName?: string;
-  /** Scales used per page */
-  pageScales: Record<number, string>;
-  /** Summary by item type */
-  summary: MeasurementSummary[];
   /** All annotations (for re-import) */
   annotations: TakeoffAnnotation[];
+  /** Export timestamp */
+  exportedAt: string;
+  /** Scales used per page */
+  pageScales: Record<number, string>;
+  /** Source PDF name */
+  pdfName?: string;
+  /** Summary by item type */
+  summary: MeasurementSummary[];
 }
 
 /**

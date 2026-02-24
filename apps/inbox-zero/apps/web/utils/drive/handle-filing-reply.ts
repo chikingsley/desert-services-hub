@@ -1,26 +1,26 @@
-import prisma from "@/utils/prisma";
-import type { ParsedMessage } from "@/utils/types";
-import type { EmailProvider } from "@/utils/email/types";
-import type { Logger } from "@/utils/logger";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { DriveConnection } from "@/generated/prisma/client";
-import { extractEmailAddress } from "@/utils/email";
-import { emailToContent } from "@/utils/mail";
-import { createDriveProviderWithRefresh } from "@/utils/drive/provider";
-import { createAndSaveFilingFolder } from "@/utils/drive/folder-utils";
 import { aiParseFilingReply } from "@/utils/ai/document-filing/parse-filing-reply";
+import { createAndSaveFilingFolder } from "@/utils/drive/folder-utils";
+import { createDriveProviderWithRefresh } from "@/utils/drive/provider";
+import { extractEmailAddress } from "@/utils/email";
+import type { EmailProvider } from "@/utils/email/types";
 import {
   getFilebotFrom,
   getFilebotReplyTo,
 } from "@/utils/filebot/is-filebot-email";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import { emailToContent } from "@/utils/mail";
+import prisma from "@/utils/prisma";
+import type { ParsedMessage } from "@/utils/types";
 
 interface ProcessFilingReplyArgs {
-  emailAccountId: string;
-  userEmail: string;
-  message: ParsedMessage;
-  emailProvider: EmailProvider;
   emailAccount: EmailAccountWithAI;
+  emailAccountId: string;
+  emailProvider: EmailProvider;
   logger: Logger;
+  message: ParsedMessage;
+  userEmail: string;
 }
 
 /**
@@ -166,7 +166,7 @@ async function handleUndo({
     try {
       const driveProvider = await createDriveProviderWithRefresh(
         driveConnection,
-        logger,
+        logger
       );
 
       // Get or create the "To Delete" folder at root
@@ -225,7 +225,7 @@ async function handleMove({
   try {
     const driveProvider = await createDriveProviderWithRefresh(
       driveConnection,
-      logger,
+      logger
     );
 
     const targetFolder = await createAndSaveFilingFolder({
@@ -274,9 +274,11 @@ async function findFilingFromThread({
   emailAccountId: string;
 }) {
   const threadMessages = await emailProvider.getThreadMessages(
-    message.threadId,
+    message.threadId
   );
-  if (!threadMessages?.length) return null;
+  if (!threadMessages?.length) {
+    return null;
+  }
 
   const messageIds = threadMessages.map((m) => m.id);
 

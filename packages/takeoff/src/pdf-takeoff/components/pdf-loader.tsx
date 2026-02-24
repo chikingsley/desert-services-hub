@@ -36,13 +36,6 @@ const DEFAULT_WORKER_SRC =
  */
 export interface PdfLoaderProps {
   /**
-   * The document to be loaded by PDF.js.
-   * If you need to pass HTTP headers, auth parameters,
-   * or other pdf settings, do it through here.
-   */
-  document: string | URL | TypedArray | DocumentInitParameters;
-
-  /**
    * Callback to render content before the PDF document is loaded.
    *
    * @param progress - PDF.js progress status.
@@ -51,20 +44,26 @@ export interface PdfLoaderProps {
   beforeLoad?(progress: OnProgressParameters): ReactNode;
 
   /**
-   * Component to render in the case of any PDF loading errors.
-   *
-   * @param error - PDF loading error.
-   * @returns - Component to be rendered in space of the PDF document.
-   */
-  errorMessage?(error: Error): ReactNode;
-
-  /**
    * Child components to use/render the loaded PDF document.
    *
    * @param pdfDocument - The loaded PDF document.
    * @returns - Component to render once PDF document is loaded.
    */
   children(pdfDocument: PDFDocumentProxy): ReactNode;
+  /**
+   * The document to be loaded by PDF.js.
+   * If you need to pass HTTP headers, auth parameters,
+   * or other pdf settings, do it through here.
+   */
+  document: string | URL | TypedArray | DocumentInitParameters;
+
+  /**
+   * Component to render in the case of any PDF loading errors.
+   *
+   * @param error - PDF loading error.
+   * @returns - Component to be rendered in space of the PDF document.
+   */
+  errorMessage?(error: Error): ReactNode;
 
   /**
    * Callback triggered whenever an error occurs.

@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { zodPeriod } from "@inboxzero/tinybird";
+import { z } from "zod";
 
 export const statsByPeriodQuerySchema = z.object({
   period: zodPeriod.optional().default("week"),
@@ -18,7 +18,7 @@ export const statsByPeriodResponseSchema = z.object({
       Unread: z.number(),
       Unarchived: z.number(),
       Archived: z.number(),
-    }),
+    })
   ),
   allCount: z.number(),
   inboxCount: z.number(),

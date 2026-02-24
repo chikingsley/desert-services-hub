@@ -1,10 +1,10 @@
 export function SparkleBlue() {
   return (
     <svg
-      width="11"
+      fill="none"
       height="11"
       viewBox="0 0 11 11"
-      fill="none"
+      width="11"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
@@ -25,23 +25,23 @@ export function SparkleBlue() {
       />
       <defs>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint0_linear_267_16423"
           x1="5.5"
-          y1="0"
           x2="5.5"
+          y1="0"
           y2="11"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#2563EB" />
           <stop offset="1" stopColor="#6595FF" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint1_linear_267_16423"
           x1="5.5"
-          y1="0"
           x2="5.5"
+          y1="0"
           y2="11"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#2563EB" />
           <stop offset="1" stopColor="#6595FF" />

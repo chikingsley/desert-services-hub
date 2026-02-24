@@ -1,14 +1,14 @@
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { ModelType } from "@/utils/llms/model";
-import type { ParsedMessage, RuleWithActions } from "@/utils/types";
-import type { EmailProvider } from "@/utils/email/types";
-import { aiDetermineThreadStatus } from "@/utils/ai/reply/determine-thread-status";
-import { getEmailForLLM } from "@/utils/get-email-from-message";
-import { createScopedLogger } from "@/utils/logger";
 import { SystemType, ThreadTrackerType } from "@/generated/prisma/enums";
-import prisma from "@/utils/prisma";
+import { aiDetermineThreadStatus } from "@/utils/ai/reply/determine-thread-status";
 import { sortByInternalDate } from "@/utils/date";
+import type { EmailProvider } from "@/utils/email/types";
+import { getEmailForLLM } from "@/utils/get-email-from-message";
+import type { ModelType } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import { withPrismaRetry } from "@/utils/prisma-retry";
+import type { ParsedMessage, RuleWithActions } from "@/utils/types";
 
 const logger = createScopedLogger("conversation-status-handler");
 
@@ -61,7 +61,7 @@ export async function determineConversationStatus({
       maxLength: index === sortedMessages.length - 1 ? 2000 : 500,
       extractReply: true,
       removeForwarded: false,
-    }),
+    })
   );
 
   // Check if the user sent the last email in the thread
@@ -85,7 +85,7 @@ export async function determineConversationStatus({
   });
 
   const rule = conversationRules.find(
-    (r) => r.systemType === status && r.enabled,
+    (r) => r.systemType === status && r.enabled
   );
 
   if (!rule) {
@@ -134,12 +134,16 @@ export async function updateThreadTrackers({
           resolved: true,
         },
       }),
-    { logger },
+    { logger }
   );
 
   const getTrackerType = (status: SystemType) => {
-    if (status === SystemType.TO_REPLY) return ThreadTrackerType.NEEDS_REPLY;
-    if (status === SystemType.AWAITING_REPLY) return ThreadTrackerType.AWAITING;
+    if (status === SystemType.TO_REPLY) {
+      return ThreadTrackerType.NEEDS_REPLY;
+    }
+    if (status === SystemType.AWAITING_REPLY) {
+      return ThreadTrackerType.AWAITING;
+    }
 
     // For FYI and ACTIONED, we just resolve trackers (nothing to create)
     return null;

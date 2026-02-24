@@ -14,18 +14,24 @@ function setUtmCookies() {
   // expires in 30 days
   const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
 
-  if (utmSource)
+  if (utmSource) {
     document.cookie = `utm_source=${encodeURIComponent(utmSource)}; expires=${expires}; path=/; SameSite=Lax; Secure`;
-  if (utmMedium)
+  }
+  if (utmMedium) {
     document.cookie = `utm_medium=${encodeURIComponent(utmMedium)}; expires=${expires}; path=/; SameSite=Lax; Secure`;
-  if (utmCampaign)
+  }
+  if (utmCampaign) {
     document.cookie = `utm_campaign=${encodeURIComponent(utmCampaign)}; expires=${expires}; path=/; SameSite=Lax; Secure`;
-  if (utmTerm)
+  }
+  if (utmTerm) {
     document.cookie = `utm_term=${encodeURIComponent(utmTerm)}; expires=${expires}; path=/; SameSite=Lax; Secure`;
-  if (affiliate)
+  }
+  if (affiliate) {
     document.cookie = `affiliate=${encodeURIComponent(affiliate)}; expires=${expires}; path=/; SameSite=Lax; Secure`;
-  if (referralCode)
+  }
+  if (referralCode) {
     document.cookie = `referral_code=${encodeURIComponent(referralCode)}; expires=${expires}; path=/; SameSite=Lax; Secure`;
+  }
 }
 
 export function UTM() {

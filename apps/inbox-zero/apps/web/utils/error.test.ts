@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
 import { APICallError } from "ai";
+import { describe, expect, it } from "vitest";
 import {
   getActionErrorMessage,
-  isInsufficientCreditsError,
   isHandledUserKeyError,
+  isInsufficientCreditsError,
   isKnownApiError,
   isKnownOutlookError,
   isOutlookAccessDeniedError,
@@ -52,7 +52,7 @@ describe("getActionErrorMessage", () => {
     });
 
     expect(result).toBe(
-      "Form is invalid. Email is required. Password too short",
+      "Form is invalid. Email is required. Password too short"
     );
   });
 
@@ -149,7 +149,7 @@ describe("getActionErrorMessage", () => {
     it("prepends prefix to error message", () => {
       const result = getActionErrorMessage(
         { serverError: "Invalid input" },
-        { prefix: "Failed to save" },
+        { prefix: "Failed to save" }
       );
 
       expect(result).toBe("Failed to save. Invalid input");
@@ -169,7 +169,7 @@ describe("getActionErrorMessage", () => {
             fieldErrors: { name: ["Name is required"] },
           } as any,
         },
-        { prefix: "Failed to update user" },
+        { prefix: "Failed to update user" }
       );
 
       expect(result).toBe("Failed to update user. Name is required");
@@ -178,7 +178,7 @@ describe("getActionErrorMessage", () => {
     it("uses custom fallback with prefix when no error", () => {
       const result = getActionErrorMessage(
         {},
-        { prefix: "Failed to save", fallback: "Please try again" },
+        { prefix: "Failed to save", fallback: "Please try again" }
       );
 
       expect(result).toBe("Failed to save");
@@ -187,7 +187,7 @@ describe("getActionErrorMessage", () => {
     it("uses fallback when no prefix and no error", () => {
       const result = getActionErrorMessage(
         {},
-        { fallback: "Custom fallback message" },
+        { fallback: "Custom fallback message" }
       );
 
       expect(result).toBe("Custom fallback message");
@@ -238,7 +238,7 @@ describe("markAsHandledUserKeyError / isHandledUserKeyError", () => {
 describe("isOutlookThrottlingError", () => {
   it("detects ApplicationThrottled code", () => {
     expect(isOutlookThrottlingError({ code: "ApplicationThrottled" })).toBe(
-      true,
+      true
     );
   });
 
@@ -254,7 +254,7 @@ describe("isOutlookThrottlingError", () => {
     expect(
       isOutlookThrottlingError({
         message: "MailboxConcurrency limit exceeded",
-      }),
+      })
     ).toBe(true);
   });
 
@@ -262,7 +262,7 @@ describe("isOutlookThrottlingError", () => {
     expect(
       isOutlookThrottlingError({
         message: "Application is over its Request limit.",
-      }),
+      })
     ).toBe(true);
   });
 
@@ -276,13 +276,13 @@ describe("isOutlookAccessDeniedError", () => {
     expect(
       isOutlookAccessDeniedError({
         message: "Access is denied. Check credentials and try again.",
-      }),
+      })
     ).toBe(true);
   });
 
   it("detects ErrorAccessDenied code", () => {
     expect(isOutlookAccessDeniedError({ code: "ErrorAccessDenied" })).toBe(
-      true,
+      true
     );
   });
 
@@ -293,15 +293,15 @@ describe("isOutlookAccessDeniedError", () => {
   it("detects string error with Access is denied", () => {
     expect(
       isOutlookAccessDeniedError(
-        "Access is denied. Check credentials and try again.",
-      ),
+        "Access is denied. Check credentials and try again."
+      )
     ).toBe(true);
   });
 
   it("does not match generic access denied from other providers", () => {
-    expect(
-      isOutlookAccessDeniedError({ message: "Access is denied" }),
-    ).toBe(false);
+    expect(isOutlookAccessDeniedError({ message: "Access is denied" })).toBe(
+      false
+    );
   });
 
   it("returns false for unrelated errors", () => {
@@ -312,7 +312,7 @@ describe("isOutlookAccessDeniedError", () => {
 describe("isOutlookItemNotFoundError", () => {
   it("detects ErrorItemNotFound code", () => {
     expect(isOutlookItemNotFoundError({ code: "ErrorItemNotFound" })).toBe(
-      true,
+      true
     );
   });
 
@@ -320,27 +320,27 @@ describe("isOutlookItemNotFoundError", () => {
     expect(
       isOutlookItemNotFoundError({
         message: "The store ID provided isn't an ID of an item.",
-      }),
+      })
     ).toBe(true);
   });
 
   it("detects ResourceNotFound message", () => {
-    expect(
-      isOutlookItemNotFoundError({ message: "ResourceNotFound" }),
-    ).toBe(true);
+    expect(isOutlookItemNotFoundError({ message: "ResourceNotFound" })).toBe(
+      true
+    );
   });
 
   it("detects string error with store ID", () => {
     expect(
       isOutlookItemNotFoundError(
-        "The store ID provided isn't an ID of an item.",
-      ),
+        "The store ID provided isn't an ID of an item."
+      )
     ).toBe(true);
   });
 
   it("returns false for unrelated errors", () => {
     expect(isOutlookItemNotFoundError({ message: "Access denied" })).toBe(
-      false,
+      false
     );
   });
 });
@@ -354,7 +354,7 @@ describe("isKnownOutlookError", () => {
     expect(
       isKnownOutlookError({
         message: "Access is denied. Check credentials and try again.",
-      }),
+      })
     ).toBe(true);
   });
 
@@ -364,7 +364,7 @@ describe("isKnownOutlookError", () => {
 
   it("returns false for unknown errors", () => {
     expect(isKnownOutlookError({ message: "Something unexpected" })).toBe(
-      false,
+      false
     );
   });
 });

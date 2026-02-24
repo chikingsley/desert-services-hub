@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { withEmailAccount } from "@/utils/middleware";
-import { getUncategorizedSenders } from "@/app/api/user/categorize/senders/uncategorized/get-uncategorized-senders";
 import type { Sender } from "@/app/api/user/categorize/senders/batch/handle-batch-validation";
+import { getUncategorizedSenders } from "@/app/api/user/categorize/senders/uncategorized/get-uncategorized-senders";
+import { withEmailAccount } from "@/utils/middleware";
 
 export type UncategorizedSendersResponse = {
   uncategorizedSenders: Sender[];
@@ -22,5 +22,5 @@ export const GET = withEmailAccount(
     });
 
     return NextResponse.json(result);
-  },
+  }
 );

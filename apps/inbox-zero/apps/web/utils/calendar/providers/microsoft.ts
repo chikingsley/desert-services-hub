@@ -1,21 +1,21 @@
 import { env } from "@/env";
-import prisma from "@/utils/prisma";
 import type { Logger } from "@/utils/logger";
 import {
   fetchMicrosoftCalendars,
   getCalendarClientWithRefresh,
 } from "@/utils/outlook/calendar-client";
+import prisma from "@/utils/prisma";
 import type { CalendarOAuthProvider, CalendarTokens } from "../oauth-types";
 import { autoPopulateTimezone } from "../timezone-helpers";
 
 export function createMicrosoftCalendarProvider(
-  logger: Logger,
+  logger: Logger
 ): CalendarOAuthProvider {
   return {
     name: "microsoft",
 
     async exchangeCodeForTokens(code: string): Promise<CalendarTokens> {
-      if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET) {
+      if (!(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET)) {
         throw new Error("Microsoft credentials not configured");
       }
 
@@ -34,14 +34,14 @@ export function createMicrosoftCalendarProvider(
             grant_type: "authorization_code",
             redirect_uri: `${env.NEXT_PUBLIC_BASE_URL}/api/outlook/calendar/callback`,
           }),
-        },
+        }
       );
 
       const tokens = await tokenResponse.json();
 
       if (!tokenResponse.ok) {
         throw new Error(
-          tokens.error_description || "Failed to exchange code for tokens",
+          tokens.error_description || "Failed to exchange code for tokens"
         );
       }
 
@@ -52,7 +52,7 @@ export function createMicrosoftCalendarProvider(
           headers: {
             Authorization: `Bearer ${tokens.access_token}`,
           },
-        },
+        }
       );
 
       if (!profileResponse.ok) {
@@ -68,7 +68,7 @@ export function createMicrosoftCalendarProvider(
 
       if (!tokens.refresh_token) {
         throw new Error(
-          "No refresh_token returned from Microsoft (ensure offline_access scope and correct app type)",
+          "No refresh_token returned from Microsoft (ensure offline_access scope and correct app type)"
         );
       }
 
@@ -87,7 +87,7 @@ export function createMicrosoftCalendarProvider(
       accessToken: string,
       refreshToken: string,
       emailAccountId: string,
-      expiresAt: Date | null,
+      expiresAt: Date | null
     ): Promise<void> {
       try {
         const calendarClient = await getCalendarClientWithRefresh({
@@ -100,11 +100,13 @@ export function createMicrosoftCalendarProvider(
 
         const microsoftCalendars = await fetchMicrosoftCalendars(
           calendarClient,
-          logger,
+          logger
         );
 
         for (const microsoftCalendar of microsoftCalendars) {
-          if (!microsoftCalendar.id) continue;
+          if (!microsoftCalendar.id) {
+            continue;
+          }
 
           await prisma.calendar.upsert({
             where: {

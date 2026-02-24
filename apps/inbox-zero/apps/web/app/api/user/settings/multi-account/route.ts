@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
 import { withAuth } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export type MultiAccountEmailsResponse = Awaited<
   ReturnType<typeof getMultiAccountEmails>
@@ -33,7 +33,7 @@ async function getMultiAccountEmails({ userId }: { userId: string }) {
       u.emailAccounts.map((ea) => ({
         email: ea.email,
         isOwnAccount: u.id === userId,
-      })),
+      }))
     ) || [];
 
   return {

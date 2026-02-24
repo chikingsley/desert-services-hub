@@ -1,9 +1,9 @@
 /** biome-ignore-all lint/style/noMagicNumbers: test */
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import { aiExtractFromEmailHistory } from "@/utils/ai/knowledge/extract-from-email-history";
-import type { EmailForLLM } from "@/utils/types";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { getEmailAccount } from "@/__tests__/helpers";
+import { aiExtractFromEmailHistory } from "@/utils/ai/knowledge/extract-from-email-history";
 import { createScopedLogger } from "@/utils/logger";
+import type { EmailForLLM } from "@/utils/types";
 
 // pnpm test-ai extract-from-email-history
 
@@ -34,7 +34,7 @@ function getTestMessages(count = 2) {
       content: `Test email content ${i + 1}`,
       from: i % 2 === 0 ? "sender@test.com" : "recipient@test.com",
       date: new Date(2024, 2, 20 + i),
-    }),
+    })
   );
 }
 
@@ -63,7 +63,7 @@ describe.runIf(isAiTest)("aiExtractFromEmailHistory", () => {
         console.debug("Extracted summary:", result);
       }
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test("handles empty historical message array", async () => {
@@ -104,6 +104,6 @@ describe.runIf(isAiTest)("aiExtractFromEmailHistory", () => {
         console.debug("Summary with time context:", result);
       }
     },
-    TIMEOUT,
+    TIMEOUT
   );
 });

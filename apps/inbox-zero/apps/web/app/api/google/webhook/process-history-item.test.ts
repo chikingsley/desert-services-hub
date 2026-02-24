@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { gmail_v1 } from "@googleapis/gmail";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getEmailAccount } from "@/__tests__/helpers";
+import { NewsletterStatus } from "@/generated/prisma/enums";
+import { isAssistantEmail } from "@/utils/assistant/is-assistant-email";
+import { processAssistantEmail } from "@/utils/assistant/process-assistant-email";
+import { createEmailProvider } from "@/utils/email/provider";
+import { GmailLabel } from "@/utils/gmail/label";
+import { createScopedLogger } from "@/utils/logger";
+import { markMessageAsProcessing } from "@/utils/redis/message-processing";
 import { processHistoryItem } from "./process-history-item";
 import { HistoryEventType } from "./types";
-import { NewsletterStatus } from "@/generated/prisma/enums";
-import type { gmail_v1 } from "@googleapis/gmail";
-import { isAssistantEmail } from "@/utils/assistant/is-assistant-email";
-import { markMessageAsProcessing } from "@/utils/redis/message-processing";
-import { GmailLabel } from "@/utils/gmail/label";
-import { processAssistantEmail } from "@/utils/assistant/process-assistant-email";
-import { getEmailAccount } from "@/__tests__/helpers";
-import { createEmailProvider } from "@/utils/email/provider";
-import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("test");
 
@@ -112,7 +112,7 @@ describe("processHistoryItem", () => {
     messageId = "123",
     threadId = "thread-123",
     type: HistoryEventType = HistoryEventType.MESSAGE_ADDED,
-    labelIds?: string[],
+    labelIds?: string[]
   ) => {
     const baseItem = { message: { id: messageId, threadId } };
 
@@ -124,7 +124,8 @@ describe("processHistoryItem", () => {
           labelIds: labelIds || [],
         } as gmail_v1.Schema$HistoryLabelRemoved,
       };
-    } else if (type === HistoryEventType.LABEL_ADDED) {
+    }
+    if (type === HistoryEventType.LABEL_ADDED) {
       return {
         type,
         item: {
@@ -132,12 +133,11 @@ describe("processHistoryItem", () => {
           labelIds: labelIds || [],
         } as gmail_v1.Schema$HistoryLabelAdded,
       };
-    } else {
-      return {
-        type,
-        item: baseItem as gmail_v1.Schema$HistoryMessageAdded,
-      };
     }
+    return {
+      type,
+      item: baseItem as gmail_v1.Schema$HistoryMessageAdded,
+    };
   };
 
   const defaultOptions = {

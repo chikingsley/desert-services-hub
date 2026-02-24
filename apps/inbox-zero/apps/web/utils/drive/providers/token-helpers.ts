@@ -1,5 +1,5 @@
-import prisma from "@/utils/prisma";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 export async function saveDriveTokens({
   tokens,

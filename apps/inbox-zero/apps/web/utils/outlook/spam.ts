@@ -1,11 +1,11 @@
+import type { Logger } from "@/utils/logger";
 import type { OutlookClient } from "@/utils/outlook/client";
 import { withOutlookRetry } from "@/utils/outlook/retry";
-import type { Logger } from "@/utils/logger";
 
 export async function markSpam(
   client: OutlookClient,
   threadId: string,
-  logger: Logger,
+  logger: Logger
 ) {
   try {
     // In Outlook, marking as spam is moving to the Junk Email folder
@@ -26,7 +26,7 @@ export async function markSpam(
             client.getClient().api(`/me/messages/${message.id}/move`).post({
               destinationId: "junkemail",
             }),
-          logger,
+          logger
         );
       } catch (error) {
         // Log the error but don't fail the entire operation
@@ -58,7 +58,7 @@ export async function markSpam(
       // Filter messages by conversationId manually
       const threadMessages = messages.value.filter(
         (message: { conversationId: string }) =>
-          message.conversationId === threadId,
+          message.conversationId === threadId
       );
 
       if (threadMessages.length > 0) {
@@ -74,7 +74,7 @@ export async function markSpam(
                     .post({
                       destinationId: "junkemail",
                     }),
-                logger,
+                logger
               );
             } catch (moveError) {
               // Log the error but don't fail the entire operation
@@ -86,7 +86,7 @@ export async function markSpam(
               });
               return null;
             }
-          },
+          }
         );
 
         await Promise.allSettled(movePromises);
@@ -97,7 +97,7 @@ export async function markSpam(
             client.getClient().api(`/me/messages/${threadId}/move`).post({
               destinationId: "junkemail",
             }),
-          logger,
+          logger
         );
       }
     } catch (directError) {

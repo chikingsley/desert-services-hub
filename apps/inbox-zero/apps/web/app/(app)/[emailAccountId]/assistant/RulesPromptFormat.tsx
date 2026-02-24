@@ -1,19 +1,19 @@
 "use client";
 
-import { useCallback, useRef, useMemo } from "react";
-import { Button } from "@/components/ui/button";
+import { useCallback, useMemo, useRef } from "react";
 import {
   SimpleRichTextEditor,
   type SimpleRichTextEditorRef,
 } from "@/components/editor/SimpleRichTextEditor";
 import { LoadingContent } from "@/components/LoadingContent";
+import { Notice } from "@/components/Notice";
+import { toastError } from "@/components/Toast";
+import { MessageText } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLabels } from "@/hooks/useLabels";
 import { useRules } from "@/hooks/useRules";
-import { toastError } from "@/components/Toast";
 import { ruleToText } from "@/utils/rule/rule-to-text";
-import { MessageText } from "@/components/Typography";
-import { Notice } from "@/components/Notice";
 
 export function RulesPromptFormat() {
   const { data: rules, isLoading: isLoadingRules } = useRules();
@@ -22,7 +22,9 @@ export function RulesPromptFormat() {
   const editorRef = useRef<SimpleRichTextEditorRef>(null);
 
   const rulesText = useMemo(() => {
-    if (!rules) return "";
+    if (!rules) {
+      return "";
+    }
 
     return rules
       .filter((rule) => rule.enabled)
@@ -35,7 +37,9 @@ export function RulesPromptFormat() {
 
   const onSubmit = useCallback(async () => {
     const markdown = editorRef.current?.getMarkdown();
-    if (typeof markdown !== "string") return;
+    if (typeof markdown !== "string") {
+      return;
+    }
     if (markdown.trim() === "") {
       toastError({
         description: "Please enter a prompt to create rules",
@@ -57,22 +61,22 @@ export function RulesPromptFormat() {
         loading={isLoadingLabels || isLoadingRules}
         loadingComponent={<Skeleton className="min-h-[220px] w-full" />}
       >
-        <Notice variant="info" className="mb-2">
+        <Notice className="mb-2" variant="info">
           Editing in 'Prompt' view is currently disabled. Edit using AI Chat or
           'List' view instead.
         </Notice>
 
         <SimpleRichTextEditor
-          ref={editorRef}
           defaultValue={rulesText}
-          minHeight={220}
-          userLabels={userLabels}
           editable={false}
+          minHeight={220}
+          ref={editorRef}
+          userLabels={userLabels}
         />
       </LoadingContent>
 
-      <div className="flex flex-wrap gap-2 mt-4 items-center">
-        <Button type="submit" size="sm" disabled>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Button disabled size="sm" type="submit">
           Save
         </Button>
 

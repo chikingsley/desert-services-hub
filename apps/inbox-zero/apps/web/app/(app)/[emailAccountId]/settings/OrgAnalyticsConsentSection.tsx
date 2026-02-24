@@ -1,21 +1,21 @@
 "use client";
 
-import { useCallback } from "react";
 import { useAction } from "next-safe-action/hooks";
-import { Switch } from "@/components/ui/switch";
+import { useCallback } from "react";
 import { LoadingContent } from "@/components/LoadingContent";
+import { toastError, toastSuccess } from "@/components/Toast";
 import {
   Item,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
   ItemActions,
+  ItemContent,
+  ItemDescription,
   ItemSeparator,
+  ItemTitle,
 } from "@/components/ui/item";
-import { toastSuccess, toastError } from "@/components/Toast";
-import { getActionErrorMessage } from "@/utils/error";
-import { updateAnalyticsConsentAction } from "@/utils/actions/organization";
+import { Switch } from "@/components/ui/switch";
 import { useOrganizationMembership } from "@/hooks/useOrganizationMembership";
+import { updateAnalyticsConsentAction } from "@/utils/actions/organization";
+import { getActionErrorMessage } from "@/utils/error";
 
 export function OrgAnalyticsConsentSection({
   emailAccountId,
@@ -42,12 +42,14 @@ export function OrgAnalyticsConsentSection({
       onSettled: () => {
         mutate();
       },
-    },
+    }
   );
 
   const handleToggle = useCallback(
     (checked: boolean) => {
-      if (!data) return;
+      if (!data) {
+        return;
+      }
 
       const optimisticData = {
         ...data,
@@ -56,15 +58,15 @@ export function OrgAnalyticsConsentSection({
       mutate(optimisticData, false);
       execute({ allowOrgAdminAnalytics: checked });
     },
-    [data, execute, mutate],
+    [data, execute, mutate]
   );
 
-  if (!isLoading && !error && !data?.organizationId) {
+  if (!(isLoading || error || data?.organizationId)) {
     return null;
   }
 
   return (
-    <LoadingContent loading={isLoading} error={error}>
+    <LoadingContent error={error} loading={isLoading}>
       {data?.organizationId && (
         <>
           <ItemSeparator />
@@ -78,8 +80,8 @@ export function OrgAnalyticsConsentSection({
             <ItemActions>
               <Switch
                 checked={data.allowOrgAdminAnalytics}
-                onCheckedChange={handleToggle}
                 disabled={isExecuting}
+                onCheckedChange={handleToggle}
               />
             </ItemActions>
           </Item>

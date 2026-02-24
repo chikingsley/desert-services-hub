@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the env module for dynamic access
 const mockEnv = {
@@ -92,7 +92,7 @@ describe("extractSSOProviderConfigFromXML", () => {
     it("should extract SSO config from valid prefixed XML", () => {
       const result = extractSSOProviderConfigFromXML(
         validIdpMetadata,
-        "test-provider",
+        "test-provider"
       );
 
       expect(result).toEqual({
@@ -107,7 +107,7 @@ describe("extractSSOProviderConfigFromXML", () => {
     it("should extract SSO config from valid unprefixed XML", () => {
       const result = extractSSOProviderConfigFromXML(
         validIdpMetadataUnprefixed,
-        "test-provider",
+        "test-provider"
       );
 
       expect(result).toEqual({
@@ -121,7 +121,7 @@ describe("extractSSOProviderConfigFromXML", () => {
     it("should prefer HTTP-POST service when multiple services available", () => {
       const result = extractSSOProviderConfigFromXML(
         validIdpMetadataMultipleServices,
-        "test-provider",
+        "test-provider"
       );
 
       expect(result.entryPoint).toBe("https://idp.example.com/sso");
@@ -130,7 +130,7 @@ describe("extractSSOProviderConfigFromXML", () => {
     it("should prefer signing key when multiple keys available", () => {
       const result = extractSSOProviderConfigFromXML(
         validIdpMetadataMultipleKeys,
-        "test-provider",
+        "test-provider"
       );
 
       expect(result.cert).toContain("SIGNING_CERT");
@@ -154,7 +154,7 @@ describe("extractSSOProviderConfigFromXML", () => {
 
       const result = extractSSOProviderConfigFromXML(
         metadataWithoutSigning,
-        "test-provider",
+        "test-provider"
       );
       expect(result.cert).toContain("FALLBACK_CERT");
     });
@@ -176,7 +176,7 @@ describe("extractSSOProviderConfigFromXML", () => {
 
       const result = extractSSOProviderConfigFromXML(
         metadataWithoutHttpPost,
-        "test-provider",
+        "test-provider"
       );
       expect(result.entryPoint).toBe("https://idp.example.com/redirect");
     });
@@ -184,11 +184,11 @@ describe("extractSSOProviderConfigFromXML", () => {
     it("should properly encode providerId in ACS URL", () => {
       const result = extractSSOProviderConfigFromXML(
         validIdpMetadata,
-        "test provider with spaces & special chars",
+        "test provider with spaces & special chars"
       );
 
       expect(result.spMetadata).toContain(
-        "test%20provider%20with%20spaces%20%26%20special%20chars",
+        "test%20provider%20with%20spaces%20%26%20special%20chars"
       );
     });
 
@@ -208,11 +208,11 @@ describe("extractSSOProviderConfigFromXML", () => {
 
       const result = extractWithTrailingSlash(
         validIdpMetadata,
-        "test-provider",
+        "test-provider"
       );
 
       expect(result.spMetadata).toContain(
-        "https://example.com/api/auth/sso/saml2/callback/test-provider",
+        "https://example.com/api/auth/sso/saml2/callback/test-provider"
       );
       expect(result.spMetadata).not.toContain("https://example.com//api");
     });
@@ -394,10 +394,10 @@ describe("extractSSOProviderConfigFromXML", () => {
 
       const result = extractSSOProviderConfigFromXML(
         metadataWithWhitespace,
-        "test-provider",
+        "test-provider"
       );
       expect(result.cert).toBe(
-        "-----BEGIN CERTIFICATE-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END CERTIFICATE-----",
+        "-----BEGIN CERTIFICATE-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END CERTIFICATE-----"
       );
     });
 
@@ -418,7 +418,7 @@ describe("extractSSOProviderConfigFromXML", () => {
 
       const result = extractSSOProviderConfigFromXML(
         mixedNamespaceMetadata,
-        "test-provider",
+        "test-provider"
       );
       expect(result.issuer).toBe("https://idp.example.com");
       expect(result.entryPoint).toBe("https://idp.example.com/sso");

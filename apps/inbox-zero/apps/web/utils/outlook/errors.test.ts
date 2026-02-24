@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { isNotFoundError, isAlreadyExistsError } from "./errors";
+import { describe, expect, it } from "vitest";
+import { isAlreadyExistsError, isNotFoundError } from "./errors";
 
 describe("isNotFoundError", () => {
   it("should return true for statusCode 404", () => {
@@ -45,7 +45,7 @@ describe("isNotFoundError", () => {
 describe("isAlreadyExistsError", () => {
   it("should return true for 'already exists' message", () => {
     expect(isAlreadyExistsError({ message: "Resource already exists" })).toBe(
-      true,
+      true
     );
   });
 

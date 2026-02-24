@@ -1,18 +1,18 @@
 import { Suspense } from "react";
-import { Card, CardTitle } from "@/components/ui/card";
-import { Loading } from "@/components/Loading";
-import { IntroStep } from "@/app/(app)/[emailAccountId]/clean/IntroStep";
 import { ActionSelectionStep } from "@/app/(app)/[emailAccountId]/clean/ActionSelectionStep";
 import { CleanInstructionsStep } from "@/app/(app)/[emailAccountId]/clean/CleanInstructionsStep";
-import { TimeRangeStep } from "@/app/(app)/[emailAccountId]/clean/TimeRangeStep";
 import { ConfirmationStep } from "@/app/(app)/[emailAccountId]/clean/ConfirmationStep";
-import { getUnhandledCount } from "@/utils/assess";
+import { IntroStep } from "@/app/(app)/[emailAccountId]/clean/IntroStep";
+import { TimeRangeStep } from "@/app/(app)/[emailAccountId]/clean/TimeRangeStep";
 import { CleanStep } from "@/app/(app)/[emailAccountId]/clean/types";
+import { Loading } from "@/components/Loading";
+import { Card, CardTitle } from "@/components/ui/card";
 import { CleanAction } from "@/generated/prisma/enums";
+import { getUnhandledCount } from "@/utils/assess";
 import { createEmailProvider } from "@/utils/email/provider";
 import { checkUserOwnsEmailAccount } from "@/utils/email-account";
-import prisma from "@/utils/prisma";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 export default async function CleanPage(props: {
   params: Promise<{ emailAccountId: string }>;
@@ -67,14 +67,10 @@ export default async function CleanPage(props: {
       case CleanStep.FINAL_CONFIRMATION:
         return (
           <ConfirmationStep
-            showFooter={false}
             action={searchParams.action ?? CleanAction.ARCHIVE}
-            timeRange={
-              searchParams.timeRange
-                ? Number.parseInt(searchParams.timeRange)
-                : 7
-            }
             instructions={searchParams.instructions}
+            reuseSettings={false}
+            showFooter={false}
             skips={{
               reply: searchParams.skipReply === "true",
               starred: searchParams.skipStarred === "true",
@@ -82,14 +78,18 @@ export default async function CleanPage(props: {
               receipt: searchParams.skipReceipt === "true",
               attachment: searchParams.skipAttachment === "true",
             }}
-            reuseSettings={false}
+            timeRange={
+              searchParams.timeRange
+                ? Number.parseInt(searchParams.timeRange)
+                : 7
+            }
           />
         );
 
       // first / default step
       default:
         return (
-          <IntroStep unhandledCount={unhandledCount} cleanAction={"ARCHIVE"} />
+          <IntroStep cleanAction={"ARCHIVE"} unhandledCount={unhandledCount} />
         );
     }
   };
@@ -98,12 +98,12 @@ export default async function CleanPage(props: {
     <div>
       <Card className="my-4 max-w-2xl p-6 sm:mx-4 md:mx-auto">
         <Suspense
-          key={step}
           fallback={
             <div className="flex h-[400px] items-center justify-center">
               <Loading />
             </div>
           }
+          key={step}
         >
           {renderStepContent()}
         </Suspense>

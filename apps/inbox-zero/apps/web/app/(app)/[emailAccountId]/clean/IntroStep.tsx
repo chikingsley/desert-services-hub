@@ -1,12 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { SectionDescription } from "@/components/Typography";
-import { TypographyH3 } from "@/components/Typography";
-import { Button } from "@/components/ui/button";
 import { useStep } from "@/app/(app)/[emailAccountId]/clean/useStep";
-import { CleanAction } from "@/generated/prisma/enums";
 import { PremiumAlertWithData } from "@/components/PremiumAlert";
+import { SectionDescription, TypographyH3 } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { CleanAction } from "@/generated/prisma/enums";
 
 export function IntroStep({
   unhandledCount,
@@ -19,15 +18,15 @@ export function IntroStep({
 
   return (
     <div>
-      <PremiumAlertWithData className="mb-20" activeOnly />
+      <PremiumAlertWithData activeOnly className="mb-20" />
       <div className="text-center">
         <Image
-          src="/images/illustrations/home-office.svg"
           alt="clean up"
-          width={200}
-          height={200}
           className="mx-auto dark:brightness-90 dark:invert"
+          height={200}
+          src="/images/illustrations/home-office.svg"
           unoptimized
+          width={200}
         />
 
         <TypographyH3 className="mt-2">
@@ -52,7 +51,7 @@ export function IntroStep({
         )}
 
         <div className="mt-6">
-          <Button onClick={onNext} disabled={unhandledCount === null}>
+          <Button disabled={unhandledCount === null} onClick={onNext}>
             Next
           </Button>
         </div>

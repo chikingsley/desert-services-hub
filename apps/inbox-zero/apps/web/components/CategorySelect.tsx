@@ -1,6 +1,7 @@
 "use client";
 
-import type { Category } from "@/generated/prisma/client";
+import { LoadingMiniSpinner } from "@/components/Loading";
+import { toastError, toastSuccess } from "@/components/Toast";
 import {
   Select,
   SelectContent,
@@ -8,10 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { changeSenderCategoryAction } from "@/utils/actions/categorize";
-import { toastError, toastSuccess } from "@/components/Toast";
+import type { Category } from "@/generated/prisma/client";
 import { useAiCategorizationQueueItem } from "@/store/ai-categorize-sender-queue";
-import { LoadingMiniSpinner } from "@/components/Loading";
+import { changeSenderCategoryAction } from "@/utils/actions/categorize";
 
 export function CategorySelect({
   emailAccountId,

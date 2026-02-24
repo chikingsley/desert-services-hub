@@ -5,25 +5,25 @@
  * helper functions for account operations.
  */
 
-import prisma from "@/utils/prisma";
+import { ActionType, SystemType } from "@/generated/prisma/enums";
 import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import { CONVERSATION_STATUS_TYPES } from "@/utils/reply-tracker/conversation-status-config";
+import { getRuleConfig } from "@/utils/rule/consts";
 import { E2E_GMAIL_EMAIL, E2E_OUTLOOK_EMAIL } from "../config";
 import { logStep } from "./logging";
-import { SystemType, ActionType } from "@/generated/prisma/enums";
-import { getRuleConfig } from "@/utils/rule/consts";
-import { CONVERSATION_STATUS_TYPES } from "@/utils/reply-tracker/conversation-status-config";
 
 // Logger for email provider operations
 const testLogger = createScopedLogger("e2e-test");
 
 export interface TestAccount {
-  id: string;
   email: string;
-  userId: string;
-  provider: "google" | "microsoft";
   emailProvider: EmailProvider;
+  id: string;
+  provider: "google" | "microsoft";
+  userId: string;
 }
 
 let gmailAccount: TestAccount | null = null;
@@ -58,7 +58,7 @@ export async function getGmailTestAccount(): Promise<TestAccount> {
   if (!emailAccount) {
     throw new Error(
       `No Gmail account found for ${E2E_GMAIL_EMAIL}. ` +
-        "Make sure the account is logged in and stored in the test database.",
+        "Make sure the account is logged in and stored in the test database."
     );
   }
 
@@ -113,7 +113,7 @@ export async function getOutlookTestAccount(): Promise<TestAccount> {
   if (!emailAccount) {
     throw new Error(
       `No Outlook account found for ${E2E_OUTLOOK_EMAIL}. ` +
-        "Make sure the account is logged in and stored in the test database.",
+        "Make sure the account is logged in and stored in the test database."
     );
   }
 
@@ -245,7 +245,7 @@ export function clearAccountCache(): void {
  * conversation status detection are disabled.
  */
 export async function ensureConversationRules(
-  emailAccountId: string,
+  emailAccountId: string
 ): Promise<void> {
   logStep("Ensuring conversation rules exist", { emailAccountId });
 
@@ -263,14 +263,14 @@ export async function ensureConversationRules(
 
     if (existingRule) {
       // Ensure rule is enabled
-      if (!existingRule.enabled) {
+      if (existingRule.enabled) {
+        logStep(`${systemType} rule already exists and is enabled`);
+      } else {
         await prisma.rule.update({
           where: { id: existingRule.id },
           data: { enabled: true },
         });
         logStep(`Enabled existing ${systemType} rule`);
-      } else {
-        logStep(`${systemType} rule already exists and is enabled`);
       }
       continue;
     }
@@ -308,7 +308,7 @@ export async function ensureConversationRules(
  * while disabling other rules that might create drafts or interfere with assertions.
  */
 export async function disableNonConversationRules(
-  emailAccountId: string,
+  emailAccountId: string
 ): Promise<void> {
   logStep("Disabling non-conversation rules", { emailAccountId });
 

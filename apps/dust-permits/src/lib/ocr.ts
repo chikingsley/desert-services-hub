@@ -32,28 +32,28 @@ function getMimeType(ext: string | undefined): string {
 
 // Types
 export interface OCRResult {
-  success: boolean;
-  text: string | null;
   error?: string;
   metadata?: {
     imageSize: number;
     processingTimeMs: number;
   };
+  success: boolean;
+  text: string | null;
 }
 
 export interface PDFOCRResult {
-  success: boolean;
   pages: {
     page: number;
     text: string | null;
     error?: string;
   }[];
+  success: boolean;
   totalPages: number;
 }
 
 export interface OCROptions {
-  prompt?: string;
   maxTokens?: number;
+  prompt?: string;
 }
 
 export interface PDFOCROptions extends OCROptions {

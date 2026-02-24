@@ -10,10 +10,10 @@
  */
 
 import { beforeAll, describe, expect, test, vi } from "vitest";
-import prisma from "@/utils/prisma";
 import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("test");
 const RUN_E2E_TESTS = process.env.RUN_E2E_TESTS;
@@ -27,10 +27,10 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Search Edge Cases", () => {
   beforeAll(async () => {
     if (!TEST_OUTLOOK_EMAIL) {
       console.warn(
-        "\n⚠️  Set TEST_OUTLOOK_EMAIL env var to run these tests (Outlook search)",
+        "\n⚠️  Set TEST_OUTLOOK_EMAIL env var to run these tests (Outlook search)"
       );
       console.warn(
-        "   Example: TEST_OUTLOOK_EMAIL=your@email.com pnpm test-e2e outlook-search\n",
+        "   Example: TEST_OUTLOOK_EMAIL=your@email.com pnpm test-e2e outlook-search\n"
       );
       return;
     }
@@ -63,7 +63,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Search Edge Cases", () => {
   test("should handle search queries containing a question mark", async () => {
     if (!provider) {
       throw new Error(
-        "Email provider not initialized. Did you set TEST_OUTLOOK_EMAIL?",
+        "Email provider not initialized. Did you set TEST_OUTLOOK_EMAIL?"
       );
     }
 
@@ -73,7 +73,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Search Edge Cases", () => {
       provider.getMessagesWithPagination({
         query,
         maxResults: 5,
-      }),
+      })
     ).resolves.toHaveProperty("messages");
   }, 30_000);
 });

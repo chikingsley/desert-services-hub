@@ -1,5 +1,5 @@
-import prisma from "@/utils/prisma";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 /**
  * Auto-populates EmailAccount timezone from calendars if not already set
@@ -11,7 +11,7 @@ export async function autoPopulateTimezone(
     primary?: boolean | null;
     isDefaultCalendar?: boolean | null;
   }>,
-  logger: Logger,
+  logger: Logger
 ): Promise<void> {
   const emailAccount = await prisma.emailAccount.findUnique({
     where: { id: emailAccountId },
@@ -21,7 +21,7 @@ export async function autoPopulateTimezone(
   if (!emailAccount?.timezone) {
     // Try primary calendar first (Google uses 'primary', Microsoft uses 'isDefaultCalendar')
     const primaryCalendar = calendars.find(
-      (cal) => cal.primary || cal.isDefaultCalendar,
+      (cal) => cal.primary || cal.isDefaultCalendar
     );
     const timezoneToSet = primaryCalendar?.timeZone || calendars[0]?.timeZone;
 

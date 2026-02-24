@@ -1,7 +1,7 @@
 import chunk from "lodash/chunk";
-import { deleteQueue, listQueues, publishToQstashQueue } from "@/utils/upstash";
 import type { AiCategorizeSenders } from "@/app/api/user/categorize/senders/batch/handle-batch-validation";
 import { createScopedLogger } from "@/utils/logger";
+import { deleteQueue, listQueues, publishToQstashQueue } from "@/utils/upstash";
 
 const logger = createScopedLogger("upstash");
 
@@ -18,7 +18,7 @@ const getCategorizeSendersQueueName = ({
  * Splits large arrays of senders into chunks of BATCH_SIZE to prevent overwhelming the system
  */
 export async function publishToAiCategorizeSendersQueue(
-  body: AiCategorizeSenders,
+  body: AiCategorizeSenders
 ) {
   // Split senders into smaller chunks to process in batches
   const BATCH_SIZE = 50;
@@ -46,8 +46,8 @@ export async function publishToAiCategorizeSendersQueue(
           emailAccountId: body.emailAccountId,
           senders: senderChunk,
         } satisfies AiCategorizeSenders,
-      }),
-    ),
+      })
+    )
   );
 }
 
@@ -72,13 +72,16 @@ async function deleteEmptyQueues({
   const queues = await listQueues();
   logger.info("Found queues", { count: queues.length });
   for (const queue of queues) {
-    if (!queue.name.startsWith(prefix)) continue;
+    if (!queue.name.startsWith(prefix)) {
+      continue;
+    }
     if (
       skipEmailAccountId &&
       queue.name ===
         getCategorizeSendersQueueName({ emailAccountId: skipEmailAccountId })
-    )
+    ) {
       continue;
+    }
 
     if (!queue.lag) {
       try {

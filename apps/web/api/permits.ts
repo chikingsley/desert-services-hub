@@ -25,16 +25,16 @@ const permitsQuerySchema = paginationSchema.extend({
   sort: sortParam(SORT_FIELDS, "submitted_date"),
 });
 interface PermitRow {
-  id: string;
-  project_name: string | null;
-  company_name: string | null;
-  status: string | null;
-  submitted_date: string | null;
-  effective_date: string | null;
-  expiration_date: string | null;
   address: string | null;
   city: string | null;
+  company_name: string | null;
+  effective_date: string | null;
+  expiration_date: string | null;
+  id: string;
   project_db_name: string | null;
+  project_name: string | null;
+  status: string | null;
+  submitted_date: string | null;
 }
 
 function getSortExpression(field: SortField): string {

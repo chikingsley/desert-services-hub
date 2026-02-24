@@ -3,24 +3,24 @@
 
 "use client";
 
+import { SparklesIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import useSWR from "swr";
-import { SparklesIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/Input";
-import { toastError } from "@/components/Toast";
-import { LoadingContent } from "@/components/LoadingContent";
 import type { MessagesResponse } from "@/app/api/messages/route";
-import { Separator } from "@/components/ui/separator";
 import { AlertBasic } from "@/components/Alert";
 import { EmailMessageCell } from "@/components/EmailMessageCell";
+import { Input } from "@/components/Input";
+import { LoadingContent } from "@/components/LoadingContent";
 import { SearchForm } from "@/components/SearchForm";
-import { TableCell, TableRow, Table, TableBody } from "@/components/ui/table";
+import { toastError } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import { testColdEmailAction } from "@/utils/actions/cold-email";
 import type { ColdEmailBlockerBody } from "@/utils/actions/cold-email.validation";
-import { useAccount } from "@/providers/EmailAccountProvider";
 
 type ColdEmailBlockerResponse = {
   isColdEmail: boolean;
@@ -35,7 +35,7 @@ export function TestRulesContent() {
     {
       keepPreviousData: true,
       dedupingInterval: 1000,
-    },
+    }
   );
 
   const { userEmail } = useAccount();
@@ -55,7 +55,7 @@ export function TestRulesContent() {
 
       <Separator />
 
-      <LoadingContent loading={isLoading} error={error}>
+      <LoadingContent error={error} loading={isLoading}>
         {data && (
           <Table>
             <TableBody>
@@ -103,23 +103,23 @@ const TestRulesForm = () => {
         date: undefined,
       });
     },
-    [testEmail],
+    [testEmail]
   );
 
   return (
     <div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <Input
-          type="text"
           autosizeTextarea
-          rows={3}
-          name="message"
+          error={errors.message}
           label="Email to test against"
+          name="message"
           placeholder="Hey, I run a marketing agency, and would love to chat."
           registerProps={register("message", { required: true })}
-          error={errors.message}
+          rows={3}
+          type="text"
         />
-        <Button type="submit" loading={isSubmitting}>
+        <Button loading={isSubmitting} type="submit">
           <SparklesIcon className="mr-2 h-4 w-4" />
           Test
         </Button>
@@ -152,13 +152,13 @@ function TestRulesContentRow({
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
             <EmailMessageCell
-              sender={message.headers.from}
-              subject={message.headers.subject}
-              snippet={message.snippet}
-              userEmail={userEmail}
-              threadId={message.threadId}
-              messageId={message.id}
               labelIds={message.labelIds}
+              messageId={message.id}
+              sender={message.headers.from}
+              snippet={message.snippet}
+              subject={message.headers.subject}
+              threadId={message.threadId}
+              userEmail={userEmail}
             />
           </div>
           <div className="ml-4 shrink-0">
@@ -194,26 +194,28 @@ function TestRulesContentRow({
 function Result(props: { coldEmailResponse: ColdEmailBlockerResponse | null }) {
   const { coldEmailResponse } = props;
 
-  if (!coldEmailResponse) return null;
+  if (!coldEmailResponse) {
+    return null;
+  }
 
   if (coldEmailResponse.isColdEmail) {
     return (
       <AlertBasic
-        variant="destructive"
-        title="Email is a cold email!"
         description={coldEmailResponse.aiReason}
+        title="Email is a cold email!"
+        variant="destructive"
       />
     );
   }
   return (
     <AlertBasic
-      variant="success"
+      description={coldEmailResponse.aiReason}
       title={
         coldEmailResponse.reason === "hasPreviousEmail"
           ? "This person has previously emailed you. This is not a cold email!"
           : "Our AI determined this is not a cold email!"
       }
-      description={coldEmailResponse.aiReason}
+      variant="success"
     />
   );
 }
@@ -221,7 +223,7 @@ function Result(props: { coldEmailResponse: ColdEmailBlockerResponse | null }) {
 function useColdEmailTest() {
   const [testing, setTesting] = useState(false);
   const [response, setResponse] = useState<ColdEmailBlockerResponse | null>(
-    null,
+    null
   );
   const { emailAccountId } = useAccount();
 

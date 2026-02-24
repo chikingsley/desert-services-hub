@@ -15,24 +15,23 @@
  * RUN_E2E_FLOW_TESTS=true pnpm test-e2e message-preservation
  */
 
-import { describe, test, expect, beforeAll, afterEach } from "vitest";
+import { afterEach, beforeAll, describe, expect, test } from "vitest";
 import { shouldRunFlowTests, TIMEOUTS } from "./config";
-import { initializeFlowTests, setupFlowTest } from "./setup";
-import { generateTestSummary } from "./teardown";
+import type { TestAccount } from "./helpers/accounts";
 import {
   sendTestEmail,
   sendTestReply,
   TEST_EMAIL_SCENARIOS,
 } from "./helpers/email";
+import { clearLogs, logStep } from "./helpers/logging";
 import {
   waitForExecutedRule,
   waitForMessageInInbox,
-  waitForReplyInInbox,
   waitForSentMessage,
   waitForThreadMessageCount,
 } from "./helpers/polling";
-import { logStep, clearLogs } from "./helpers/logging";
-import type { TestAccount } from "./helpers/accounts";
+import { initializeFlowTests, setupFlowTest } from "./setup";
+import { generateTestSummary } from "./teardown";
 
 describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
   let gmail: TestAccount;
@@ -113,7 +112,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
       });
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       expect(draftAction).toBeDefined();
@@ -174,7 +173,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
 
       // Get all messages in the thread
       const threadMessages = await gmail.emailProvider.getThreadMessages(
-        firstReceived.threadId,
+        firstReceived.threadId
       );
 
       logStep("Thread messages retrieved", {
@@ -188,10 +187,10 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
 
       // Verify both the first message and follow-up still exist
       const firstMessageStillExists = threadMessages.some(
-        (m) => m.id === firstReceived.messageId,
+        (m) => m.id === firstReceived.messageId
       );
       const followUpStillExists = threadMessages.some(
-        (m) => m.id === followUpReceived.messageId,
+        (m) => m.id === followUpReceived.messageId
       );
 
       logStep("Message existence check", {
@@ -211,7 +210,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
 
       try {
         const followUpMessage = await gmail.emailProvider.getMessage(
-          followUpReceived.messageId,
+          followUpReceived.messageId
         );
         expect(followUpMessage).toBeDefined();
         expect(followUpMessage.id).toBe(followUpReceived.messageId);
@@ -225,7 +224,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
           error: String(error),
         });
         throw new Error(
-          `BUG REPRODUCED: Follow-up message ${followUpReceived.messageId} was deleted during draft cleanup. This should NOT happen.`,
+          `BUG REPRODUCED: Follow-up message ${followUpReceived.messageId} was deleted during draft cleanup. This should NOT happen.`
         );
       }
 
@@ -242,7 +241,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
       // Note: Draft may or may not exist depending on implementation
       // The key thing is that the follow-up message was NOT deleted
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   test(
@@ -297,7 +296,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
       });
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
       const aiDraftId = draftAction?.draftId;
       logStep("AI draft created", { draftId: aiDraftId });
@@ -353,7 +352,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
       logStep("Verifying all messages preserved after user reply");
 
       const threadMessages = await gmail.emailProvider.getThreadMessages(
-        firstReceived.threadId,
+        firstReceived.threadId
       );
 
       logStep("Thread messages after user reply", {
@@ -384,7 +383,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
 
         if (!exists) {
           throw new Error(
-            `BUG: ${msg.name} (${msg.id}) was deleted! This should NOT happen.`,
+            `BUG: ${msg.name} (${msg.id}) was deleted! This should NOT happen.`
           );
         }
         expect(exists).toBe(true);
@@ -392,7 +391,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
 
       logStep("All messages preserved successfully");
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   // ============================================================
@@ -446,7 +445,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
       });
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       expect(draftAction).toBeDefined();
@@ -503,7 +502,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
       logStep("Step 4: Verifying follow-up message was NOT deleted");
 
       const threadMessages = await outlook.emailProvider.getThreadMessages(
-        firstReceived.threadId,
+        firstReceived.threadId
       );
 
       logStep("Thread messages retrieved", {
@@ -514,11 +513,11 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
       expect(threadMessages.length).toBeGreaterThanOrEqual(2);
 
       const firstMessageStillExists = threadMessages.some(
-        (m) => m.id === firstReceived.messageId,
+        (m) => m.id === firstReceived.messageId
       );
       // Use Outlook-side messageId for comparison
       const followUpStillExists = threadMessages.some(
-        (m) => m.id === followUpReceived.messageId,
+        (m) => m.id === followUpReceived.messageId
       );
 
       logStep("Message existence check", {
@@ -538,7 +537,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
 
       try {
         const followUpMessage = await outlook.emailProvider.getMessage(
-          followUpReceived.messageId,
+          followUpReceived.messageId
         );
         expect(followUpMessage).toBeDefined();
         expect(followUpMessage.id).toBe(followUpReceived.messageId);
@@ -551,7 +550,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
           error: String(error),
         });
         throw new Error(
-          `BUG REPRODUCED: Follow-up message ${followUpReceived.messageId} was deleted during draft cleanup. This should NOT happen.`,
+          `BUG REPRODUCED: Follow-up message ${followUpReceived.messageId} was deleted during draft cleanup. This should NOT happen.`
         );
       }
 
@@ -567,7 +566,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
         stillExists: !!draftAfterFollowUp,
       });
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   test(
@@ -579,7 +578,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
       // Setup: External sender sends multiple messages, then user replies
       // ========================================
       logStep(
-        "Setup: Creating thread with multiple messages from sender (to Outlook)",
+        "Setup: Creating thread with multiple messages from sender (to Outlook)"
       );
 
       // First message
@@ -609,7 +608,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
       });
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
       // Assert draft was created before continuing
       expect(draftAction?.draftId).toBeTruthy();
@@ -684,13 +683,13 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
       // The user reply is the message that's not firstReceived or secondReceived
       const userReplyInThread = threadMessages.find(
         (m) =>
-          m.id !== firstReceived.messageId && m.id !== secondReceived.messageId,
+          m.id !== firstReceived.messageId && m.id !== secondReceived.messageId
       );
 
       // If no user reply found in thread, that's the bug we're testing for
       if (!userReplyInThread) {
         throw new Error(
-          "User reply not found in thread - may have been deleted",
+          "User reply not found in thread - may have been deleted"
         );
       }
 
@@ -717,7 +716,7 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
 
         if (!exists) {
           throw new Error(
-            `BUG: ${msg.name} (${msg.id}) was deleted! This should NOT happen.`,
+            `BUG: ${msg.name} (${msg.id}) was deleted! This should NOT happen.`
           );
         }
         expect(exists).toBe(true);
@@ -725,6 +724,6 @@ describe.skipIf(!shouldRunFlowTests())("Message Preservation", () => {
 
       logStep("All messages preserved successfully");
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 });

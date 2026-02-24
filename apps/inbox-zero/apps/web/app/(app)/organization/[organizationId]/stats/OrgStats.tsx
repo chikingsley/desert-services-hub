@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import type { DateRange } from "react-day-picker";
 import { subDays } from "date-fns/subDays";
 import { Mail, Sparkles, Users } from "lucide-react";
-import { LoadingContent } from "@/components/LoadingContent";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCallback, useMemo, useState } from "react";
+import type { DateRange } from "react-day-picker";
+import { AccessDenied } from "@/components/AccessDenied";
 import { DatePickerWithRange } from "@/components/DatePickerWithRange";
-import { useOrgStatsTotals } from "@/hooks/useOrgStatsTotals";
+import { LoadingContent } from "@/components/LoadingContent";
+import { MutedText } from "@/components/Typography";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useOrganizationMembership } from "@/hooks/useOrganizationMembership";
 import { useOrgStatsEmailBuckets } from "@/hooks/useOrgStatsEmailBuckets";
 import { useOrgStatsRulesBuckets } from "@/hooks/useOrgStatsRulesBuckets";
-import { MutedText } from "@/components/Typography";
-import { useOrganizationMembership } from "@/hooks/useOrganizationMembership";
+import { useOrgStatsTotals } from "@/hooks/useOrgStatsTotals";
 import { hasOrganizationAdminRole } from "@/utils/organizations/roles";
-import { AccessDenied } from "@/components/AccessDenied";
 
 const selectOptions = [
   { label: "Last week", value: "7" },
@@ -30,7 +30,7 @@ export function OrgStats({ organizationId }: { organizationId: string }) {
   const isAdmin = hasOrganizationAdminRole(membership?.role ?? "");
 
   const [dateDropdown, setDateDropdown] = useState<string>(
-    defaultSelected.label,
+    defaultSelected.label
   );
 
   const now = useMemo(() => new Date(), []);
@@ -43,7 +43,7 @@ export function OrgStats({ organizationId }: { organizationId: string }) {
     (option: { label: string; value: string }) => {
       setDateDropdown(option.label);
     },
-    [],
+    []
   );
 
   const options = useMemo(
@@ -51,7 +51,7 @@ export function OrgStats({ organizationId }: { organizationId: string }) {
       fromDate: dateRange?.from?.getTime(),
       toDate: dateRange?.to?.getTime(),
     }),
-    [dateRange],
+    [dateRange]
   );
 
   const {
@@ -95,18 +95,18 @@ export function OrgStats({ organizationId }: { organizationId: string }) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <DatePickerWithRange
+          dateDropdown={dateDropdown}
           dateRange={dateRange}
+          onSetDateDropdown={onSetDateDropdown}
           onSetDateRange={setDateRange}
           selectOptions={selectOptions}
-          dateDropdown={dateDropdown}
-          onSetDateDropdown={onSetDateDropdown}
         />
       </div>
 
       <div className="space-y-6">
         <LoadingContent
-          loading={totalsLoading}
           error={totalsError}
+          loading={totalsLoading}
           loadingComponent={
             <div className="grid gap-4 md:grid-cols-3">
               <Skeleton className="h-24" />
@@ -118,19 +118,19 @@ export function OrgStats({ organizationId }: { organizationId: string }) {
           {totalsData && (
             <div className="grid gap-4 md:grid-cols-3">
               <StatCard
+                icon={<Mail className="h-4 w-4 text-muted-foreground" />}
                 title="Emails Received"
                 value={totalsData.totalEmails.toLocaleString()}
-                icon={<Mail className="h-4 w-4 text-muted-foreground" />}
               />
               <StatCard
+                icon={<Sparkles className="h-4 w-4 text-muted-foreground" />}
                 title="Rules Executed"
                 value={totalsData.totalRules.toLocaleString()}
-                icon={<Sparkles className="h-4 w-4 text-muted-foreground" />}
               />
               <StatCard
+                icon={<Users className="h-4 w-4 text-muted-foreground" />}
                 title="Active Members"
                 value={totalsData.activeMembers.toLocaleString()}
-                icon={<Users className="h-4 w-4 text-muted-foreground" />}
               />
             </div>
           )}
@@ -138,32 +138,32 @@ export function OrgStats({ organizationId }: { organizationId: string }) {
 
         <div className="grid gap-4 md:grid-cols-2">
           <LoadingContent
-            loading={emailBucketsLoading}
             error={emailBucketsError}
+            loading={emailBucketsLoading}
             loadingComponent={<Skeleton className="h-64" />}
           >
             {emailBucketsData && (
               <BucketChart
-                title="Email Volume Distribution"
-                description="Number of users by emails received in selected period"
                 data={emailBucketsData}
+                description="Number of users by emails received in selected period"
                 emptyMessage="No email data available. Users need to load their stats first."
+                title="Email Volume Distribution"
                 unit="emails"
               />
             )}
           </LoadingContent>
 
           <LoadingContent
-            loading={rulesBucketsLoading}
             error={rulesBucketsError}
+            loading={rulesBucketsLoading}
             loadingComponent={<Skeleton className="h-64" />}
           >
             {rulesBucketsData && (
               <BucketChart
-                title="Automation Usage Distribution"
-                description="Number of users by rules executed in selected period"
                 data={rulesBucketsData}
+                description="Number of users by rules executed in selected period"
                 emptyMessage="No automation data yet."
+                title="Automation Usage Distribution"
                 unit="rules"
               />
             )}
@@ -186,11 +186,11 @@ function StatCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <CardTitle className="font-medium text-sm">{title}</CardTitle>
         {icon}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="font-bold text-2xl">{value}</div>
       </CardContent>
     </Card>
   );
@@ -219,14 +219,10 @@ function BucketChart({
         <MutedText>{description}</MutedText>
       </CardHeader>
       <CardContent>
-        {!hasData ? (
-          <div className="flex h-40 items-center justify-center">
-            <MutedText className="text-center">{emptyMessage}</MutedText>
-          </div>
-        ) : (
+        {hasData ? (
           <div className="space-y-3">
             {data.map((bucket) => (
-              <div key={bucket.label} className="space-y-1">
+              <div className="space-y-1" key={bucket.label}>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
                     {bucket.label} {unit}
@@ -246,6 +242,10 @@ function BucketChart({
                 </div>
               </div>
             ))}
+          </div>
+        ) : (
+          <div className="flex h-40 items-center justify-center">
+            <MutedText className="text-center">{emptyMessage}</MutedText>
           </div>
         )}
       </CardContent>

@@ -1,8 +1,13 @@
 "use client";
 
 import useSWR from "swr";
-import { Button } from "@/components/ui/button";
+import { ViewLearnedPatterns } from "@/app/(app)/[emailAccountId]/assistant/group/ViewLearnedPatterns";
+import type { GroupsResponse } from "@/app/api/user/group/route";
+import { LoadingContent } from "@/components/LoadingContent";
 import { SettingCard } from "@/components/SettingCard";
+import { TypographyP } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -11,21 +16,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TypographyP } from "@/components/Typography";
-import { ViewLearnedPatterns } from "@/app/(app)/[emailAccountId]/assistant/group/ViewLearnedPatterns";
-import type { GroupsResponse } from "@/app/api/user/group/route";
-import { LoadingContent } from "@/components/LoadingContent";
 
 export function LearnedPatternsSetting() {
   return (
     <SettingCard
-      title="Learned patterns"
       description="View the patterns the assistant has learned from your email history."
       right={
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
+            <Button size="sm" variant="outline">
               View
             </Button>
           </DialogTrigger>
@@ -45,6 +44,7 @@ export function LearnedPatternsSetting() {
           </DialogContent>
         </Dialog>
       }
+      title="Learned patterns"
     />
   );
 }
@@ -53,7 +53,7 @@ function Content() {
   const { data, isLoading, error } = useSWR<GroupsResponse>("/api/user/group");
 
   return (
-    <LoadingContent loading={isLoading} error={error}>
+    <LoadingContent error={error} loading={isLoading}>
       {data?.groups.length === 0 ? (
         <Card>
           <CardContent className="flex items-center justify-center p-6">

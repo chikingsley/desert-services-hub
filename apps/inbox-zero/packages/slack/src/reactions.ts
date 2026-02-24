@@ -7,7 +7,7 @@ export async function addReaction(
   channel: string,
   timestamp: string,
   name: string,
-  logger?: Logger,
+  logger?: Logger
 ): Promise<void> {
   try {
     await client.reactions.add({ channel, timestamp, name });
@@ -21,7 +21,7 @@ export async function removeReaction(
   channel: string,
   timestamp: string,
   name: string,
-  logger?: Logger,
+  logger?: Logger
 ): Promise<void> {
   try {
     await client.reactions.remove({ channel, timestamp, name });

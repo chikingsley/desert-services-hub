@@ -1,21 +1,21 @@
 "use client";
 
+import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
-import { useCalendars } from "@/hooks/useCalendars";
-import { useAction } from "next-safe-action/hooks";
-import { updateEmailAccountTimezoneAction } from "@/utils/actions/calendar";
-import { useAccount } from "@/providers/EmailAccountProvider";
+import { toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { toastSuccess } from "@/components/Toast";
+import { useCalendars } from "@/hooks/useCalendars";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { updateEmailAccountTimezoneAction } from "@/utils/actions/calendar";
 
 export type DismissedPrompt = {
   saved: string;
@@ -43,12 +43,14 @@ export function TimezoneDetector() {
       onSettled: () => {
         mutate();
       },
-    },
+    }
   );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: executeUpdateTimezone is stable from useAction and causes infinite loops if included
   useEffect(() => {
-    if (!data) return;
+    if (!data) {
+      return;
+    }
 
     const currentTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const savedTimezone = data.timezone;
@@ -79,7 +81,7 @@ export function TimezoneDetector() {
       const updated = addDismissedPrompt(
         dismissedPrompts,
         data.timezone,
-        currentTimezone,
+        currentTimezone
       );
       setDismissedPrompts(updated);
     }
@@ -93,7 +95,7 @@ export function TimezoneDetector() {
   const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   return (
-    <Dialog open={showDialog} onOpenChange={setShowDialog}>
+    <Dialog onOpenChange={setShowDialog} open={showDialog}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Timezone Change Detected</DialogTitle>
@@ -106,13 +108,13 @@ export function TimezoneDetector() {
         </DialogHeader>
         <DialogFooter>
           <Button
-            variant="outline"
-            onClick={handleKeepCurrent}
             disabled={isExecuting}
+            onClick={handleKeepCurrent}
+            variant="outline"
           >
             Keep Current Setting
           </Button>
-          <Button onClick={handleUpdateTimezone} loading={isExecuting}>
+          <Button loading={isExecuting} onClick={handleUpdateTimezone}>
             Update to {detectedTimezone}
           </Button>
         </DialogFooter>
@@ -127,7 +129,7 @@ export function TimezoneDetector() {
 export function shouldShowTimezonePrompt(
   savedTimezone: string,
   detectedTimezone: string,
-  dismissedPrompts: DismissedPrompt[],
+  dismissedPrompts: DismissedPrompt[]
 ): boolean {
   // If timezones match, don't show prompt
   if (savedTimezone === detectedTimezone) {
@@ -142,7 +144,7 @@ export function shouldShowTimezonePrompt(
     (prompt) =>
       prompt.saved === savedTimezone &&
       prompt.detected === detectedTimezone &&
-      now - prompt.dismissedAt < expiryMs,
+      now - prompt.dismissedAt < expiryMs
   );
 
   return !recentlyDismissed;
@@ -154,12 +156,12 @@ export function shouldShowTimezonePrompt(
 export function addDismissedPrompt(
   dismissedPrompts: DismissedPrompt[],
   savedTimezone: string,
-  detectedTimezone: string,
+  detectedTimezone: string
 ): DismissedPrompt[] {
   // Remove any old dismissals for this combination
   const filtered = dismissedPrompts.filter(
     (prompt) =>
-      !(prompt.saved === savedTimezone && prompt.detected === detectedTimezone),
+      !(prompt.saved === savedTimezone && prompt.detected === detectedTimezone)
   );
 
   // Add the new dismissal

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import type { ThreadMessage } from "@/components/email-list/types";
 import { EmailMessage } from "@/components/email-list/EmailMessage";
+import type { ThreadMessage } from "@/components/email-list/types";
 
 export function EmailThread({
   messages,
@@ -47,14 +47,14 @@ export function EmailThread({
   const lastMessageId = organizedMessages.at(-1)?.message.id;
 
   const [expandedMessageIds, setExpandedMessageIds] = useState<Set<string>>(
-    new Set(lastMessageId ? [lastMessageId] : []),
+    new Set(lastMessageId ? [lastMessageId] : [])
   );
 
   return (
     <div className="flex-1 overflow-auto bg-muted p-4">
       {withHeader && (
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-semibold text-foreground">
+          <div className="font-semibold text-2xl text-foreground">
             {messages[0]?.headers.subject}
           </div>
           {topRightComponent && (
@@ -68,28 +68,32 @@ export function EmailThread({
             autoOpenReplyForMessageId === message.id || Boolean(draftMessage);
           return (
             <EmailMessage
-              key={message.id}
-              message={message}
-              showReplyButton={showReplyButton}
-              refetch={refetch}
               defaultShowReply={defaultShowReply}
               draftMessage={draftMessage}
               expanded={expandedMessageIds.has(message.id)}
+              generateNudge={defaultShowReply && !draftMessage?.textHtml}
+              key={message.id}
+              message={message}
               onExpand={() => {
                 setExpandedMessageIds((prev) => {
-                  if (prev.has(message.id)) return prev;
+                  if (prev.has(message.id)) {
+                    return prev;
+                  }
                   return new Set(prev).add(message.id);
                 });
               }}
               onSendSuccess={(messageId) => {
                 setExpandedMessageIds((prev) => {
-                  if (prev.has(messageId)) return prev;
+                  if (prev.has(messageId)) {
+                    return prev;
+                  }
                   return new Set(prev).add(messageId);
                 });
 
                 onSendSuccess?.(messageId, message.threadId);
               }}
-              generateNudge={defaultShowReply && !draftMessage?.textHtml}
+              refetch={refetch}
+              showReplyButton={showReplyButton}
             />
           );
         })}

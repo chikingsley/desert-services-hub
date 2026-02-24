@@ -1,10 +1,12 @@
 "use client";
 
-import type * as React from "react";
+import { differenceInDays, subDays } from "date-fns";
 import { format } from "date-fns/format";
 import { CalendarIcon, ChevronDown } from "lucide-react";
+import type * as React from "react";
+import { useMemo } from "react";
 import type { DateRange } from "react-day-picker";
-import { cn } from "@/utils";
+import { List } from "@/components/List";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -12,26 +14,34 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { List } from "@/components/List";
-import { differenceInDays, subDays } from "date-fns";
-import { useMemo } from "react";
+import { cn } from "@/utils";
 
 function getRelativeDateLabel(days: number) {
-  if (days === 1) return "Last day";
-  if (days === 7) return "Last week";
-  if (days === 30) return "Last month";
-  if (days === 90) return "Last 3 months";
-  if (days === 365) return "Last year";
+  if (days === 1) {
+    return "Last day";
+  }
+  if (days === 7) {
+    return "Last week";
+  }
+  if (days === 30) {
+    return "Last month";
+  }
+  if (days === 90) {
+    return "Last 3 months";
+  }
+  if (days === 365) {
+    return "Last year";
+  }
   return "All";
 }
 
 interface DatePickerWithRangeProps
   extends React.HTMLAttributes<HTMLDivElement> {
+  dateDropdown: string;
   dateRange?: DateRange;
+  onSetDateDropdown: (option: { label: string; value: string }) => void;
   onSetDateRange: (dateRange?: DateRange) => void;
   selectOptions: { label: string; value: string }[];
-  dateDropdown: string;
-  onSetDateDropdown: (option: { label: string; value: string }) => void;
 }
 
 export function DatePickerWithRange({
@@ -52,12 +62,12 @@ export function DatePickerWithRange({
     <Popover modal={true}>
       <PopoverTrigger asChild>
         <Button
+          className={cn(
+            "min-w-52 justify-between whitespace-nowrap px-3 text-left font-normal",
+            !dateRange && "text-muted-foreground"
+          )}
           id="date"
           variant="outline"
-          className={cn(
-            "px-3 justify-between whitespace-nowrap text-left font-normal min-w-52",
-            !dateRange && "text-muted-foreground",
-          )}
         >
           <div className="flex items-center">
             <CalendarIcon className="mr-2 hidden h-4 w-4 sm:block" />
@@ -80,20 +90,15 @@ export function DatePickerWithRange({
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
         <Calendar
+          defaultMonth={dateRange?.from}
           initialFocus
           mode="range"
-          defaultMonth={dateRange?.from}
-          selected={dateRange}
-          onSelect={onSetDateRange}
           numberOfMonths={2}
+          onSelect={onSetDateRange}
           rightContent={
             <List
-              value={
-                selectOptions.find((option) => option.label === dateDropdown)
-                  ?.value
-              }
-              items={selectOptions}
               className="min-w-32"
+              items={selectOptions}
               onSelect={({ label, value }) => {
                 onSetDateDropdown({ label, value });
                 // When "All" is selected (value "0"), pass undefined to skip date filtering
@@ -106,8 +111,13 @@ export function DatePickerWithRange({
                   });
                 }
               }}
+              value={
+                selectOptions.find((option) => option.label === dateDropdown)
+                  ?.value
+              }
             />
           }
+          selected={dateRange}
         />
       </PopoverContent>
     </Popover>

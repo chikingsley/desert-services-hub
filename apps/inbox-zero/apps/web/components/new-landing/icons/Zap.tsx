@@ -1,13 +1,13 @@
 export function Zap() {
   return (
     <svg
-      width="13"
-      height="16"
-      viewBox="0 0 13 16"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      role="img"
       aria-label="Zap"
+      fill="none"
+      height="16"
+      role="img"
+      viewBox="0 0 13 16"
+      width="13"
+      xmlns="http://www.w3.org/2000/svg"
     >
       <title>Zap</title>
       <path
@@ -20,12 +20,12 @@ export function Zap() {
       />
       <defs>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint0_linear_137_69722"
           x1="6.26616"
-          y1="0"
           x2="6.26616"
+          y1="0"
           y2="15.2487"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#9F9F9F" />
           <stop offset="1" stopColor="#E1E1E1" />

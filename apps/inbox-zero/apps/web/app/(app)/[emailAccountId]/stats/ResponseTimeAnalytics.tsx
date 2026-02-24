@@ -1,22 +1,27 @@
 "use client";
 
+import { Clock, Timer, TrendingDown, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
 import type { DateRange } from "react-day-picker";
-import { Clock, TrendingDown, TrendingUp, Timer } from "lucide-react";
-import { useOrgSWR } from "@/hooks/useOrgSWR";
-import { LoadingContent } from "@/components/LoadingContent";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CardBasic } from "@/components/ui/card";
-import { getDateRangeParams } from "./params";
-import { BarChart } from "./BarChart";
-import type { ChartConfig } from "@/components/ui/chart";
-import { COLORS } from "@/utils/colors";
-import { cn } from "@/utils";
-import type { ResponseTimeQuery } from "@/app/api/user/stats/response-time/validation";
 import type { ResponseTimeResponse } from "@/app/api/user/stats/response-time/controller";
-import { isDefined } from "@/utils/types";
+import type { ResponseTimeQuery } from "@/app/api/user/stats/response-time/validation";
+import { LoadingContent } from "@/components/LoadingContent";
+import {
+  Card,
+  CardBasic,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import type { ChartConfig } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useOrgSWR } from "@/hooks/useOrgSWR";
+import { cn } from "@/utils";
+import { COLORS } from "@/utils/colors";
 import { pluralize } from "@/utils/string";
+import { isDefined } from "@/utils/types";
+import { BarChart } from "./BarChart";
+import { getDateRangeParams } from "./params";
 
 interface ResponseTimeAnalyticsProps {
   dateRange?: DateRange;
@@ -31,11 +36,13 @@ export function ResponseTimeAnalytics({
 
   const { data, isLoading, error } = useOrgSWR<ResponseTimeResponse>(
     `/api/user/stats/response-time?${new URLSearchParams(params as Record<string, string>)}`,
-    { refreshInterval },
+    { refreshInterval }
   );
 
   const distributionData = useMemo(() => {
-    if (!data?.distribution) return [];
+    if (!data?.distribution) {
+      return [];
+    }
     return [
       { group: "< 1 hour", count: data.distribution.lessThan1Hour },
       { group: "1-4 hours", count: data.distribution.oneToFourHours },
@@ -46,7 +53,9 @@ export function ResponseTimeAnalytics({
     ];
   }, [data]);
   const trendData = useMemo(() => {
-    if (!data?.trend) return [];
+    if (!data?.trend) {
+      return [];
+    }
     return data.trend
       .map((item) =>
         item
@@ -54,7 +63,7 @@ export function ResponseTimeAnalytics({
               date: item.period,
               median: item.medianResponseTime,
             }
-          : null,
+          : null
       )
       .filter(isDefined);
   }, [data]);
@@ -69,8 +78,8 @@ export function ResponseTimeAnalytics({
 
   return (
     <LoadingContent
-      loading={isLoading}
       error={error}
+      loading={isLoading}
       loadingComponent={<Skeleton className="h-[400px] rounded" />}
     >
       {data?.summary && (
@@ -82,22 +91,22 @@ export function ResponseTimeAnalytics({
             </p>
           )}
 
-          <div className="grid gap-2 sm:gap-4 grid-cols-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
             <SummaryCard
+              comparison={data.summary.previousPeriodComparison}
+              icon={<Clock className="h-4 w-4" />}
               title="Median Response"
               value={formatTime(data.summary.medianResponseTime)}
-              icon={<Clock className="h-4 w-4" />}
-              comparison={data.summary.previousPeriodComparison}
             />
             <SummaryCard
+              icon={<Timer className="h-4 w-4" />}
               title="Average Response"
               value={formatTime(data.summary.averageResponseTime)}
-              icon={<Timer className="h-4 w-4" />}
             />
             <SummaryCard
+              icon={<TrendingUp className="h-4 w-4" />}
               title="Within 1 Hour"
               value={`${data.summary.within1Hour}%`}
-              icon={<TrendingUp className="h-4 w-4" />}
             />
           </div>
 
@@ -107,12 +116,12 @@ export function ResponseTimeAnalytics({
               <p>Response Time Distribution</p>
               <div className="mt-4">
                 <BarChart
-                  data={distributionData}
                   config={distributionChartConfig}
+                  data={distributionData}
                   dataKeys={["count"]}
-                  xAxisKey="group"
-                  xAxisFormatter={(value) => value}
                   tooltipLabelFormatter={(value) => String(value)}
+                  xAxisFormatter={(value) => value}
+                  xAxisKey="group"
                 />
               </div>
             </CardBasic>
@@ -124,13 +133,13 @@ export function ResponseTimeAnalytics({
               <p>Weekly Response Time Trend</p>
               <div className="mt-4">
                 <BarChart
-                  data={trendData}
                   config={trendChartConfig}
+                  data={trendData}
                   dataKeys={["median"]}
-                  xAxisKey="date"
-                  xAxisFormatter={(value) => value}
-                  yAxisFormatter={formatTimeShort}
                   tooltipValueFormatter={formatTime}
+                  xAxisFormatter={(value) => value}
+                  xAxisKey="date"
+                  yAxisFormatter={formatTimeShort}
                 />
               </div>
             </CardBasic>
@@ -141,7 +150,7 @@ export function ResponseTimeAnalytics({
             trendData.length === 0 && (
               <CardBasic>
                 <p>Response Time Analytics</p>
-                <div className="mt-4 h-32 flex items-center justify-center text-muted-foreground">
+                <div className="mt-4 flex h-32 items-center justify-center text-muted-foreground">
                   <p>No response time data available for this period.</p>
                 </div>
               </CardBasic>
@@ -169,22 +178,22 @@ function SummaryCard({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardTitle className="font-medium text-muted-foreground text-sm">
           {title}
         </CardTitle>
         <span className="text-muted-foreground">{icon}</span>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="font-bold text-2xl">{value}</div>
         {comparison && (
           <p
             className={cn(
-              "text-xs mt-1 flex items-center gap-1",
+              "mt-1 flex items-center gap-1 text-xs",
               comparison.percentChange < 0
                 ? "text-green-600"
                 : comparison.percentChange > 0
                   ? "text-red-600"
-                  : "text-muted-foreground",
+                  : "text-muted-foreground"
             )}
           >
             {comparison.percentChange < 0 ? (
@@ -195,7 +204,7 @@ function SummaryCard({
             {comparison.percentChange === 0
               ? "No change"
               : `${Math.abs(comparison.percentChange)}% ${comparison.percentChange < 0 ? "faster" : "slower"}`}
-            <span className="text-muted-foreground ml-1">vs previous</span>
+            <span className="ml-1 text-muted-foreground">vs previous</span>
           </p>
         )}
       </CardContent>
@@ -204,8 +213,12 @@ function SummaryCard({
 }
 
 function formatTime(minutes: number): string {
-  if (minutes === 0) return "0m";
-  if (minutes < 60) return `${Math.round(minutes)}m`;
+  if (minutes === 0) {
+    return "0m";
+  }
+  if (minutes < 60) {
+    return `${Math.round(minutes)}m`;
+  }
   if (minutes < 1440) {
     let hours = Math.floor(minutes / 60);
     let mins = Math.round(minutes % 60);
@@ -228,8 +241,12 @@ function formatTime(minutes: number): string {
 
 // Shorter format for Y-axis labels
 function formatTimeShort(minutes: number): string {
-  if (minutes === 0) return "0";
-  if (minutes < 60) return `${Math.round(minutes)}m`;
+  if (minutes === 0) {
+    return "0";
+  }
+  if (minutes < 60) {
+    return `${Math.round(minutes)}m`;
+  }
   if (minutes < 1440) {
     const hours = Math.round(minutes / 60);
     return `${hours}h`;

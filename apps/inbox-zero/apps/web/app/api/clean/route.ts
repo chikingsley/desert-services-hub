@@ -1,29 +1,29 @@
-import { z } from "zod";
 import { NextResponse } from "next/server";
-import { withError, type RequestWithLogger } from "@/utils/middleware";
-import { publishToQstash } from "@/utils/upstash";
-import { getThreadMessages } from "@/utils/gmail/thread";
-import { getGmailClientWithRefresh } from "@/utils/gmail/client";
+import { z } from "zod";
 import type { CleanGmailBody } from "@/app/api/clean/gmail/route";
-import { SafeError } from "@/utils/error";
-import type { Logger } from "@/utils/logger";
+import { CleanAction } from "@/generated/prisma/enums";
 import { aiClean } from "@/utils/ai/clean/ai-clean";
+import { isNewsletterSender } from "@/utils/ai/group/find-newsletters";
+import { isMaybeReceipt, isReceipt } from "@/utils/ai/group/find-receipts";
+import { internalDateToDate } from "@/utils/date";
+import { SafeError } from "@/utils/error";
 import { getEmailForLLM } from "@/utils/get-email-from-message";
+import { getGmailClientWithRefresh } from "@/utils/gmail/client";
+import { GmailLabel } from "@/utils/gmail/label";
+import { getThreadMessages } from "@/utils/gmail/thread";
+import type { Logger } from "@/utils/logger";
+import { type RequestWithLogger, withError } from "@/utils/middleware";
+import { getCalendarEventStatus } from "@/utils/parse/calender-event";
+import { findUnsubscribeLink } from "@/utils/parse/parseHtml.server";
+import { isActivePremium } from "@/utils/premium";
+import { withQstashOrInternal } from "@/utils/qstash";
+import { saveThread, updateThread } from "@/utils/redis/clean";
+import type { ParsedMessage } from "@/utils/types";
+import { publishToQstash } from "@/utils/upstash";
 import {
   getEmailAccountWithAiAndTokens,
   getUserPremium,
 } from "@/utils/user/get";
-import { findUnsubscribeLink } from "@/utils/parse/parseHtml.server";
-import { getCalendarEventStatus } from "@/utils/parse/calender-event";
-import { GmailLabel } from "@/utils/gmail/label";
-import { isNewsletterSender } from "@/utils/ai/group/find-newsletters";
-import { isMaybeReceipt, isReceipt } from "@/utils/ai/group/find-receipts";
-import { saveThread, updateThread } from "@/utils/redis/clean";
-import { internalDateToDate } from "@/utils/date";
-import { CleanAction } from "@/generated/prisma/enums";
-import type { ParsedMessage } from "@/utils/types";
-import { isActivePremium } from "@/utils/premium";
-import { withQstashOrInternal } from "@/utils/qstash";
 
 const cleanThreadBody = z.object({
   emailAccountId: z.string(),
@@ -64,15 +64,26 @@ export async function cleanThread({
     emailAccountId,
   });
 
-  if (!emailAccount) throw new SafeError("User not found", 404);
+  if (!emailAccount) {
+    throw new SafeError("User not found", 404);
+  }
 
-  if (!emailAccount.tokens) throw new SafeError("No Gmail account found", 404);
-  if (!emailAccount.tokens.access_token || !emailAccount.tokens.refresh_token)
+  if (!emailAccount.tokens) {
     throw new SafeError("No Gmail account found", 404);
+  }
+  if (
+    !(emailAccount.tokens.access_token && emailAccount.tokens.refresh_token)
+  ) {
+    throw new SafeError("No Gmail account found", 404);
+  }
 
   const premium = await getUserPremium({ userId: emailAccount.userId });
-  if (!premium) throw new SafeError("User not premium");
-  if (!isActivePremium(premium)) throw new SafeError("Premium not active");
+  if (!premium) {
+    throw new SafeError("User not premium");
+  }
+  if (!isActivePremium(premium)) {
+    throw new SafeError("Premium not active");
+  }
 
   const gmail = await getGmailClientWithRefresh({
     accessToken: emailAccount.tokens.access_token,
@@ -91,7 +102,9 @@ export async function cleanThread({
   });
 
   const lastMessage = messages[messages.length - 1];
-  if (!lastMessage) return;
+  if (!lastMessage) {
+    return;
+  }
 
   await saveThread({
     emailAccountId,
@@ -208,7 +221,7 @@ export async function cleanThread({
         label === GmailLabel.SOCIAL ||
         label === GmailLabel.PROMOTIONS ||
         label === GmailLabel.UPDATES ||
-        label === GmailLabel.FORUMS,
+        label === GmailLabel.FORUMS
     )
   ) {
     await publish({ markDone: true });
@@ -304,5 +317,5 @@ export const POST = withError(
     });
 
     return NextResponse.json({ success: true });
-  }),
+  })
 );

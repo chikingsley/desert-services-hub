@@ -1,6 +1,5 @@
 import type { EstimatePDFOptions } from "@documents/pdf/estimate/build-estimate-doc-definition";
 import { generateEstimatePDFBlob } from "@documents/pdf/estimate/generate-estimate-pdf.client";
-import { catalog } from "@/packages/estimates/catalog/catalog";
 import type { EditorEstimate } from "@lib/db/types";
 import {
   ChevronDown,
@@ -31,6 +30,7 @@ import {
 import { useSidebar } from "@/apps/web/frontend/components/ui/sidebar";
 import { Spinner } from "@/apps/web/frontend/components/ui/spinner";
 import { useSettings } from "@/hooks/use-settings";
+import { catalog } from "@/packages/estimates/catalog/catalog";
 import type { ApiEstimateResponse } from "./estimate-workspace-helpers";
 import {
   apiToEditorEstimate,
@@ -40,13 +40,13 @@ import {
 const COMPACT_EDITOR_BREAKPOINT = 1180;
 
 interface EstimateWorkspaceProps {
-  initialEstimate: EditorEstimate;
   estimateId: string;
-  versionId: string;
-  jobName: string;
-  linkedTakeoff: { id: string; name: string } | null;
+  initialEstimate: EditorEstimate;
   initialIsLocked?: boolean;
   initialUpdatedAt?: string;
+  jobName: string;
+  linkedTakeoff: { id: string; name: string } | null;
+  versionId: string;
 }
 
 export function EstimateWorkspace({

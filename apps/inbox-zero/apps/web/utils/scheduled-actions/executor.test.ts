@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ActionType, ScheduledActionStatus } from "@/generated/prisma/enums";
-import { executeScheduledAction } from "./executor";
 import prisma from "@/utils/__mocks__/prisma";
 import { createScopedLogger } from "@/utils/logger";
+import { executeScheduledAction } from "./executor";
 
 // Run with: pnpm test utils/scheduled-actions/executor.test.ts
 
@@ -142,7 +142,7 @@ describe("executor", () => {
       const result = await executeScheduledAction(
         mockScheduledAction,
         mockEmailProvider,
-        logger,
+        logger
       );
 
       expect(result.success).toBe(true);
@@ -199,7 +199,7 @@ describe("executor", () => {
       );
 
       (runActionFunction as any).mockRejectedValue(
-        new Error("Execution failed"),
+        new Error("Execution failed")
       );
       (getEmailAccountWithAiAndTokens as any).mockResolvedValue({
         id: "account-123",
@@ -222,7 +222,7 @@ describe("executor", () => {
       const result = await executeScheduledAction(
         mockScheduledAction,
         mockEmailProvider,
-        logger,
+        logger
       );
 
       expect(result.success).toBe(false);
@@ -255,7 +255,7 @@ describe("executor", () => {
       await executeScheduledAction(
         mockScheduledAction,
         mockEmailProvider,
-        logger,
+        logger
       );
 
       expect(prisma.scheduledAction.update).toHaveBeenCalledWith({

@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
-import { aiDiffRules } from "@/utils/ai/rule/diff-rules";
+import { describe, expect, it, vi } from "vitest";
 import { getEmailAccount } from "@/__tests__/helpers";
+import { aiDiffRules } from "@/utils/ai/rule/diff-rules";
 
 // RUN_AI_TESTS=true pnpm test-ai ai-diff-rules
 
@@ -49,7 +49,7 @@ describe.runIf(isAiTest)("aiDiffRules", () => {
         removedRules: [`* Label receipts as "Receipt"`],
       });
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   it("should handle errors gracefully", async () => {
@@ -61,7 +61,7 @@ describe.runIf(isAiTest)("aiDiffRules", () => {
     const newPromptFile = "Some new prompt";
 
     await expect(
-      aiDiffRules({ emailAccount, oldPromptFile, newPromptFile }),
+      aiDiffRules({ emailAccount, oldPromptFile, newPromptFile })
     ).rejects.toThrow();
   });
 });

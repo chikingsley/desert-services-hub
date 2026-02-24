@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
 import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export type GetChatResponse = Awaited<ReturnType<typeof getChat>>;
 
@@ -13,14 +13,14 @@ export const GET = withEmailAccount(
     if (!chatId) {
       return NextResponse.json(
         { error: "Chat ID is required." },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     const chat = await getChat({ chatId, emailAccountId });
 
     return NextResponse.json(chat);
-  },
+  }
 );
 
 async function getChat({

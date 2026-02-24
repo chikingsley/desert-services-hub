@@ -3,11 +3,11 @@ import {
   generateEstimatePDF,
   getEstimatePDFFilename,
 } from "@documents/pdf/estimate/generate-estimate-pdf.server";
+import type { EditorEstimate } from "@lib/db/types";
 import {
   getEstimateNumber,
   getEstimateWithDetails,
 } from "@/packages/estimates/estimating/estimate-read-service";
-import type { EditorEstimate } from "@lib/db/types";
 
 export interface GenerateEstimatePdfOptions {
   includeBackPage?: boolean;
@@ -15,8 +15,8 @@ export interface GenerateEstimatePdfOptions {
 }
 
 export interface GenerateEstimatePdfResult {
-  outputPath: string;
   estimateNumber: string;
+  outputPath: string;
 }
 
 export async function generateEstimatePdfById(

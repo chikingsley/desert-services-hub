@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { extractLLMErrorInfo, withLLMRetry } from "./retry";
 
 vi.mock("server-only", () => ({}));
@@ -9,7 +9,7 @@ vi.mock("@/utils/sleep", () => ({
 
 function createError(
   message: string,
-  props: { status?: number; code?: string } = {},
+  props: { status?: number; code?: string } = {}
 ): Error {
   const error = new Error(message);
   (error as unknown as { cause: typeof props }).cause = props;
@@ -247,7 +247,7 @@ describe("withLLMRetry", () => {
     const fn = vi.fn().mockRejectedValue(rateLimitError);
 
     await expect(
-      withLLMRetry(fn, { label: "test", maxRetries: 1 }),
+      withLLMRetry(fn, { label: "test", maxRetries: 1 })
     ).rejects.toThrow("Rate limited");
 
     expect(fn).toHaveBeenCalledTimes(2);

@@ -1,15 +1,15 @@
 interface OutlookProps {
-  width?: string | number;
   height?: string | number;
+  width?: string | number;
 }
 
 export function Outlook({ width = "28", height = "27" }: OutlookProps) {
   return (
     <svg
-      width={width}
+      fill="none"
       height={height}
       viewBox="0 0 28 27"
-      fill="none"
+      width={width}
       xmlns="http://www.w3.org/2000/svg"
     >
       <g filter="url(#filter0_d_265_2030)">
@@ -76,20 +76,20 @@ export function Outlook({ width = "28", height = "27" }: OutlookProps) {
       </g>
       <defs>
         <filter
+          colorInterpolationFilters="sRGB"
+          filterUnits="userSpaceOnUse"
+          height="27"
           id="filter0_d_265_2030"
+          width="28"
           x="0"
           y="-0.000457764"
-          width="28"
-          height="27"
-          filterUnits="userSpaceOnUse"
-          colorInterpolationFilters="sRGB"
         >
           <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feColorMatrix
             in="SourceAlpha"
+            result="hardAlpha"
             type="matrix"
             values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-            result="hardAlpha"
           />
           <feOffset dy="2" />
           <feGaussianBlur stdDeviation="2" />
@@ -99,159 +99,159 @@ export function Outlook({ width = "28", height = "27" }: OutlookProps) {
             values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0"
           />
           <feBlend
-            mode="normal"
             in2="BackgroundImageFix"
+            mode="normal"
             result="effect1_dropShadow_265_2030"
           />
           <feBlend
-            mode="normal"
             in="SourceGraphic"
             in2="effect1_dropShadow_265_2030"
+            mode="normal"
             result="shape"
           />
         </filter>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint0_linear_265_2030"
           x1="7.15133"
-          y1="10.6278"
           x2="18.1945"
+          y1="10.6278"
           y2="3.80162"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#20A7FA" />
           <stop offset="0.4" stopColor="#3BD5FF" />
           <stop offset="1" stopColor="#C4B0FF" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint1_linear_265_2030"
           x1="10.9453"
-          y1="12.9668"
           x2="17.1117"
+          y1="12.9668"
           y2="3.12715"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#165AD9" />
           <stop offset="0.501" stopColor="#1880E5" />
           <stop offset="1" stopColor="#8587FF" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint2_linear_265_2030"
           x1="15.4209"
-          y1="13.1009"
           x2="8.58944"
+          y1="13.1009"
           y2="7.55392"
-          gradientUnits="userSpaceOnUse"
         >
           <stop offset="0.237" stopColor="#448AFF" stopOpacity="0" />
           <stop offset="0.792" stopColor="#0032B1" stopOpacity="0.2" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint3_linear_265_2030"
           x1="14.554"
-          y1="15.2461"
           x2="25.3418"
+          y1="15.2461"
           y2="8.36568"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#1A43A6" />
           <stop offset="0.492" stopColor="#2052CB" />
           <stop offset="1" stopColor="#5F20CB" />
         </linearGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint4_linear_265_2030"
           x1="17.5933"
-          y1="14.8326"
           x2="11.0318"
+          y1="14.8326"
           y2="9.17453"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#0045B9" stopOpacity="0" />
           <stop offset="0.67" stopColor="#0D1F69" stopOpacity="0.2" />
         </linearGradient>
         <radialGradient
-          id="paint5_radial_265_2030"
           cx="0"
           cy="0"
-          r="1"
-          gradientUnits="userSpaceOnUse"
           gradientTransform="translate(14.5262 2.41738) rotate(-90) scale(14.2601 15.3817)"
+          gradientUnits="userSpaceOnUse"
+          id="paint5_radial_265_2030"
+          r="1"
         >
           <stop offset="0.568" stopColor="#275FF0" stopOpacity="0" />
           <stop offset="0.992" stopColor="#002177" stopOpacity="1" />
         </radialGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint6_linear_265_2030"
           x1="23.9985"
-          y1="14.6298"
           x2="14.4483"
+          y1="14.6298"
           y2="14.6298"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#4DC4FF" stopOpacity="1" />
           <stop offset="0.196" stopColor="#0FAFFF" stopOpacity="1" />
         </linearGradient>
         <radialGradient
-          id="paint7_radial_265_2030"
           cx="0"
           cy="0"
-          r="1"
           gradientTransform="matrix(4.3065 -4.32126 4.3065 4.32126 16.6778 18.8365)"
           gradientUnits="userSpaceOnUse"
+          id="paint7_radial_265_2030"
+          r="1"
         >
           <stop offset="0.259" stopColor="#0060D1" stopOpacity="0.4" />
           <stop offset="0.908" stopColor="#0383F1" stopOpacity="0" />
         </radialGradient>
         <radialGradient
-          id="paint8_radial_265_2030"
           cx="0"
           cy="0"
-          r="1"
           gradientTransform="matrix(12.5402 -16.4924 14.8624 11.3784 7.49034 23.3587)"
           gradientUnits="userSpaceOnUse"
+          id="paint8_radial_265_2030"
+          r="1"
         >
           <stop offset="0.732" stopColor="#F4A7F7" stopOpacity="0" />
           <stop offset="1" stopColor="#F4A7F7" stopOpacity="0.501961" />
         </radialGradient>
         <radialGradient
-          id="paint9_radial_265_2030"
           cx="0"
           cy="0"
-          r="1"
           gradientTransform="matrix(-5.99491 9.14407 -23.6489 -15.6108 11.6691 13.3565)"
           gradientUnits="userSpaceOnUse"
+          id="paint9_radial_265_2030"
+          r="1"
         >
           <stop stopColor="#49DEFF" />
           <stop offset="0.724" stopColor="#29C3FF" />
         </radialGradient>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint10_linear_265_2030"
           x1="3.71531"
-          y1="18.8171"
           x2="12.9102"
+          y1="18.8171"
           y2="18.8108"
-          gradientUnits="userSpaceOnUse"
         >
           <stop offset="0.206" stopColor="#6CE0FF" stopOpacity="1" />
           <stop offset="0.535" stopColor="#50D5FF" stopOpacity="0" />
         </linearGradient>
         <radialGradient
-          id="paint11_radial_265_2030"
           cx="0"
           cy="0"
-          r="1"
           gradientTransform="matrix(7.57054 8.12459 -8.09685 7.59648 3.96998 11.2881)"
           gradientUnits="userSpaceOnUse"
+          id="paint11_radial_265_2030"
+          r="1"
         >
           <stop offset="0.039" stopColor="#0091FF" />
           <stop offset="0.919" stopColor="#183DAD" />
         </radialGradient>
         <radialGradient
-          id="paint12_radial_265_2030"
           cx="0"
           cy="0"
-          r="1"
-          gradientUnits="userSpaceOnUse"
           gradientTransform="translate(8.21038 16.1089) rotate(90) scale(5.91473 6.79913)"
+          gradientUnits="userSpaceOnUse"
+          id="paint12_radial_265_2030"
+          r="1"
         >
           <stop offset="0.558" stopColor="#0FA5F7" stopOpacity="0" />
           <stop offset="1" stopColor="#74C6FF" stopOpacity="0.501961" />

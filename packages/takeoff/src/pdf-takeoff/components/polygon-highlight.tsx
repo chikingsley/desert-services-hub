@@ -16,9 +16,9 @@ export interface ViewportPoint {
  */
 export interface PolygonHighlightProps {
   /**
-   * Points of the polygon in viewport coordinates.
+   * Calculated area to display.
    */
-  points: ViewportPoint[];
+  area?: string;
 
   /**
    * Bounding rect for positioning.
@@ -31,26 +31,10 @@ export interface PolygonHighlightProps {
   color: string;
 
   /**
-   * Stroke width of the polygon.
-   * @default 2
-   */
-  strokeWidth?: number;
-
-  /**
    * Fill opacity.
    * @default 0.2
    */
   fillOpacity?: number;
-
-  /**
-   * Label text to display.
-   */
-  label?: string;
-
-  /**
-   * Whether this polygon is currently selected.
-   */
-  isSelected?: boolean;
 
   /**
    * Has the polygon been auto-scrolled into view?
@@ -58,9 +42,14 @@ export interface PolygonHighlightProps {
   isScrolledTo?: boolean;
 
   /**
-   * Calculated area to display.
+   * Whether this polygon is currently selected.
    */
-  area?: string;
+  isSelected?: boolean;
+
+  /**
+   * Label text to display.
+   */
+  label?: string;
 
   /**
    * Callback triggered on click.
@@ -71,6 +60,16 @@ export interface PolygonHighlightProps {
    * Callback triggered on context menu.
    */
   onContextMenu?(event: MouseEvent<HTMLDivElement>): void;
+  /**
+   * Points of the polygon in viewport coordinates.
+   */
+  points: ViewportPoint[];
+
+  /**
+   * Stroke width of the polygon.
+   * @default 2
+   */
+  strokeWidth?: number;
 
   /**
    * Custom styling for the container.

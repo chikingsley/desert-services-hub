@@ -1,7 +1,7 @@
+import { createScopedLogger } from "@/utils/logger";
 import { redis } from "@/utils/redis";
 import type { CleanThread } from "@/utils/redis/clean.types";
 import { isDefined } from "@/utils/types";
-import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("redis/clean");
 
@@ -118,15 +118,19 @@ export async function getThreadsByJobId({
     cursor = Number(nextCursor);
     keys.push(...batch);
 
-    if (keys.length >= limit) break;
+    if (keys.length >= limit) {
+      break;
+    }
   } while (cursor !== 0);
 
   // Slice to ensure we don't exceed limit
   const keysToFetch = keys.slice(0, limit);
-  if (keysToFetch.length === 0) return [];
+  if (keysToFetch.length === 0) {
+    return [];
+  }
 
   const threads = await Promise.all(
-    keysToFetch.map((key) => redis.get<CleanThread>(key)),
+    keysToFetch.map((key) => redis.get<CleanThread>(key))
   );
   return threads.filter(isDefined);
 }

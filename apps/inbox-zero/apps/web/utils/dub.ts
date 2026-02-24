@@ -1,10 +1,12 @@
 import { Dub } from "dub";
-import { env } from "@/env";
 import { cookies } from "next/headers";
+import { env } from "@/env";
 import type { Logger } from "@/utils/logger";
 
 function getDub() {
-  if (!env.DUB_API_KEY) return null;
+  if (!env.DUB_API_KEY) {
+    return null;
+  }
   return new Dub({ token: env.DUB_API_KEY });
 }
 
@@ -15,10 +17,12 @@ export async function trackDubSignUp(
     email?: string | null;
     image?: string | null;
   },
-  logger: Logger,
+  logger: Logger
 ) {
   const dub = getDub();
-  if (!dub) return;
+  if (!dub) {
+    return;
+  }
 
   const cookieStore = await cookies();
   const clickId = cookieStore.get("dub_id")?.value;

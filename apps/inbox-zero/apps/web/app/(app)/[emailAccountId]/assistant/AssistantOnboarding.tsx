@@ -1,17 +1,17 @@
 "use client";
 
+import { ListChecksIcon, ReplyIcon, SlidersIcon } from "lucide-react";
 import { useWindowSize } from "usehooks-ts";
 import { useOnboarding } from "@/components/OnboardingModal";
+import { Button } from "@/components/ui/button";
+import { CardBasic } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
-import { CardBasic } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ListChecksIcon, ReplyIcon, SlidersIcon } from "lucide-react";
 import { YouTubeVideo } from "@/components/YouTubeVideo";
 
 export function AssistantOnboarding({
@@ -27,7 +27,7 @@ export function AssistantOnboarding({
   const videoHeight = videoWidth * (675 / 1200);
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogContent className="min-w-[350px] sm:min-w-[600px] md:min-w-[750px] lg:min-w-[880px]">
         <DialogHeader>
           <DialogTitle>Welcome to your AI Personal Assistant</DialogTitle>
@@ -38,12 +38,12 @@ export function AssistantOnboarding({
         </DialogHeader>
 
         <YouTubeVideo
-          videoId="AQtB0j6Zmt0"
           iframeClassName="mx-auto"
           opts={{
             height: `${videoHeight}`,
             width: `${videoWidth}`,
           }}
+          videoId="AQtB0j6Zmt0"
         />
 
         <div className="grid gap-2 text-sm">

@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
 import { useQueryState } from "nuqs";
+import { useCallback, useState } from "react";
 
 export const useDisplayedEmail = () => {
   const [threadId, setThreadId] = useQueryState("side-panel-thread-id");
@@ -15,14 +15,14 @@ export const useDisplayedEmail = () => {
         messageId?: string;
         showReplyButton?: boolean;
         autoOpenReplyForMessageId?: string;
-      } | null,
+      } | null
     ) => {
       setAutoOpenReplyForMessageId(options?.autoOpenReplyForMessageId || "");
       setThreadId(options?.threadId ?? null);
       setMessageId(options?.messageId ?? null);
       setShowReplyButton(options?.showReplyButton ?? true);
     },
-    [setMessageId, setThreadId, setAutoOpenReplyForMessageId],
+    [setMessageId, setThreadId, setAutoOpenReplyForMessageId]
   );
 
   return {

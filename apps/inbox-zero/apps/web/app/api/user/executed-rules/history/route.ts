@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
 import groupBy from "lodash/groupBy";
-import { withEmailProvider } from "@/utils/middleware";
-import { isDefined } from "@/utils/types";
-import prisma from "@/utils/prisma";
-import { ExecutedRuleStatus } from "@/generated/prisma/enums";
+import { NextResponse } from "next/server";
 import type { Prisma } from "@/generated/prisma/client";
+import { ExecutedRuleStatus } from "@/generated/prisma/enums";
 import type { EmailProvider } from "@/utils/email/types";
 import type { Logger } from "@/utils/logger";
+import { withEmailProvider } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
+import { isDefined } from "@/utils/types";
 
 const LIMIT = 50;
 
@@ -34,7 +34,7 @@ export const GET = withEmailProvider(
     });
 
     return NextResponse.json(result);
-  },
+  }
 );
 
 async function getExecutedRules({
@@ -111,8 +111,8 @@ async function getExecutedRules({
             messageId,
           });
         }
-      },
-    ),
+      }
+    )
   );
 
   return {

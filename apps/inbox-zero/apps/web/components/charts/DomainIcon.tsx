@@ -1,9 +1,9 @@
 "use client";
 
-import { cn } from "@/utils";
 import Image from "next/image";
 import { useState } from "react";
 import { getDomain } from "tldts";
+import { cn } from "@/utils";
 
 function getFavicon(apexDomain: string) {
   return `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://${apexDomain}&size=64`;
@@ -40,8 +40,8 @@ export function FallbackIcon({ seed, size = 20 }: FallbackIconProps) {
 
   return (
     <div
-      style={{ width: size, height: size }}
       className={cn("z-10 rounded bg-gradient-to-r", gradients[gradientIndex])}
+      style={{ width: size, height: size }}
     />
   );
 }
@@ -63,22 +63,22 @@ export function DomainIcon({
 
   return (
     <div
-      style={{ width: size, height: size }}
       className={cn(
         "relative shrink-0 overflow-hidden",
-        variant === "circular" ? "rounded-full" : "rounded",
+        variant === "circular" ? "rounded-full" : "rounded"
       )}
+      style={{ width: size, height: size }}
     >
       {fallbackEnabled || !domainFavicon ? (
         <FallbackIcon seed={domain} size={size} />
       ) : (
         <Image
-          width={size}
-          height={size}
-          src={domainFavicon}
           alt="favicon"
           className="z-10 rounded"
+          height={size}
           onError={() => setFallbackEnabled(true)}
+          src={domainFavicon}
+          width={size}
         />
       )}
     </div>

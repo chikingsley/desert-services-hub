@@ -5,8 +5,8 @@ import type { ExtractedPlanHints, RehydrateOptions } from "./types";
 
 interface CliArgs {
   inputPath: string | null;
-  outputPath: string | null;
   options: RehydrateOptions;
+  outputPath: string | null;
 }
 
 function parseArgs(argv: string[]): CliArgs {

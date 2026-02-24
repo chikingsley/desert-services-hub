@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
 import {
   LAST_EMAIL_ACCOUNT_COOKIE,
   parseLastEmailAccountCookieValue,
 } from "@/utils/cookies";
 import { withAuth } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export type GetEmailAccountsResponse = Awaited<
   ReturnType<typeof getEmailAccounts>

@@ -8,12 +8,12 @@ import type { ValidationHelpers } from "./helpers";
 
 export interface CategoryJState {
   applies: boolean;
-  hasWater: boolean;
   hasDustSuppressants: boolean;
-  hasSuppressantFrequency: boolean;
-  hasSuppressantAmount: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
+  hasSuppressantAmount: boolean;
+  hasSuppressantFrequency: boolean;
+  hasWater: boolean;
 }
 
 export function getCategoryJState(

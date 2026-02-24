@@ -25,15 +25,15 @@ import { formatDate } from "@/lib/utils";
 
 interface EmailDetailPanelProps {
   emailId: number | null;
-  open: boolean;
   onClose: () => void;
   onSpam?: (domain: string) => void;
+  open: boolean;
 }
 
 interface EmailAttachmentItem {
+  contentType: string | null;
   id: string; // "db:<pk>" or "graph:<graphAttachmentId>"
   name: string;
-  contentType: string | null;
   size: number | null;
 }
 

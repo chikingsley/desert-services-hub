@@ -1,11 +1,11 @@
-import { vi, describe, it, expect, beforeEach } from "vitest";
-import { HistoryEventType } from "./types";
-import { handleLabelRemovedEvent } from "./process-label-removed-event";
 import type { gmail_v1 } from "@googleapis/gmail";
-import { saveLearnedPattern } from "@/utils/rule/learned-patterns";
-import { createScopedLogger } from "@/utils/logger";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GroupItemSource, SystemType } from "@/generated/prisma/enums";
+import { createScopedLogger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
+import { saveLearnedPattern } from "@/utils/rule/learned-patterns";
+import { handleLabelRemovedEvent } from "./process-label-removed-event";
+import { HistoryEventType } from "./types";
 
 const logger = createScopedLogger("test");
 
@@ -63,7 +63,7 @@ describe("process-label-removed-event", () => {
   const createLabelRemovedHistoryItem = (
     messageId = "123",
     threadId = "thread-123",
-    labelIds = ["label-1"],
+    labelIds = ["label-1"]
   ) => ({
     type: HistoryEventType.LABEL_REMOVED,
     item: {
@@ -201,10 +201,10 @@ describe("process-label-removed-event", () => {
 
       expect(saveLearnedPattern).toHaveBeenCalledTimes(2);
       expect(saveLearnedPattern).toHaveBeenCalledWith(
-        expect.objectContaining({ ruleId: "rule-1" }),
+        expect.objectContaining({ ruleId: "rule-1" })
       );
       expect(saveLearnedPattern).toHaveBeenCalledWith(
-        expect.objectContaining({ ruleId: "rule-2" }),
+        expect.objectContaining({ ruleId: "rule-2" })
       );
     });
 

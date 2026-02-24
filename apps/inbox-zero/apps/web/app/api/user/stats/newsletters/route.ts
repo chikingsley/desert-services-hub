@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { withEmailProvider } from "@/utils/middleware";
-import { extractEmailAddress } from "@/utils/email";
-import type { Logger } from "@/utils/logger";
-import prisma from "@/utils/prisma";
-import { Prisma } from "@/generated/prisma/client";
-import type { EmailProvider } from "@/utils/email/types";
 import {
-  getAutoArchiveFilters,
-  findNewsletterStatus,
-  findAutoArchiveFilter,
   filterNewsletters,
+  findAutoArchiveFilter,
+  findNewsletterStatus,
+  getAutoArchiveFilters,
 } from "@/app/api/user/stats/newsletters/helpers";
+import { Prisma } from "@/generated/prisma/client";
+import { extractEmailAddress } from "@/utils/email";
+import type { EmailProvider } from "@/utils/email/types";
+import type { Logger } from "@/utils/logger";
+import { withEmailProvider } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 const newsletterStatsQuery = z.object({
   limit: z.coerce.number().nullish(),
@@ -24,7 +24,7 @@ const newsletterStatsQuery = z.object({
     .transform((arr) => arr?.filter(Boolean)),
   filters: z
     .array(
-      z.enum(["unhandled", "autoArchived", "unsubscribed", "approved", ""]),
+      z.enum(["unhandled", "autoArchived", "unsubscribed", "approved", ""])
     )
     .optional()
     .transform((arr) => arr?.filter(Boolean)),
@@ -55,7 +55,7 @@ function getTypeFilters(types: NewsletterStatsQuery["types"]) {
   const all =
     !types.length ||
     types.length === 4 ||
-    (!read && !unread && !archived && !unarchived);
+    !(read || unread || archived || unarchived);
 
   return {
     all,
@@ -72,7 +72,7 @@ async function getEmailMessages(
     emailAccountId: string;
     emailProvider: EmailProvider;
     logger: Logger;
-  } & NewsletterStatsQuery,
+  } & NewsletterStatsQuery
 ) {
   const { emailAccountId, emailProvider, logger } = options;
   const types = getTypeFilters(options.types);
@@ -99,13 +99,15 @@ async function getEmailMessages(
       autoArchived: findAutoArchiveFilter(
         autoArchiveFilters,
         from,
-        emailProvider,
+        emailProvider
       ),
       status: userNewsletters?.find((n) => n.email === from)?.status,
     };
   });
 
-  if (!options.filters?.length) return { newsletters };
+  if (!options.filters?.length) {
+    return { newsletters };
+  }
 
   return {
     newsletters: filterNewsletters(newsletters, options.filters),
@@ -140,7 +142,7 @@ async function getNewsletterCounts(
     all?: boolean;
     andClause?: boolean;
     logger: Logger;
-  },
+  }
 ): Promise<NewsletterCountResult[]> {
   const { logger } = options;
   // Build WHERE conditions using Prisma.sql for type safety
@@ -150,14 +152,14 @@ async function getNewsletterCounts(
   if (options.fromDate) {
     const fromTimestamp = (options.fromDate / 1000).toString();
     whereConditions.push(
-      Prisma.sql`"date" >= to_timestamp(${fromTimestamp}::double precision)`,
+      Prisma.sql`"date" >= to_timestamp(${fromTimestamp}::double precision)`
     );
   }
 
   if (options.toDate) {
     const toTimestamp = (options.toDate / 1000).toString();
     whereConditions.push(
-      Prisma.sql`"date" <= to_timestamp(${toTimestamp}::double precision)`,
+      Prisma.sql`"date" <= to_timestamp(${toTimestamp}::double precision)`
     );
   }
 
@@ -177,14 +179,14 @@ async function getNewsletterCounts(
 
   // Always filter by emailAccountId
   whereConditions.push(
-    Prisma.sql`"emailAccountId" = ${options.emailAccountId}`,
+    Prisma.sql`"emailAccountId" = ${options.emailAccountId}`
   );
 
   // Add search filter if provided - search both from (email) and fromName fields
   if (options.search) {
     const searchTerm = options.search.toLowerCase();
     whereConditions.push(
-      Prisma.sql`(position(${searchTerm} in LOWER("from")) > 0 OR position(${searchTerm} in LOWER(COALESCE("fromName", ''))) > 0)`,
+      Prisma.sql`(position(${searchTerm} in LOWER("from")) > 0 OR position(${searchTerm} in LOWER(COALESCE("fromName", ''))) > 0)`
     );
   }
 
@@ -244,7 +246,7 @@ async function getNewsletterCounts(
 
 function getOrderByClause(
   orderBy: string,
-  orderDirection?: "asc" | "desc",
+  orderDirection?: "asc" | "desc"
 ): string {
   const direction = orderDirection?.toUpperCase() || "DESC";
 
@@ -290,5 +292,5 @@ export const GET = withEmailProvider(
     });
 
     return NextResponse.json(result);
-  },
+  }
 );

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export function FollowUpRemindersIllustration() {
   const [stage, setStage] = useState(0);
@@ -47,60 +47,60 @@ export function FollowUpRemindersIllustration() {
         <AnimatePresence mode="wait">
           {stage >= 1 && (
             <motion.div
-              key="card"
-              initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ duration: 0.625, ease: "easeOut" }}
               className="w-full max-w-[280px] rounded-lg bg-white p-3 shadow-md dark:bg-slate-800"
+              exit={{ opacity: 0, x: -100 }}
+              initial={{ opacity: 0, x: 100 }}
+              key="card"
+              transition={{ duration: 0.625, ease: "easeOut" }}
             >
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pink-100 text-xs font-semibold text-pink-600 dark:bg-pink-900/50 dark:text-pink-300">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pink-100 font-semibold text-pink-600 text-xs dark:bg-pink-900/50 dark:text-pink-300">
                   SM
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">
+                    <span className="font-semibold text-[13px] text-gray-900 dark:text-gray-100">
                       Sarah Miller
                     </span>
                     <AnimatePresence>
                       {stage >= 6 && (
                         <motion.span
-                          initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
+                          className="rounded bg-amber-100 px-1.5 py-0.5 font-semibold text-[9px] text-amber-700 dark:bg-amber-800/50 dark:text-amber-300"
+                          initial={{ opacity: 0, scale: 0.8 }}
                           transition={{ duration: 0.375, ease: "easeOut" }}
-                          className="rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700 dark:bg-amber-800/50 dark:text-amber-300"
                         >
                           Follow up
                         </motion.span>
                       )}
                     </AnimatePresence>
                   </div>
-                  <div className="text-[11px] font-medium text-gray-700 dark:text-gray-300">
+                  <div className="font-medium text-[11px] text-gray-700 dark:text-gray-300">
                     Meeting follow-up
                   </div>
                 </div>
               </div>
-              <div className="mt-2 text-[10px] leading-relaxed text-gray-500 dark:text-gray-400">
+              <div className="mt-2 text-[10px] text-gray-500 leading-relaxed dark:text-gray-400">
                 Thanks for your time today. I wanted to follow up on...
               </div>
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
                 animate={{
                   height: stage >= 2 ? "auto" : 0,
                   opacity: stage >= 2 ? 1 : 0,
                 }}
-                transition={{ duration: 0.375, ease: "easeOut" }}
                 className="overflow-hidden"
+                initial={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.375, ease: "easeOut" }}
               >
-                <div className="mt-2.5 flex items-center gap-1.5 border-t border-gray-100 pt-2 dark:border-gray-700">
+                <div className="mt-2.5 flex items-center gap-1.5 border-gray-100 border-t pt-2 dark:border-gray-700">
                   <span className="text-[10px] text-gray-400 dark:text-gray-500">
                     ↩ You replied
                     {stage >= 3 && (
                       <motion.span
-                        key={daysText}
-                        initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
+                        initial={{ opacity: 0 }}
+                        key={daysText}
                         transition={{ duration: 0.375 }}
                       >
                         {" "}

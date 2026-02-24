@@ -12,19 +12,19 @@
  * 4. Set TEST_CATEGORY_NAME for category/label testing (optional, defaults to "To Reply")
  */
 
-import { describe, test, expect, beforeAll, vi } from "vitest";
 import { NextRequest } from "next/server";
-import prisma from "@/utils/prisma";
-import { createEmailProvider } from "@/utils/email/provider";
-import { webhookBodySchema } from "@/app/api/outlook/webhook/types";
+import { beforeAll, describe, expect, test, vi } from "vitest";
 import {
   ensureCatchAllTestRule,
   ensureTestPremiumAccount,
   findOldMessage,
 } from "@/__tests__/e2e/helpers";
-import { sleep } from "@/utils/sleep";
+import { webhookBodySchema } from "@/app/api/outlook/webhook/types";
+import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import { sleep } from "@/utils/sleep";
 
 const logger = createScopedLogger("test");
 
@@ -65,7 +65,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Operations Integration Tests", () => {
     if (!testEmail) {
       console.warn("\n⚠️  Set TEST_OUTLOOK_EMAIL env var to run these tests");
       console.warn(
-        "   Example: TEST_OUTLOOK_EMAIL=your@email.com pnpm test-e2e outlook-operations\n",
+        "   Example: TEST_OUTLOOK_EMAIL=your@email.com pnpm test-e2e outlook-operations\n"
       );
       return;
     }
@@ -108,13 +108,13 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Operations Integration Tests", () => {
       if (messages.length > 0) {
         console.log(`   ✅ Got ${messages.length} messages`);
         console.log(
-          `   First message: ${messages[0].subject || "(no subject)"}`,
+          `   First message: ${messages[0].subject || "(no subject)"}`
         );
         expect(messages[0]).toHaveProperty("id");
         expect(messages[0]).toHaveProperty("subject");
       } else {
         console.log(
-          "   ℹ️  No messages found (may be expected if conversationId is old)",
+          "   ℹ️  No messages found (may be expected if conversationId is old)"
         );
       }
     }, 30_000);
@@ -127,7 +127,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Operations Integration Tests", () => {
       expect(messages).toBeDefined();
       expect(Array.isArray(messages)).toBe(true);
       console.log(
-        `   ✅ Handled conversationId with special characters (${TEST_CONVERSATION_ID.slice(0, 20)}...)`,
+        `   ✅ Handled conversationId with special characters (${TEST_CONVERSATION_ID.slice(0, 20)}...)`
       );
     });
   });
@@ -136,7 +136,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Operations Integration Tests", () => {
     test("getMessagesFromSender should resolve without error (current bug: fails)", async () => {
       const sender = "aibreakfast@mail.beehiiv.com";
       await expect(
-        provider.getMessagesFromSender({ senderEmail: sender, maxResults: 5 }),
+        provider.getMessagesFromSender({ senderEmail: sender, maxResults: 5 })
       ).resolves.toHaveProperty("messages");
     }, 30_000);
   });
@@ -148,7 +148,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Operations Integration Tests", () => {
 
       if (!label) {
         console.log(
-          `   📝 Category "${TEST_CATEGORY_NAME}" doesn't exist, creating it`,
+          `   📝 Category "${TEST_CATEGORY_NAME}" doesn't exist, creating it`
         );
         label = await provider.createLabel(TEST_CATEGORY_NAME);
       }
@@ -179,7 +179,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Operations Integration Tests", () => {
 
     test("should handle empty category name gracefully", async () => {
       await expect(
-        provider.removeThreadLabel(TEST_CONVERSATION_ID, ""),
+        provider.removeThreadLabel(TEST_CONVERSATION_ID, "")
       ).resolves.not.toThrow();
 
       console.log("   ✅ Handled empty category name");
@@ -265,7 +265,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Operations Integration Tests", () => {
       expect(result.messages).toBeDefined();
       expect(Array.isArray(result.messages)).toBe(true);
       console.log(
-        `   ✅ Plain text search returned ${result.messages.length} messages`,
+        `   ✅ Plain text search returned ${result.messages.length} messages`
       );
     });
 
@@ -288,7 +288,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Operations Integration Tests", () => {
         expect(result.messages).toBeDefined();
         expect(Array.isArray(result.messages)).toBe(true);
         console.log(
-          `   ✅ Query "${query}" returned ${result.messages.length} messages`,
+          `   ✅ Query "${query}" returned ${result.messages.length} messages`
         );
       }
     });
@@ -389,7 +389,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Webhook Payload", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(realWebhookPayload),
-      },
+      }
     );
 
     // Call the webhook handler
@@ -472,7 +472,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Webhook Payload", () => {
       console.log(`      Subject: ${draft?.subject || "(no subject)"}`);
       console.log("      Content:");
       console.log(
-        `        ${draft?.textPlain?.substring(0, 200).replace(/\n/g, "\n        ") || "(empty)"}`,
+        `        ${draft?.textPlain?.substring(0, 200).replace(/\n/g, "\n        ") || "(empty)"}`
       );
       if (draft?.textPlain && draft.textPlain.length > 200) {
         console.log(`        ... (${draft.textPlain.length} total characters)`);
@@ -500,7 +500,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Webhook Payload", () => {
     const draftResult = await provider.draftEmail(
       message,
       { content: "Test draft - verifying ID can be fetched" },
-      emailAccount.email,
+      emailAccount.email
     );
 
     expect(draftResult.draftId).toBeDefined();
@@ -516,7 +516,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Webhook Payload", () => {
     console.log(`      Draft ID: ${draftResult.draftId}`);
     console.log(`      Fetched ID: ${fetchedDraft?.id}`);
     console.log(
-      `      Content preview: ${fetchedDraft?.textPlain?.substring(0, 50) || "(empty)"}...`,
+      `      Content preview: ${fetchedDraft?.textPlain?.substring(0, 50) || "(empty)"}...`
     );
 
     // Clean up - delete the test draft

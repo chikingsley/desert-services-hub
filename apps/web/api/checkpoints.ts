@@ -23,12 +23,12 @@ const respondCheckpointSchema = z.object({
 });
 
 interface Checkpoint {
+  context?: Record<string, unknown>;
+  createdAt: string;
   id: string;
   label: string;
-  context?: Record<string, unknown>;
-  status: "pending" | "approved" | "declined";
-  createdAt: string;
   resolvedAt?: string;
+  status: "pending" | "approved" | "declined";
 }
 
 /** In-memory checkpoint store. Transient - clears on server restart. */

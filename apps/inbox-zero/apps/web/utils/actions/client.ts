@@ -1,4 +1,4 @@
-import { toastSuccess, toastError } from "@/components/Toast";
+import { toastError, toastSuccess } from "@/components/Toast";
 import {
   createAutoArchiveFilterAction,
   deleteFilterAction,

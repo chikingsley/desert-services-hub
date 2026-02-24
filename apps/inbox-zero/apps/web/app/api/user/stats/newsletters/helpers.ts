@@ -1,19 +1,19 @@
-import type { EmailProvider, EmailFilter } from "@/utils/email/types";
-import { extractEmailAddress } from "@/utils/email";
-import prisma from "@/utils/prisma";
 import { NewsletterStatus } from "@/generated/prisma/enums";
+import { extractEmailAddress } from "@/utils/email";
+import type { EmailFilter, EmailProvider } from "@/utils/email/types";
 import { GmailLabel } from "@/utils/gmail/label";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 export async function getAutoArchiveFilters(
   emailProvider: EmailProvider,
-  logger: Logger,
+  logger: Logger
 ) {
   try {
     const filters = await emailProvider.getFiltersList();
 
     const autoArchiveFilters = filters.filter((filter) =>
-      isAutoArchiveFilter(filter, emailProvider),
+      isAutoArchiveFilter(filter, emailProvider)
     );
 
     return autoArchiveFilters;
@@ -27,7 +27,7 @@ export async function getAutoArchiveFilters(
 export function findAutoArchiveFilter(
   autoArchiveFilters: EmailFilter[],
   fromEmail: string,
-  emailProvider: EmailProvider,
+  emailProvider: EmailProvider
 ) {
   return autoArchiveFilters.find((filter) => {
     const from = extractEmailAddress(fromEmail);
@@ -57,7 +57,7 @@ export function filterNewsletters<
   },
 >(
   newsletters: T[],
-  filters: ("unhandled" | "autoArchived" | "unsubscribed" | "approved" | "")[],
+  filters: ("unhandled" | "autoArchived" | "unsubscribed" | "approved" | "")[]
 ): T[] {
   const showAutoArchived = filters.includes("autoArchived");
   const showApproved = filters.includes("approved");
@@ -68,12 +68,18 @@ export function filterNewsletters<
     if (
       showAutoArchived &&
       (email.autoArchived || email.status === NewsletterStatus.AUTO_ARCHIVED)
-    )
+    ) {
       return true;
-    if (showUnsubscribed && email.status === NewsletterStatus.UNSUBSCRIBED)
+    }
+    if (showUnsubscribed && email.status === NewsletterStatus.UNSUBSCRIBED) {
       return true;
-    if (showApproved && email.status === NewsletterStatus.APPROVED) return true;
-    if (showUnhandled && !email.status && !email.autoArchived) return true;
+    }
+    if (showApproved && email.status === NewsletterStatus.APPROVED) {
+      return true;
+    }
+    if (showUnhandled && !email.status && !email.autoArchived) {
+      return true;
+    }
 
     return false;
   });
@@ -94,7 +100,7 @@ function isGmailAutoArchiveFilter(filter: EmailFilter): boolean {
   // For Gmail: check if it removes INBOX label or adds TRASH label
   return Boolean(
     filter.action?.removeLabelIds?.includes(GmailLabel.INBOX) ||
-      filter.action?.addLabelIds?.includes(GmailLabel.TRASH),
+      filter.action?.addLabelIds?.includes(GmailLabel.TRASH)
   );
 }
 

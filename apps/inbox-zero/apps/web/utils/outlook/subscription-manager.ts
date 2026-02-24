@@ -1,13 +1,13 @@
-import prisma from "@/utils/prisma";
-import { captureException } from "@/utils/error";
-import type { EmailProvider } from "@/utils/email/types";
 import { createEmailProvider } from "@/utils/email/provider";
+import type { EmailProvider } from "@/utils/email/types";
+import { captureException } from "@/utils/error";
 import type { Logger } from "@/utils/logger";
 import {
-  parseSubscriptionHistory,
-  cleanupOldHistoryEntries,
   addCurrentSubscriptionToHistory,
+  cleanupOldHistoryEntries,
+  parseSubscriptionHistory,
 } from "@/utils/outlook/subscription-history";
+import prisma from "@/utils/prisma";
 
 /**
  * Manages Outlook subscriptions, ensuring only one active subscription per email account
@@ -88,7 +88,9 @@ export class OutlookSubscriptionManager {
    */
   async ensureSubscription(): Promise<Date | null> {
     const result = await this.createSubscription();
-    if (!result?.subscriptionId) return null;
+    if (!result?.subscriptionId) {
+      return null;
+    }
 
     if (result.changed) {
       try {
@@ -144,7 +146,7 @@ export class OutlookSubscriptionManager {
             {
               existingSubscriptionId,
               error,
-            },
+            }
           );
         }
       } else {
@@ -167,7 +169,9 @@ export class OutlookSubscriptionManager {
       },
     });
 
-    if (!emailAccount) return null;
+    if (!emailAccount) {
+      return null;
+    }
 
     return {
       subscriptionId: emailAccount.watchEmailsSubscriptionId || null,
@@ -197,7 +201,7 @@ export class OutlookSubscriptionManager {
 
     let updatedHistory = parseSubscriptionHistory(
       existing?.subscriptionHistory,
-      this.logger,
+      this.logger
     );
     updatedHistory = cleanupOldHistoryEntries(updatedHistory);
 
@@ -210,7 +214,7 @@ export class OutlookSubscriptionManager {
         existing.subscriptionId,
         now,
         existing.accountCreatedAt,
-        this.logger,
+        this.logger
       );
 
       this.logger.info("Moving old subscription to history", {
@@ -243,12 +247,12 @@ export class OutlookSubscriptionManager {
         {
           ourSubscriptionId: subscription.subscriptionId,
           currentSubscriptionId: current?.subscriptionId,
-        },
+        }
       );
       await this.addSubscriptionToHistoryIfMissing(
         subscription.subscriptionId,
         now,
-        existing?.accountCreatedAt || now,
+        existing?.accountCreatedAt || now
       );
     }
   }
@@ -261,7 +265,7 @@ export class OutlookSubscriptionManager {
   private async addSubscriptionToHistoryIfMissing(
     subscriptionId: string,
     replacedAt: Date,
-    accountCreatedAt: Date,
+    accountCreatedAt: Date
   ): Promise<void> {
     const historyEntry = {
       subscriptionId,
@@ -299,7 +303,7 @@ export async function createManagedOutlookSubscription({
   const manager = new OutlookSubscriptionManager(
     provider,
     emailAccountId,
-    logger,
+    logger
   );
 
   return await manager.ensureSubscription();

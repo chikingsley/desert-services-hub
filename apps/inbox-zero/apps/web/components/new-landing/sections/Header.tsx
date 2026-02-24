@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePostHog } from "posthog-js/react";
-import { cn } from "@/utils";
-import { Logo } from "@/components/new-landing/common/Logo";
 import { Button } from "@/components/new-landing/common/Button";
+import { Logo } from "@/components/new-landing/common/Logo";
 import { HeaderLinks } from "@/components/new-landing/HeaderLinks";
 import { landingPageAnalytics } from "@/hooks/useAnalytics";
+import { cn } from "@/utils";
 
 interface HeaderProps {
   className: string;
@@ -18,8 +18,8 @@ export function Header({ className }: HeaderProps) {
   return (
     <header
       className={cn(
-        "bg-white mx-auto flex items-center justify-between h-16",
-        className,
+        "mx-auto flex h-16 items-center justify-between bg-white",
+        className
       )}
     >
       <div className="hidden md:block">
@@ -30,7 +30,7 @@ export function Header({ className }: HeaderProps) {
       </div>
       <HeaderLinks />
       <div className="flex items-center gap-3">
-        <Button variant="secondary" asChild>
+        <Button asChild variant="secondary">
           <Link
             href="/login"
             onClick={() => landingPageAnalytics.logInClicked(posthog)}

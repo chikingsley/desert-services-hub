@@ -86,7 +86,7 @@ export function validateConfig(): {
   if (!ngrokDomain) {
     if (!effectiveUrl) {
       warnings.push(
-        "Neither E2E_NGROK_DOMAIN nor WEBHOOK_URL is set. Webhooks will not work.",
+        "Neither E2E_NGROK_DOMAIN nor WEBHOOK_URL is set. Webhooks will not work."
       );
     } else if (
       effectiveUrl.includes("localhost") ||
@@ -94,7 +94,7 @@ export function validateConfig(): {
     ) {
       warnings.push(
         `WEBHOOK_URL appears to be localhost (${effectiveUrl}). ` +
-          "Webhooks require a publicly accessible URL. Set E2E_NGROK_DOMAIN.",
+          "Webhooks require a publicly accessible URL. Set E2E_NGROK_DOMAIN."
       );
     }
   }

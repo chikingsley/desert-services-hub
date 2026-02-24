@@ -1,6 +1,6 @@
 import type { RulesResponse } from "@/app/api/user/rules/route";
-import { isAIRule, type RuleConditions } from "@/utils/condition";
 import { ActionType } from "@/generated/prisma/enums";
+import { isAIRule, type RuleConditions } from "@/utils/condition";
 import { TEMPLATE_VARIABLE_PATTERN } from "@/utils/template";
 
 const RISK_LEVELS = {
@@ -23,7 +23,7 @@ export type RiskAction = {
 
 export function getActionRiskLevel(
   action: RiskAction,
-  rule: RuleConditions,
+  rule: RuleConditions
 ): {
   level: RiskLevel;
   message: string;
@@ -47,20 +47,20 @@ export function getActionRiskLevel(
 
   const hasFullyDynamicContent = hasAnyFieldWithStatus(
     contentFields,
-    "fully-dynamic",
+    "fully-dynamic"
   );
   const hasPartiallyDynamicContent = hasAnyFieldWithStatus(
     contentFields,
-    "partially-dynamic",
+    "partially-dynamic"
   );
 
   const hasFullyDynamicRecipient = hasAnyFieldWithStatus(
     recipientFields,
-    "fully-dynamic",
+    "fully-dynamic"
   );
   const hasPartiallyDynamicRecipient = hasAnyFieldWithStatus(
     recipientFields,
-    "partially-dynamic",
+    "partially-dynamic"
   );
 
   // All rules are now automated, so we always check for dynamic content risks
@@ -104,7 +104,7 @@ export function getActionRiskLevel(
 
 function hasAnyFieldWithStatus(
   fields: (string | null)[],
-  status: "fully-dynamic" | "partially-dynamic",
+  status: "fully-dynamic" | "partially-dynamic"
 ) {
   return fields.some((field) => field === status);
 }
@@ -120,7 +120,7 @@ function compareRiskLevels(a: RiskLevel, b: RiskLevel): RiskLevel {
 }
 
 export function getRiskLevel(
-  rule: Pick<RulesResponse[number], "actions"> & RuleConditions,
+  rule: Pick<RulesResponse[number], "actions"> & RuleConditions
 ): {
   level: RiskLevel;
   message: string;
@@ -140,15 +140,21 @@ export function getRiskLevel(
     {
       level: RISK_LEVELS.LOW,
       message: "Low Risk: All content and recipients are static.",
-    },
+    }
   );
 }
 
 function getFieldsDynamicStatus(action: RiskAction) {
   const checkFieldStatus = (field: string | null) => {
-    if (!field) return null;
-    if (isFullyDynamicField(field)) return "fully-dynamic";
-    if (isPartiallyDynamicField(field)) return "partially-dynamic";
+    if (!field) {
+      return null;
+    }
+    if (isFullyDynamicField(field)) {
+      return "fully-dynamic";
+    }
+    if (isPartiallyDynamicField(field)) {
+      return "partially-dynamic";
+    }
     return "static";
   };
 

@@ -18,7 +18,7 @@ export function ButtonGroup(props: {
       })}
     >
       {props.buttons.map((button) => (
-        <Tooltip key={button.text || button.tooltip} content={button.tooltip}>
+        <Tooltip content={button.tooltip} key={button.text || button.tooltip}>
           <Button onClick={button.onClick} size="icon" variant="ghost">
             {button.icon}
             {button.text}

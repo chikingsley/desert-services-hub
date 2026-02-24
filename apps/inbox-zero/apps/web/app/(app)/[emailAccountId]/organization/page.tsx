@@ -1,7 +1,7 @@
-import { auth } from "@/utils/auth";
 import { redirect } from "next/navigation";
-import prisma from "@/utils/prisma";
+import { auth } from "@/utils/auth";
 import { prefixPath } from "@/utils/path";
+import prisma from "@/utils/prisma";
 
 export default async function OrganizationPage({
   params,
@@ -12,7 +12,9 @@ export default async function OrganizationPage({
 
   const session = await auth();
   const userId = session?.user.id;
-  if (!userId) redirect("/login");
+  if (!userId) {
+    redirect("/login");
+  }
 
   const member = await prisma.member.findFirst({
     where: { emailAccountId, emailAccount: { userId } },

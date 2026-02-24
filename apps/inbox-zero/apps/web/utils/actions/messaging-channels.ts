@@ -1,22 +1,22 @@
 "use server";
 
-import { actionClient } from "@/utils/actions/safe-action";
-import {
-  updateSlackChannelBody,
-  updateChannelFeaturesBody,
-  updateEmailDeliveryBody,
-  disconnectChannelBody,
-  linkSlackWorkspaceBody,
-} from "@/utils/actions/messaging-channels.validation";
-import prisma from "@/utils/prisma";
-import { SafeError } from "@/utils/error";
-import { MessagingProvider } from "@/generated/prisma/enums";
 import {
   createSlackClient,
   getChannelInfo,
-  sendChannelConfirmation,
   lookupSlackUserByEmail,
+  sendChannelConfirmation,
 } from "@inboxzero/slack";
+import { MessagingProvider } from "@/generated/prisma/enums";
+import {
+  disconnectChannelBody,
+  linkSlackWorkspaceBody,
+  updateChannelFeaturesBody,
+  updateEmailDeliveryBody,
+  updateSlackChannelBody,
+} from "@/utils/actions/messaging-channels.validation";
+import { actionClient } from "@/utils/actions/safe-action";
+import { SafeError } from "@/utils/error";
+import prisma from "@/utils/prisma";
 
 export const updateSlackChannelAction = actionClient
   .metadata({ name: "updateSlackChannel" })
@@ -51,7 +51,7 @@ export const updateSlackChannelAction = actionClient
 
       if (!channelInfo.isPrivate) {
         throw new SafeError(
-          "Only private channels are allowed. Please select a private channel.",
+          "Only private channels are allowed. Please select a private channel."
         );
       }
 
@@ -71,7 +71,7 @@ export const updateSlackChannelAction = actionClient
       } catch (error) {
         logger.error("Failed to send channel confirmation", { error });
       }
-    },
+    }
   );
 
 export const updateChannelFeaturesAction = actionClient
@@ -98,7 +98,7 @@ export const updateChannelFeaturesAction = actionClient
         sendMeetingBriefs === true || sendDocumentFilings === true;
       if (enablingFeature && !channel.channelId) {
         throw new SafeError(
-          "Please select a target channel before enabling features",
+          "Please select a target channel before enabling features"
         );
       }
 
@@ -109,7 +109,7 @@ export const updateChannelFeaturesAction = actionClient
           ...(sendDocumentFilings !== undefined && { sendDocumentFilings }),
         },
       });
-    },
+    }
   );
 
 export const updateEmailDeliveryAction = actionClient
@@ -194,19 +194,19 @@ export const linkSlackWorkspaceAction = actionClient
 
       if (!orgMateChannel?.accessToken) {
         throw new SafeError(
-          "No connected workspace found in your organization",
+          "No connected workspace found in your organization"
         );
       }
 
       const client = createSlackClient(orgMateChannel.accessToken);
       const slackUser = await lookupSlackUserByEmail(
         client,
-        emailAccount.email,
+        emailAccount.email
       );
 
       if (!slackUser) {
         throw new SafeError(
-          "Could not find your Slack account. Your Inbox Zero email may not match your Slack profile email.",
+          "Could not find your Slack account. Your Inbox Zero email may not match your Slack profile email."
         );
       }
 
@@ -238,5 +238,5 @@ export const linkSlackWorkspaceAction = actionClient
       });
 
       logger.info("Slack workspace linked via org-mate token", { teamId });
-    },
+    }
   );

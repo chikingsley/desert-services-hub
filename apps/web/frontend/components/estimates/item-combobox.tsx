@@ -1,6 +1,5 @@
 "use client";
 
-import type { Catalog } from "@/packages/estimates/catalog/types";
 import { ChevronsUpDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/apps/web/frontend/components/ui/button";
@@ -19,28 +18,29 @@ import {
 } from "@/apps/web/frontend/components/ui/popover";
 import type { CatalogItemInfo } from "@/apps/web/frontend/lib/catalog-item-info";
 import { cn } from "@/lib/utils";
+import type { Catalog } from "@/packages/estimates/catalog/types";
 
 interface ItemComboboxProps {
   catalog: Catalog;
-  currentValue: string;
   categoryId?: string; // Optional: filter to items in this category
-  onSelect: (item: CatalogItemInfo) => void;
-  disabled?: boolean;
   className?: string;
+  currentValue: string;
+  disabled?: boolean;
+  onSelect: (item: CatalogItemInfo) => void;
 }
 
 interface FlattenedItem {
-  id: string;
-  code: string;
-  name: string;
-  description: string;
-  price: number;
-  unit: string;
-  defaultQty?: number;
   categoryId: string;
   categoryName: string;
+  code: string;
+  defaultQty?: number;
+  description: string;
+  id: string;
+  name: string;
+  price: number;
   subcategoryId?: string;
   subcategoryName?: string;
+  unit: string;
 }
 
 function flattenCategory(

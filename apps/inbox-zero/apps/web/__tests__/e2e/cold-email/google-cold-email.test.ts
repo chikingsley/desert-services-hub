@@ -12,13 +12,13 @@
  * - TEST_GMAIL_EMAIL=<your gmail email>
  */
 
-import { describe, test, expect, beforeAll, vi } from "vitest";
-import prisma from "@/utils/prisma";
+import { beforeAll, describe, expect, test, vi } from "vitest";
+import { extractDomainFromEmail, extractEmailAddress } from "@/utils/email";
 import { createEmailProvider } from "@/utils/email/provider";
-import { extractEmailAddress, extractDomainFromEmail } from "@/utils/email";
 import type { EmailProvider } from "@/utils/email/types";
-import type { ParsedMessage } from "@/utils/types";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import type { ParsedMessage } from "@/utils/types";
 
 const logger = createScopedLogger("test");
 const RUN_E2E_TESTS = process.env.RUN_E2E_TESTS;
@@ -26,7 +26,7 @@ const TEST_GMAIL_EMAIL = process.env.TEST_GMAIL_EMAIL;
 
 vi.mock("server-only", () => ({}));
 
-describe.skipIf(!RUN_E2E_TESTS || !TEST_GMAIL_EMAIL)(
+describe.skipIf(!(RUN_E2E_TESTS && TEST_GMAIL_EMAIL))(
   "Cold Email Detection - Google",
   { timeout: 30_000 },
   () => {
@@ -86,7 +86,9 @@ describe.skipIf(!RUN_E2E_TESTS || !TEST_GMAIL_EMAIL)(
       ];
       const companyMessage = realMessages.find((m) => {
         const from = extractEmailAddress(m.headers.from);
-        if (!from) return false;
+        if (!from) {
+          return false;
+        }
         const domain = extractDomainFromEmail(from);
         return domain && !publicDomains.includes(domain.toLowerCase());
       });
@@ -155,5 +157,5 @@ describe.skipIf(!RUN_E2E_TESTS || !TEST_GMAIL_EMAIL)(
         expect(result).toBe(true);
       });
     });
-  },
+  }
 );

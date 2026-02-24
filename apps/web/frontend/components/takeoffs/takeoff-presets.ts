@@ -1,7 +1,7 @@
 export interface PresetItem {
+  color: string;
   id: string;
   label: string;
-  color: string;
   type: "count" | "linear" | "area";
 }
 

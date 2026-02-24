@@ -33,7 +33,7 @@ const strategy: RetrievalStrategy = {
            AND e.project_id IS NOT NULL
          GROUP BY e.project_id
          ORDER BY max_rank DESC, email_count DESC
-         LIMIT 20`,
+         LIMIT 20`
       )
       .all(subject);
 
@@ -49,7 +49,7 @@ const strategy: RetrievalStrategy = {
               websearch_to_tsquery('english', $1) q(query)
          WHERE psi.search_vector @@ q.query
          ORDER BY ts_rank(psi.search_vector, q.query) DESC
-         LIMIT 20`,
+         LIMIT 20`
       )
       .all(subject);
 

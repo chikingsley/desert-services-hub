@@ -9,7 +9,9 @@ export async function createContact(options: {
     return;
   }
   const audienceId = process.env.RESEND_AUDIENCE_ID || options.audienceId;
-  if (!audienceId) throw new Error("Missing audienceId");
+  if (!audienceId) {
+    throw new Error("Missing audienceId");
+  }
   return resend.contacts.create({ email: options.email, audienceId });
 }
 
@@ -22,6 +24,8 @@ export async function deleteContact(options: {
     return;
   }
   const audienceId = process.env.RESEND_AUDIENCE_ID || options.audienceId;
-  if (!audienceId) throw new Error("Missing audienceId");
+  if (!audienceId) {
+    throw new Error("Missing audienceId");
+  }
   return resend.contacts.remove({ email: options.email, audienceId });
 }

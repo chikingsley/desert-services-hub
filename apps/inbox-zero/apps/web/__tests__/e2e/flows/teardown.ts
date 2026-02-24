@@ -6,17 +6,17 @@
 
 import { getTestSubjectPrefix } from "./config";
 import {
+  clearAccountCache,
   getGmailTestAccount,
   getOutlookTestAccount,
-  clearAccountCache,
 } from "./helpers/accounts";
 import { cleanupTestEmails } from "./helpers/email";
 import {
   clearLogs,
+  getApiCallLog,
+  getWebhookLog,
   logStep,
   logTestSummary,
-  getWebhookLog,
-  getApiCallLog,
 } from "./helpers/logging";
 
 /**
@@ -95,7 +95,7 @@ export async function teardownFlowTests(): Promise<void> {
 export function generateTestSummary(
   testName: string,
   startTime: number,
-  error?: Error,
+  error?: Error
 ): void {
   const duration = Date.now() - startTime;
   const webhooks = getWebhookLog();

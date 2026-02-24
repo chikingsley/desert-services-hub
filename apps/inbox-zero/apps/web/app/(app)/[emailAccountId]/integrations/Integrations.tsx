@@ -1,18 +1,18 @@
 "use client";
 
+import { IntegrationRow } from "@/app/(app)/[emailAccountId]/integrations/IntegrationRow";
 import { LoadingContent } from "@/components/LoadingContent";
 import { TypographyP } from "@/components/Typography";
+import { Card } from "@/components/ui/card";
 import {
   Table,
-  TableRow,
   TableBody,
   TableCell,
-  TableHeader,
   TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { useIntegrations } from "@/hooks/useIntegrations";
-import { IntegrationRow } from "@/app/(app)/[emailAccountId]/integrations/IntegrationRow";
-import { Card } from "@/components/ui/card";
 
 export function Integrations() {
   const { data, isLoading, error, mutate } = useIntegrations();
@@ -21,7 +21,7 @@ export function Integrations() {
 
   return (
     <Card>
-      <LoadingContent loading={isLoading} error={error}>
+      <LoadingContent error={error} loading={isLoading}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -36,8 +36,8 @@ export function Integrations() {
             {integrations.length ? (
               integrations.map((integration) => (
                 <IntegrationRow
-                  key={integration.name}
                   integration={integration}
+                  key={integration.name}
                   onConnectionChange={mutate}
                 />
               ))

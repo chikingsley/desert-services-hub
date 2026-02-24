@@ -1,5 +1,5 @@
-import { MessagingProvider } from "@/generated/prisma/enums";
 import { createSlackClient } from "@inboxzero/slack";
+import { MessagingProvider } from "@/generated/prisma/enums";
 import type { Logger } from "@/utils/logger";
 
 type SlackMessagingChannel = {
@@ -32,7 +32,7 @@ export async function sendAutomationMessageToSlack({
 
   if (channel.provider !== MessagingProvider.SLACK) {
     const error = new AutomationJobConfigurationError(
-      "Only Slack messaging channels are supported",
+      "Only Slack messaging channels are supported"
     );
     slackLogger.error("Unsupported messaging provider for automation job", {
       provider: channel.provider,
@@ -43,7 +43,7 @@ export async function sendAutomationMessageToSlack({
 
   if (!channel.accessToken) {
     const error = new AutomationJobConfigurationError(
-      "Messaging channel is missing Slack access token",
+      "Messaging channel is missing Slack access token"
     );
     slackLogger.error("Slack channel is missing access token", { error });
     throw error;
@@ -61,7 +61,7 @@ export async function sendAutomationMessageToSlack({
 
   if (!destinationChannelId) {
     const error = new AutomationJobConfigurationError(
-      "No Slack destination available for automation job",
+      "No Slack destination available for automation job"
     );
     slackLogger.error("No Slack destination available for automation job", {
       hasProviderUserId: Boolean(channel.providerUserId),
@@ -116,14 +116,14 @@ export async function sendAutomationMessageToSlack({
 
 async function resolveDirectMessageChannelId(
   client: ReturnType<typeof createSlackClient>,
-  providerUserId: string,
+  providerUserId: string
 ) {
   const response = await client.conversations.open({ users: providerUserId });
   return response.channel?.id ?? null;
 }
 
 function isSlackError(
-  error: unknown,
+  error: unknown
 ): error is Error & { data?: { error?: string } } {
   return error instanceof Error && "data" in error;
 }

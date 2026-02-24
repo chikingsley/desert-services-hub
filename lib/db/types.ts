@@ -66,162 +66,161 @@ export type BodyLinkScanStatus =
 // ============================================
 
 export interface Account {
-  id: number;
-  domain: string;
-  name: string;
-  type: AccountType;
   contactCount: number;
+  createdAt: string;
+  domain: string;
   emailCount: number;
+  id: number;
   mondayAccountId: string | null;
   mondayName: string | null;
-  createdAt: string;
+  name: string;
+  type: AccountType;
   updatedAt: string;
 }
 
 export interface Project {
-  id: number;
-  projectNumber: string | null;
   accountId: number | null;
-  name: string;
-  normalizedName: string | null;
-  contractor: string | null;
-  awardedValue: number | null;
   address: string | null;
+  awardedValue: number | null;
+  contractor: string | null;
+  contractStatus: string;
+  createdAt: string;
+  dustPermitStatus: string;
+  emailCount: number;
+  firstSeen: string | null;
+  id: number;
+  lastSeen: string | null;
   locationCity: string | null;
   locationState: string | null;
   locationZip: string | null;
-  status: string;
-  contractStatus: string;
-  dustPermitStatus: string;
-  noiStatus: string;
-  swpppStatus: string;
-  signsStatus: string;
-  outlookFolder: string | null;
-  notes: string | null;
-  emailCount: number;
-  firstSeen: string | null;
-  lastSeen: string | null;
   mondayItemId: string | null;
-  createdAt: string;
+  name: string;
+  noiStatus: string;
+  normalizedName: string | null;
+  notes: string | null;
+  outlookFolder: string | null;
+  projectNumber: string | null;
+  signsStatus: string;
+  status: string;
+  swpppStatus: string;
   updatedAt: string;
 }
 
 export interface Mailbox {
-  id: number;
-  email: string;
-  displayName: string | null;
-  lastSyncAt: string | null;
-  emailCount: number;
   createdAt: string;
+  displayName: string | null;
+  email: string;
+  emailCount: number;
+  id: number;
+  lastSyncAt: string | null;
   updatedAt: string;
 }
 
 export interface Email {
-  id: number;
-  messageId: string;
-  internetMessageId: string | null;
-  mailboxId: number;
-  conversationId: string | null;
-  subject: string | null;
-  normalizedSubject: string | null;
-  fromEmail: string | null;
-  fromName: string | null;
-  fromDomain: string | null;
-  toEmails: string[];
-  ccEmails: string[];
-  receivedAt: string;
-  hasAttachments: boolean;
+  // Foreign key relationships
+  accountId: number | null;
   attachmentNames: string[];
-  bodyPreview: string | null;
   bodyFull: string | null;
   bodyHtml: string | null;
-  webUrl: string | null;
+  bodyLinkScanAttachmentsAdded: number;
+  bodyLinkScanAttempts: number;
+  bodyLinkScanError: string | null;
+  bodyLinkScanLinksFound: number;
+  bodyLinkScannedAt: string | null;
+
+  // Body-link scanning
+  bodyLinkScanStatus: BodyLinkScanStatus | null;
+  bodyLinkScanVersion: number;
+  bodyPreview: string | null;
   categories: string[];
+  ccEmails: string[];
 
   // Classification
   classification: EmailClassification | null;
   classificationConfidence: number | null;
   classificationMethod: ClassificationMethod | null;
-
-  // Linking text fields
-  projectName: string | null;
   contractorName: string | null;
-  mondayEstimateId: string | null;
-  notionProjectId: string | null;
+  conversationId: string | null;
 
-  // Foreign key relationships
-  accountId: number | null;
-  projectId: number | null;
-
-  // Threading
-  threadId: string | null;
+  createdAt: string;
+  fromDomain: string | null;
+  fromEmail: string | null;
+  fromName: string | null;
+  hasAttachments: boolean;
+  id: number;
+  internetMessageId: string | null;
+  isExcluded: boolean;
+  isForwarded: boolean;
 
   // Internal/Forwarding flags
   isInternal: boolean;
-  isForwarded: boolean;
-  originalSenderEmail: string | null;
-  originalSenderDomain: string | null;
 
   // Platform extraction
   isPlatformEmail: boolean;
+  mailboxId: number;
+  messageId: string;
+  mondayEstimateId: string | null;
+  normalizedSubject: string | null;
+  notionProjectId: string | null;
+  originalSenderDomain: string | null;
+  originalSenderEmail: string | null;
   platformName: string | null;
-  realSenderName: string | null;
+  projectId: number | null;
+
+  // Linking text fields
+  projectName: string | null;
   realSenderCompany: string | null;
-  realSenderEmail: string | null;
   realSenderDomain: string | null;
-  isExcluded: boolean;
+  realSenderEmail: string | null;
+  realSenderName: string | null;
+  receivedAt: string;
+  subject: string | null;
 
-  // Body-link scanning
-  bodyLinkScanStatus: BodyLinkScanStatus | null;
-  bodyLinkScannedAt: string | null;
-  bodyLinkScanError: string | null;
-  bodyLinkScanLinksFound: number;
-  bodyLinkScanAttachmentsAdded: number;
-  bodyLinkScanAttempts: number;
-  bodyLinkScanVersion: number;
-
-  createdAt: string;
+  // Threading
+  threadId: string | null;
+  toEmails: string[];
+  webUrl: string | null;
 }
 
 export interface Attachment {
-  id: number;
-  emailId: number;
   attachmentId: string;
-  name: string;
   contentType: string | null;
+  createdAt: string;
+  emailId: number;
+  extractedAt: string | null;
+  extractedText: string | null;
+  extractionError: string | null;
+  extractionStatus: ExtractionStatus;
+  id: number;
+  name: string;
   size: number | null;
   storageBucket: string | null;
   storagePath: string | null;
-  extractedText: string | null;
-  extractionStatus: ExtractionStatus;
-  extractionError: string | null;
-  extractedAt: string | null;
-  createdAt: string;
 }
 
 export interface Estimate {
-  id: number;
-  mondayItemId: string;
-  name: string;
-  estimateNumber: string | null;
-  contractor: string | null;
-  groupId: string | null;
-  groupTitle: string | null;
-  mondayUrl: string | null;
-  accountMondayId: string | null;
   accountDomain: string | null;
-  bidStatus: string | null;
-  bidValue: number | null;
+  accountMondayId: string | null;
+  awarded: boolean;
   awardedValue: number | null;
   bidSource: string | null;
-  awarded: boolean;
-  dueDate: string | null;
-  location: string | null;
-  sharepointUrl: string | null;
-  estimateStoragePath: string | null;
-  estimateFileName: string | null;
-  syncedAt: string;
+  bidStatus: string | null;
+  bidValue: number | null;
+  contractor: string | null;
   createdAt: string;
+  dueDate: string | null;
+  estimateFileName: string | null;
+  estimateNumber: string | null;
+  estimateStoragePath: string | null;
+  groupId: string | null;
+  groupTitle: string | null;
+  id: number;
+  location: string | null;
+  mondayItemId: string;
+  mondayUrl: string | null;
+  name: string;
+  sharepointUrl: string | null;
+  syncedAt: string;
   updatedAt: string;
 }
 
@@ -235,30 +234,30 @@ export type PermitStatus =
   | "Pending Payment";
 
 export interface Permit {
-  id: string;
-  projectName: string | null;
-  facilityId: string | null;
   accountId: number | null;
-  projectId: number | null;
-  companyName: string | null;
-  portalCompanyId: string | null;
-  status: PermitStatus | null;
-  submittedDate: string | null;
-  effectiveDate: string | null;
-  expirationDate: string | null;
-  closedDate: string | null;
-  previousAppId: string | null;
-  projectStartDate: string | null;
-  projectEndDate: string | null;
   address: string | null;
   city: string | null;
-  parcel: string | null;
-  isBlockPermit: boolean;
-  isAccelerated: boolean;
-  invoiceNumber: string | null;
-  invoiceCharges: number | null;
-  invoiceBalance: number | null;
+  closedDate: string | null;
+  companyName: string | null;
   createdAt: number;
+  effectiveDate: string | null;
+  expirationDate: string | null;
+  facilityId: string | null;
+  id: string;
+  invoiceBalance: number | null;
+  invoiceCharges: number | null;
+  invoiceNumber: string | null;
+  isAccelerated: boolean;
+  isBlockPermit: boolean;
+  parcel: string | null;
+  portalCompanyId: string | null;
+  previousAppId: string | null;
+  projectEndDate: string | null;
+  projectId: number | null;
+  projectName: string | null;
+  projectStartDate: string | null;
+  status: PermitStatus | null;
+  submittedDate: string | null;
   updatedAt: number;
 }
 
@@ -268,23 +267,23 @@ export type SwpppWorksheet =
   | "SWPPP B & V";
 
 export interface SwpppWorkOrder {
-  id: number;
-  rowNumber: number;
-  worksheet: SwpppWorksheet;
-  date: string | null;
-  contractor: string | null;
-  jobName: string | null;
-  address: string | null;
-  contact: string | null;
-  phone: string | null;
-  workDescription: string | null;
-  dateEntered: string | null;
-  comments: string | null;
-  invoice: string | null;
-  workCompleted: string | null;
   accountId: number | null;
+  address: string | null;
+  comments: string | null;
+  contact: string | null;
+  contractor: string | null;
+  date: string | null;
+  dateEntered: string | null;
+  id: number;
+  invoice: string | null;
+  jobName: string | null;
+  phone: string | null;
   projectId: number | null;
+  rowNumber: number;
   syncedAt: string;
+  workCompleted: string | null;
+  workDescription: string | null;
+  worksheet: SwpppWorksheet;
 }
 
 export type NotificationEventType =
@@ -301,38 +300,38 @@ export type NotificationEventType =
 export type NotificationStatus = "pending" | "drafted" | "sent" | "failed";
 
 export interface Notification {
-  id: number;
-  eventType: NotificationEventType;
-  refType: string | null;
-  refId: string | null;
-  subject: string;
-  draftId: string | null;
-  status: NotificationStatus;
-  sentAt: string | null;
-  error: string | null;
-  metadata: string | null;
   createdAt: string;
+  draftId: string | null;
+  error: string | null;
+  eventType: NotificationEventType;
+  id: number;
+  metadata: string | null;
+  refId: string | null;
+  refType: string | null;
+  sentAt: string | null;
+  status: NotificationStatus;
+  subject: string;
 }
 
 export type ProjectMatchReviewStatus = "pending" | "resolved" | "dismissed";
 
 export interface ProjectMatchReview {
+  accountIdHint: number | null;
+  addressHint: string | null;
+  aliasHints: string[];
+  candidates: unknown[];
+  contractorHint: string | null;
+  createdAt: string;
+  decision: unknown;
   id: number;
+  note: string | null;
+  primaryText: string;
+  resolutionNote: string | null;
+  resolvedAt: string | null;
+  selectedProjectId: number | null;
   source: string;
   sourceKey: string;
   status: ProjectMatchReviewStatus;
-  primaryText: string;
-  aliasHints: string[];
-  contractorHint: string | null;
-  addressHint: string | null;
-  accountIdHint: number | null;
-  candidates: unknown[];
-  decision: unknown;
-  selectedProjectId: number | null;
-  note: string | null;
-  resolutionNote: string | null;
-  resolvedAt: string | null;
-  createdAt: string;
   updatedAt: string;
 }
 
@@ -341,81 +340,81 @@ export interface ProjectMatchReview {
 // ============================================
 
 export interface InsertEmailData {
-  messageId: string;
-  internetMessageId?: string | null;
-  mailboxId: number;
-  conversationId?: string | null;
-  subject?: string | null;
-  fromEmail?: string | null;
-  fromName?: string | null;
-  toEmails?: string[];
-  ccEmails?: string[];
-  receivedAt: string;
-  hasAttachments?: boolean;
   attachmentNames?: string[];
-  bodyPreview?: string | null;
   bodyFull?: string | null;
   bodyHtml?: string | null;
-  webUrl?: string | null;
+  bodyPreview?: string | null;
   categories?: string[];
+  ccEmails?: string[];
+  conversationId?: string | null;
+  fromEmail?: string | null;
+  fromName?: string | null;
+  hasAttachments?: boolean;
+  internetMessageId?: string | null;
+  mailboxId: number;
+  messageId: string;
+  receivedAt: string;
+  subject?: string | null;
+  toEmails?: string[];
+  webUrl?: string | null;
 }
 
 export interface InsertAttachmentData {
-  emailId: number;
   attachmentId: string;
-  name: string;
   contentType?: string | null;
+  emailId: number;
+  name: string;
   size?: number | null;
   storageBucket?: string | null;
   storagePath?: string | null;
 }
 
 export interface UpsertEstimateData {
-  mondayItemId: string;
-  name: string;
-  estimateNumber?: string | null;
-  contractor?: string | null;
-  groupId?: string | null;
-  groupTitle?: string | null;
-  mondayUrl?: string | null;
-  accountMondayId?: string | null;
   accountDomain?: string | null;
-  bidStatus?: string | null;
-  bidValue?: number | null;
+  accountMondayId?: string | null;
+  awarded?: boolean;
   awardedValue?: number | null;
   bidSource?: string | null;
-  awarded?: boolean;
+  bidStatus?: string | null;
+  bidValue?: number | null;
+  contractor?: string | null;
   dueDate?: string | null;
-  location?: string | null;
-  sharepointUrl?: string | null;
-  estimateStoragePath?: string | null;
   estimateFileName?: string | null;
+  estimateNumber?: string | null;
+  estimateStoragePath?: string | null;
+  groupId?: string | null;
+  groupTitle?: string | null;
+  location?: string | null;
+  mondayItemId: string;
+  mondayUrl?: string | null;
+  name: string;
+  sharepointUrl?: string | null;
 }
 
 export interface UpsertPermitData {
-  id: string;
-  projectName?: string | null;
-  facilityId?: string | null;
   accountId?: number | null;
-  projectId?: number | null;
-  companyName?: string | null;
-  portalCompanyId?: string | null;
-  status?: string | null;
-  submittedDate?: string | null;
-  effectiveDate?: string | null;
-  expirationDate?: string | null;
-  closedDate?: string | null;
-  previousAppId?: string | null;
-  projectStartDate?: string | null;
-  projectEndDate?: string | null;
   address?: string | null;
   city?: string | null;
-  parcel?: string | null;
-  isBlockPermit?: boolean;
-  isAccelerated?: boolean;
-  invoiceNumber?: string | null;
-  invoiceCharges?: number | null;
+  closedDate?: string | null;
+  companyName?: string | null;
+  effectiveDate?: string | null;
+  expirationDate?: string | null;
+  facilityId?: string | null;
+  id: string;
   invoiceBalance?: number | null;
+  invoiceCharges?: number | null;
+  invoiceNumber?: string | null;
+  isAccelerated?: boolean;
+  isBlockPermit?: boolean;
+  parcel?: string | null;
+  portalCompanyId?: string | null;
+  previousAppId?: string | null;
+  projectEndDate?: string | null;
+  projectId?: number | null;
+  projectName?: string | null;
+  projectStartDate?: string | null;
+  status?: string | null;
+  submittedDate?: string | null;
 }
 
 // ============================================
@@ -423,54 +422,54 @@ export interface UpsertPermitData {
 // ============================================
 
 export interface MarketingPermit {
-  id: string;
-  projectName: string | null;
-  companyId: string | null;
-  companyName: string | null;
-  status: PermitStatus | null;
-  submittedDate: string | null;
-  effectiveDate: string | null;
-  expirationDate: string | null;
-  closedDate: string | null;
-  previousAppId: string | null;
-  projectStartDate: string | null;
-  projectEndDate: string | null;
   address: string | null;
   city: string | null;
-  parcel: string | null;
-  isBlockPermit: boolean;
-  isAccelerated: boolean;
-  invoiceNumber: string | null;
-  invoiceCharges: number | null;
+  closedDate: string | null;
+  companyId: string | null;
+  companyName: string | null;
+  createdAt: number;
+  detailScrapedAt: number | null;
+  effectiveDate: string | null;
+  expirationDate: string | null;
+  id: string;
   invoiceBalance: number | null;
+  invoiceCharges: number | null;
+  invoiceNumber: string | null;
+  isAccelerated: boolean;
+  isBlockPermit: boolean;
+  parcel: string | null;
+  previousAppId: string | null;
+  projectEndDate: string | null;
+  projectName: string | null;
+  projectStartDate: string | null;
   rawData: Record<string, unknown> | null;
   scrapedAt: number | null;
-  detailScrapedAt: number | null;
-  createdAt: number;
+  status: PermitStatus | null;
+  submittedDate: string | null;
 }
 
 export interface UpsertMarketingPermitData {
-  id: string;
-  projectName?: string | null;
-  companyId?: string | null;
-  companyName?: string | null;
-  status?: string | null;
-  submittedDate?: string | null;
-  effectiveDate?: string | null;
-  expirationDate?: string | null;
-  closedDate?: string | null;
-  previousAppId?: string | null;
-  projectStartDate?: string | null;
-  projectEndDate?: string | null;
   address?: string | null;
   city?: string | null;
-  parcel?: string | null;
-  isBlockPermit?: boolean;
-  isAccelerated?: boolean;
-  invoiceNumber?: string | null;
-  invoiceCharges?: number | null;
+  closedDate?: string | null;
+  companyId?: string | null;
+  companyName?: string | null;
+  effectiveDate?: string | null;
+  expirationDate?: string | null;
+  id: string;
   invoiceBalance?: number | null;
+  invoiceCharges?: number | null;
+  invoiceNumber?: string | null;
+  isAccelerated?: boolean;
+  isBlockPermit?: boolean;
+  parcel?: string | null;
+  previousAppId?: string | null;
+  projectEndDate?: string | null;
+  projectName?: string | null;
+  projectStartDate?: string | null;
   rawData?: Record<string, unknown> | null;
+  status?: string | null;
+  submittedDate?: string | null;
 }
 
 // ============================================

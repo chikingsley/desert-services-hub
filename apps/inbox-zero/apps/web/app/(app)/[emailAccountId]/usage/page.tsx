@@ -1,15 +1,15 @@
-import { getUsage } from "@/utils/redis/usage";
-import { Usage } from "@/app/(app)/[emailAccountId]/usage/usage";
-import { auth } from "@/utils/auth";
-import {
-  getMemberEmailAccount,
-  getCallerEmailAccount,
-} from "@/utils/organizations/access";
-import { checkUserOwnsEmailAccount } from "@/utils/email-account";
 import { notFound } from "next/navigation";
-import prisma from "@/utils/prisma";
-import { PageWrapper } from "@/components/PageWrapper";
+import { Usage } from "@/app/(app)/[emailAccountId]/usage/usage";
 import { PageHeader } from "@/components/PageHeader";
+import { PageWrapper } from "@/components/PageWrapper";
+import { auth } from "@/utils/auth";
+import { checkUserOwnsEmailAccount } from "@/utils/email-account";
+import {
+  getCallerEmailAccount,
+  getMemberEmailAccount,
+} from "@/utils/organizations/access";
+import prisma from "@/utils/prisma";
+import { getUsage } from "@/utils/redis/usage";
 
 export default async function UsagePage(props: {
   params: Promise<{ emailAccountId: string }>;
@@ -17,24 +17,30 @@ export default async function UsagePage(props: {
   const { emailAccountId } = await props.params;
   const session = await auth();
   const userId = session?.user.id;
-  if (!userId) notFound();
+  if (!userId) {
+    notFound();
+  }
 
   try {
     await checkUserOwnsEmailAccount({ emailAccountId });
   } catch {
     const callerEmailAccount = await getCallerEmailAccount(
       userId,
-      emailAccountId,
+      emailAccountId
     );
 
-    if (!callerEmailAccount) notFound();
+    if (!callerEmailAccount) {
+      notFound();
+    }
 
     const memberEmailAccount = await getMemberEmailAccount(
       callerEmailAccount.id,
-      emailAccountId,
+      emailAccountId
     );
 
-    if (!memberEmailAccount) notFound();
+    if (!memberEmailAccount) {
+      notFound();
+    }
   }
 
   const emailAccount = await prisma.emailAccount.findUnique({
@@ -48,7 +54,9 @@ export default async function UsagePage(props: {
     },
   });
 
-  if (!emailAccount) notFound();
+  if (!emailAccount) {
+    notFound();
+  }
 
   const usage = await getUsage({ email: emailAccount.email });
   const isOwnAccount = emailAccount.user.id === userId;

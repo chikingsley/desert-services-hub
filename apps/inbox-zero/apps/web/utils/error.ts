@@ -21,7 +21,7 @@ export function isError(value: any): value is ErrorMessage | ZodError {
 }
 
 export function isGmailError(
-  error: unknown,
+  error: unknown
 ): error is { code: number; errors: { message: string }[] } {
   return (
     typeof error === "object" &&
@@ -46,7 +46,7 @@ export type CaptureExceptionContext = {
 
 export function captureException(
   error: unknown,
-  context: CaptureExceptionContext = {},
+  context: CaptureExceptionContext = {}
 ) {
   if (isKnownApiError(error) || isHandledUserKeyError(error)) {
     const logger = createScopedLogger("captureException");
@@ -63,7 +63,9 @@ export function captureException(
     return;
   }
 
-  if (userEmail) setUser({ email: userEmail });
+  if (userEmail) {
+    setUser({ email: userEmail });
+  }
 
   const sentryExtra = {
     ...extra,
@@ -115,7 +117,7 @@ export function isIncorrectOpenAIAPIKeyError(error: APICallError): boolean {
 
 export function isInvalidOpenAIModelError(error: APICallError): boolean {
   return error.message.includes(
-    "does not exist or you do not have access to it",
+    "does not exist or you do not have access to it"
   );
 }
 
@@ -138,10 +140,10 @@ export function isOpenAIAPIKeyDeactivatedError(error: APICallError): boolean {
 }
 
 export function isAnthropicInsufficientBalanceError(
-  error: APICallError,
+  error: APICallError
 ): boolean {
   return error.message.includes(
-    "Your credit balance is too low to access the Anthropic API",
+    "Your credit balance is too low to access the Anthropic API"
   );
 }
 
@@ -245,7 +247,7 @@ export function isKnownApiError(error: unknown): boolean {
 export function checkCommonErrors(
   error: unknown,
   url: string,
-  logger: Logger,
+  logger: Logger
 ): ApiErrorType | null {
   if (isGmailInsufficientPermissionsError(error)) {
     logger.warn("Gmail insufficient permissions error for url", { url });
@@ -319,17 +321,27 @@ export function checkCommonErrors(
 }
 
 export function getErrorMessage(error: unknown): string | undefined {
-  if (typeof error === "string") return error;
-  if (error instanceof Error) return error.message;
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
 
   const outer = asRecord(error);
-  if (!outer) return undefined;
+  if (!outer) {
+    return undefined;
+  }
 
   const directMessage = getStringProp(outer, "message");
-  if (directMessage) return directMessage;
+  if (directMessage) {
+    return directMessage;
+  }
 
   const nested = asRecord(outer.error);
-  if (!nested) return undefined;
+  if (!nested) {
+    return undefined;
+  }
 
   return getStringProp(nested, "message");
 }
@@ -342,7 +354,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 function getStringProp(
   obj: Record<string, unknown>,
-  key: string,
+  key: string
 ): string | undefined {
   const value = obj[key];
   return typeof value === "string" ? value : undefined;
@@ -382,7 +394,7 @@ export function getActionErrorMessage(
   error: SafeActionError,
   fallbackOrOptions:
     | string
-    | ActionErrorMessageOptions = "An unknown error occurred",
+    | ActionErrorMessageOptions = "An unknown error occurred"
 ): string {
   const { fallback, prefix } =
     typeof fallbackOrOptions === "string"
@@ -407,12 +419,16 @@ function extractActionErrorMessage(error: SafeActionError): string | null {
   }
 
   const messages = getValidationMessages(error.validationErrors);
-  if (messages) return messages;
+  if (messages) {
+    return messages;
+  }
 
   if (error.bindArgsValidationErrors) {
     for (const ve of error.bindArgsValidationErrors) {
       const msg = getValidationMessages(ve);
-      if (msg) return msg;
+      if (msg) {
+        return msg;
+      }
     }
   }
 
@@ -420,9 +436,11 @@ function extractActionErrorMessage(error: SafeActionError): string | null {
 }
 
 function getValidationMessages(
-  errors: FlattenedErrors | undefined,
+  errors: FlattenedErrors | undefined
 ): string | null {
-  if (!errors) return null;
+  if (!errors) {
+    return null;
+  }
 
   const { formErrors, fieldErrors } = errors;
   const all = [...formErrors, ...Object.values(fieldErrors).flat()];

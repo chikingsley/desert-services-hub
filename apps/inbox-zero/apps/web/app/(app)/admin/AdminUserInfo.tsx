@@ -1,19 +1,19 @@
 "use client";
 
-import { useCallback } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { useAction } from "next-safe-action/hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAction } from "next-safe-action/hooks";
+import { useCallback } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { Input } from "@/components/Input";
 import { toastError } from "@/components/Toast";
-import { getActionErrorMessage } from "@/utils/error";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { adminGetUserInfoAction } from "@/utils/actions/admin";
 import {
-  getUserInfoBody,
   type GetUserInfoBody,
+  getUserInfoBody,
 } from "@/utils/actions/admin.validation";
+import { getActionErrorMessage } from "@/utils/error";
 
 export function AdminUserInfo() {
   const { execute, isExecuting, result } = useAction(adminGetUserInfoAction, {
@@ -37,7 +37,7 @@ export function AdminUserInfo() {
     (data) => {
       execute({ email: data.email });
     },
-    [execute],
+    [execute]
   );
 
   const data = result.data;
@@ -50,14 +50,14 @@ export function AdminUserInfo() {
       <CardContent className="space-y-4">
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <Input
-            type="email"
-            name="email"
+            error={errors.email}
             label="Email"
+            name="email"
             placeholder="user@example.com"
             registerProps={register("email")}
-            error={errors.email}
+            type="email"
           />
-          <Button type="submit" loading={isExecuting}>
+          <Button loading={isExecuting} type="submit">
             Look Up
           </Button>
         </form>
@@ -92,7 +92,7 @@ export function AdminUserInfo() {
             />
 
             {data.emailAccounts.map((ea) => (
-              <div key={ea.email} className="space-y-1 rounded-md border p-3">
+              <div className="space-y-1 rounded-md border p-3" key={ea.email}>
                 <p className="font-medium">{ea.email}</p>
                 <InfoRow label="Provider" value={ea.provider} />
                 <InfoRow

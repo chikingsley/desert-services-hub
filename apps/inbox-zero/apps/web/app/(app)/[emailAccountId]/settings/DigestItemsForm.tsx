@@ -1,22 +1,22 @@
-import { useCallback, useEffect, useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback, useEffect, useState } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import useSWR from "swr";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { toastError, toastSuccess } from "@/components/Toast";
+import type { GetDigestSettingsResponse } from "@/app/api/user/digest-settings/route";
 import { LoadingContent } from "@/components/LoadingContent";
-import { useRules } from "@/hooks/useRules";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ActionType } from "@/generated/prisma/enums";
+import { useRules } from "@/hooks/useRules";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import { updateDigestItemsAction } from "@/utils/actions/settings";
 import {
-  updateDigestItemsBody,
   type UpdateDigestItemsBody,
+  updateDigestItemsBody,
 } from "@/utils/actions/settings.validation";
-import { ActionType } from "@/generated/prisma/enums";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import type { GetDigestSettingsResponse } from "@/app/api/user/digest-settings/route";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export function DigestItemsForm({
   showSaveButton,
@@ -42,7 +42,7 @@ export function DigestItemsForm({
 
   // Use local state for MultiSelectFilter
   const [selectedDigestItems, setSelectedDigestItems] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
 
   const {
@@ -120,8 +120,8 @@ export function DigestItemsForm({
 
   return (
     <LoadingContent
-      loading={isLoading}
       error={error}
+      loading={isLoading}
       loadingComponent={<Skeleton className="min-h-[500px] w-full" />}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -129,16 +129,16 @@ export function DigestItemsForm({
 
         <div className="mt-4">
           <MultiSelectFilter
-            title="Digest Items"
+            maxDisplayedValues={3}
             options={digestOptions}
             selectedValues={selectedDigestItems}
             setSelectedValues={setSelectedDigestItems}
-            maxDisplayedValues={3}
+            title="Digest Items"
           />
         </div>
 
         {showSaveButton && (
-          <Button type="submit" loading={isSubmitting} className="mt-4">
+          <Button className="mt-4" loading={isSubmitting} type="submit">
             Save
           </Button>
         )}

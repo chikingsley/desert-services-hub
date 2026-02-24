@@ -1,9 +1,28 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FolderIcon, Loader2Icon, PlusIcon } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
+import type {
+  FolderItem,
+  SavedFolder,
+} from "@/app/api/user/drive/folders/route";
+import { Input } from "@/components/Input";
+import {
+  TreeExpander,
+  TreeIcon,
+  TreeLabel,
+  TreeNode,
+  TreeNodeContent,
+  TreeNodeTrigger,
+  TreeProvider,
+  TreeView,
+  useTree,
+} from "@/components/kibo-ui/tree";
+import { LoadingContent } from "@/components/LoadingContent";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import {
   Card,
   CardBasic,
@@ -13,43 +32,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toastError, toastSuccess } from "@/components/Toast";
-import {
-  TreeProvider,
-  TreeView,
-  TreeNode,
-  TreeNodeTrigger,
-  TreeNodeContent,
-  TreeExpander,
-  TreeIcon,
-  TreeLabel,
-  useTree,
-} from "@/components/kibo-ui/tree";
-import {
-  addFilingFolderAction,
-  removeFilingFolderAction,
-  createDriveFolderAction,
-} from "@/utils/actions/drive";
-import {
-  createDriveFolderBody,
-  type CreateDriveFolderBody,
-} from "@/utils/actions/drive.validation";
-import { useDriveFolders } from "@/hooks/useDriveFolders";
-import { LoadingContent } from "@/components/LoadingContent";
-import { useDriveSubfolders } from "@/hooks/useDriveSubfolders";
-import type {
-  FolderItem,
-  SavedFolder,
-} from "@/app/api/user/drive/folders/route";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { Button, type ButtonProps } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -58,9 +40,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/Input";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { useDialogState } from "@/hooks/useDialogState";
 import { useDriveConnections } from "@/hooks/useDriveConnections";
+import { useDriveFolders } from "@/hooks/useDriveFolders";
+import { useDriveSubfolders } from "@/hooks/useDriveSubfolders";
+import {
+  addFilingFolderAction,
+  createDriveFolderAction,
+  removeFilingFolderAction,
+} from "@/utils/actions/drive";
+import {
+  type CreateDriveFolderBody,
+  createDriveFolderBody,
+} from "@/utils/actions/drive.validation";
 
 export function AllowedFolders({ emailAccountId }: { emailAccountId: string }) {
   const { data, isLoading, error, mutate } = useDriveFolders();
@@ -68,14 +68,14 @@ export function AllowedFolders({ emailAccountId }: { emailAccountId: string }) {
   const driveConnectionId = connectionsData?.connections[0]?.id;
 
   return (
-    <LoadingContent loading={isLoading} error={error}>
+    <LoadingContent error={error} loading={isLoading}>
       {data && (
         <AllowedFoldersContent
-          emailAccountId={emailAccountId}
           availableFolders={data.availableFolders}
-          savedFolders={data.savedFolders}
-          mutateFolders={mutate}
           driveConnectionId={driveConnectionId ?? null}
+          emailAccountId={emailAccountId}
+          mutateFolders={mutate}
+          savedFolders={data.savedFolders}
         />
       )}
     </LoadingContent>
@@ -137,7 +137,7 @@ function AllowedFoldersContent({
         setIsFolderBusy(false);
       }
     },
-    [emailAccountId, mutateFolders],
+    [emailAccountId, mutateFolders]
   );
 
   const rootFolders = useMemo(() => {
@@ -149,7 +149,7 @@ function AllowedFoldersContent({
     }
 
     for (const folder of availableFolders) {
-      if (!folder.parentId || !folderMap.has(folder.parentId)) {
+      if (!(folder.parentId && folderMap.has(folder.parentId))) {
         roots.push(folder);
       }
     }
@@ -161,7 +161,9 @@ function AllowedFoldersContent({
     const map = new Map<string, FolderItem[]>();
     for (const folder of availableFolders) {
       if (folder.parentId) {
-        if (!map.has(folder.parentId)) map.set(folder.parentId, []);
+        if (!map.has(folder.parentId)) {
+          map.set(folder.parentId, []);
+        }
         map.get(folder.parentId)!.push(folder);
       }
     }
@@ -170,7 +172,7 @@ function AllowedFoldersContent({
 
   const savedFolderIds = useMemo(
     () => new Set(savedFolders.map((f) => f.folderId)),
-    [savedFolders],
+    [savedFolders]
   );
   const hasFolders = rootFolders.length > 0;
 
@@ -184,45 +186,45 @@ function AllowedFoldersContent({
         {hasFolders ? (
           <>
             <TreeProvider
-              showLines
-              showIcons
-              selectable={false}
               animateExpand
               indent={16}
+              selectable={false}
+              showIcons
+              showLines
             >
               <TreeView className="p-0">
                 {rootFolders.map((folder, index) => (
                   <FolderNode
-                    key={folder.id}
                     folder={folder}
-                    isLast={index === rootFolders.length - 1}
-                    selectedFolderIds={savedFolderIds}
-                    onToggle={handleFolderToggle}
                     isDisabled={isFolderBusy}
-                    level={0}
-                    parentPath=""
+                    isLast={index === rootFolders.length - 1}
+                    key={folder.id}
                     knownChildren={folderChildrenMap.get(folder.id)}
+                    level={0}
+                    onToggle={handleFolderToggle}
+                    parentPath=""
+                    selectedFolderIds={savedFolderIds}
                   />
                 ))}
               </TreeView>
             </TreeProvider>
             <div className="mt-2">
               <CreateFolderDialog
-                emailAccountId={emailAccountId}
                 driveConnectionId={driveConnectionId}
+                emailAccountId={emailAccountId}
                 onFolderCreated={mutateFolders}
-                triggerLabel="Add folder"
-                triggerVariant="ghost"
-                triggerSize="xs-2"
-                triggerIcon={PlusIcon}
                 triggerClassName="text-muted-foreground hover:text-foreground"
+                triggerIcon={PlusIcon}
+                triggerLabel="Add folder"
+                triggerSize="xs-2"
+                triggerVariant="ghost"
               />
             </div>
           </>
         ) : (
           <NoFoldersFound
-            emailAccountId={emailAccountId}
             driveConnectionId={driveConnectionId}
+            emailAccountId={emailAccountId}
             onFolderCreated={mutateFolders}
           />
         )}
@@ -262,14 +264,14 @@ export function FolderNode({
             folderId: folder.id,
             driveConnectionId: folder.driveConnectionId,
           }
-        : null,
+        : null
     );
 
   const subfolders = subfoldersData?.folders ?? knownChildren ?? [];
   const hasLoadedChildren = subfolders.length > 0;
 
   return (
-    <TreeNode nodeId={folder.id} level={level} isLast={isLast}>
+    <TreeNode isLast={isLast} level={level} nodeId={folder.id}>
       <TreeNodeTrigger className="py-1">
         {isLoadingSubfolders ? (
           <div className="mr-1 flex h-4 w-4 items-center justify-center">
@@ -281,12 +283,12 @@ export function FolderNode({
         <TreeIcon hasChildren />
         <div className="flex flex-1 items-center gap-2">
           <Checkbox
-            id={`folder-${folder.id}`}
             checked={isSelected}
+            disabled={isDisabled}
+            id={`folder-${folder.id}`}
             onCheckedChange={(checked) =>
               onToggle({ ...folder, path: currentPath }, checked === true)
             }
-            disabled={isDisabled}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
@@ -301,22 +303,22 @@ export function FolderNode({
         {hasLoadedChildren ? (
           subfolders.map((subfolder, index) => (
             <FolderNode
-              key={subfolder.id}
               folder={{
                 ...subfolder,
                 path: `${currentPath}/${subfolder.name}`,
               }}
-              isLast={index === subfolders.length - 1}
-              selectedFolderIds={selectedFolderIds}
-              onToggle={onToggle}
               isDisabled={isDisabled}
+              isLast={index === subfolders.length - 1}
+              key={subfolder.id}
               level={level + 1}
+              onToggle={onToggle}
               parentPath={currentPath}
+              selectedFolderIds={selectedFolderIds}
             />
           ))
         ) : isExpanded && !isLoadingSubfolders ? (
           <div
-            className="py-1 text-xs text-muted-foreground italic"
+            className="py-1 text-muted-foreground text-xs italic"
             style={{ paddingLeft: (level + 1) * 16 + 28 }}
           >
             No subfolders
@@ -375,7 +377,7 @@ export function NoFoldersFound({
         onFolderCreated?.();
       }
     },
-    [emailAccountId, reset, onClose, onFolderCreated, driveConnectionId],
+    [emailAccountId, reset, onClose, onFolderCreated, driveConnectionId]
   );
 
   return (
@@ -392,8 +394,8 @@ export function NoFoldersFound({
         </EmptyHeader>
         <EmptyContent>
           <CreateFolderDialog
-            emailAccountId={emailAccountId}
             driveConnectionId={driveConnectionId}
+            emailAccountId={emailAccountId}
             onFolderCreated={onFolderCreated}
             triggerLabel="Create folder"
           />
@@ -461,18 +463,18 @@ export function CreateFolderDialog({
         onFolderCreated?.();
       }
     },
-    [emailAccountId, reset, onClose, onFolderCreated, driveConnectionId],
+    [emailAccountId, reset, onClose, onFolderCreated, driveConnectionId]
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={onToggle}>
+    <Dialog onOpenChange={onToggle} open={isOpen}>
       <DialogTrigger asChild>
         <Button
-          disabled={!driveConnectionId}
-          variant={triggerVariant}
-          size={triggerSize}
-          Icon={triggerIcon}
           className={triggerClassName}
+          disabled={!driveConnectionId}
+          Icon={triggerIcon}
+          size={triggerSize}
+          variant={triggerVariant}
         >
           {triggerLabel}
         </Button>
@@ -484,16 +486,16 @@ export function CreateFolderDialog({
             Create a new folder in your drive to organize your files.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <Input
-            type="text"
-            name="folderName"
+            error={errors.folderName}
             label="Folder name"
+            name="folderName"
             placeholder="e.g. Receipts"
             registerProps={register("folderName")}
-            error={errors.folderName}
+            type="text"
           />
-          <Button type="submit" loading={isSubmitting}>
+          <Button loading={isSubmitting} type="submit">
             Create folder
           </Button>
         </form>

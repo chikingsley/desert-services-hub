@@ -1,17 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/Button";
-import { Input } from "@/components/Input";
-import { toastError, toastSuccess } from "@/components/Toast";
-import { useRouter } from "next/navigation";
 import type {
   GetSsoSignInParams,
   GetSsoSignInResponse,
 } from "@/app/api/sso/signin/route";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
+import { toastError, toastSuccess } from "@/components/Toast";
 
 const ssoLoginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -19,7 +19,7 @@ const ssoLoginSchema = z.object({
     .string()
     .regex(
       /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/,
-      "Please enter a valid organization slug",
+      "Please enter a valid organization slug"
     )
     .max(63, "Organization slug must be 63 characters or fewer"),
 });
@@ -50,7 +50,7 @@ export default function SSOLoginPage() {
         const paramsString = new URLSearchParams(params).toString();
         const url = new URL(
           `/api/sso/signin?${paramsString}`,
-          window.location.origin,
+          window.location.origin
         );
 
         const response = await fetch(url.toString());
@@ -79,7 +79,7 @@ export default function SSOLoginPage() {
         setIsSubmitting(false);
       }
     },
-    [router],
+    [router]
   );
 
   return (
@@ -96,23 +96,23 @@ export default function SSOLoginPage() {
           <div className="space-y-4">
             <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
               <Input
-                type="email"
-                name="email"
-                label="Email"
-                registerProps={register("email")}
                 error={errors.email}
+                label="Email"
+                name="email"
+                registerProps={register("email")}
+                type="email"
               />
 
               <Input
-                type="text"
-                name="organizationSlug"
+                error={errors.organizationSlug}
                 label="Organization Slug"
+                name="organizationSlug"
                 placeholder="your-org-slug"
                 registerProps={register("organizationSlug")}
-                error={errors.organizationSlug}
+                type="text"
               />
 
-              <Button type="submit" size="lg" full loading={isSubmitting}>
+              <Button full loading={isSubmitting} size="lg" type="submit">
                 Continue with SSO
               </Button>
             </form>

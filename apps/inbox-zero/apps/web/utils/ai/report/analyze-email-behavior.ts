@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createGenerateObject } from "@/utils/llms";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { EmailSummary } from "@/utils/ai/report/summarize-emails";
-import { createScopedLogger } from "@/utils/logger";
+import { createGenerateObject } from "@/utils/llms";
 import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("email-report-email-behavior");
 
@@ -29,7 +29,7 @@ const emailBehaviorSchema = z.object({
 export async function aiAnalyzeEmailBehavior(
   emailSummaries: EmailSummary[],
   emailAccount: EmailAccountWithAI,
-  sentEmailSummaries?: EmailSummary[],
+  sentEmailSummaries?: EmailSummary[]
 ) {
   const system = `You are an expert AI system that analyzes a user's email behavior to infer timing patterns, content preferences, and automation opportunities.
 

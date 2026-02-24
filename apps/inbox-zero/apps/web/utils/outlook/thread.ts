@@ -1,20 +1,20 @@
-import type { OutlookClient } from "@/utils/outlook/client";
 import type { Message } from "@microsoft/microsoft-graph-types";
-import type { ParsedMessage } from "@/utils/types";
-import { escapeODataString } from "@/utils/outlook/odata-escape";
 import type { Logger } from "@/utils/logger";
+import type { OutlookClient } from "@/utils/outlook/client";
 import {
   convertMessage,
   createMessagesRequest,
   getCategoryMap,
   getFolderIds,
 } from "@/utils/outlook/message";
+import { escapeODataString } from "@/utils/outlook/odata-escape";
 import { withOutlookRetry } from "@/utils/outlook/retry";
+import type { ParsedMessage } from "@/utils/types";
 
 export async function getThread(
   threadId: string,
   client: OutlookClient,
-  logger: Logger,
+  logger: Logger
 ): Promise<Message[]> {
   const escapedThreadId = escapeODataString(threadId);
   const filter = `conversationId eq '${escapedThreadId}'`;
@@ -26,7 +26,7 @@ export async function getThread(
           .filter(filter)
           .top(100) // Get up to 100 messages instead of default 10
           .get(),
-      logger,
+      logger
     );
 
     // Sort in memory to avoid "restriction or sort order is too complex" error
@@ -53,7 +53,7 @@ export async function getThreads(
   query: string,
   client: OutlookClient,
   logger: Logger,
-  maxResults = 100,
+  maxResults = 100
 ): Promise<{
   nextPageToken?: string | null;
   threads: { id: string; snippet: string }[];
@@ -62,7 +62,7 @@ export async function getThreads(
 
   if (query) {
     request = request.filter(
-      `contains(subject, '${escapeODataString(query)}')`,
+      `contains(subject, '${escapeODataString(query)}')`
     );
   }
 
@@ -73,7 +73,7 @@ export async function getThreads(
           .top(maxResults)
           .select("id,conversationId,subject,bodyPreview")
           .get(),
-      logger,
+      logger
     );
 
   // Group messages by conversationId to create thread-like structure
@@ -114,7 +114,7 @@ export async function getThreadsWithNextPageToken({
 
   if (query) {
     request = request.filter(
-      `contains(subject, '${escapeODataString(query)}')`,
+      `contains(subject, '${escapeODataString(query)}')`
     );
   }
 
@@ -142,7 +142,7 @@ export async function getThreadsFromSender(
   client: OutlookClient,
   sender: string,
   limit: number,
-  logger: Logger,
+  logger: Logger
 ): Promise<Array<{ id: string; snippet: string }>> {
   const response: { value: Message[] } = await withOutlookRetry(
     () =>
@@ -153,7 +153,7 @@ export async function getThreadsFromSender(
         .top(limit)
         .select("id,conversationId,bodyPreview")
         .get(),
-    logger,
+    logger
   );
 
   // Group messages by conversationId
@@ -174,7 +174,7 @@ export async function getThreadsFromSenderWithSubject(
   client: OutlookClient,
   sender: string,
   limit: number,
-  logger: Logger,
+  logger: Logger
 ): Promise<Array<{ id: string; snippet: string; subject: string }>> {
   const response: { value: Message[] } = await withOutlookRetry(
     () =>
@@ -185,7 +185,7 @@ export async function getThreadsFromSenderWithSubject(
         .top(limit)
         .select("id,conversationId,subject,bodyPreview")
         .get(),
-    logger,
+    logger
   );
 
   // Group messages by conversationId
@@ -209,7 +209,7 @@ export async function getThreadsFromSenderWithSubject(
 export async function getThreadMessages(
   threadId: string,
   client: OutlookClient,
-  logger: Logger,
+  logger: Logger
 ): Promise<ParsedMessage[]> {
   const [messages, folderIds, categoryMap] = await Promise.all([
     getThread(threadId, client, logger),

@@ -1,22 +1,22 @@
 "use client";
 
+import { ArchiveIcon, TagsIcon, ZapIcon } from "lucide-react";
 import { useOnboarding } from "@/components/OnboardingModal";
+import { Button } from "@/components/ui/button";
+import { CardBasic } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
-import { CardBasic } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { TagsIcon, ArchiveIcon, ZapIcon } from "lucide-react";
 
 export function SmartCategoriesOnboarding() {
   const { isOpen, setIsOpen, onClose } = useOnboarding("SmartCategories");
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Welcome to Sender Categories</DialogTitle>

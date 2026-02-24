@@ -1,8 +1,8 @@
 "use client";
 
 import { SquareSlashIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Tooltip } from "@/components/Tooltip";
+import { Button } from "@/components/ui/button";
 
 export function ShortcutTooltip() {
   return (

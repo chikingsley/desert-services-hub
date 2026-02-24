@@ -2,13 +2,13 @@ import { Card } from "@/components/new-landing/common/Card";
 import { cn } from "@/utils";
 
 interface DisplayCardProps {
-  title: string;
+  cardHeaderClassName?: string;
+  centerContent?: boolean;
+  children: React.ReactNode;
+  className?: string;
   description: string;
   icon: React.ReactNode;
-  children: React.ReactNode;
-  centerContent?: boolean;
-  className?: string;
-  cardHeaderClassName?: string;
+  title: string;
 }
 
 export function DisplayCard({
@@ -22,17 +22,17 @@ export function DisplayCard({
 }: DisplayCardProps) {
   return (
     <Card
-      title={title}
+      cardHeaderClassName={cardHeaderClassName}
+      className={cn("h-full overflow-hidden", className)}
       description={description}
       icon={icon}
-      className={cn("overflow-hidden h-full", className)}
+      title={title}
       variant="extra-rounding"
-      cardHeaderClassName={cardHeaderClassName}
     >
       <div
         className={cn(
-          "border-t border-[#F6F6F6] bg-[#FCFCFC] flex h-full min-h-40",
-          centerContent ? "items-center justify-center" : "items-end",
+          "flex h-full min-h-40 border-[#F6F6F6] border-t bg-[#FCFCFC]",
+          centerContent ? "items-center justify-center" : "items-end"
         )}
       >
         {children}

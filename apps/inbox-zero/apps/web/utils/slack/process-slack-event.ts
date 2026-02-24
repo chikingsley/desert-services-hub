@@ -1,18 +1,18 @@
-import { convertToModelMessages, type UIMessage } from "ai";
-import prisma from "@/utils/prisma";
-import { MessagingProvider } from "@/generated/prisma/enums";
 import {
+  addReaction,
   createSlackClient,
   markdownToSlackMrkdwn,
-  addReaction,
   removeReaction,
 } from "@inboxzero/slack";
-import { getEmailAccountWithAi } from "@/utils/user/get";
+import { convertToModelMessages, type UIMessage } from "ai";
+import type { Prisma } from "@/generated/prisma/client";
+import { MessagingProvider } from "@/generated/prisma/enums";
 import { aiProcessAssistantChat } from "@/utils/ai/assistant/chat";
 import { getInboxStatsForChatContext } from "@/utils/ai/assistant/get-inbox-stats-for-chat-context";
 import { formatUtcDate } from "@/utils/date";
 import type { Logger } from "@/utils/logger";
-import type { Prisma } from "@/generated/prisma/client";
+import prisma from "@/utils/prisma";
+import { getEmailAccountWithAi } from "@/utils/user/get";
 
 type SlackEventPayload = {
   team_id: string;
@@ -34,22 +34,30 @@ const MAX_CHAT_MEMORIES = 20;
 
 export async function processSlackEvent(
   body: SlackEventPayload,
-  logger: Logger,
+  logger: Logger
 ): Promise<void> {
   const { team_id: teamId, event } = body;
   const { type, user, bot_id, text, channel, ts, thread_ts, channel_type } =
     event;
 
-  if (!type || !channel || !ts) return;
+  if (!(type && channel && ts)) {
+    return;
+  }
 
   // Ignore bot messages
-  if (bot_id || !user) return;
+  if (bot_id || !user) {
+    return;
+  }
 
   // Only handle DMs and channel @mentions
-  if (type !== "message" && type !== "app_mention") return;
+  if (type !== "message" && type !== "app_mention") {
+    return;
+  }
 
   // For messages, only process DMs (not channel messages without @mention)
-  if (type === "message" && channel_type !== "im") return;
+  if (type === "message" && channel_type !== "im") {
+    return;
+  }
 
   // Auth check: only match channels authorized for this Slack user
   const candidates = await prisma.messagingChannel.findMany({
@@ -83,7 +91,9 @@ export async function processSlackEvent(
     teamId,
   });
 
-  if (!messagingChannel) return;
+  if (!messagingChannel) {
+    return;
+  }
 
   if (!messagingChannel.accessToken) {
     logger.info("No access token for messaging channel", { teamId });
@@ -100,7 +110,9 @@ export async function processSlackEvent(
       .trim();
   }
 
-  if (!messageText) return;
+  if (!messageText) {
+    return;
+  }
 
   const emailAccountUser = await getEmailAccountWithAi({ emailAccountId });
   if (!emailAccountUser) {
@@ -305,7 +317,9 @@ async function resolveMessagingChannel({
   // For @mentions in channels, always enforce channel assignment
   if (type === "app_mention") {
     const channelMatch = candidates.find((c) => c.channelId === channel);
-    if (channelMatch) return channelMatch;
+    if (channelMatch) {
+      return channelMatch;
+    }
 
     // Tell the user this channel isn't linked
     const firstToken = candidates[0].accessToken;
@@ -329,7 +343,9 @@ async function resolveMessagingChannel({
   }
 
   // For DMs: single account can be used directly
-  if (candidates.length === 1) return candidates[0];
+  if (candidates.length === 1) {
+    return candidates[0];
+  }
 
   // For DMs with multiple accounts, check for existing chat thread
   const chatId = thread_ts
@@ -343,9 +359,11 @@ async function resolveMessagingChannel({
 
   if (existingChat) {
     const match = candidates.find(
-      (c) => c.emailAccountId === existingChat.emailAccountId,
+      (c) => c.emailAccountId === existingChat.emailAccountId
     );
-    if (match) return match;
+    if (match) {
+      return match;
+    }
   }
 
   // Multiple accounts in DMs — use first match.

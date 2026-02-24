@@ -30,16 +30,16 @@ interface CatalogCategoryCardProps {
   category: CategoryData;
   index: number;
   isExpanded: boolean;
-  onToggle: () => void;
-  onItemUpdate: (itemId: string, updates: Partial<CatalogItemData>) => void;
-  onEditCategory: () => void;
-  onDeleteCategory: () => void;
-  onAddSubcategory: () => void;
   onAddItem: (subcategoryId?: string, parentName?: string) => void;
-  onEditItem: (item: CatalogItemData, subcategoryId?: string) => void;
+  onAddSubcategory: () => void;
+  onDeleteCategory: () => void;
   onDeleteItem: (itemId: string) => void;
-  onEditSubcategory: (subcategory: SubcategoryData) => void;
   onDeleteSubcategory: (subcategoryId: string) => void;
+  onEditCategory: () => void;
+  onEditItem: (item: CatalogItemData, subcategoryId?: string) => void;
+  onEditSubcategory: (subcategory: SubcategoryData) => void;
+  onItemUpdate: (itemId: string, updates: Partial<CatalogItemData>) => void;
+  onToggle: () => void;
   onToggleSubcategoryHidden: (
     subcategoryId: string,
     currentHidden: boolean
@@ -250,17 +250,17 @@ export function CatalogCategoryCard({
 }
 
 interface SubcategorySectionProps {
-  subcategory: SubcategoryData;
   isExpanded: boolean;
-  onToggle: () => void;
-  onItemUpdate: (itemId: string, updates: Partial<CatalogItemData>) => void;
   onAddItem: () => void;
-  onEditItem: (item: CatalogItemData) => void;
   onDeleteItem: (itemId: string) => void;
-  onEditSubcategory: () => void;
   onDeleteSubcategory: () => void;
+  onEditItem: (item: CatalogItemData) => void;
+  onEditSubcategory: () => void;
+  onItemUpdate: (itemId: string, updates: Partial<CatalogItemData>) => void;
+  onToggle: () => void;
   onToggleHidden: () => void;
   readOnly?: boolean;
+  subcategory: SubcategoryData;
 }
 
 function SubcategorySection({

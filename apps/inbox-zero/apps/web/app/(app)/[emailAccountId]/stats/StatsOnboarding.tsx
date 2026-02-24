@@ -1,7 +1,9 @@
 "use client";
 
-import { ArchiveIcon, Layers3Icon, BarChartBigIcon } from "lucide-react";
+import { ArchiveIcon, BarChartBigIcon, Layers3Icon } from "lucide-react";
+import { useOnboarding } from "@/components/OnboardingModal";
 import { Button } from "@/components/ui/button";
+import { CardBasic } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -9,14 +11,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useOnboarding } from "@/components/OnboardingModal";
-import { CardBasic } from "@/components/ui/card";
 
 export function StatsOnboarding() {
   const { isOpen, setIsOpen, onClose } = useOnboarding("Stats");
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Welcome to email analytics</DialogTitle>

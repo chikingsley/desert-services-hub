@@ -27,7 +27,7 @@ function formatPromptArray(promptArray: string[]): string {
 
 function processPromptsWithTerminology(
   prompts: string[],
-  provider: string,
+  provider: string
 ): string[] {
   const terminology = getEmailTerminology(provider);
   return prompts.map((prompt) => {
@@ -36,7 +36,7 @@ function processPromptsWithTerminology(
     // Replace lowercase "label" in the middle of sentences
     processed = processed.replace(
       /\blabel\b/g,
-      terminology.label.action.toLowerCase(),
+      terminology.label.action.toLowerCase()
     );
     return processed;
   });
@@ -69,11 +69,11 @@ const examplePromptsBase = [
 
 export function getExamplePrompts(
   provider: string,
-  examples?: string[],
+  examples?: string[]
 ): string[] {
   return processPromptsWithTerminology(
     examples || examplePromptsBase,
-    provider,
+    provider
   );
 }
 
@@ -111,7 +111,7 @@ export function getPersonas(provider: string) {
           "Label brand partnership emails as @[Brand Deal] and forward to manager@example.com",
           "Label media inquiries to us as @[Press] and draft a polite reply",
         ],
-        provider,
+        provider
       ),
       get prompt() {
         return formatPromptArray(this.promptArray);
@@ -132,7 +132,7 @@ export function getPersonas(provider: string) {
           "Label emails from home inspectors as @[Inspector] and forward to scheduling@realty.com",
           "If someone refers a client to me, label as @[Referral] and draft a thank you reply with my calendar link to schedule a consultation",
         ],
-        provider,
+        provider
       ),
       get prompt() {
         return formatPromptArray(this.promptArray);
@@ -158,7 +158,7 @@ export function getPersonas(provider: string) {
           "Label emails about fund administration as @[Fund Admin]",
           "Label emails about speaking at investment conferences as @[Speaking Opportunity]",
         ],
-        provider,
+        provider
       ),
       get prompt() {
         return formatPromptArray(this.promptArray);
@@ -186,7 +186,7 @@ export function getPersonas(provider: string) {
           "Label emails about job interviews as @[Job Search]",
           "Label emails from recruiters as @[Recruiter] and archive them",
         ],
-        provider,
+        provider
       ),
       get prompt() {
         return formatPromptArray(this.promptArray);
@@ -207,7 +207,7 @@ export function getPersonas(provider: string) {
           "Label emails about job interviews as @[Job Search]",
           "Label emails from recruiters as @[Recruiter] and archive them",
         ],
-        provider,
+        provider
       ),
       get prompt() {
         return formatPromptArray(this.promptArray);
@@ -231,7 +231,7 @@ export function getPersonas(provider: string) {
           "If someone asks about enterprise pricing, draft a reply asking about their company size and requirements",
           "If a customer mentions churn risk, label as @[Churn Risk] and draft an urgent notification to the customer success team",
         ],
-        provider,
+        provider
       ),
       get prompt() {
         return formatPromptArray(this.promptArray);
@@ -251,7 +251,7 @@ export function getPersonas(provider: string) {
           "If someone asks about partnership opportunities, label as @[Partnership] and draft a reply asking for their media kit",
           "If someone reports broken marketing links, label as @[Bug] and forward to tech@company.com",
         ],
-        provider,
+        provider
       ),
       get prompt() {
         return formatPromptArray(this.promptArray);
@@ -275,7 +275,7 @@ export function getPersonas(provider: string) {
           "Label emails about API integration issues as @[API Support]",
           "If someone reports data privacy concerns, label as @[Privacy], and draft a reply with our privacy policy link: https://company.com/privacy-policy",
         ],
-        provider,
+        provider
       ),
       get prompt() {
         return formatPromptArray(this.promptArray);
@@ -306,7 +306,7 @@ export function getPersonas(provider: string) {
           "Label emails about recruitment events or job fairs as @[Recruiting Event]",
           "If someone withdraws their application, label as @[Withdrawn]",
         ],
-        provider,
+        provider
       ),
       get prompt() {
         return formatPromptArray(this.promptArray);
@@ -325,7 +325,7 @@ export function getPersonas(provider: string) {
           "If someone asks for class notes, draft a reply with our shared Google Drive folder link: https://drive.google.com/drive/u/0/folders/1234567890",
           "Label emails about tutoring opportunities as @[Tutoring] and draft a reply with that my rate is $70/hour or $40/hour for group tutoring",
         ],
-        provider,
+        provider
       ),
       get prompt() {
         return formatPromptArray(this.promptArray);
@@ -337,7 +337,7 @@ export function getPersonas(provider: string) {
         [
           "If someone replies to me that they're interested, label it @[Interested] and draft a reply with my calendar link: https://cal.com/example",
         ],
-        provider,
+        provider
       ),
       get prompt() {
         return formatPromptArray(this.promptArray);

@@ -1,9 +1,9 @@
-import prisma from "@/utils/prisma";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 export async function cleanupOrphanedAccount(
   orphanedAccountId: string,
-  log: Logger,
+  log: Logger
 ) {
   const logger = log.with({ accountId: orphanedAccountId });
 

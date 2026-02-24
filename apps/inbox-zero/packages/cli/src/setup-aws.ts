@@ -22,15 +22,15 @@ interface AwsPrerequisites {
 }
 
 interface GcloudPrerequisites {
-  installed: boolean;
   authenticated: boolean;
+  installed: boolean;
   projectId: string | null;
 }
 
 export interface AwsSetupOptions {
+  environment?: string;
   profile?: string;
   region?: string;
-  environment?: string;
   yes?: boolean; // Non-interactive mode with defaults
 }
 
@@ -119,7 +119,7 @@ export async function runAwsSetup(options: AwsSetupOptions) {
     p.log.error(
       "The AWS CLI is not installed.\n" +
         "Please install it from: https://aws.amazon.com/cli/\n" +
-        "After installation, run: aws configure",
+        "After installation, run: aws configure"
     );
     process.exit(1);
   }
@@ -128,7 +128,7 @@ export async function runAwsSetup(options: AwsSetupOptions) {
     spinner.stop("AWS Copilot CLI not found");
     p.log.error(
       "The AWS Copilot CLI is not installed.\n" +
-        "Please install it from: https://aws.github.io/copilot-cli/docs/getting-started/install/",
+        "Please install it from: https://aws.github.io/copilot-cli/docs/getting-started/install/"
     );
     process.exit(1);
   }
@@ -146,20 +146,22 @@ export async function runAwsSetup(options: AwsSetupOptions) {
     p.log.success("gcloud CLI configured");
   } else {
     p.log.warn(
-      "gcloud CLI not configured - you'll need to run 'inbox-zero setup-google' separately",
+      "gcloud CLI not configured - you'll need to run 'inbox-zero setup-google' separately"
     );
   }
 
   // Step 2: Get AWS profile
   let profile = options.profile;
 
-  if (!profile) {
+  if (profile) {
+    p.log.info(`Using AWS profile: ${profile}`);
+  } else {
     const availableProfiles = getAwsProfiles();
 
     if (availableProfiles.length === 0) {
       p.log.error(
         "No AWS profiles found. Please configure AWS credentials first:\n" +
-          "  aws configure --profile inbox-zero",
+          "  aws configure --profile inbox-zero"
       );
       process.exit(1);
     }
@@ -187,8 +189,6 @@ export async function runAwsSetup(options: AwsSetupOptions) {
 
       profile = profileChoice as string;
     }
-  } else {
-    p.log.info(`Using AWS profile: ${profile}`);
   }
 
   // Validate the profile works
@@ -202,7 +202,7 @@ export async function runAwsSetup(options: AwsSetupOptions) {
         "1. You're using an IAM user (not root account)\n" +
         "2. The credentials are correctly configured\n" +
         "3. Run: aws configure --profile " +
-        profile,
+        profile
     );
     process.exit(1);
   }
@@ -212,26 +212,24 @@ export async function runAwsSetup(options: AwsSetupOptions) {
   let region =
     options.region || awsPrereqs.region || getRegionForProfile(profile);
 
-  if (!region) {
-    if (nonInteractive) {
-      region = "us-east-1";
-      p.log.info(`Using region: ${region}`);
-    } else {
-      const regionInput = await p.text({
-        message: "AWS Region:",
-        placeholder: "us-east-1",
-        initialValue: "us-east-1",
-      });
-
-      if (p.isCancel(regionInput)) {
-        p.cancel("Setup cancelled.");
-        process.exit(0);
-      }
-
-      region = regionInput || "us-east-1";
-    }
-  } else {
+  if (region) {
     p.log.info(`Using region: ${region}`);
+  } else if (nonInteractive) {
+    region = "us-east-1";
+    p.log.info(`Using region: ${region}`);
+  } else {
+    const regionInput = await p.text({
+      message: "AWS Region:",
+      placeholder: "us-east-1",
+      initialValue: "us-east-1",
+    });
+
+    if (p.isCancel(regionInput)) {
+      p.cancel("Setup cancelled.");
+      process.exit(0);
+    }
+
+    region = regionInput || "us-east-1";
   }
 
   // Step 4: Get environment name
@@ -247,7 +245,9 @@ export async function runAwsSetup(options: AwsSetupOptions) {
         placeholder: "production",
         initialValue: "production",
         validate: (v) => {
-          if (!v) return "Environment name is required";
+          if (!v) {
+            return "Environment name is required";
+          }
           if (!/^[a-z][a-z0-9-]*$/.test(v)) {
             return "Must start with a letter and contain only lowercase letters, numbers, and hyphens";
           }
@@ -363,11 +363,11 @@ export async function runAwsSetup(options: AwsSetupOptions) {
   if (nonInteractive) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    if (!clientId || !clientSecret) {
+    if (!(clientId && clientSecret)) {
       p.log.error(
         "Missing GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET.\n" +
           "In non-interactive mode, set these env vars before running:\n" +
-          "GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... inbox-zero setup-aws --yes",
+          "GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... inbox-zero setup-aws --yes"
       );
       process.exit(1);
     }
@@ -376,7 +376,7 @@ export async function runAwsSetup(options: AwsSetupOptions) {
     p.note(
       "Google OAuth credentials are required for the app to start.\n" +
         "Create them at: https://console.cloud.google.com/apis/credentials",
-      "Google OAuth Required",
+      "Google OAuth Required"
     );
 
     const oauthInput = await p.group(
@@ -399,7 +399,7 @@ export async function runAwsSetup(options: AwsSetupOptions) {
           p.cancel("Setup cancelled.");
           process.exit(0);
         },
-      },
+      }
     );
 
     googleOAuth = {
@@ -420,7 +420,9 @@ export async function runAwsSetup(options: AwsSetupOptions) {
 
       // Get Google project ID
       let projectId = gcloudPrereqs.projectId;
-      if (!projectId) {
+      if (projectId) {
+        p.log.info(`Using Google Cloud project: ${projectId}`);
+      } else {
         const projectInput = await p.text({
           message: "Google Cloud project ID:",
           placeholder: "my-project-123",
@@ -433,8 +435,6 @@ export async function runAwsSetup(options: AwsSetupOptions) {
         }
 
         projectId = projectInput;
-      } else {
-        p.log.info(`Using Google Cloud project: ${projectId}`);
       }
 
       googleConfig = { projectId };
@@ -486,7 +486,7 @@ export async function runAwsSetup(options: AwsSetupOptions) {
     // Get LLM API key
     if (llmProvider === "bedrock") {
       p.log.info(
-        "Bedrock uses AWS credentials. Make sure your IAM user has Bedrock access.",
+        "Bedrock uses AWS credentials. Make sure your IAM user has Bedrock access."
       );
       llmEnvVar = "BEDROCK_REGION";
       llmApiKey = region;
@@ -554,10 +554,12 @@ export async function runAwsSetup(options: AwsSetupOptions) {
 • Webhook Gateway: ${useWebhookGateway ? "Yes" : "No"}
 • Google Integration: ${configureGoogle ? "Yes" : "No"}
 • LLM Provider: ${llmProvider}`,
-    "Ready to Deploy",
+    "Ready to Deploy"
   );
 
-  if (!nonInteractive) {
+  if (nonInteractive) {
+    p.log.info("Proceeding with deployment (non-interactive mode)...");
+  } else {
     const confirmDeploy = await p.confirm({
       message: "Proceed with deployment? This will create AWS resources.",
       initialValue: true,
@@ -567,8 +569,6 @@ export async function runAwsSetup(options: AwsSetupOptions) {
       p.cancel("Deployment cancelled.");
       process.exit(0);
     }
-  } else {
-    p.log.info("Proceeding with deployment (non-interactive mode)...");
   }
 
   // Set environment variables for all subsequent commands
@@ -604,7 +604,7 @@ export async function runAwsSetup(options: AwsSetupOptions) {
   if (googleOAuth) {
     secrets.push(
       { name: "GOOGLE_CLIENT_ID", value: googleOAuth.clientId },
-      { name: "GOOGLE_CLIENT_SECRET", value: googleOAuth.clientSecret },
+      { name: "GOOGLE_CLIENT_SECRET", value: googleOAuth.clientSecret }
     );
   }
 
@@ -666,7 +666,7 @@ export async function runAwsSetup(options: AwsSetupOptions) {
 
   // Step 18: Deploy environment (creates VPC, RDS)
   spinner.start(
-    `Deploying ${envName} environment (this may take 10-15 minutes)...`,
+    `Deploying ${envName} environment (this may take 10-15 minutes)...`
   );
 
   let envDeployResult = deployCopilotEnv(envName, env);
@@ -678,7 +678,7 @@ export async function runAwsSetup(options: AwsSetupOptions) {
   ) {
     spinner.stop("Detected orphaned environment registration");
     p.log.warn(
-      "Found stale environment registration from a previous failed deployment.",
+      "Found stale environment registration from a previous failed deployment."
     );
     p.log.info("Cleaning up and retrying...");
 
@@ -709,7 +709,7 @@ export async function runAwsSetup(options: AwsSetupOptions) {
       spinner.stop("Environment re-initialized");
 
       spinner.start(
-        `Deploying ${envName} environment (this may take 10-15 minutes)...`,
+        `Deploying ${envName} environment (this may take 10-15 minutes)...`
       );
       envDeployResult = deployCopilotEnv(envName, env);
     }
@@ -723,7 +723,7 @@ export async function runAwsSetup(options: AwsSetupOptions) {
 • CloudFormation stack in ROLLBACK state (delete via AWS Console)
 • IAM permission issues (ensure using IAM user, not root)
 • Network/timeout issues (retry the command)`,
-      "Troubleshooting",
+      "Troubleshooting"
     );
     process.exit(1);
   }
@@ -733,22 +733,22 @@ export async function runAwsSetup(options: AwsSetupOptions) {
   // Step 18.25: Ensure database URL parameters
   spinner.start("Ensuring database URL parameters...");
   const dbUrlResult = ensureDatabaseUrlParameters(APP_NAME, envName, env);
-  if (!dbUrlResult.success) {
+  if (dbUrlResult.success) {
+    spinner.stop("Database URL parameters ensured");
+  } else {
     spinner.stop("Database URL setup failed");
     p.log.warn(dbUrlResult.error || "Unable to set database URL parameters");
-  } else {
-    spinner.stop("Database URL parameters ensured");
   }
 
   // Step 18.3: Ensure Redis URL parameter (if Redis enabled)
   if (enableRedis) {
     spinner.start("Ensuring Redis URL parameter...");
     const redisUrlResult = ensureRedisUrlParameter(APP_NAME, envName, env);
-    if (!redisUrlResult.success) {
+    if (redisUrlResult.success) {
+      spinner.stop("Redis URL parameter ensured");
+    } else {
       spinner.stop("Redis URL setup failed");
       p.log.warn(redisUrlResult.error || "Unable to set Redis URL parameter");
-    } else {
-      spinner.stop("Redis URL parameter ensured");
     }
   }
 
@@ -835,7 +835,7 @@ export async function runAwsSetup(options: AwsSetupOptions) {
       const templatePath = resolve(
         copilotRoot,
         "templates",
-        "webhook-gateway.yml",
+        "webhook-gateway.yml"
       );
       const addonPath = resolve(addonsPath, "webhook-gateway.yml");
 
@@ -850,13 +850,13 @@ export async function runAwsSetup(options: AwsSetupOptions) {
           const listenerProtocol = domain ? "HTTPS" : "HTTP";
           if (!paramsContent.includes("WebhookAudience:")) {
             paramsContent = `${paramsContent.trimEnd()}\n\n  # Webhook gateway params (auto-added)\n  WebhookAudience: ''\n  WebhookListenerProtocol: '${listenerProtocol}'\n`;
-          } else if (!paramsContent.includes("WebhookListenerProtocol:")) {
-            paramsContent = `${paramsContent.trimEnd()}\n  WebhookListenerProtocol: '${listenerProtocol}'\n`;
-          } else {
+          } else if (paramsContent.includes("WebhookListenerProtocol:")) {
             paramsContent = paramsContent.replace(
               /WebhookListenerProtocol:\s*['"]?[^'\n]*['"]?/,
-              `WebhookListenerProtocol: '${listenerProtocol}'`,
+              `WebhookListenerProtocol: '${listenerProtocol}'`
             );
+          } else {
+            paramsContent = `${paramsContent.trimEnd()}\n  WebhookListenerProtocol: '${listenerProtocol}'\n`;
           }
           writeFileSync(paramsPath, paramsContent);
         }
@@ -865,10 +865,14 @@ export async function runAwsSetup(options: AwsSetupOptions) {
 
         // Redeploy environment to include webhook gateway
         spinner.start(
-          "Deploying webhook gateway (this may take a few minutes)...",
+          "Deploying webhook gateway (this may take a few minutes)..."
         );
         const webhookDeployResult = deployCopilotEnv(envName, env);
-        if (!webhookDeployResult.success) {
+        if (webhookDeployResult.success) {
+          spinner.stop("Webhook gateway deployed");
+          // Get the webhook URL from CloudFormation outputs
+          webhookUrl = getWebhookUrl(APP_NAME, envName, env);
+        } else {
           spinner.stop("Failed to deploy webhook gateway");
           p.log.error(webhookDeployResult.error || "Unknown error");
           // Clean up - remove the addon so it doesn't fail next time
@@ -878,20 +882,16 @@ export async function runAwsSetup(options: AwsSetupOptions) {
             let paramsContent = readFileSync(paramsPath, "utf-8");
             paramsContent = paramsContent.replace(
               /\n\n\s+# Webhook gateway params \(auto-added\)\n\s+WebhookAudience: ''\n\s+WebhookListenerProtocol: '[^']+'\n?/,
-              "",
+              ""
             );
             writeFileSync(paramsPath, paramsContent);
           }
-        } else {
-          spinner.stop("Webhook gateway deployed");
-          // Get the webhook URL from CloudFormation outputs
-          webhookUrl = getWebhookUrl(APP_NAME, envName, env);
         }
       } else {
         spinner.stop("Webhook gateway template not found");
         p.log.warn(
           `Template not found at ${templatePath}.\n` +
-            "You can manually add the webhook gateway later.",
+            "You can manually add the webhook gateway later."
         );
       }
     }
@@ -910,14 +910,14 @@ export async function runAwsSetup(options: AwsSetupOptions) {
       env,
     });
 
-    if (!pubsubResult.success) {
+    if (pubsubResult.success) {
+      spinner.stop("Google Pub/Sub configured");
+    } else {
       spinner.stop("Failed to configure Pub/Sub");
       p.log.warn(
         "Pub/Sub setup failed. You can configure it manually:\n" +
-          `inbox-zero setup-google --webhook-url "${webhookUrl}"`,
+          `inbox-zero setup-google --webhook-url "${webhookUrl}"`
       );
-    } else {
-      spinner.stop("Google Pub/Sub configured");
     }
   }
 
@@ -955,19 +955,19 @@ export async function runAwsSetup(options: AwsSetupOptions) {
 
   if (!configureGoogle) {
     nextSteps.push(
-      `Run Google setup:\n  inbox-zero setup-google${webhookUrl ? ` --webhook-url "${webhookUrl}"` : ""}`,
+      `Run Google setup:\n  inbox-zero setup-google${webhookUrl ? ` --webhook-url "${webhookUrl}"` : ""}`
     );
   }
 
   if (!domain) {
     nextSteps.push(
-      "Get your app URL:\n  copilot svc show --name inbox-zero-ecs",
+      "Get your app URL:\n  copilot svc show --name inbox-zero-ecs"
     );
   }
 
   nextSteps.push(
     "View logs:\n  copilot svc logs --follow",
-    "Check status:\n  copilot svc status",
+    "Check status:\n  copilot svc status"
   );
 
   p.note(nextSteps.join("\n\n"), "Next Steps");
@@ -1014,14 +1014,18 @@ function checkAwsPrerequisites(): AwsPrerequisites {
 function getRegionForProfile(profile: string): string | null {
   const envRegion =
     process.env.AWS_REGION?.trim() || process.env.AWS_DEFAULT_REGION?.trim();
-  if (envRegion) return envRegion;
+  if (envRegion) {
+    return envRegion;
+  }
 
   const result = spawnSync(
     "aws",
     ["configure", "get", "region", "--profile", profile],
-    { stdio: "pipe" },
+    { stdio: "pipe" }
   );
-  if (result.status !== 0) return null;
+  if (result.status !== 0) {
+    return null;
+  }
   return result.stdout.toString().trim() || null;
 }
 
@@ -1050,7 +1054,7 @@ function checkGcloudPrerequisites(): GcloudPrerequisites {
   const projectResult = spawnSync(
     "gcloud",
     ["config", "get-value", "project"],
-    { stdio: "pipe" },
+    { stdio: "pipe" }
   );
   const projectId =
     projectResult.status === 0
@@ -1064,7 +1068,7 @@ function validateAwsCredentials(profile: string): boolean {
   const result = spawnSync(
     "aws",
     ["sts", "get-caller-identity", "--profile", profile],
-    { stdio: "pipe" },
+    { stdio: "pipe" }
   );
   return result.status === 0;
 }
@@ -1113,13 +1117,15 @@ function getAwsProfiles(): string[] {
 
 function cleanupInterruptedRun(): void {
   const addonsPath = findAddonsPath();
-  if (!addonsPath) return;
+  if (!addonsPath) {
+    return;
+  }
 
   // Clean up any leftover .bak or .disabled files from old runs
   const webhookGatewayBackup = resolve(addonsPath, "webhook-gateway.yml.bak");
   const webhookGatewayDisabled = resolve(
     addonsPath,
-    "webhook-gateway.yml.disabled",
+    "webhook-gateway.yml.disabled"
   );
 
   if (existsSync(webhookGatewayBackup)) {
@@ -1133,7 +1139,7 @@ function cleanupInterruptedRun(): void {
 function cleanupOrphanedEnvironment(
   appName: string,
   envName: string,
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ): boolean {
   // Check if there's an orphaned environment registration in SSM
   // This happens when env init succeeds but env deploy fails, leaving a stale registration
@@ -1149,7 +1155,7 @@ function cleanupOrphanedEnvironment(
       "--output",
       "text",
     ],
-    { stdio: "pipe", env },
+    { stdio: "pipe", env }
   );
 
   // Delete the SSM registration if it exists
@@ -1162,7 +1168,7 @@ function cleanupOrphanedEnvironment(
         "--name",
         `/copilot/applications/${appName}/environments/${envName}`,
       ],
-      { stdio: "pipe", env },
+      { stdio: "pipe", env }
     );
   }
 
@@ -1180,7 +1186,7 @@ function cleanupOrphanedEnvironment(
       "--output",
       "text",
     ],
-    { stdio: "pipe", env },
+    { stdio: "pipe", env }
   );
 
   const stackStatus = stackStatusResult.stdout?.toString().trim();
@@ -1194,7 +1200,7 @@ function cleanupOrphanedEnvironment(
     spawnSync(
       "aws",
       ["cloudformation", "delete-stack", "--stack-name", stackName],
-      { stdio: "pipe", env },
+      { stdio: "pipe", env }
     );
 
     // Wait for deletion (with timeout)
@@ -1207,7 +1213,7 @@ function cleanupOrphanedEnvironment(
         "--stack-name",
         stackName,
       ],
-      { stdio: "pipe", env, timeout: 300_000 },
+      { stdio: "pipe", env, timeout: 300_000 }
     );
   }
 
@@ -1232,13 +1238,17 @@ function findCopilotRoot(): string | null {
 
 function getCopilotWorkspaceDir(): string | null {
   const copilotRoot = findCopilotRoot();
-  if (!copilotRoot) return null;
+  if (!copilotRoot) {
+    return null;
+  }
   return resolve(copilotRoot, "..");
 }
 
 function findAddonsPath(): string | null {
   const copilotRoot = findCopilotRoot();
-  if (!copilotRoot) return null;
+  if (!copilotRoot) {
+    return null;
+  }
 
   const addonsPath = resolve(copilotRoot, "environments/addons");
   return existsSync(addonsPath) ? addonsPath : null;
@@ -1265,7 +1275,7 @@ function updateAddonsParameters(config: {
   if (content.includes("RDSInstanceClass:")) {
     content = content.replace(
       /RDSInstanceClass:\s*['"]?[^'\n]*['"]?/,
-      `RDSInstanceClass: '${config.rdsInstanceClass}'`,
+      `RDSInstanceClass: '${config.rdsInstanceClass}'`
     );
   } else {
     content = `${content.trimEnd()}\n  RDSInstanceClass: '${config.rdsInstanceClass}'\n`;
@@ -1276,7 +1286,7 @@ function updateAddonsParameters(config: {
   if (content.includes("EnableRedis:")) {
     content = content.replace(
       /EnableRedis:\s*['"]?[^'\n]*['"]?/,
-      `EnableRedis: '${enableRedisValue}'`,
+      `EnableRedis: '${enableRedisValue}'`
     );
   } else {
     content = `${content.trimEnd()}\n  EnableRedis: '${enableRedisValue}'\n`;
@@ -1287,7 +1297,7 @@ function updateAddonsParameters(config: {
     if (content.includes("RedisInstanceClass:")) {
       content = content.replace(
         /RedisInstanceClass:\s*['"]?[^'\n]*['"]?/,
-        `RedisInstanceClass: '${config.redisInstanceClass}'`,
+        `RedisInstanceClass: '${config.redisInstanceClass}'`
       );
     } else {
       content = `${content.trimEnd()}\n  RedisInstanceClass: '${config.redisInstanceClass}'\n`;
@@ -1303,10 +1313,14 @@ function updateServiceManifestSecrets(config: {
   enableRedis?: boolean;
 }): void {
   const copilotRoot = findCopilotRoot();
-  if (!copilotRoot) return;
+  if (!copilotRoot) {
+    return;
+  }
 
   const manifestPath = resolve(copilotRoot, SERVICE_NAME, "manifest.yml");
-  if (!existsSync(manifestPath)) return;
+  if (!existsSync(manifestPath)) {
+    return;
+  }
 
   let content = readFileSync(manifestPath, "utf-8");
 
@@ -1346,7 +1360,7 @@ function updateServiceManifestSecrets(config: {
     // Add after the last secret line (before comments or end of secrets block)
     content = content.replace(
       /(secrets:[\s\S]*?)((?:\n\s+#|\n[a-z]|\n$))/,
-      `$1\n${secretLine}$2`,
+      `$1\n${secretLine}$2`
     );
   }
 
@@ -1354,20 +1368,18 @@ function updateServiceManifestSecrets(config: {
     const pubsubSecret = `  GOOGLE_PUBSUB_TOPIC_NAME: ${getSecretReference("GOOGLE_PUBSUB_TOPIC_NAME")}`;
     content = content.replace(
       /(secrets:[\s\S]*?)((?:\n\s+#|\n[a-z]|\n$))/,
-      `$1\n${pubsubSecret}$2`,
+      `$1\n${pubsubSecret}$2`
     );
   }
 
   // Add Google OAuth secrets if configured and not already present
-  if (config.hasGoogleOAuth) {
-    if (!content.includes("GOOGLE_CLIENT_ID:")) {
-      const googleSecrets = `  GOOGLE_CLIENT_ID: /copilot/\${COPILOT_APPLICATION_NAME}/\${COPILOT_ENVIRONMENT_NAME}/secrets/GOOGLE_CLIENT_ID
+  if (config.hasGoogleOAuth && !content.includes("GOOGLE_CLIENT_ID:")) {
+    const googleSecrets = `  GOOGLE_CLIENT_ID: /copilot/\${COPILOT_APPLICATION_NAME}/\${COPILOT_ENVIRONMENT_NAME}/secrets/GOOGLE_CLIENT_ID
   GOOGLE_CLIENT_SECRET: /copilot/\${COPILOT_APPLICATION_NAME}/\${COPILOT_ENVIRONMENT_NAME}/secrets/GOOGLE_CLIENT_SECRET`;
-      content = content.replace(
-        /(secrets:[\s\S]*?)((?:\n\s+#|\n[a-z]|\n$))/,
-        `$1\n${googleSecrets}$2`,
-      );
-    }
+    content = content.replace(
+      /(secrets:[\s\S]*?)((?:\n\s+#|\n[a-z]|\n$))/,
+      `$1\n${googleSecrets}$2`
+    );
   }
 
   // Add Redis URL secret if enabled and not already present
@@ -1375,7 +1387,7 @@ function updateServiceManifestSecrets(config: {
     const redisSecret = `  REDIS_URL: ${getSecretReference("REDIS_URL")}`;
     content = content.replace(
       /(secrets:[\s\S]*?)((?:\n\s+#|\n[a-z]|\n$))/,
-      `$1\n${redisSecret}$2`,
+      `$1\n${redisSecret}$2`
     );
   }
 
@@ -1387,31 +1399,39 @@ function updateServiceManifestVariables(config: {
   llmProvider: string;
 }): void {
   const copilotRoot = findCopilotRoot();
-  if (!copilotRoot) return;
+  if (!copilotRoot) {
+    return;
+  }
 
   const manifestPath = resolve(copilotRoot, SERVICE_NAME, "manifest.yml");
-  if (!existsSync(manifestPath)) return;
+  if (!existsSync(manifestPath)) {
+    return;
+  }
 
   let content = readFileSync(manifestPath, "utf-8");
   content = setManifestVariable(
     content,
     "NEXT_PUBLIC_BASE_URL",
-    config.baseUrl,
+    config.baseUrl
   );
   content = setManifestVariable(
     content,
     "DEFAULT_LLM_PROVIDER",
-    config.llmProvider,
+    config.llmProvider
   );
   writeFileSync(manifestPath, content);
 }
 
 function updateServiceManifestHttp(config: { domain?: string }): void {
   const copilotRoot = findCopilotRoot();
-  if (!copilotRoot) return;
+  if (!copilotRoot) {
+    return;
+  }
 
   const manifestPath = resolve(copilotRoot, SERVICE_NAME, "manifest.yml");
-  if (!existsSync(manifestPath)) return;
+  if (!existsSync(manifestPath)) {
+    return;
+  }
 
   let content = readFileSync(manifestPath, "utf-8");
   content = content.replace(/^\s*#?\s*alias:.*\n?/m, "");
@@ -1424,7 +1444,7 @@ function updateServiceManifestHttp(config: { domain?: string }): void {
       : "  # alias: YOUR_DOMAIN  # Uncomment and set if using a custom domain\n  # redirect_to_https: true  # Enable when using a domain with HTTPS\n";
     content = content.replace(
       /http:\n\s+path: '\/'\n/,
-      `http:\n  path: '/'\n${insertLines}`,
+      `http:\n  path: '/'\n${insertLines}`
     );
   }
 
@@ -1433,19 +1453,23 @@ function updateServiceManifestHttp(config: { domain?: string }): void {
 
 function resetServiceManifestVariables(): void {
   const copilotRoot = findCopilotRoot();
-  if (!copilotRoot) return;
+  if (!copilotRoot) {
+    return;
+  }
 
   const manifestPath = resolve(copilotRoot, SERVICE_NAME, "manifest.yml");
-  if (!existsSync(manifestPath)) return;
+  if (!existsSync(manifestPath)) {
+    return;
+  }
 
   let content = readFileSync(manifestPath, "utf-8");
   content = content.replace(
     /^\s*NEXT_PUBLIC_BASE_URL:.*$/m,
-    "  NEXT_PUBLIC_BASE_URL: # YOUR_DOMAIN, e.g. https://www.getinboxzero.com (with http or https)",
+    "  NEXT_PUBLIC_BASE_URL: # YOUR_DOMAIN, e.g. https://www.getinboxzero.com (with http or https)"
   );
   content = content.replace(
     /^\s*DEFAULT_LLM_PROVIDER:.*$/m,
-    "  DEFAULT_LLM_PROVIDER:",
+    "  DEFAULT_LLM_PROVIDER:"
   );
   writeFileSync(manifestPath, content);
 }
@@ -1453,7 +1477,7 @@ function resetServiceManifestVariables(): void {
 function setManifestVariable(
   content: string,
   key: string,
-  value: string,
+  value: string
 ): string {
   const lineRegex = new RegExp(`^\\s*${key}:.*$`, "m");
   if (lineRegex.test(content)) {
@@ -1462,7 +1486,7 @@ function setManifestVariable(
   if (content.includes("variables:")) {
     return content.replace(
       /variables:\s*\n/,
-      `variables:\n  ${key}: ${value}\n`,
+      `variables:\n  ${key}: ${value}\n`
     );
   }
   return content;
@@ -1472,14 +1496,16 @@ function getServiceUrl(envName: string, env: NodeJS.ProcessEnv): string | null {
   const result = spawnSync(
     "copilot",
     ["svc", "show", "-n", SERVICE_NAME, "--json"],
-    { stdio: "pipe", env },
+    { stdio: "pipe", env }
   );
   if (result.status !== 0) {
     return null;
   }
 
   const output = result.stdout?.toString().trim();
-  if (!output) return null;
+  if (!output) {
+    return null;
+  }
 
   try {
     const data = JSON.parse(output) as {
@@ -1487,15 +1513,21 @@ function getServiceUrl(envName: string, env: NodeJS.ProcessEnv): string | null {
       variables?: { environment: string; name: string; value: string }[];
     };
     const route = data.routes?.find((r) => r.environment === envName);
-    if (route?.url) return route.url;
+    if (route?.url) {
+      return route.url;
+    }
 
     const lbDns = data.variables?.find(
-      (v) => v.environment === envName && v.name === "COPILOT_LB_DNS",
+      (v) => v.environment === envName && v.name === "COPILOT_LB_DNS"
     );
-    if (lbDns?.value) return `http://${lbDns.value}`;
+    if (lbDns?.value) {
+      return `http://${lbDns.value}`;
+    }
   } catch {
     const match = output.match(/https?:\/\/[^\s"]+/);
-    if (match) return match[0];
+    if (match) {
+      return match[0];
+    }
   }
 
   return null;
@@ -1503,7 +1535,7 @@ function getServiceUrl(envName: string, env: NodeJS.ProcessEnv): string | null {
 
 function initCopilotApp(
   domain: string | undefined,
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ): { success: boolean; error?: string } {
   const args = ["app", "init", APP_NAME];
   if (domain) {
@@ -1529,7 +1561,7 @@ function initCopilotApp(
 function initCopilotEnv(
   envName: string,
   profile: string,
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ): { success: boolean; error?: string } {
   const args = [
     "env",
@@ -1571,7 +1603,7 @@ function initCopilotEnv(
       const showResult = spawnSync(
         "copilot",
         ["env", "show", "-n", envName, "--manifest"],
-        { stdio: "pipe", env },
+        { stdio: "pipe", env }
       );
 
       if (showResult.status === 0 && showResult.stdout) {
@@ -1595,7 +1627,7 @@ observability:
 
 function deployCopilotEnv(
   envName: string,
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ): { success: boolean; error?: string } {
   // Verify manifest exists before deploying
   const copilotRoot = findCopilotRoot();
@@ -1604,7 +1636,7 @@ function deployCopilotEnv(
       copilotRoot,
       "environments",
       envName,
-      "manifest.yml",
+      "manifest.yml"
     );
     if (!existsSync(manifestPath)) {
       return {
@@ -1669,7 +1701,7 @@ function initCopilotService(env: NodeJS.ProcessEnv): {
       "--deploy",
       "no",
     ],
-    { stdio: "pipe", env },
+    { stdio: "pipe", env }
   );
 
   // Ignore "already exists" error
@@ -1688,12 +1720,12 @@ function initCopilotService(env: NodeJS.ProcessEnv): {
 
 function deployCopilotService(
   envName: string,
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ): { success: boolean; error?: string } {
   const result = spawnSync(
     "copilot",
     ["svc", "deploy", "--name", SERVICE_NAME, "--env", envName],
-    { stdio: "inherit", env },
+    { stdio: "inherit", env }
   );
 
   if (result.status !== 0) {
@@ -1708,7 +1740,7 @@ function deployCopilotService(
 
 function getEnvStackStatus(
   envName: string,
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ): string | null {
   const stackName = `${APP_NAME}-${envName}`;
   const result = spawnSync(
@@ -1723,15 +1755,17 @@ function getEnvStackStatus(
       "--output",
       "text",
     ],
-    { stdio: "pipe", env },
+    { stdio: "pipe", env }
   );
-  if (result.status !== 0) return null;
+  if (result.status !== 0) {
+    return null;
+  }
   return result.stdout.toString().trim() || null;
 }
 
 function waitForEnvStackCompletion(
   envName: string,
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ): string | null {
   const stackName = `${APP_NAME}-${envName}`;
   const updateWait = spawnSync(
@@ -1743,7 +1777,7 @@ function waitForEnvStackCompletion(
       "--stack-name",
       stackName,
     ],
-    { stdio: "pipe", env },
+    { stdio: "pipe", env }
   );
   if (updateWait.status !== 0) {
     spawnSync(
@@ -1755,7 +1789,7 @@ function waitForEnvStackCompletion(
         "--stack-name",
         stackName,
       ],
-      { stdio: "pipe", env },
+      { stdio: "pipe", env }
     );
   }
   return getEnvStackStatus(envName, env);
@@ -1769,7 +1803,7 @@ function storeSecretInSsm(
   name: string,
   value: string,
   envName: string,
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ): { success: boolean; error?: string } {
   const paramName = `/copilot/${APP_NAME}/${envName}/secrets/${name}`;
 

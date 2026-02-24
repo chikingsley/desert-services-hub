@@ -3,7 +3,9 @@ import { Tinybird } from "@chronark/zod-bird";
 let tb: Tinybird;
 
 export const getTinybird = () => {
-  if (!process.env.TINYBIRD_TOKEN) return;
+  if (!process.env.TINYBIRD_TOKEN) {
+    return;
+  }
 
   if (!tb) {
     tb = new Tinybird({

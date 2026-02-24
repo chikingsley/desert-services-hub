@@ -3,7 +3,7 @@ import type { GetAttachmentsPreviewResponse } from "@/app/api/user/drive/preview
 
 export function useFilingPreviewAttachments(
   shouldFetch: boolean,
-  options?: SWRConfiguration,
+  options?: SWRConfiguration
 ) {
   return useSWR<GetAttachmentsPreviewResponse>(
     shouldFetch ? "/api/user/drive/preview/attachments" : null,
@@ -11,6 +11,6 @@ export function useFilingPreviewAttachments(
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       ...options,
-    },
+    }
   );
 }

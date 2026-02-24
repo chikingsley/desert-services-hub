@@ -1,20 +1,20 @@
-import { z } from "zod";
 import { tool } from "ai";
-import type { Logger } from "@/utils/logger";
+import { z } from "zod";
+import { getUserInfoPrompt } from "@/utils/ai/helpers";
+import { getUnifiedCalendarAvailability } from "@/utils/calendar/unified-availability";
 import { createGenerateText } from "@/utils/llms";
 import { getModel } from "@/utils/llms/model";
-import { getUnifiedCalendarAvailability } from "@/utils/calendar/unified-availability";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailForLLM } from "@/utils/types";
+import type { Logger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
-import { getUserInfoPrompt } from "@/utils/ai/helpers";
+import type { EmailForLLM } from "@/utils/types";
 
 const timeSlotSchema = z.object({
   start: z.string().describe("Start time in format YYYY-MM-DD HH:MM"),
   end: z
     .string()
     .describe(
-      "End time in format YYYY-MM-DD HH:MM - infer meeting duration from email context",
+      "End time in format YYYY-MM-DD HH:MM - infer meeting duration from email context"
     ),
 });
 
@@ -24,7 +24,7 @@ const schema = z.object({
     .boolean()
     .optional()
     .describe(
-      "Set to true if the user has no availability in the requested timeframe",
+      "Set to true if the user has no availability in the requested timeframe"
     ),
 });
 
@@ -124,9 +124,7 @@ ${threadContent}
     prompt,
     stopWhen: (result) =>
       result.steps.some((step) =>
-        step.toolCalls?.some(
-          (call) => call.toolName === "returnSuggestedTimes",
-        ),
+        step.toolCalls?.some((call) => call.toolName === "returnSuggestedTimes")
       ) || result.steps.length > 5,
     tools: {
       checkCalendarAvailability: tool({
@@ -185,7 +183,7 @@ function getUserTimezone(
       timezone: string | null;
       primary: boolean;
     }>;
-  }>,
+  }>
 ): string {
   // First priority: user's explicitly set timezone
   if (emailAccount.timezone) {

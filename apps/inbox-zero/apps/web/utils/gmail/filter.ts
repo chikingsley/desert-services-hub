@@ -1,7 +1,7 @@
 import type { gmail_v1 } from "@googleapis/gmail";
+import { SafeError } from "@/utils/error";
 import { GmailLabel } from "@/utils/gmail/label";
 import { extractErrorInfo, withGmailRetry } from "@/utils/gmail/retry";
-import { SafeError } from "@/utils/error";
 import type { Logger } from "@/utils/logger";
 
 export async function createFilter(options: {
@@ -24,10 +24,12 @@ export async function createFilter(options: {
             removeLabelIds,
           },
         },
-      }),
+      })
     );
   } catch (error) {
-    if (isFilterExistsError(error)) return { status: 200 };
+    if (isFilterExistsError(error)) {
+      return { status: 200 };
+    }
 
     const errorInfo = extractErrorInfo(error);
 
@@ -50,11 +52,13 @@ export async function createFilter(options: {
         const filterCount = filters.data?.filter?.length ?? 0;
         if (filterCount >= 990) {
           throw new SafeError(
-            `Gmail filter limit reached (${filterCount}/1000 filters). Please delete some existing filters in Gmail settings.`,
+            `Gmail filter limit reached (${filterCount}/1000 filters). Please delete some existing filters in Gmail settings.`
           );
         }
       } catch (limitCheckError) {
-        if (limitCheckError instanceof SafeError) throw limitCheckError;
+        if (limitCheckError instanceof SafeError) {
+          throw limitCheckError;
+        }
         // If limit check fails, just log and continue with original error
         logger.warn("Failed to check filter count", { error: limitCheckError });
       }
@@ -84,7 +88,9 @@ export async function createAutoArchiveFilter({
       logger,
     });
   } catch (error) {
-    if (isFilterExistsError(error)) return { status: 200 };
+    if (isFilterExistsError(error)) {
+      return { status: 200 };
+    }
     throw error;
   }
 }
@@ -96,13 +102,13 @@ export async function deleteFilter(options: {
   const { gmail, id } = options;
 
   return withGmailRetry(() =>
-    gmail.users.settings.filters.delete({ userId: "me", id }),
+    gmail.users.settings.filters.delete({ userId: "me", id })
   );
 }
 
 export async function getFiltersList(options: { gmail: gmail_v1.Gmail }) {
   return withGmailRetry(() =>
-    options.gmail.users.settings.filters.list({ userId: "me" }),
+    options.gmail.users.settings.filters.list({ userId: "me" })
   );
 }
 

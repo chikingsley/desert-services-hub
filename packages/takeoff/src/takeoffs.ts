@@ -1,21 +1,21 @@
 import type { TakeoffAnnotation } from "@takeoff/pdf-takeoff/types";
 
 export interface Takeoff {
+  annotations: TakeoffAnnotation[];
+  created_at: string;
   id: string;
   name: string;
-  pdf_url: string | null;
-  annotations: TakeoffAnnotation[];
   page_scales: Record<number, string>;
+  pdf_url: string | null;
   status: "draft" | "in_progress" | "complete";
-  created_at: string;
   updated_at: string;
 }
 
 export interface TakeoffInsert {
-  name: string;
-  pdf_url?: string | null;
   annotations?: TakeoffAnnotation[];
+  name: string;
   page_scales?: Record<number, string>;
+  pdf_url?: string | null;
   status?: "draft" | "in_progress" | "complete";
 }
 

@@ -1,13 +1,13 @@
 import type React from "react";
-import { Loading } from "./Loading";
 import { ErrorDisplay } from "./ErrorDisplay";
+import { Loading } from "./Loading";
 
 interface LoadingContentProps {
-  loading: boolean;
-  loadingComponent?: React.ReactNode;
+  children: React.ReactNode;
   error?: { info?: { error: string }; error?: string; status?: number };
   errorComponent?: React.ReactNode;
-  children: React.ReactNode;
+  loading: boolean;
+  loadingComponent?: React.ReactNode;
 }
 
 export function LoadingContent(props: LoadingContentProps) {
@@ -24,15 +24,18 @@ export function LoadingContent(props: LoadingContentProps) {
   }
 
   // In dev mode with ignored error, show loading while retrying
-  if (props.loading || ignoreError)
+  if (props.loading || ignoreError) {
     return <>{props.loadingComponent || <Loading />}</>;
+  }
 
   return <>{props.children}</>;
 }
 
 // In development, ignore 404 errors (likely transient HMR errors)
 function shouldIgnoreError(error: LoadingContentProps["error"]): boolean {
-  if (process.env.NODE_ENV !== "development") return false;
+  if (process.env.NODE_ENV !== "development") {
+    return false;
+  }
   const status = (error as { status?: number })?.status;
   return status === 404;
 }

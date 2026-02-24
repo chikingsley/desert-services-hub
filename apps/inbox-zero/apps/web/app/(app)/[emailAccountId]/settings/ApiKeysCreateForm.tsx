@@ -1,11 +1,14 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import { CopyInput } from "@/components/CopyInput";
 import { Input } from "@/components/Input";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { SectionDescription } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,17 +18,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  createApiKeyBody,
-  type CreateApiKeyBody,
-} from "@/utils/actions/api-key.validation";
-import {
   createApiKeyAction,
   deactivateApiKeyAction,
 } from "@/utils/actions/api-key";
-import { toastError, toastSuccess } from "@/components/Toast";
+import {
+  type CreateApiKeyBody,
+  createApiKeyBody,
+} from "@/utils/actions/api-key.validation";
 import { getActionErrorMessage } from "@/utils/error";
-import { CopyInput } from "@/components/CopyInput";
-import { SectionDescription } from "@/components/Typography";
 
 export function ApiKeysCreateButtonModal({ mutate }: { mutate: () => void }) {
   return (
@@ -84,28 +84,28 @@ function ApiKeysForm({ mutate }: { mutate: () => void }) {
     defaultValues: {},
   });
 
-  return !secretKey ? (
-    <form onSubmit={handleSubmit(execute)} className="space-y-4">
-      <Input
-        type="text"
-        name="name"
-        label="Name (optional)"
-        placeholder="My secret key"
-        registerProps={register("name")}
-        error={errors.name}
-      />
-
-      <Button type="submit" loading={isExecuting}>
-        Create
-      </Button>
-    </form>
-  ) : (
+  return secretKey ? (
     <div className="space-y-2">
       <SectionDescription>
         This will only be shown once. Please copy it. Your secret key is:
       </SectionDescription>
       <CopyInput value={secretKey} />
     </div>
+  ) : (
+    <form className="space-y-4" onSubmit={handleSubmit(execute)}>
+      <Input
+        error={errors.name}
+        label="Name (optional)"
+        name="name"
+        placeholder="My secret key"
+        registerProps={register("name")}
+        type="text"
+      />
+
+      <Button loading={isExecuting} type="submit">
+        Create
+      </Button>
+    </form>
   );
 }
 
@@ -134,10 +134,10 @@ export function ApiKeysDeactivateButton({
 
   return (
     <Button
-      variant="outline"
-      size="sm"
       loading={isExecuting}
       onClick={() => execute({ id })}
+      size="sm"
+      variant="outline"
     >
       Revoke
     </Button>

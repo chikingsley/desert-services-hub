@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks";
 import { useCallback } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
+import TextareaAutosize from "react-textarea-autosize";
 import { ErrorMessage, Input, Label } from "@/components/Input";
 import { toastError, toastSuccess } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
@@ -17,13 +18,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import TextareaAutosize from "react-textarea-autosize";
+import { useDialogState } from "@/hooks/useDialogState";
 import { registerSSOProviderAction } from "@/utils/actions/sso";
 import {
   type SsoRegistrationBody,
   ssoRegistrationBody,
 } from "@/utils/actions/sso.validation";
-import { useDialogState } from "@/hooks/useDialogState";
 
 export function RegisterSSOModal() {
   const {
@@ -38,7 +38,7 @@ export function RegisterSSOModal() {
   const { isOpen, onToggle, onClose } = useDialogState();
 
   const { executeAsync: executeRegisterSSO, isExecuting } = useAction(
-    registerSSOProviderAction,
+    registerSSOProviderAction
   );
 
   const onSubmit: SubmitHandler<SsoRegistrationBody> = useCallback(
@@ -58,11 +58,11 @@ export function RegisterSSOModal() {
         onClose();
       }
     },
-    [executeRegisterSSO, reset, onClose],
+    [executeRegisterSSO, reset, onClose]
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={onToggle}>
+    <Dialog onOpenChange={onToggle} open={isOpen}>
       <DialogTrigger asChild>
         <Button>Register SSO Provider</Button>
       </DialogTrigger>
@@ -76,40 +76,40 @@ export function RegisterSSOModal() {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 gap-4">
             <Input
-              type="text"
-              name="organizationName"
+              error={errors.organizationName}
               label="Organization Name"
+              name="organizationName"
               placeholder="e.g., Your Company"
               registerProps={register("organizationName")}
-              error={errors.organizationName}
+              type="text"
             />
 
             <Input
-              type="text"
-              name="providerId"
+              error={errors.providerId}
               label="Provider ID"
+              name="providerId"
               placeholder="e.g., your-company-saml"
               registerProps={register("providerId")}
-              error={errors.providerId}
+              type="text"
             />
 
             <Input
-              type="text"
-              name="domain"
+              error={errors.domain}
               label="Domain"
+              name="domain"
               placeholder="e.g., your-company.com"
               registerProps={register("domain")}
-              error={errors.domain}
+              type="text"
             />
 
             <div className="space-y-2">
-              <Label name="idpMetadata" label="IDP Metadata (XML)" />
+              <Label label="IDP Metadata (XML)" name="idpMetadata" />
               <TextareaAutosize
-                id="idpMetadata"
                 className="block w-full flex-1 whitespace-pre-wrap rounded-md border border-border bg-background shadow-sm focus:border-black focus:ring-black sm:text-sm"
+                id="idpMetadata"
                 minRows={3}
                 rows={3}
                 {...register("idpMetadata")}
@@ -125,7 +125,7 @@ export function RegisterSSOModal() {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit" loading={isExecuting}>
+            <Button loading={isExecuting} type="submit">
               Register SSO
             </Button>
           </DialogFooter>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
-import { withEmailAccount } from "@/utils/middleware";
 import { getUserCategoriesWithRules } from "@/utils/category.server";
+import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export type CategorizedSendersResponse = Awaited<
   ReturnType<typeof getCategorizedSenders>
@@ -42,5 +42,5 @@ export const GET = withEmailAccount(
     const emailAccountId = request.auth.emailAccountId;
     const result = await getCategorizedSenders({ emailAccountId });
     return NextResponse.json(result);
-  },
+  }
 );

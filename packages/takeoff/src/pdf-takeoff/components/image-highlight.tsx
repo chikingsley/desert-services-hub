@@ -10,10 +10,29 @@ import type { LTWHP, ViewportHighlight } from "../types";
  */
 export interface ImageHighlightProps {
   /**
+   * react-rnd bounds on the highlight area.
+   */
+  bounds?: string | Element;
+
+  /**
+   * Custom delete icon. Replaces the default trash icon.
+   */
+  deleteIcon?: ReactNode;
+
+  /**
+   * Custom drag icon. Replaces the default 6-dot grid icon.
+   */
+  dragIcon?: ReactNode;
+  /**
    * The highlight to be rendered as an {@link ImageHighlight}.
    * The highlight.content.image should contain the image data URL.
    */
   highlight: ViewportHighlight;
+
+  /**
+   * Has the highlight been auto-scrolled into view?
+   */
+  isScrolledTo?: boolean;
 
   /**
    * A callback triggered whenever the highlight position or size changes.
@@ -23,39 +42,9 @@ export interface ImageHighlightProps {
   onChange?(rect: LTWHP): void;
 
   /**
-   * Has the highlight been auto-scrolled into view?
-   */
-  isScrolledTo?: boolean;
-
-  /**
-   * react-rnd bounds on the highlight area.
-   */
-  bounds?: string | Element;
-
-  /**
    * A callback triggered on context menu.
    */
   onContextMenu?(event: MouseEvent<HTMLDivElement>): void;
-
-  /**
-   * Event called when editing begins (drag or resize).
-   */
-  onEditStart?(): void;
-
-  /**
-   * Event called when editing ends.
-   */
-  onEditEnd?(): void;
-
-  /**
-   * Custom styling for the container.
-   */
-  style?: CSSProperties;
-
-  /**
-   * Custom drag icon. Replaces the default 6-dot grid icon.
-   */
-  dragIcon?: ReactNode;
 
   /**
    * Callback triggered when the delete button is clicked.
@@ -63,9 +52,19 @@ export interface ImageHighlightProps {
   onDelete?(): void;
 
   /**
-   * Custom delete icon. Replaces the default trash icon.
+   * Event called when editing ends.
    */
-  deleteIcon?: ReactNode;
+  onEditEnd?(): void;
+
+  /**
+   * Event called when editing begins (drag or resize).
+   */
+  onEditStart?(): void;
+
+  /**
+   * Custom styling for the container.
+   */
+  style?: CSSProperties;
 }
 
 /**

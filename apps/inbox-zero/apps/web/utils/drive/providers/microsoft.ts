@@ -1,14 +1,14 @@
 import { Client } from "@microsoft/microsoft-graph-client";
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
+import type {
+  DriveFile,
+  DriveFolder,
+  DriveProvider,
+  UploadFileParams,
+} from "@/utils/drive/types";
 import type { Logger } from "@/utils/logger";
 import { createScopedLogger } from "@/utils/logger";
 import { isNotFoundError } from "@/utils/outlook/errors";
-import type {
-  DriveProvider,
-  DriveFolder,
-  DriveFile,
-  UploadFileParams,
-} from "@/utils/drive/types";
 
 export class OneDriveProvider implements DriveProvider {
   readonly name = "microsoft" as const;
@@ -19,7 +19,7 @@ export class OneDriveProvider implements DriveProvider {
   constructor(
     accessToken: string,
     logger?: Logger,
-    options?: { appOnly?: boolean; mailbox?: string | null },
+    options?: { appOnly?: boolean; mailbox?: string | null }
   ) {
     this.accessToken = accessToken;
     this.logger = (logger || createScopedLogger("onedrive-provider")).with({
@@ -151,7 +151,7 @@ export class OneDriveProvider implements DriveProvider {
           limit: MAX_SIMPLE_UPLOAD_SIZE,
         });
         throw new Error(
-          `File size ${content.length} exceeds 4MB limit. Large file upload not yet implemented.`,
+          `File size ${content.length} exceeds 4MB limit. Large file upload not yet implemented.`
         );
       }
 
@@ -159,7 +159,7 @@ export class OneDriveProvider implements DriveProvider {
       // Path: /me/drive/items/{parent-id}:/{filename}:/content
       const item: DriveItem = await this.client
         .api(
-          `/me/drive/items/${folderId}:/${encodeURIComponent(filename)}:/content`,
+          `/me/drive/items/${folderId}:/${encodeURIComponent(filename)}:/content`
         )
         .header("Content-Type", mimeType)
         .put(content);
@@ -254,7 +254,9 @@ function createMailboxScopedClient(client: Client, mailbox: string): Client {
   const mailboxPath = `/users/${encodeURIComponent(mailbox)}`;
   const proxied = new Proxy(client, {
     get(target, prop, receiver) {
-      if (prop !== "api") return Reflect.get(target, prop, receiver);
+      if (prop !== "api") {
+        return Reflect.get(target, prop, receiver);
+      }
 
       return (path: string) => target.api(rewriteMeEndpoint(path, mailboxPath));
     },
@@ -274,7 +276,7 @@ function rewriteMeEndpoint(path: string, mailboxPath: string): string {
   if (absoluteV1MePattern.test(path)) {
     return path.replace(
       absoluteV1MePattern,
-      `https://graph.microsoft.com/v1.0${mailboxPath}`,
+      `https://graph.microsoft.com/v1.0${mailboxPath}`
     );
   }
 

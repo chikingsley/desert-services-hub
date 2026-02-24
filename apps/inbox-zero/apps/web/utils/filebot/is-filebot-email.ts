@@ -18,10 +18,14 @@ export function isFilebotEmail({
   userEmail: string;
   emailToCheck: string;
 }): boolean {
-  if (!emailToCheck) return false;
+  if (!emailToCheck) {
+    return false;
+  }
 
   const [localPart, domain] = userEmail.split("@");
-  if (!localPart || !domain) return false;
+  if (!(localPart && domain)) {
+    return false;
+  }
 
   const pattern = buildFilebotPattern(localPart, domain);
 
@@ -44,7 +48,7 @@ export function isFilebotEmail({
  */
 export function getFilebotEmail({ userEmail }: { userEmail: string }): string {
   const [localPart, domain] = userEmail.split("@");
-  if (!localPart || !domain) {
+  if (!(localPart && domain)) {
     throw new Error("Invalid email format");
   }
   return `${localPart}+${FILEBOT_SUFFIX}@${domain}`;
@@ -57,7 +61,7 @@ export function getFilebotReplyTo({
 }): string {
   return formatEmailWithName(
     FILEBOT_DISPLAY_NAME,
-    getFilebotEmail({ userEmail }),
+    getFilebotEmail({ userEmail })
   );
 }
 
@@ -81,7 +85,7 @@ function buildFilebotPattern(localPart: string, domain: string): RegExp {
     })
     .join("");
   return new RegExp(
-    `^${escapeRegex(localPart)}\\+${FILEBOT_SUFFIX}@${caseInsensitiveDomain}$`,
+    `^${escapeRegex(localPart)}\\+${FILEBOT_SUFFIX}@${caseInsensitiveDomain}$`
   );
 }
 

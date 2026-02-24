@@ -1,15 +1,14 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import { CalendarIcon, SendIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { toastSuccess, toastError } from "@/components/Toast";
-import { LoadingContent } from "@/components/LoadingContent";
 import { useAction } from "next-safe-action/hooks";
-import { sendBriefAction } from "@/utils/actions/meeting-briefs";
-import { useMeetingBriefsHistory } from "@/hooks/useMeetingBriefs";
-import { useCalendarUpcomingEvents } from "@/hooks/useCalendarUpcomingEvents";
+import { useCallback, useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { LoadingContent } from "@/components/LoadingContent";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { TypographyH3 } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -18,22 +17,23 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Item,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
-  ItemActions,
-  ItemGroup,
-} from "@/components/ui/item";
-import {
   Empty,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { TypographyH3 } from "@/components/Typography";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemTitle,
+} from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCalendarUpcomingEvents } from "@/hooks/useCalendarUpcomingEvents";
+import { useMeetingBriefsHistory } from "@/hooks/useMeetingBriefs";
+import { sendBriefAction } from "@/utils/actions/meeting-briefs";
 
 export function UpcomingMeetings({
   emailAccountId,
@@ -76,24 +76,15 @@ export function UpcomingMeetings({
         },
       });
     },
-    [execute],
+    [execute]
   );
 
   return (
     <>
       <TypographyH3>Upcoming Meetings</TypographyH3>
 
-      <LoadingContent loading={isLoading} error={error}>
-        {!data?.events.length ? (
-          <Empty className="mt-4 border">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <CalendarIcon />
-              </EmptyMedia>
-              <EmptyTitle>No upcoming calendar events found</EmptyTitle>
-            </EmptyHeader>
-          </Empty>
-        ) : (
+      <LoadingContent error={error} loading={isLoading}>
+        {data?.events.length ? (
           <>
             <ItemGroup className="mt-4 gap-2">
               {data?.events.map((event) => (
@@ -103,25 +94,25 @@ export function UpcomingMeetings({
                     <ItemDescription>
                       {format(
                         new Date(event.startTime),
-                        "EEE, MMM d 'at' h:mm a",
+                        "EEE, MMM d 'at' h:mm a"
                       )}
                     </ItemDescription>
                   </ItemContent>
                   <ItemActions>
                     <ConfirmDialog
+                      confirmText="Send"
+                      description="This will send you a briefing email for this meeting now. Use this to verify briefs are working correctly."
+                      onConfirm={() => handleSendTestBrief(event)}
+                      title="Send test brief?"
                       trigger={
                         <Button
-                          variant="outline"
                           Icon={SendIcon}
                           loading={sendingEventId === event.id}
+                          variant="outline"
                         >
                           Send test brief
                         </Button>
                       }
-                      title="Send test brief?"
-                      description="This will send you a briefing email for this meeting now. Use this to verify briefs are working correctly."
-                      confirmText="Send"
-                      onConfirm={() => handleSendTestBrief(event)}
                     />
                   </ItemActions>
                 </Item>
@@ -132,6 +123,15 @@ export function UpcomingMeetings({
               <SendHistoryLink />
             </div>
           </>
+        ) : (
+          <Empty className="mt-4 border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <CalendarIcon />
+              </EmptyMedia>
+              <EmptyTitle>No upcoming calendar events found</EmptyTitle>
+            </EmptyHeader>
+          </Empty>
         )}
       </LoadingContent>
     </>
@@ -144,7 +144,7 @@ function SendHistoryLink() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="link" className="h-auto p-0 text-muted-foreground">
+        <Button className="h-auto p-0 text-muted-foreground" variant="link">
           View send history →
         </Button>
       </DialogTrigger>
@@ -154,20 +154,11 @@ function SendHistoryLink() {
         </DialogHeader>
 
         <LoadingContent
-          loading={isLoading}
           error={error}
+          loading={isLoading}
           loadingComponent={<Skeleton className="h-10 w-full" />}
         >
-          {!data?.briefings.length ? (
-            <Empty className="mt-4 border">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <CalendarIcon />
-                </EmptyMedia>
-                <EmptyTitle>No briefings have been sent yet</EmptyTitle>
-              </EmptyHeader>
-            </Empty>
-          ) : (
+          {data?.briefings.length ? (
             <ItemGroup className="mt-2 gap-2">
               {data?.briefings.map((briefing) => (
                 <Item key={briefing.id} variant="outline">
@@ -183,7 +174,7 @@ function SendHistoryLink() {
                   </ItemContent>
                   <ItemActions>
                     <span
-                      className={`text-xs px-2 py-1 rounded ${
+                      className={`rounded px-2 py-1 text-xs ${
                         briefing.status === "SENT"
                           ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                           : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
@@ -195,6 +186,15 @@ function SendHistoryLink() {
                 </Item>
               ))}
             </ItemGroup>
+          ) : (
+            <Empty className="mt-4 border">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <CalendarIcon />
+                </EmptyMedia>
+                <EmptyTitle>No briefings have been sent yet</EmptyTitle>
+              </EmptyHeader>
+            </Empty>
           )}
         </LoadingContent>
       </DialogContent>

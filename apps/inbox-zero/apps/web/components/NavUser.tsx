@@ -1,16 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import {
-  ChevronsUpDownIcon,
-  MessageCircleReplyIcon,
-  ShieldCheckIcon,
-  RibbonIcon,
-  LogOutIcon,
-  PaletteIcon,
-  ChromeIcon,
   Building2Icon,
+  ChevronsUpDownIcon,
+  ChromeIcon,
+  LogOutIcon,
+  MessageCircleReplyIcon,
+  PaletteIcon,
+  RibbonIcon,
+  ShieldCheckIcon,
 } from "lucide-react";
+import Link from "next/link";
+import { useTheme } from "next-themes";
+import { ProfileImage } from "@/components/ProfileImage";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,16 +23,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SidebarMenuButton } from "@/components/ui/sidebar";
+import { useUser } from "@/hooks/useUser";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { EXTENSION_URL } from "@/utils/config";
+import { isGoogleProvider } from "@/utils/email/provider-types";
 import { prefixPath } from "@/utils/path";
 import { logOut } from "@/utils/user";
-import { isGoogleProvider } from "@/utils/email/provider-types";
-import { useTheme } from "next-themes";
-import { ProfileImage } from "@/components/ProfileImage";
-import { SidebarMenuButton } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { EXTENSION_URL } from "@/utils/config";
-import { useUser } from "@/hooks/useUser";
 
 export function NavUser() {
   const { emailAccountId, emailAccount, provider } = useAccount();
@@ -39,7 +39,7 @@ export function NavUser() {
   const currentEmailAccountId = emailAccount?.id || emailAccountId;
   const currentEmailAccountMembers =
     user?.members?.filter(
-      (member) => member.emailAccountId === currentEmailAccountId,
+      (member) => member.emailAccountId === currentEmailAccountId
     ) || [];
   const hasOrganization = currentEmailAccountMembers.length > 0;
   const organizationName = currentEmailAccountMembers[0]?.organization?.name;
@@ -48,13 +48,13 @@ export function NavUser() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <SidebarMenuButton
-          size="lg"
           className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+          size="lg"
         >
           <Avatar className="h-8 w-8 rounded-lg">
             <AvatarImage
-              src={emailAccount?.image || ""}
               alt={emailAccount?.name || emailAccount?.email}
+              src={emailAccount?.image || ""}
             />
             <AvatarFallback className="rounded-lg">
               {emailAccount?.name?.charAt(0) || emailAccount?.email?.charAt(0)}
@@ -66,7 +66,7 @@ export function NavUser() {
                 <span className="truncate font-medium">
                   {emailAccount.name || emailAccount.email}
                 </span>
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="truncate text-muted-foreground text-xs">
                   {organizationName || emailAccount.email}
                 </span>
               </div>
@@ -76,9 +76,9 @@ export function NavUser() {
         </SidebarMenuButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent
+        align="end"
         className="min-w-52 origin-top-right rounded-md"
         side="bottom"
-        align="end"
         sideOffset={4}
       >
         <DropdownMenuLabel className="p-0 font-normal">
@@ -93,7 +93,7 @@ export function NavUser() {
                 {emailAccount?.name || emailAccount?.email || "Account"}
               </span>
               {(organizationName || emailAccount?.email) && (
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="truncate text-muted-foreground text-xs">
                   {organizationName || emailAccount?.email}
                 </span>
               )}
@@ -125,8 +125,8 @@ export function NavUser() {
             <DropdownMenuItem asChild>
               <Link
                 href={EXTENSION_URL}
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               >
                 <ChromeIcon className="mr-2 size-4" />
                 Install extension
@@ -150,7 +150,7 @@ export function NavUser() {
                 <Link
                   href={prefixPath(
                     currentEmailAccountId,
-                    "/cold-email-blocker",
+                    "/cold-email-blocker"
                   )}
                 >
                   <ShieldCheckIcon className="mr-2 size-4" />

@@ -2,7 +2,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 
 export function createMcpTransport(
   serverUrl: string,
-  accessToken: string,
+  accessToken: string
 ): StreamableHTTPClientTransport {
   return new StreamableHTTPClientTransport(new URL(serverUrl), {
     requestInit: {

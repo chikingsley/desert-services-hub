@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { aiCollectReplyContext } from "@/utils/ai/reply/reply-context-collector";
-import type { EmailForLLM, ParsedMessage } from "@/utils/types";
-import type { EmailProvider } from "@/utils/email/types";
 import { getEmailAccount } from "@/__tests__/helpers";
+import { aiCollectReplyContext } from "@/utils/ai/reply/reply-context-collector";
+import type { EmailProvider } from "@/utils/email/types";
+import type { EmailForLLM, ParsedMessage } from "@/utils/types";
 
 // Run with: pnpm test-ai reply-context-collector
 
@@ -88,7 +88,7 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
 
       console.log(
         `Basic: LLM issued ${observedQueries.length} search call(s):`,
-        observedQueries,
+        observedQueries
       );
 
       expect(result).not.toBeNull();
@@ -98,13 +98,13 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
       const outputText = relevantEmailsToLowerText(result);
       const expectedPhrases = ["3-5 business days", "march invoice"];
       const containsExpected = expectedPhrases.some((p) =>
-        outputText.includes(p.toLowerCase()),
+        outputText.includes(p.toLowerCase())
       );
       expect(containsExpected).toBe(true);
 
       console.log("result", result);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 
   test(
@@ -127,7 +127,7 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
 
       const observedQueries: string[] = [];
       const historicalMessages = getSupportHistoricalMessages(
-        emailAccount.email,
+        emailAccount.email
       );
 
       // Inline provider stub to capture search queries
@@ -149,7 +149,7 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
 
       console.log(
         `LLM issued ${observedQueries.length} search call(s):`,
-        observedQueries,
+        observedQueries
       );
 
       expect(result).not.toBeNull();
@@ -159,13 +159,13 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
       const outputText = relevantEmailsToLowerText(result);
       const expectedPhrases = ["invoice", "5-10 business days", "3-5 days"];
       const containsExpected = expectedPhrases.some((p) =>
-        outputText.includes(p.toLowerCase()),
+        outputText.includes(p.toLowerCase())
       );
       expect(containsExpected).toBe(true);
 
       console.log("result", result);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 
   test(
@@ -240,7 +240,7 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
 
       console.log(
         `Technical support: LLM issued ${observedQueries.length} search call(s):`,
-        observedQueries,
+        observedQueries
       );
 
       expect(result).not.toBeNull();
@@ -250,13 +250,13 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
       const outputText = relevantEmailsToLowerText(result);
       const expectedPhrases = ["connection pool", "webhook"];
       const containsExpected = expectedPhrases.some((p) =>
-        outputText.includes(p.toLowerCase()),
+        outputText.includes(p.toLowerCase())
       );
       expect(containsExpected).toBe(true);
 
       console.log("result", result);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 
   test(
@@ -314,7 +314,7 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
 
       console.log(
         `Escalation: LLM issued ${observedQueries.length} search call(s):`,
-        observedQueries,
+        observedQueries
       );
 
       expect(result).not.toBeNull();
@@ -324,13 +324,13 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
       const outputText = relevantEmailsToLowerText(result);
       const expectedPhrases = ["duplicate charges", "activated premium"];
       const containsExpected = expectedPhrases.some((p) =>
-        outputText.includes(p.toLowerCase()),
+        outputText.includes(p.toLowerCase())
       );
       expect(containsExpected).toBe(true);
 
       console.log("result", result);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 
   test(
@@ -388,7 +388,7 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
 
       console.log(
         `Billing: LLM issued ${observedQueries.length} search call(s):`,
-        observedQueries,
+        observedQueries
       );
 
       expect(result).not.toBeNull();
@@ -402,13 +402,13 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
         "volume discount",
       ];
       const containsExpected = expectedPhrases.some((p) =>
-        outputText.includes(p.toLowerCase()),
+        outputText.includes(p.toLowerCase())
       );
       expect(containsExpected).toBe(true);
 
       console.log("result", result);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 
   test(
@@ -466,7 +466,7 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
 
       console.log(
         `Shipping: LLM issued ${observedQueries.length} search call(s):`,
-        observedQueries,
+        observedQueries
       );
 
       expect(result).not.toBeNull();
@@ -476,13 +476,13 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
       const outputText = relevantEmailsToLowerText(result);
       const expectedPhrases = ["expedited shipping"];
       const containsExpected = expectedPhrases.some((p) =>
-        outputText.includes(p.toLowerCase()),
+        outputText.includes(p.toLowerCase())
       );
       expect(containsExpected).toBe(true);
 
       console.log("result", result);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 
   test(
@@ -540,7 +540,7 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
 
       console.log(
         `Product inquiry: LLM issued ${observedQueries.length} search call(s):`,
-        observedQueries,
+        observedQueries
       );
 
       expect(result).not.toBeNull();
@@ -550,13 +550,13 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
       const outputText = relevantEmailsToLowerText(result);
       const expectedPhrases = ["r integration", "1tb", "terabyte"];
       const containsExpected = expectedPhrases.some((p) =>
-        outputText.includes(p.toLowerCase()),
+        outputText.includes(p.toLowerCase())
       );
       expect(containsExpected).toBe(true);
 
       console.log("result", result);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 
   test(
@@ -614,7 +614,7 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
 
       console.log(
         `Security: LLM issued ${observedQueries.length} search call(s):`,
-        observedQueries,
+        observedQueries
       );
 
       expect(result).not.toBeNull();
@@ -624,13 +624,13 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
       const outputText = relevantEmailsToLowerText(result);
       const expectedPhrases = ["2fa", "temporary password"];
       const containsExpected = expectedPhrases.some((p) =>
-        outputText.includes(p.toLowerCase()),
+        outputText.includes(p.toLowerCase())
       );
       expect(containsExpected).toBe(true);
 
       console.log("result", result);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 
   test(
@@ -687,12 +687,12 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
 
       console.log(
         `No-history: LLM issued ${observedQueries.length} search call(s):`,
-        observedQueries,
+        observedQueries
       );
 
       expect(result?.relevantEmails.length || 0).toBe(0);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 
   test(
@@ -753,7 +753,8 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
               return {
                 messages: [historicalMessages[0], historicalMessages[1]],
               };
-            } else if (query.includes("payment")) {
+            }
+            if (query.includes("payment")) {
               return { messages: historicalMessages };
             }
             return { messages: [] };
@@ -770,7 +771,7 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
 
       // Verify it searched using the subject line first or early
       const usedSubjectLine = observedQueries.some(
-        (q) => q === "Failed payment" || q.includes("Failed payment"),
+        (q) => q === "Failed payment" || q.includes("Failed payment")
       );
       expect(usedSubjectLine).toBe(true);
 
@@ -781,7 +782,7 @@ describe.runIf(isAiTest)("aiCollectReplyContext", () => {
       const outputText = relevantEmailsToLowerText(result);
       expect(outputText).toContain("payment");
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 });
 
@@ -886,7 +887,7 @@ function getSupportHistoricalMessages(ownerEmail: string): ParsedMessage[] {
 }
 
 function relevantEmailsToLowerText(
-  result: { relevantEmails?: string[] } | null,
+  result: { relevantEmails?: string[] } | null
 ): string {
   return (result?.relevantEmails || []).join(" \n\n").toLowerCase();
 }

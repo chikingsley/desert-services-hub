@@ -30,7 +30,7 @@ export function SettingsSection({
         <div
           className={cn(
             "flex flex-col gap-3 sm:flex-row sm:justify-between",
-            align === "start" ? "sm:items-start" : "sm:items-center",
+            align === "start" ? "sm:items-start" : "sm:items-center"
           )}
         >
           {title || description ? (
@@ -41,8 +41,8 @@ export function SettingsSection({
               {description ? (
                 <p
                   className={cn(
-                    "text-sm text-muted-foreground",
-                    descriptionClassName,
+                    "text-muted-foreground text-sm",
+                    descriptionClassName
                   )}
                 >
                   {description}

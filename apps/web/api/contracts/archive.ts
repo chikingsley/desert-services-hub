@@ -9,8 +9,8 @@ import { extname, join } from "node:path";
 const ARCHIVE_DIR = join(process.cwd(), "archives");
 
 interface ConversationMeta {
+  attachmentCount: number;
   conversationId: string;
-  subject: string;
   emails: Array<{
     messageId: string;
     from: string;
@@ -26,23 +26,12 @@ interface ConversationMeta {
       localPath?: string;
     }>;
   }>;
-  attachmentCount: number;
   firstEmail: string;
   lastEmail: string;
+  subject: string;
 }
 
 interface ArchiveIndex {
-  mailbox: string;
-  downloadedAt: string;
-  dateRange: {
-    after: string;
-    before: string | null;
-  };
-  stats: {
-    emailsProcessed: number;
-    attachmentsDownloaded: number;
-    conversationsWithAttachments: number;
-  };
   conversations: Array<{
     folder: string;
     subject: string;
@@ -50,6 +39,17 @@ interface ArchiveIndex {
     attachmentCount: number;
     dateRange: string;
   }>;
+  dateRange: {
+    after: string;
+    before: string | null;
+  };
+  downloadedAt: string;
+  mailbox: string;
+  stats: {
+    emailsProcessed: number;
+    attachmentsDownloaded: number;
+    conversationsWithAttachments: number;
+  };
 }
 
 /**

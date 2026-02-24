@@ -21,35 +21,35 @@ export type ReconciliationOutcome =
   | "NEEDS_CLARIFICATION";
 
 export interface ContractFlag {
-  type: string;
   description: string;
   severity: ValidationSeverity;
+  type: string;
 }
 
 export interface ContractMathCheck {
-  estimateTotal: number;
-  contractTotal: number;
-  removedTotal: number;
   addedTotal: number;
   calculated: number;
-  variance: number;
+  contractTotal: number;
+  estimateTotal: number;
   matches: boolean;
+  removedTotal: number;
+  variance: number;
 }
 
 export interface PipelineContract {
-  id: string;
-  subject: string;
-  contractor: string;
-  receivedDate: string;
   attachmentCount: number;
-  stage: PipelineStage;
-  estimateTotal: number | null;
+  contractor: string;
   contractTotal: number | null;
-  mathCheck: ContractMathCheck | null;
-  outcome: ReconciliationOutcome | null;
+  estimateTotal: number | null;
   flags: ContractFlag[];
-  notionUrl: string | null;
+  id: string;
+  mathCheck: ContractMathCheck | null;
   mondayUrl: string | null;
+  notionUrl: string | null;
+  outcome: ReconciliationOutcome | null;
+  receivedDate: string;
+  stage: PipelineStage;
+  subject: string;
 }
 
 export const STAGE_CONFIG: Record<

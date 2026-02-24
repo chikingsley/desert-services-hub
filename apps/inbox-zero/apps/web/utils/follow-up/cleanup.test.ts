@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import prisma from "@/utils/__mocks__/prisma";
-import { cleanupStaleDrafts } from "./cleanup";
-import { createScopedLogger } from "@/utils/logger";
-import { createMockEmailProvider } from "@/__tests__/mocks/email-provider.mock";
 import { subDays } from "date-fns/subDays";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createMockEmailProvider } from "@/__tests__/mocks/email-provider.mock";
+import prisma from "@/utils/__mocks__/prisma";
+import { createScopedLogger } from "@/utils/logger";
+import { cleanupStaleDrafts } from "./cleanup";
 
 vi.mock("@/utils/prisma");
 

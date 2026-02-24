@@ -1,8 +1,8 @@
 import { z } from "zod";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { Action, Rule } from "@/generated/prisma/client";
-import { getModel } from "@/utils/llms/model";
 import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
 
 export async function aiFindExistingRules({
   emailAccount,
@@ -64,7 +64,7 @@ Please return the existing rules that match the prompt rules in JSON format.
             promptNumber: z
               .number()
               .describe("The index of the prompt that matches the rule"),
-          }),
+          })
         )
         .describe("The existing rules that match the prompt rules"),
     }),

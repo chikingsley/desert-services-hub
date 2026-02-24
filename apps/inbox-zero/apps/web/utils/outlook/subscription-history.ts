@@ -13,7 +13,7 @@ export type SubscriptionHistory = SubscriptionHistoryEntry[];
  */
 export function parseSubscriptionHistory(
   rawHistory: unknown,
-  logger?: Logger,
+  logger?: Logger
 ): SubscriptionHistory {
   if (!rawHistory) {
     return [];
@@ -53,7 +53,7 @@ export function parseSubscriptionHistory(
 export function createHistoryEntry(
   subscriptionId: string,
   createdAt: string,
-  replacedAt: string,
+  replacedAt: string
 ): SubscriptionHistoryEntry {
   return {
     subscriptionId,
@@ -67,7 +67,7 @@ export function createHistoryEntry(
  */
 export function cleanupOldHistoryEntries(
   history: SubscriptionHistory,
-  daysToKeep = 30,
+  daysToKeep = 30
 ): SubscriptionHistory {
   const cutoffDate = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000);
   return history.filter((entry) => new Date(entry.replacedAt) > cutoffDate);
@@ -78,7 +78,7 @@ export function cleanupOldHistoryEntries(
  */
 export function isSubscriptionInHistory(
   subscriptionId: string,
-  rawHistory: unknown,
+  rawHistory: unknown
 ): boolean {
   const history = parseSubscriptionHistory(rawHistory);
   return history.some((entry) => entry.subscriptionId === subscriptionId);
@@ -92,7 +92,7 @@ export function addToHistory(
   subscriptionId: string,
   createdAt: string,
   replacedAt: string,
-  logger?: Logger,
+  logger?: Logger
 ): SubscriptionHistory {
   const parsed = parseSubscriptionHistory(currentHistory, logger);
   const newEntry = createHistoryEntry(subscriptionId, createdAt, replacedAt);
@@ -107,7 +107,7 @@ export function addCurrentSubscriptionToHistory(
   subscriptionId: string,
   replacedAt: Date,
   fallbackCreatedAt: Date,
-  logger?: Logger,
+  logger?: Logger
 ): SubscriptionHistory {
   const parsed = parseSubscriptionHistory(currentHistory, logger);
 
@@ -119,7 +119,7 @@ export function addCurrentSubscriptionToHistory(
   const newEntry = createHistoryEntry(
     subscriptionId,
     estimatedCreatedAt,
-    replacedAt.toISOString(),
+    replacedAt.toISOString()
   );
 
   return [...parsed, newEntry];

@@ -6,6 +6,6 @@ export function useRules(emailAccountId?: string) {
   const { emailAccountId: contextId } = useAccount();
   const id = emailAccountId ?? contextId;
   return useSWR<RulesResponse, { error: string }>(
-    id ? ["/api/user/rules", id] : null,
+    id ? ["/api/user/rules", id] : null
   );
 }

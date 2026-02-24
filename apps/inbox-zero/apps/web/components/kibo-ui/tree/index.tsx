@@ -45,7 +45,7 @@ type TreeNodeContextType = {
 };
 
 const TreeNodeContext = createContext<TreeNodeContextType | undefined>(
-  undefined,
+  undefined
 );
 
 const useTreeNode = () => {
@@ -84,10 +84,10 @@ export const TreeProvider = ({
   className,
 }: TreeProviderProps) => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
-    new Set(defaultExpandedIds),
+    new Set(defaultExpandedIds)
   );
   const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>(
-    selectedIds ?? [],
+    selectedIds ?? []
   );
 
   const isControlled =
@@ -134,7 +134,7 @@ export const TreeProvider = ({
       currentSelectedIds,
       isControlled,
       onSelectionChange,
-    ],
+    ]
   );
 
   return (
@@ -237,11 +237,13 @@ export const TreeNodeTrigger = ({
 
   return (
     <motion.div
+      aria-expanded={isExpanded}
+      aria-selected={isSelected}
       className={cn(
         "group relative mx-1 flex cursor-pointer items-center rounded-md px-3 py-2 transition-all duration-200",
         "hover:bg-accent/50",
         isSelected && "bg-accent/80",
-        className,
+        className
       )}
       onClick={(e) => {
         toggleExpanded(nodeId);
@@ -256,10 +258,8 @@ export const TreeNodeTrigger = ({
         }
       }}
       role="treeitem"
-      tabIndex={0}
-      aria-selected={isSelected}
-      aria-expanded={isExpanded}
       style={{ paddingLeft: level * (indent ?? 0) + 8 }}
+      tabIndex={0}
       whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
       {...props}
     >
@@ -389,9 +389,10 @@ export const TreeExpander = ({
   return (
     <motion.div
       animate={{ rotate: isExpanded ? 90 : 0 }}
+      aria-label={isExpanded ? "Collapse" : "Expand"}
       className={cn(
         "mr-1 flex h-4 w-4 cursor-pointer items-center justify-center",
-        className,
+        className
       )}
       onClick={(e) => {
         e.stopPropagation();
@@ -407,7 +408,6 @@ export const TreeExpander = ({
       }}
       role="button"
       tabIndex={0}
-      aria-label={isExpanded ? "Collapse" : "Expand"}
       transition={{ duration: 0.2, ease: "easeInOut" }}
       {...props}
     >
@@ -450,7 +450,7 @@ export const TreeIcon = ({
     <motion.div
       className={cn(
         "mr-2 flex h-4 w-4 items-center justify-center text-muted-foreground",
-        className,
+        className
       )}
       transition={{ duration: 0.15 }}
       whileHover={{ scale: 1.1 }}

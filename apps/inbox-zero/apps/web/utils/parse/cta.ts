@@ -17,6 +17,6 @@ const ctaKeywords = [
 export function containsCtaKeyword(text: string) {
   const maxLength = 30; // Avoid CTAs that are sentences
   return ctaKeywords.some(
-    (keyword) => text.includes(keyword) && text.length < maxLength,
+    (keyword) => text.includes(keyword) && text.length < maxLength
   );
 }

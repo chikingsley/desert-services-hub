@@ -7,9 +7,9 @@
 import { getGraphToken } from "@/packages/archive/email/sync/graph/token";
 
 export interface SharePointResult {
+  error?: string;
   success: boolean;
   webUrl?: string;
-  error?: string;
 }
 
 export async function uploadToSharePoint(

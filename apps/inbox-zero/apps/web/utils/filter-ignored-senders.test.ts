@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { isIgnoredSender } from "./filter-ignored-senders";
 
 describe("isIgnoredSender", () => {
@@ -45,7 +45,7 @@ describe("isIgnoredSender", () => {
 
     it("returns false for substring match", () => {
       expect(isIgnoredSender("Reminder <reminder@superhuman.com> extra")).toBe(
-        false,
+        false
       );
     });
   });

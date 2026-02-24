@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks";
-import { Button } from "@/components/ui/button";
+import { useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { Tiptap, type TiptapHandle } from "@/components/editor/Tiptap";
+import { LoadingContent } from "@/components/LoadingContent";
 import { SettingCard } from "@/components/SettingCard";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,18 +17,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { toastError, toastSuccess } from "@/components/Toast";
-import { useEmailAccountFull } from "@/hooks/useEmailAccountFull";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LoadingContent } from "@/components/LoadingContent";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useEmailAccountFull } from "@/hooks/useEmailAccountFull";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { saveWritingStyleAction } from "@/utils/actions/user";
 import {
   type SaveWritingStyleBody,
   saveWritingStyleBody,
 } from "@/utils/actions/user.validation";
-import { saveWritingStyleAction } from "@/utils/actions/user";
-import { Tiptap, type TiptapHandle } from "@/components/editor/Tiptap";
 import { getActionErrorMessage } from "@/utils/error";
 
 export function WritingStyleSetting() {
@@ -34,21 +34,21 @@ export function WritingStyleSetting() {
 
   return (
     <SettingCard
-      title="Writing style"
       description="Define your tone and style."
       right={
         <LoadingContent
-          loading={isLoading}
           error={error}
+          loading={isLoading}
           loadingComponent={<Skeleton className="h-8 w-32" />}
         >
           <WritingStyleDialog currentWritingStyle={data?.writingStyle || ""}>
-            <Button variant="outline" size="sm">
+            <Button size="sm" variant="outline">
               {hasWritingStyle ? "Edit" : "Set"}
             </Button>
           </WritingStyleDialog>
         </LoadingContent>
       }
+      title="Writing style"
     />
   );
 }
@@ -91,7 +91,7 @@ function WritingStyleDialog({
       onSettled: () => {
         mutate();
       },
-    },
+    }
   );
 
   const onSubmit = (data: SaveWritingStyleBody) => {
@@ -99,7 +99,7 @@ function WritingStyleDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
@@ -111,18 +111,16 @@ function WritingStyleDialog({
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <Controller
-            name="writingStyle"
             control={control}
+            name="writingStyle"
             render={({ field }) => (
               <div className="max-h-[400px] overflow-y-auto">
                 <Tiptap
-                  ref={editorRef}
+                  autofocus={false}
+                  className="prose prose-sm dark:prose-invert max-w-none [&_p.is-editor-empty:first-child::before]:pointer-events-none [&_p.is-editor-empty:first-child::before]:float-left [&_p.is-editor-empty:first-child::before]:h-0 [&_p.is-editor-empty:first-child::before]:text-muted-foreground [&_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]"
                   initialContent={field.value ?? ""}
                   onChange={field.onChange}
                   output="markdown"
-                  className="prose prose-sm dark:prose-invert max-w-none [&_p.is-editor-empty:first-child::before]:pointer-events-none [&_p.is-editor-empty:first-child::before]:float-left [&_p.is-editor-empty:first-child::before]:h-0 [&_p.is-editor-empty:first-child::before]:text-muted-foreground [&_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]"
-                  autofocus={false}
-                  preservePastedLineBreaks
                   placeholder={`Typical Length: 2-3 sentences
 
 Formality: Informal but professional
@@ -133,16 +131,18 @@ Notable Traits:
 - Uses contractions frequently
 - Concise and direct responses
 - Minimal closings`}
+                  preservePastedLineBreaks
+                  ref={editorRef}
                 />
               </div>
             )}
           />
           {errors.writingStyle && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-1 text-destructive text-sm">
               {errors.writingStyle.message}
             </p>
           )}
-          <Button type="submit" className="mt-4" loading={isExecuting}>
+          <Button className="mt-4" loading={isExecuting} type="submit">
             Save
           </Button>
         </form>

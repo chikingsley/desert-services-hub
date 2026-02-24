@@ -9,18 +9,18 @@ import type { ValidationHelpers } from "./helpers";
 
 export interface CategoryE1State {
   applies: boolean;
+  hasCeaseOperations: boolean;
   hasDeviceType: boolean;
   hasDeviceTypeOtherText: boolean;
-  hasCeaseOperations: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
 }
 
 export interface CategoryE2State {
-  hasStreetSweeper: boolean;
   hasManualSweep: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
+  hasStreetSweeper: boolean;
 }
 
 export function getCategoryEState(

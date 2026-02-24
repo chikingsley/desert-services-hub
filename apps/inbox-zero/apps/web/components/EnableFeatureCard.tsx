@@ -1,23 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { SectionDescription, TypographyH3 } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { SectionDescription, TypographyH3 } from "@/components/Typography";
 import { cn } from "@/utils";
 
 interface EnableFeatureCardProps {
-  title: string;
+  buttonText: string;
   description: React.ReactNode;
   extraDescription?: React.ReactNode;
-  imageSrc: string;
-  imageAlt: string;
-  buttonText: string;
-  href?: string;
   hideBorder?: boolean;
+  href?: string;
+  imageAlt: string;
+  imageSrc: string;
   onEnable?: () => Promise<void>;
+  title: string;
 }
 
 export function EnableFeatureCard({
@@ -43,17 +43,17 @@ export function EnableFeatureCard({
     <Card
       className={cn(
         "mx-4 mt-10 max-w-2xl p-6 md:mx-auto",
-        hideBorder && "border-none shadow-none",
+        hideBorder && "border-none shadow-none"
       )}
     >
       <div className="text-center">
         <Image
-          src={imageSrc}
           alt={imageAlt}
-          width={200}
-          height={200}
           className="mx-auto dark:brightness-90 dark:invert"
+          height={200}
+          src={imageSrc}
           unoptimized
+          width={200}
         />
 
         <TypographyH3 className="mt-2">{title}</TypographyH3>

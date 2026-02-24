@@ -1,12 +1,12 @@
 "use server";
 
 import { generateReplySchema } from "@/utils/actions/generate-reply.validation";
+import { actionClient } from "@/utils/actions/safe-action";
 import { aiGenerateNudge } from "@/utils/ai/reply/generate-nudge";
+import { SafeError } from "@/utils/error";
 import { emailToContent } from "@/utils/mail";
 import { getReply, saveReply } from "@/utils/redis/reply";
-import { actionClient } from "@/utils/actions/safe-action";
 import { getEmailAccountWithAi } from "@/utils/user/get";
-import { SafeError } from "@/utils/error";
 
 export const generateNudgeReplyAction = actionClient
   .metadata({ name: "generateNudgeReply" })
@@ -18,18 +18,24 @@ export const generateNudgeReplyAction = actionClient
     }) => {
       const emailAccount = await getEmailAccountWithAi({ emailAccountId });
 
-      if (!emailAccount) throw new SafeError("User not found");
+      if (!emailAccount) {
+        throw new SafeError("User not found");
+      }
 
       const lastMessage = inputMessages.at(-1);
 
-      if (!lastMessage) throw new SafeError("No message provided");
+      if (!lastMessage) {
+        throw new SafeError("No message provided");
+      }
 
       const reply = await getReply({
         emailAccountId,
         messageId: lastMessage.id,
       });
 
-      if (reply) return { text: reply };
+      if (reply) {
+        return { text: reply };
+      }
 
       const messages = inputMessages.map((msg) => ({
         ...msg,
@@ -49,5 +55,5 @@ export const generateNudgeReplyAction = actionClient
       });
 
       return { text };
-    },
+    }
   );

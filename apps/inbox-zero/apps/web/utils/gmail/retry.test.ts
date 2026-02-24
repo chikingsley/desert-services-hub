@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
+  calculateRetryDelay,
   extractErrorInfo,
   isRetryableError,
-  calculateRetryDelay,
 } from "./retry";
 
 describe("Gmail retry helpers", () => {
@@ -141,7 +141,7 @@ describe("Gmail retry helpers", () => {
         false,
         1,
         undefined,
-        errorMessage,
+        errorMessage
       );
       expect(delay).toBe(30_000);
     });
@@ -165,7 +165,7 @@ describe("Gmail retry helpers", () => {
         false,
         1,
         undefined,
-        errorMessage,
+        errorMessage
       );
       expect(delay).toBeGreaterThan(14_000); // Should be ~15s
       expect(delay).toBeLessThan(16_000);

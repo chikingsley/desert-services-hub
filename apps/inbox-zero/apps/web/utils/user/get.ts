@@ -1,7 +1,7 @@
-import prisma from "@/utils/prisma";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { Prisma } from "@/generated/prisma/client";
 import { env } from "@/env";
+import type { Prisma } from "@/generated/prisma/client";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import prisma from "@/utils/prisma";
 
 export type EmailAccountWithAIAndTokens = Prisma.EmailAccountGetPayload<{
   select: {
@@ -101,7 +101,9 @@ export async function getEmailAccountWithAiAndTokens({
     },
   });
 
-  if (!emailAccount) return null;
+  if (!emailAccount) {
+    return null;
+  }
 
   return {
     ...emailAccount,

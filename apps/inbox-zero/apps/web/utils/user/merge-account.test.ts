@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mergeAccount } from "./merge-account";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getMockUserSelect } from "@/__tests__/helpers";
 import prisma from "@/utils/__mocks__/prisma";
 import { createScopedLogger } from "@/utils/logger";
-import { getMockUserSelect } from "@/__tests__/helpers";
+import { mergeAccount } from "./merge-account";
 
 vi.mock("@/utils/prisma");
 vi.mock("@/utils/user/merge-premium");
@@ -34,7 +34,7 @@ describe("mergeAccount", () => {
       ] as any);
 
       prisma.user.findUnique.mockResolvedValue(
-        getMockUserSelect({ email: "primary@test.com" }) as any,
+        getMockUserSelect({ email: "primary@test.com" }) as any
       );
 
       prisma.account.update.mockResolvedValue({} as any);
@@ -57,7 +57,7 @@ describe("mergeAccount", () => {
           expect.anything(), // account update
           expect.anything(), // email account update
           expect.anything(), // user update (primary email change)
-        ]),
+        ])
       );
       expect(prisma.user.delete).not.toHaveBeenCalled();
     });
@@ -81,7 +81,7 @@ describe("mergeAccount", () => {
       ] as any);
 
       prisma.user.findUnique.mockResolvedValue(
-        getMockUserSelect({ email: "primary@test.com" }) as any,
+        getMockUserSelect({ email: "primary@test.com" }) as any
       );
 
       prisma.account.update.mockResolvedValue({} as any);
@@ -102,12 +102,10 @@ describe("mergeAccount", () => {
         expect.arrayContaining([
           expect.anything(), // account update
           expect.anything(), // email account update
-        ]),
+        ])
       );
       expect(prisma.$transaction).toHaveBeenCalledWith(
-        expect.not.arrayContaining([
-          expect.objectContaining({ model: "user" }),
-        ]),
+        expect.not.arrayContaining([expect.objectContaining({ model: "user" })])
       );
       expect(prisma.user.delete).not.toHaveBeenCalled();
     });
@@ -128,7 +126,7 @@ describe("mergeAccount", () => {
       ] as any);
 
       prisma.user.findUnique.mockResolvedValue(
-        getMockUserSelect({ email: "only@test.com" }) as any,
+        getMockUserSelect({ email: "only@test.com" }) as any
       );
 
       prisma.account.update.mockResolvedValue({} as any);
@@ -161,7 +159,7 @@ describe("mergeAccount", () => {
           expect.anything(), // account update
           expect.anything(), // email account update
           expect.anything(), // user delete
-        ]),
+        ])
       );
       expect(prisma.user.delete).toHaveBeenCalledWith({
         where: { id: sourceUserId },

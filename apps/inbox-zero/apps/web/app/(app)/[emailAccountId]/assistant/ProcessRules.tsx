@@ -1,39 +1,39 @@
 "use client";
 
-import { useCallback, useState, useRef, useMemo } from "react";
-import useSWR from "swr";
-import useSWRInfinite from "swr/infinite";
-import { parseAsBoolean, useQueryState } from "nuqs";
-import PQueue from "p-queue";
 import {
   BookOpenCheckIcon,
-  SparklesIcon,
-  PenSquareIcon,
-  PauseIcon,
   ChevronsDownIcon,
+  PauseIcon,
+  PenSquareIcon,
   RefreshCcwIcon,
+  SparklesIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { toastError } from "@/components/Toast";
-import { LoadingContent } from "@/components/LoadingContent";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import type { MessagesResponse } from "@/app/api/messages/route";
-import { EmailMessageCell } from "@/components/EmailMessageCell";
-import { runRulesAction } from "@/utils/actions/ai-rule";
-import type { RulesResponse } from "@/app/api/user/rules/route";
-import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
-import { Card } from "@/components/ui/card";
-import type { RunRulesResult } from "@/utils/ai/choose-rule/run-rules";
-import { SearchForm } from "@/components/SearchForm";
-import type { BatchExecutedRulesResponse } from "@/app/api/user/executed-rules/batch/route";
-import { isAIRule, isGroupRule, isStaticRule } from "@/utils/condition";
-import { cn } from "@/utils";
-import { TestCustomEmailForm } from "@/app/(app)/[emailAccountId]/assistant/TestCustomEmailForm";
-import { ResultsDisplay } from "@/app/(app)/[emailAccountId]/assistant/ResultDisplay";
-import { useAccount } from "@/providers/EmailAccountProvider";
+import { parseAsBoolean, useQueryState } from "nuqs";
+import PQueue from "p-queue";
+import { useCallback, useMemo, useRef, useState } from "react";
+import useSWR from "swr";
+import useSWRInfinite from "swr/infinite";
 import { FixWithChat } from "@/app/(app)/[emailAccountId]/assistant/FixWithChat";
-import { useChat } from "@/providers/ChatProvider";
+import { ResultsDisplay } from "@/app/(app)/[emailAccountId]/assistant/ResultDisplay";
+import { TestCustomEmailForm } from "@/app/(app)/[emailAccountId]/assistant/TestCustomEmailForm";
+import type { MessagesResponse } from "@/app/api/messages/route";
+import type { BatchExecutedRulesResponse } from "@/app/api/user/executed-rules/batch/route";
+import type { RulesResponse } from "@/app/api/user/rules/route";
+import { EmailMessageCell } from "@/components/EmailMessageCell";
+import { LoadingContent } from "@/components/LoadingContent";
+import { SearchForm } from "@/components/SearchForm";
+import { toastError } from "@/components/Toast";
 import { MutedText } from "@/components/Typography";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { useChat } from "@/providers/ChatProvider";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { cn } from "@/utils";
+import { runRulesAction } from "@/utils/actions/ai-rule";
+import type { RunRulesResult } from "@/utils/ai/choose-rule/run-rules";
+import { isAIRule, isGroupRule, isStaticRule } from "@/utils/condition";
 
 type Message = MessagesResponse["messages"][number];
 
@@ -41,7 +41,7 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
   const [searchQuery, setSearchQuery] = useQueryState("search");
   const [showCustomForm, setShowCustomForm] = useQueryState(
     "custom",
-    parseAsBoolean.withDefault(false),
+    parseAsBoolean.withDefault(false)
   );
 
   const { data, isLoading, isValidating, error, setSize, mutate, size } =
@@ -50,7 +50,9 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
         // Always return the URL for the first page
         if (index === 0) {
           const params = new URLSearchParams();
-          if (searchQuery) params.set("q", searchQuery);
+          if (searchQuery) {
+            params.set("q", searchQuery);
+          }
           const paramsString = params.toString();
 
           return `/api/messages${paramsString ? `?${paramsString}` : ""}`;
@@ -58,10 +60,14 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
 
         // For subsequent pages, check if we have a next page token
         const pageToken = previousPageData?.nextPageToken;
-        if (!pageToken) return null;
+        if (!pageToken) {
+          return null;
+        }
 
         const params = new URLSearchParams();
-        if (searchQuery) params.set("q", searchQuery);
+        if (searchQuery) {
+          params.set("q", searchQuery);
+        }
         params.set("pageToken", pageToken);
         const paramsString = params.toString();
 
@@ -69,7 +75,7 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
       },
       {
         revalidateFirstPage: false,
-      },
+      }
     );
 
   const onLoadMore = async () => {
@@ -87,7 +93,9 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
     const messages = data?.flatMap((page) => page.messages) || [];
     return messages.filter((message) => {
       // works because messages are sorted by date descending
-      if (threadIds.has(message.threadId)) return false;
+      if (threadIds.has(message.threadId)) {
+        return false;
+      }
       threadIds.add(message.threadId);
       return true;
     });
@@ -99,18 +107,18 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
   // Fetch existing executed rules for current messages
   const messageIdsToFetch = useMemo(
     () => messages.map((m) => m.id),
-    [messages],
+    [messages]
   );
 
   const { data: existingRules } = useSWR<BatchExecutedRulesResponse>(
     messageIdsToFetch.length > 0
       ? `/api/user/executed-rules/batch?messageIds=${messageIdsToFetch.join(",")}`
-      : null,
+      : null
   );
 
   // only show test rules form if we have an AI rule. this form won't match group/static rules which will confuse users
   const hasAiRules = rules?.some(
-    (rule) => isAIRule(rule) && !isGroupRule(rule) && !isStaticRule(rule),
+    (rule) => isAIRule(rule) && !isGroupRule(rule) && !isStaticRule(rule)
   );
 
   const isRunningAllRef = useRef(false);
@@ -162,7 +170,7 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
       }
       setIsRunning((prev) => ({ ...prev, [message.id]: false }));
     },
-    [testMode, emailAccountId],
+    [testMode, emailAccountId]
   );
 
   const handleRunAll = async () => {
@@ -186,17 +194,25 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
 
       // Filter messages that should be processed
       const messagesToProcess = currentBatch.filter((message) => {
-        if (allResults[message.id]) return false;
-        if (handledThreadsRef.current.has(message.threadId)) return false;
+        if (allResults[message.id]) {
+          return false;
+        }
+        if (handledThreadsRef.current.has(message.threadId)) {
+          return false;
+        }
         return true;
       });
 
       // Add all messages to the queue for concurrent processing
       for (const message of messagesToProcess) {
-        if (!isRunningAllRef.current) break;
+        if (!isRunningAllRef.current) {
+          break;
+        }
 
         processQueue.add(async () => {
-          if (!isRunningAllRef.current) return;
+          if (!isRunningAllRef.current) {
+            return;
+          }
 
           try {
             await onRun(message);
@@ -213,7 +229,9 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
 
       // Check if we got new data in the last request
       const lastPage = currentData?.[page];
-      if (!lastPage?.nextPageToken || !isRunningAllRef.current) break;
+      if (!(lastPage?.nextPageToken && isRunningAllRef.current)) {
+        break;
+      }
     }
 
     // Wait for all queued tasks to complete
@@ -239,7 +257,7 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
       <div className="flex items-center justify-between gap-2 pb-6">
         <div className="flex items-center gap-2">
           {isRunningAll ? (
-            <Button onClick={handleStop} variant="outline" size="sm">
+            <Button onClick={handleStop} size="sm" variant="outline">
               <PauseIcon className="mr-2 size-4" />
               Stop
             </Button>
@@ -254,9 +272,9 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
         <div className="flex items-center gap-2">
           {testMode && (
             <Button
-              variant="ghost"
               onClick={() => setShowCustomForm((show) => !show)}
               size="sm"
+              variant="ghost"
             >
               <PenSquareIcon className="mr-2 size-4" />
               Custom
@@ -283,7 +301,7 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
         </div>
       )}
 
-      <LoadingContent loading={isLoading} error={error}>
+      <LoadingContent error={error} loading={isLoading}>
         {messages.length === 0 ? (
           <MutedText className="p-4 text-center">No emails found</MutedText>
         ) : (
@@ -292,14 +310,14 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
               <TableBody>
                 {messages.map((message) => (
                   <ProcessRulesRow
+                    isRunning={isRunning[message.id]}
                     key={message.id}
                     message={message}
-                    userEmail={userEmail}
-                    isRunning={isRunning[message.id]}
-                    results={allResults[message.id]}
                     onRun={(rerun) => onRun(message, rerun)}
-                    testMode={testMode}
+                    results={allResults[message.id]}
                     setInput={setInput}
+                    testMode={testMode}
+                    userEmail={userEmail}
                   />
                 ))}
               </TableBody>
@@ -307,11 +325,11 @@ export function ProcessRulesContent({ testMode }: { testMode: boolean }) {
 
             <div className="mx-4 mb-4">
               <Button
-                variant="outline"
                 className="w-full"
-                onClick={onLoadMore}
-                loading={isValidating}
                 disabled={!hasMore || isValidating}
+                loading={isValidating}
+                onClick={onLoadMore}
+                variant="outline"
               >
                 {!isValidating && <ChevronsDownIcon className="mr-2 size-4" />}
                 {isValidating
@@ -355,13 +373,13 @@ function ProcessRulesRow({
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
             <EmailMessageCell
-              sender={message.headers.from}
-              subject={message.headers.subject}
-              snippet={message.snippet}
-              userEmail={userEmail}
-              threadId={message.threadId}
-              messageId={message.id}
               labelIds={message.labelIds}
+              messageId={message.id}
+              sender={message.headers.from}
+              snippet={message.snippet}
+              subject={message.headers.subject}
+              threadId={message.threadId}
+              userEmail={userEmail}
             />
           </div>
           <div className="ml-4 flex shrink-0 items-center gap-1">
@@ -369,15 +387,15 @@ function ProcessRulesRow({
               <>
                 <ResultsDisplay results={results} />
                 <FixWithChat
-                  setInput={setInput}
                   message={message}
                   results={results}
+                  setInput={setInput}
                 />
                 <Button
-                  variant="outline"
-                  size="sm"
                   disabled={isRunning}
                   onClick={() => onRun(true)}
+                  size="sm"
+                  variant="outline"
                 >
                   <RefreshCcwIcon
                     className={cn("mr-2 size-4", isRunning && "animate-spin")}
@@ -387,10 +405,10 @@ function ProcessRulesRow({
               </>
             ) : (
               <Button
-                variant="default"
-                size="sm"
                 loading={isRunning}
                 onClick={() => onRun()}
+                size="sm"
+                variant="default"
               >
                 {!isRunning && <SparklesIcon className="mr-2 size-4" />}
                 {testMode ? "Test" : "Run"}

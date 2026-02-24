@@ -8,7 +8,9 @@ export function useInterval(callback: () => void, delay: number | null) {
   }, [callback]);
 
   useEffect(() => {
-    if (delay === null) return;
+    if (delay === null) {
+      return;
+    }
 
     const interval = setInterval(() => savedCallback.current(), delay);
     return () => clearInterval(interval);

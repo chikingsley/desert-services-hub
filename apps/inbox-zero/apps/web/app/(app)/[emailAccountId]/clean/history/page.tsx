@@ -1,11 +1,11 @@
-import { Suspense } from "react";
-import Link from "next/link";
 import { PlusIcon } from "lucide-react";
+import Link from "next/link";
+import { Suspense } from "react";
 import { CleanHistory } from "@/app/(app)/[emailAccountId]/clean/CleanHistory";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loading } from "@/components/Loading";
 import { PageHeading } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { prefixPath } from "@/utils/path";
 
 export default async function CleanHistoryPage(props: {
@@ -18,7 +18,7 @@ export default async function CleanHistoryPage(props: {
       <CardHeader>
         <div className="flex items-center justify-between">
           <PageHeading>Clean History</PageHeading>
-          <Button variant="outline" asChild>
+          <Button asChild variant="outline">
             <Link href={prefixPath(emailAccountId, "/clean")}>
               <PlusIcon className="mr-2 size-4" />
               New Clean

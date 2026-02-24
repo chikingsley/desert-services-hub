@@ -1,15 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import {
-  HomeIcon,
-  UserIcon,
-  RocketIcon,
   BuildingIcon,
   HeadphonesIcon,
+  HomeIcon,
+  RocketIcon,
   ShoppingCartIcon,
+  UserIcon,
 } from "lucide-react";
-import { cn } from "@/utils";
+import Link from "next/link";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -19,6 +18,7 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import { cn } from "@/utils";
 
 const navigation = [{ name: "Enterprise", href: "/enterprise" }];
 
@@ -92,21 +92,21 @@ export function HeaderLinks() {
         <NavigationMenuList>
           {/* Solutions Dropdown */}
           <NavigationMenuItem>
-            <NavigationMenuTrigger className="text-sm font-semibold font-geist leading-6 text-gray-900">
+            <NavigationMenuTrigger className="font-geist font-semibold text-gray-900 text-sm leading-6">
               Solutions
             </NavigationMenuTrigger>
             <NavigationMenuContent>
               <ul className="grid w-[640px] grid-cols-2 gap-2 p-4">
                 {useCases.map((useCase) => (
                   <EnhancedListItem
-                    key={useCase.title}
-                    title={useCase.title}
+                    borderColor={useCase.borderColor}
+                    gradient={useCase.gradient}
+                    hoverBg={useCase.hoverBg}
                     href={useCase.href}
                     icon={useCase.icon}
                     iconColor={useCase.iconColor}
-                    gradient={useCase.gradient}
-                    borderColor={useCase.borderColor}
-                    hoverBg={useCase.hoverBg}
+                    key={useCase.title}
+                    title={useCase.title}
                   >
                     {useCase.description}
                   </EnhancedListItem>
@@ -123,8 +123,8 @@ export function HeaderLinks() {
                 className={navigationMenuTriggerStyle()}
               >
                 <Link
+                  className="font-geist font-semibold text-gray-900 text-sm leading-6"
                   href={item.href}
-                  className="text-sm font-semibold font-geist leading-6 text-gray-900"
                 >
                   {item.name}
                 </Link>
@@ -159,33 +159,33 @@ function EnhancedListItem({
     <li {...props}>
       <NavigationMenuLink asChild>
         <Link
-          href={href}
           className={cn(
             "group block select-none space-y-1 rounded-xl p-4 leading-none no-underline outline-none transition-all duration-200 focus:bg-accent focus:text-accent-foreground",
-            hoverBg,
+            hoverBg
           )}
+          href={href}
         >
           <div className="flex items-start gap-3">
             <div
               className={cn(
-                "p-px rounded-lg shadow-sm bg-gradient-to-b",
-                borderColor,
+                "rounded-lg bg-gradient-to-b p-px shadow-sm",
+                borderColor
               )}
             >
               <div
                 className={cn(
                   "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[7px] bg-gradient-to-b shadow-sm transition-transform",
-                  gradient,
+                  gradient
                 )}
               >
                 <Icon className={cn("h-4 w-4", iconColor)} />
               </div>
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold leading-none text-gray-900 group-hover:text-gray-800">
+              <div className="font-semibold text-gray-900 text-sm leading-none group-hover:text-gray-800">
                 {title}
               </div>
-              <p className="mt-1 text-sm leading-snug text-gray-600 group-hover:text-gray-700">
+              <p className="mt-1 text-gray-600 text-sm leading-snug group-hover:text-gray-700">
                 {children}
               </p>
             </div>

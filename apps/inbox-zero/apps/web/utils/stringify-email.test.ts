@@ -1,10 +1,10 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import type { EmailForLLM } from "@/utils/types";
 import {
   stringifyEmail,
-  stringifyEmailSimple,
   stringifyEmailFromBody,
+  stringifyEmailSimple,
 } from "./stringify-email";
-import type { EmailForLLM } from "@/utils/types";
 
 vi.mock("server-only", () => ({}));
 
@@ -29,7 +29,7 @@ describe("stringifyEmail", () => {
         "<cc>cc@example.com</cc>\n" +
         "<date>2025-04-06T13:37:14.413Z</date>\n" +
         "<subject>Test Subject</subject>\n" +
-        "<body>Hello world</body>",
+        "<body>Hello world</body>"
     );
   });
 
@@ -44,10 +44,10 @@ describe("stringifyEmail", () => {
         subject: "Test Subject",
         content: longContent,
       },
-      maxLength,
+      maxLength
     );
     expect(result).toBe(
-      `<from>test@example.com</from>\n<to>to@example.com</to>\n<subject>Test Subject</subject>\n<body>${"a".repeat(50)}...</body>`,
+      `<from>test@example.com</from>\n<to>to@example.com</to>\n<subject>Test Subject</subject>\n<body>${"a".repeat(50)}...</body>`
     );
   });
 
@@ -64,7 +64,7 @@ describe("stringifyEmail", () => {
       "<from>test@example.com</from>\n" +
         "<to>to@example.com</to>\n" +
         "<subject>Test Subject</subject>\n" +
-        "<body>Hello world</body>",
+        "<body>Hello world</body>"
     );
   });
 });
@@ -85,7 +85,7 @@ describe("stringifyEmailSimple", () => {
     expect(result).toBe(
       "<from>test@example.com</from>\n" +
         "<subject>Test Subject</subject>\n" +
-        "<body>Hello world</body>",
+        "<body>Hello world</body>"
     );
   });
 });
@@ -104,7 +104,7 @@ describe("stringifyEmailFromBody", () => {
 
     const result = stringifyEmailFromBody(email);
     expect(result).toBe(
-      "<from>test@example.com</from>\n<body>Hello world</body>",
+      "<from>test@example.com</from>\n<body>Hello world</body>"
     );
   });
 });

@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
-import { aiChooseRule } from "@/utils/ai/choose-rule/ai-choose-rule";
-import { ActionType } from "@/generated/prisma/enums";
 import { getEmail, getEmailAccount, getRule } from "@/__tests__/helpers";
+import { ActionType } from "@/generated/prisma/enums";
+import { aiChooseRule } from "@/utils/ai/choose-rule/ai-choose-rule";
 
 // pnpm test-ai ai-choose-rule
 
@@ -22,7 +22,7 @@ describe.runIf(isAiTest)("aiChooseRule", () => {
 
   test("Should return correct rule when only one rule passed", async () => {
     const rule = getRule(
-      "Match emails that have the word 'test' in the subject line",
+      "Match emails that have the word 'test' in the subject line"
     );
 
     const result = await aiChooseRule({
@@ -41,12 +41,12 @@ describe.runIf(isAiTest)("aiChooseRule", () => {
     const rule1 = getRule(
       "Match emails that have the word 'test' in the subject line",
       [],
-      "Test emails",
+      "Test emails"
     );
     const rule2 = getRule(
       "Match emails that have the word 'remember' in the subject line",
       [],
-      "Remember emails",
+      "Remember emails"
     );
 
     const result = await aiChooseRule({
@@ -64,7 +64,7 @@ describe.runIf(isAiTest)("aiChooseRule", () => {
     const rule1 = getRule(
       "Match emails that have the word 'question' in the subject line",
       [],
-      "Question emails",
+      "Question emails"
     );
     const rule2 = getRule(
       "Match emails asking for a joke",
@@ -88,7 +88,7 @@ describe.runIf(isAiTest)("aiChooseRule", () => {
           folderId: null,
         },
       ],
-      "Joke requests",
+      "Joke requests"
     );
 
     const result = await aiChooseRule({
@@ -109,67 +109,67 @@ describe.runIf(isAiTest)("aiChooseRule", () => {
     const recruiters = getRule(
       "Match emails from recruiters or about job opportunities",
       [],
-      "Recruiters",
+      "Recruiters"
     );
     const legal = getRule(
       "Match emails containing legal documents or contracts",
       [],
-      "Legal",
+      "Legal"
     );
     const requiresResponse = getRule(
       "Match emails requiring a response",
       [],
-      "Requires Response",
+      "Requires Response"
     );
     const productUpdates = getRule(
       "Match emails about product updates or feature announcements",
       [],
-      "Product Updates",
+      "Product Updates"
     );
     const financial = getRule(
       "Match emails containing financial information or invoices",
       [],
-      "Financial",
+      "Financial"
     );
     const technicalIssues = getRule(
       "Match emails about technical issues like server downtime or bug reports",
       [],
-      "Technical Issues",
+      "Technical Issues"
     );
     const marketing = getRule(
       "Match emails containing marketing or promotional content",
       [],
-      "Marketing",
+      "Marketing"
     );
     const teamUpdates = getRule(
       "Match emails about team updates or internal communications",
       [],
-      "Team Updates",
+      "Team Updates"
     );
     const customerFeedback = getRule(
       "Match emails about customer feedback or support requests",
       [],
-      "Customer Feedback",
+      "Customer Feedback"
     );
     const events = getRule(
       "Match emails containing event invitations or RSVPs",
       [],
-      "Events",
+      "Events"
     );
     const projectDeadlines = getRule(
       "Match emails about project deadlines or milestones",
       [],
-      "Project Deadlines",
+      "Project Deadlines"
     );
     const urgent = getRule(
       "Match urgent emails requiring immediate attention",
       [],
-      "Urgent",
+      "Urgent"
     );
     const catchAll = getRule(
       "Match emails that don't fit any other category",
       [],
-      "Catch All",
+      "Catch All"
     );
 
     const rules = [
@@ -222,7 +222,7 @@ describe.runIf(isAiTest)("aiChooseRule", () => {
           result.rules.map((r) => ({
             name: r.rule.name,
             isPrimary: r.isPrimary,
-          })),
+          }))
         );
         console.log("Reasoning:", result.reason);
       }
@@ -283,7 +283,7 @@ describe.runIf(isAiTest)("aiChooseRule", () => {
           result.rules.map((r) => ({
             name: r.rule.name,
             isPrimary: r.isPrimary,
-          })),
+          }))
         );
         console.log("Reasoning:", result.reason);
       }
@@ -309,13 +309,13 @@ describe.runIf(isAiTest)("aiChooseRule", () => {
       // Log if multiple rules were matched
       if (result.rules.length > 1) {
         console.log(
-          "⚠️  Emails Requiring Response test matched multiple rules:",
+          "⚠️  Emails Requiring Response test matched multiple rules:"
         );
         console.log(
           result.rules.map((r) => ({
             name: r.rule.name,
             isPrimary: r.isPrimary,
-          })),
+          }))
         );
         console.log("Reasoning:", result.reason);
       }
@@ -390,7 +390,7 @@ describe.runIf(isAiTest)("aiChooseRule", () => {
           result.rules.map((r) => ({
             name: r.rule.name,
             isPrimary: r.isPrimary,
-          })),
+          }))
         );
         console.log("Reasoning:", result.reason);
       }
@@ -420,7 +420,7 @@ describe.runIf(isAiTest)("aiChooseRule", () => {
           result.rules.map((r) => ({
             name: r.rule.name,
             isPrimary: r.isPrimary,
-          })),
+          }))
         );
         console.log("Reasoning:", result.reason);
       }

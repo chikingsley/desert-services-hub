@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { withEmailProvider } from "@/utils/middleware";
 import { messageQuerySchema } from "@/app/api/messages/validation";
 import { isAssistantEmail } from "@/utils/assistant/is-assistant-email";
-import { GmailLabel } from "@/utils/gmail/label";
-import type { EmailProvider } from "@/utils/email/types";
 import { isGoogleProvider } from "@/utils/email/provider-types";
+import type { EmailProvider } from "@/utils/email/types";
+import { GmailLabel } from "@/utils/gmail/label";
 import type { Logger } from "@/utils/logger";
+import { withEmailProvider } from "@/utils/middleware";
 
 export type MessagesResponse = Awaited<ReturnType<typeof getMessages>>;
 
@@ -78,7 +78,9 @@ async function getMessages({
         const isDraft = message.labelIds?.includes(GmailLabel.DRAFT);
         const isInbox = message.labelIds?.includes(GmailLabel.INBOX);
 
-        if (isDraft) return false;
+        if (isDraft) {
+          return false;
+        }
 
         if (isSent) {
           // Only show sent message that are in the inbox

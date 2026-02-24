@@ -23,16 +23,16 @@ const DATE_FROM_URL_REGEX = /(\d{1,2})([A-Za-z]{3})(\d{2})-/;
 // =============================================================================
 
 export interface InspectionData {
-  siteName: string;
-  siteAddress: string;
-  reportUrl: string;
   inspectionDate: Date;
+  reportUrl: string;
+  siteAddress: string;
+  siteName: string;
 }
 
 export interface ParsedEmail {
   from: string;
-  subject: string;
   html: string;
+  subject: string;
   text: string;
 }
 

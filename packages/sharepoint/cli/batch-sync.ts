@@ -207,8 +207,8 @@ const EXCLUDE_IDS = [
 
 interface ProjectRow {
   notion_project_id: string;
-  project_name: string;
   pdf_count: number;
+  project_name: string;
 }
 
 const projects = await db
@@ -252,9 +252,9 @@ if (dryRun) {
 
 interface AttachmentRow {
   name: string;
+  size: number;
   storage_bucket: string;
   storage_path: string;
-  size: number;
 }
 
 const totalUploaded = 0;

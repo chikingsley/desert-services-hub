@@ -1,6 +1,6 @@
-import { useMemo, useState, useRef, useEffect } from "react";
-import { useTheme } from "next-themes";
 import DOMPurify from "dompurify";
+import { useTheme } from "next-themes";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export function HtmlEmail({ html }: { html: string }) {
   const [showReplies, setShowReplies] = useState(false);
@@ -11,12 +11,12 @@ export function HtmlEmail({ html }: { html: string }) {
   const sanitizedHtml = useMemo(() => sanitize(html), [html]);
   const { mainContent, hasReplies } = useMemo(
     () => getEmailContent(sanitizedHtml),
-    [sanitizedHtml],
+    [sanitizedHtml]
   );
 
   const srcDoc = useMemo(
     () => getIframeHtml(showReplies ? sanitizedHtml : mainContent, isDarkMode),
-    [sanitizedHtml, mainContent, showReplies, isDarkMode],
+    [sanitizedHtml, mainContent, showReplies, isDarkMode]
   );
 
   const iframeHeight = useIframeHeight(iframeRef);
@@ -24,19 +24,19 @@ export function HtmlEmail({ html }: { html: string }) {
   return (
     <div className="relative">
       <iframe
-        ref={iframeRef}
-        srcDoc={srcDoc}
         className="min-h-0 w-full"
+        ref={iframeRef}
+        referrerPolicy="no-referrer"
+        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+        srcDoc={srcDoc}
         style={{ height: `${iframeHeight + 3}px` }}
         title="Email content preview"
-        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-        referrerPolicy="no-referrer"
       />
       {hasReplies && (
         <button
-          type="button"
           className="absolute bottom-0 left-0 text-muted-foreground hover:text-foreground"
           onClick={() => setShowReplies(!showReplies)}
+          type="button"
         >
           ...
         </button>
@@ -187,7 +187,7 @@ function getIframeHtml(html: string, isDarkMode: boolean) {
     if (content.indexOf("<head") === -1) {
       return content.replace(
         /<html([^>]*)>/i,
-        `<html$1><head>${headContent}</head>`,
+        `<html$1><head>${headContent}</head>`
       );
     }
 
@@ -222,7 +222,7 @@ function addDarkModeClass(html: string, isDarkMode: boolean) {
             `${existingClass[1].trim()} ${darkClass}`.trim();
           return match.replace(
             /class=["']([^"']*)["']/i,
-            `class="${combinedClass}"`,
+            `class="${combinedClass}"`
           );
         }
         return `<body${attributes} class="${darkClass}">`;
@@ -263,7 +263,9 @@ function useIframeHeight(iframeRef: React.RefObject<HTMLIFrameElement | null>) {
     };
 
     const attemptUpdate = () => {
-      if (attempts >= maxAttempts) return;
+      if (attempts >= maxAttempts) {
+        return;
+      }
 
       const success = updateHeight();
       if (!success) {

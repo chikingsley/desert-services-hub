@@ -261,8 +261,8 @@ export async function cleanLocation(
 
 interface SchoolCleanParams {
   name?: string;
-  website?: string;
   profile?: string; // LinkedIn URL
+  website?: string;
 }
 
 /**

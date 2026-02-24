@@ -1,6 +1,5 @@
 "use client";
 
-import { useHotkeys } from "react-hotkeys-hook";
 import {
   Combobox,
   ComboboxInput,
@@ -10,23 +9,24 @@ import {
 import { CheckCircleIcon, TrashIcon, XIcon } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
+import { useHotkeys } from "react-hotkeys-hook";
 import useSWR from "swr";
 import { z } from "zod";
+import type { ContactsResponse } from "@/app/api/google/contacts/route";
+import { Tiptap, type TiptapHandle } from "@/components/editor/Tiptap";
 import { Input, Label } from "@/components/Input";
+import { ButtonLoader } from "@/components/Loading";
 import { toastError, toastSuccess } from "@/components/Toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ButtonLoader } from "@/components/Loading";
-import { env } from "@/env";
-import { extractNameFromEmail } from "@/utils/email";
-import { Tiptap, type TiptapHandle } from "@/components/editor/Tiptap";
-import { sendEmailAction } from "@/utils/actions/mail";
-import type { ContactsResponse } from "@/app/api/google/contacts/route";
-import type { SendEmailBody } from "@/utils/gmail/mail";
 import { CommandShortcut } from "@/components/ui/command";
+import { env } from "@/env";
 import { useModifierKey } from "@/hooks/useModifierKey";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { sendEmailAction } from "@/utils/actions/mail";
+import { extractNameFromEmail } from "@/utils/email";
+import type { SendEmailBody } from "@/utils/gmail/mail";
 
 export type ReplyingToEmail = {
   threadId?: string;
@@ -101,7 +101,7 @@ export const ComposeEmailForm = ({
 
       refetch?.();
     },
-    [refetch, onSuccess, showFullContent, replyingToEmail, emailAccountId],
+    [refetch, onSuccess, showFullContent, replyingToEmail, emailAccountId]
   );
 
   useHotkeys(
@@ -116,7 +116,7 @@ export const ComposeEmailForm = ({
       enableOnFormTags: true,
       enableOnContentEditable: true,
       preventDefault: true,
-    },
+    }
   );
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,7 +126,7 @@ export const ComposeEmailForm = ({
       : null,
     {
       keepPreviousData: true,
-    },
+    }
   );
 
   // TODO not in love with how this was implemented
@@ -134,7 +134,7 @@ export const ComposeEmailForm = ({
 
   const onRemoveSelectedEmail = (emailAddress: string) => {
     const filteredEmailAddresses = selectedEmailAddressses.filter(
-      (email) => email !== emailAddress,
+      (email) => email !== emailAddress
     );
     setValue("to", filteredEmailAddresses.join(","));
   };
@@ -156,7 +156,7 @@ export const ComposeEmailForm = ({
     (html: string) => {
       setValue("messageHtml", html);
     },
-    [setValue],
+    [setValue]
   );
 
   const editorRef = useRef<TiptapHandle>(null);
@@ -165,7 +165,7 @@ export const ComposeEmailForm = ({
     if (!showFullContent) {
       try {
         editorRef.current?.appendContent(
-          replyingToEmail?.quotedContentHtml ?? "",
+          replyingToEmail?.quotedContentHtml ?? ""
         );
       } catch (error) {
         console.error("Failed to append content:", error);
@@ -177,12 +177,12 @@ export const ComposeEmailForm = ({
   }, [showFullContent, replyingToEmail?.quotedContentHtml]);
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+    <form className="space-y-2" onSubmit={handleSubmit(onSubmit)} ref={formRef}>
       {replyingToEmail?.to && !editReply ? (
         <button
-          type="button"
           className="flex gap-1 text-left"
           onClick={() => setEditReply(true)}
+          type="button"
         >
           <span className="text-green-500">Draft</span>{" "}
           <span className="max-w-md break-words text-foreground">
@@ -194,29 +194,29 @@ export const ComposeEmailForm = ({
           {env.NEXT_PUBLIC_CONTACTS_ENABLED ? (
             <div className="flex space-x-2">
               <div className="mt-2">
-                <Label name="to" label="To" />
+                <Label label="To" name="to" />
               </div>
               <Combobox
-                value={selectedEmailAddressses}
-                onChange={handleComboboxOnChange}
                 multiple
+                onChange={handleComboboxOnChange}
+                value={selectedEmailAddressses}
               >
                 <div className="flex min-h-10 w-full flex-1 flex-wrap items-center gap-1.5 rounded-md text-sm disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-muted-foreground">
                   {selectedEmailAddressses.map((emailAddress) => (
                     <Badge
-                      key={emailAddress}
-                      variant="secondary"
                       className="cursor-pointer rounded-md"
+                      key={emailAddress}
                       onClick={() => {
                         onRemoveSelectedEmail(emailAddress);
                         setSearchQuery(emailAddress);
                       }}
+                      variant="secondary"
                     >
                       {extractNameFromEmail(emailAddress)}
 
                       <button
-                        type="button"
                         onClick={() => onRemoveSelectedEmail(emailAddress)}
+                        type="button"
                       >
                         <XIcon className="ml-1.5 size-3" />
                       </button>
@@ -225,7 +225,6 @@ export const ComposeEmailForm = ({
 
                   <div className="relative flex-1">
                     <ComboboxInput
-                      value={searchQuery}
                       className="w-full border-none bg-background p-0 text-sm focus:border-none focus:ring-0"
                       onChange={(event) => setSearchQuery(event.target.value)}
                       onKeyUp={(event) => {
@@ -233,11 +232,12 @@ export const ComposeEmailForm = ({
                           event.preventDefault();
                           setValue(
                             "to",
-                            [...selectedEmailAddressses, searchQuery].join(","),
+                            [...selectedEmailAddressses, searchQuery].join(",")
                           );
                           setSearchQuery("");
                         }
                       }}
+                      value={searchQuery}
                     />
 
                     {!!data?.result?.length && (
@@ -277,11 +277,11 @@ export const ComposeEmailForm = ({
                                   ) : (
                                     <Avatar>
                                       <AvatarImage
-                                        src={person.profilePictureUrl!}
                                         alt={
                                           person.emailAddress ||
                                           "Profile picture"
                                         }
+                                        src={person.profilePictureUrl!}
                                       />
                                       <AvatarFallback>
                                         {person.emailAddress?.[0] || "A"}
@@ -292,7 +292,7 @@ export const ComposeEmailForm = ({
                                     <div className="text-foreground">
                                       {person.name}
                                     </div>
-                                    <div className="text-sm font-semibold text-muted-foreground">
+                                    <div className="font-semibold text-muted-foreground text-sm">
                                       {person.emailAddress}
                                     </div>
                                   </div>
@@ -309,39 +309,39 @@ export const ComposeEmailForm = ({
             </div>
           ) : (
             <Input
-              type="text"
-              name="to"
-              label="To"
-              registerProps={register("to", { required: true })}
               error={errors.to}
+              label="To"
+              name="to"
+              registerProps={register("to", { required: true })}
+              type="text"
             />
           )}
 
           <Input
-            type="text"
-            name="subject"
-            registerProps={register("subject", { required: true })}
-            error={errors.subject}
-            placeholder="Subject"
             className="border border-input bg-background focus:border-slate-200 focus:ring-0 focus:ring-slate-200"
+            error={errors.subject}
+            name="subject"
+            placeholder="Subject"
+            registerProps={register("subject", { required: true })}
+            type="text"
           />
         </>
       )}
 
       <Tiptap
-        ref={editorRef}
+        className="min-h-[200px]"
         initialContent={replyingToEmail?.draftHtml}
         onChange={handleEditorChange}
-        className="min-h-[200px]"
         onMoreClick={
           !replyingToEmail?.quotedContentHtml || showFullContent
             ? undefined
             : showExpandedContent
         }
+        ref={editorRef}
       />
 
       <div className="flex items-center justify-between">
-        <Button type="submit" disabled={isSubmitting}>
+        <Button disabled={isSubmitting} type="submit">
           {isSubmitting && <ButtonLoader />}
           Send
           <CommandShortcut className="ml-2">{symbol}+Enter</CommandShortcut>
@@ -349,11 +349,11 @@ export const ComposeEmailForm = ({
 
         {onDiscard && (
           <Button
-            type="button"
-            variant="secondary"
-            size="icon"
             disabled={isSubmitting}
             onClick={onDiscard}
+            size="icon"
+            type="button"
+            variant="secondary"
           >
             <TrashIcon className="h-4 w-4" />
             <span className="sr-only">Discard</span>
@@ -370,12 +370,14 @@ function getReplyToEmailPayload(
         ReplyingToEmail,
         "threadId" | "headerMessageId" | "references" | "messageId"
       >
-    | undefined,
+    | undefined
 ): SendEmailBody["replyToEmail"] | undefined {
   const threadId = replyingToEmail?.threadId?.trim();
   const headerMessageId = replyingToEmail?.headerMessageId?.trim();
 
-  if (!threadId || !headerMessageId) return undefined;
+  if (!(threadId && headerMessageId)) {
+    return undefined;
+  }
 
   return {
     threadId,
@@ -383,6 +385,8 @@ function getReplyToEmailPayload(
     ...(replyingToEmail?.references
       ? { references: replyingToEmail.references }
       : {}),
-    ...(replyingToEmail?.messageId ? { messageId: replyingToEmail.messageId } : {}),
+    ...(replyingToEmail?.messageId
+      ? { messageId: replyingToEmail.messageId }
+      : {}),
   };
 }

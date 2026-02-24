@@ -1,13 +1,13 @@
 "use server";
 
-import { z } from "zod";
 import { cookies } from "next/headers";
+import { z } from "zod";
+import { actionClientUser } from "@/utils/actions/safe-action";
 import {
   LAST_EMAIL_ACCOUNT_COOKIE,
   type LastEmailAccountCookieValue,
 } from "@/utils/cookies";
 import { clearLastEmailAccountCookie } from "@/utils/cookies.server";
-import { actionClientUser } from "@/utils/actions/safe-action";
 
 /**
  * Sets a cookie with the last selected email account ID.

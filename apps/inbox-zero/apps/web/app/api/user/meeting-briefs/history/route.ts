@@ -12,7 +12,7 @@ export const GET = withEmailAccount(
     const emailAccountId = request.auth.emailAccountId;
     const result = await getData({ emailAccountId });
     return NextResponse.json(result);
-  },
+  }
 );
 
 async function getData({ emailAccountId }: { emailAccountId: string }) {

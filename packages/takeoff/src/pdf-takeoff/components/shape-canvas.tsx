@@ -28,6 +28,19 @@ export interface ShapeCanvasProps {
   isActive: boolean;
 
   /**
+   * Callback when shape creation is cancelled.
+   */
+  onCancel: () => void;
+
+  /**
+   * Callback when shape creation is complete.
+   *
+   * @param position - Scaled position of the shape on the page.
+   * @param shape - The shape data.
+   */
+  onComplete: (position: ScaledPosition, shape: ShapeData) => void;
+
+  /**
    * The type of shape to create.
    */
   shapeType: ShapeType;
@@ -48,19 +61,6 @@ export interface ShapeCanvasProps {
    * The PDF viewer instance.
    */
   viewer: InstanceType<typeof TPDFViewer>;
-
-  /**
-   * Callback when shape creation is complete.
-   *
-   * @param position - Scaled position of the shape on the page.
-   * @param shape - The shape data.
-   */
-  onComplete: (position: ScaledPosition, shape: ShapeData) => void;
-
-  /**
-   * Callback when shape creation is cancelled.
-   */
-  onCancel: () => void;
 }
 
 interface Point {

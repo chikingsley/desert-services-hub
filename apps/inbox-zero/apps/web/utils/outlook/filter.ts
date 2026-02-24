@@ -1,12 +1,12 @@
-import type { OutlookClient } from "@/utils/outlook/client";
 import type {
   MessageRule,
   OutlookCategory,
 } from "@microsoft/microsoft-graph-types";
 import type { Logger } from "@/utils/logger";
-import { isAlreadyExistsError } from "./errors";
-import { withOutlookRetry } from "@/utils/outlook/retry";
+import type { OutlookClient } from "@/utils/outlook/client";
 import { getLabelById } from "@/utils/outlook/label";
+import { withOutlookRetry } from "@/utils/outlook/retry";
+import { isAlreadyExistsError } from "./errors";
 
 // Microsoft Graph API doesn't have a direct equivalent to Gmail filters
 // Instead, we can work with mail rules which are more complex but provide similar functionality
@@ -43,7 +43,7 @@ export async function createFilter(options: {
     const response: MessageRule = await withOutlookRetry(
       () =>
         client.getClient().api("/me/mailFolders/inbox/messageRules").post(rule),
-      logger,
+      logger
     );
 
     return { status: 201, data: response };
@@ -86,7 +86,7 @@ export async function createAutoArchiveFilter({
     const response: MessageRule = await withOutlookRetry(
       () =>
         client.getClient().api("/me/mailFolders/inbox/messageRules").post(rule),
-      logger,
+      logger
     );
 
     return { status: 201, data: response };
@@ -115,7 +115,7 @@ export async function deleteFilter({
           .getClient()
           .api(`/me/mailFolders/inbox/messageRules/${id}`)
           .delete(),
-      logger,
+      logger
     );
 
     return { status: 204 };
@@ -170,7 +170,7 @@ export async function createCategoryFilter({
       .get();
 
     let category = categories.value.find(
-      (cat) => cat.displayName === categoryName,
+      (cat) => cat.displayName === categoryName
     );
 
     if (!category) {
@@ -181,7 +181,7 @@ export async function createCategoryFilter({
             displayName: categoryName,
             color: "preset0", // Default color
           }),
-        logger,
+        logger
       );
 
       client.invalidateCategoryMapCache();
@@ -252,7 +252,7 @@ export async function updateFilter({
           .getClient()
           .api(`/me/mailFolders/inbox/messageRules/${id}`)
           .patch(rule),
-      logger,
+      logger
     );
 
     return response;
@@ -271,7 +271,7 @@ export async function updateFilter({
 async function resolveCategoryNames(
   client: OutlookClient,
   labelIds: string[],
-  logger: Logger,
+  logger: Logger
 ): Promise<string[]> {
   const categoryNames: string[] = [];
 
@@ -321,7 +321,7 @@ async function buildFilterActions(options: {
     const categoryNames = await resolveCategoryNames(
       client,
       addLabelIds,
-      logger,
+      logger
     );
     if (categoryNames.length > 0) {
       actions.assignCategories = categoryNames;

@@ -12,7 +12,7 @@ export const useExpanded = (options?: {
   const [expanded, setExpanded] = useState(false);
   const toggleExpand = useCallback(
     () => setExpanded((expanded) => !expanded),
-    [],
+    []
   );
 
   // Only show "Show more" if we have exactly the limit (meaning there might be more)
@@ -21,15 +21,17 @@ export const useExpanded = (options?: {
     expanded || (resultCount !== undefined && resultCount >= collapsedLimit);
 
   const extra = useMemo(() => {
-    if (!shouldShowButton) return null;
+    if (!shouldShowButton) {
+      return null;
+    }
 
     return (
       <div className="mt-2">
         <Button
-          variant="outline"
-          size="sm"
-          onClick={toggleExpand}
           className="w-full"
+          onClick={toggleExpand}
+          size="sm"
+          variant="outline"
         >
           {expanded ? (
             <>

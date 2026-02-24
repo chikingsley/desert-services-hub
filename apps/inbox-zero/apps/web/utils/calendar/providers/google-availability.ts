@@ -1,10 +1,10 @@
 import type { calendar_v3 } from "@googleapis/calendar";
 import type { Logger } from "@/utils/logger";
-import { getCalendarClientWithRefresh } from "../client";
 import type {
-  CalendarAvailabilityProvider,
   BusyPeriod,
+  CalendarAvailabilityProvider,
 } from "../availability-types";
+import { getCalendarClientWithRefresh } from "../client";
 
 async function fetchGoogleCalendarBusyPeriods({
   calendarClient,
@@ -32,7 +32,7 @@ async function fetchGoogleCalendarBusyPeriods({
 
     if (response.data.calendars) {
       for (const [_calendarId, calendar] of Object.entries(
-        response.data.calendars,
+        response.data.calendars
       )) {
         if (calendar.busy) {
           for (const period of calendar.busy) {
@@ -61,7 +61,7 @@ async function fetchGoogleCalendarBusyPeriods({
 }
 
 export function createGoogleAvailabilityProvider(
-  logger: Logger,
+  logger: Logger
 ): CalendarAvailabilityProvider {
   return {
     name: "google",

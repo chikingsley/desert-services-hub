@@ -22,21 +22,21 @@ import {
 import { Switch } from "@/apps/web/frontend/components/ui/switch";
 
 interface SubcategoryDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   categoryId: string;
   categoryName: string;
+  onOpenChange: (open: boolean) => void;
+  onSave: (data: {
+    name: string;
+    selectionMode: string;
+    hidden: boolean;
+  }) => Promise<void>;
+  open: boolean;
   subcategory?: {
     id: string;
     name: string;
     selectionMode: string;
     hidden: boolean;
   };
-  onSave: (data: {
-    name: string;
-    selectionMode: string;
-    hidden: boolean;
-  }) => Promise<void>;
 }
 
 export function SubcategoryDialog({

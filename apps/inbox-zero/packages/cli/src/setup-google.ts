@@ -7,19 +7,19 @@ import { generateSecret } from "./utils";
 // ═══════════════════════════════════════════════════════════════════════════
 
 interface GcloudPrerequisites {
-  installed: boolean;
   authenticated: boolean;
+  installed: boolean;
   projectId: string | null;
 }
 
 interface SetupResult {
-  success: boolean;
   error?: string;
+  success: boolean;
 }
 
 export interface GoogleSetupOptions {
-  projectId?: string;
   domain?: string;
+  projectId?: string;
   skipOauth?: boolean;
   skipPubsub?: boolean;
 }
@@ -42,7 +42,7 @@ export async function runGoogleSetup(options: GoogleSetupOptions) {
     p.log.error(
       "The gcloud CLI is not installed.\n" +
         "Please install it from: https://cloud.google.com/sdk/docs/install\n" +
-        "After installation, run: gcloud auth login",
+        "After installation, run: gcloud auth login"
     );
     process.exit(1);
   }
@@ -69,7 +69,9 @@ export async function runGoogleSetup(options: GoogleSetupOptions) {
   // Step 3: Get project ID
   let projectId = options.projectId || prereqs.projectId;
 
-  if (!projectId) {
+  if (projectId) {
+    p.log.info(`Using project: ${projectId}`);
+  } else {
     const inputProjectId = await p.text({
       message: "Enter your Google Cloud project ID:",
       placeholder: "my-project-123",
@@ -82,8 +84,6 @@ export async function runGoogleSetup(options: GoogleSetupOptions) {
     }
 
     projectId = inputProjectId;
-  } else {
-    p.log.info(`Using project: ${projectId}`);
   }
 
   // Step 4: Get domain (needed for OAuth redirect URIs and Pub/Sub webhook)
@@ -95,8 +95,12 @@ export async function runGoogleSetup(options: GoogleSetupOptions) {
         "Enter your app domain (for OAuth redirects and Pub/Sub webhook):",
       placeholder: "app.example.com",
       validate: (v) => {
-        if (!v) return undefined; // Allow empty for localhost development
-        if (!v.includes(".")) return "Enter a valid domain";
+        if (!v) {
+          return undefined; // Allow empty for localhost development
+        }
+        if (!v.includes(".")) {
+          return "Enter a valid domain";
+        }
         return undefined;
       },
     });
@@ -111,7 +115,7 @@ export async function runGoogleSetup(options: GoogleSetupOptions) {
 
   // Step 5: Enable required APIs
   spinner.start(
-    "Enabling Google Cloud APIs (Gmail, People, Calendar, Drive, Pub/Sub)...",
+    "Enabling Google Cloud APIs (Gmail, People, Calendar, Drive, Pub/Sub)..."
   );
 
   const apiResult = enableGoogleApis(projectId);
@@ -147,7 +151,7 @@ Steps:
 7. Complete the wizard
 
 The console will open in your browser.`,
-      "OAuth Consent Screen",
+      "OAuth Consent Screen"
     );
 
     const openConsent = await p.confirm({
@@ -166,7 +170,7 @@ The console will open in your browser.`,
 
     if (p.isCancel(consentDone) || !consentDone) {
       p.log.warn(
-        "You can continue, but OAuth won't work until the consent screen is configured.",
+        "You can continue, but OAuth won't work until the consent screen is configured."
       );
     }
 
@@ -193,7 +197,7 @@ ${redirectUris}
 5. Copy the Client ID and Client Secret
 
 The console will open in your browser.`,
-      "OAuth Credentials",
+      "OAuth Credentials"
     );
 
     const openCredentials = await p.confirm({
@@ -212,7 +216,9 @@ The console will open in your browser.`,
             message: "Paste your Google Client ID:",
             placeholder: "123456789012-abc.apps.googleusercontent.com",
             validate: (v) => {
-              if (!v) return undefined; // Allow empty to skip
+              if (!v) {
+                return undefined; // Allow empty to skip
+              }
               if (!v.endsWith(".apps.googleusercontent.com")) {
                 return "Client ID should end with .apps.googleusercontent.com";
               }
@@ -230,7 +236,7 @@ The console will open in your browser.`,
           p.cancel("Setup cancelled.");
           process.exit(0);
         },
-      },
+      }
     );
 
     clientId = oauthInput.clientId || "";
@@ -252,11 +258,7 @@ The console will open in your browser.`,
 
     const topicResult = setupPubSubTopic(projectId, topicName);
 
-    if (!topicResult.success) {
-      spinner.stop("Failed to create Pub/Sub topic");
-      p.log.error(topicResult.error || "Unknown error");
-      p.log.warn("You can set up Pub/Sub manually later.");
-    } else {
+    if (topicResult.success) {
       spinner.stop("Pub/Sub topic created with Gmail permissions");
 
       spinner.start("Creating Pub/Sub push subscription...");
@@ -265,20 +267,24 @@ The console will open in your browser.`,
         projectId,
         topicName,
         subscriptionName,
-        webhookUrl,
+        webhookUrl
       );
 
-      if (!subResult.success) {
+      if (subResult.success) {
+        spinner.stop("Pub/Sub subscription created");
+        pubsubSuccess = true;
+      } else {
         spinner.stop("Failed to create subscription");
         p.log.error(subResult.error || "Unknown error");
         p.log.warn(
           "You can create the subscription manually:\n" +
-            `gcloud pubsub subscriptions create ${subscriptionName} --topic=${topicName} --push-endpoint="${webhookUrl}" --project=${projectId}`,
+            `gcloud pubsub subscriptions create ${subscriptionName} --topic=${topicName} --push-endpoint="${webhookUrl}" --project=${projectId}`
         );
-      } else {
-        spinner.stop("Pub/Sub subscription created");
-        pubsubSuccess = true;
       }
+    } else {
+      spinner.stop("Failed to create Pub/Sub topic");
+      p.log.error(topicResult.error || "Unknown error");
+      p.log.warn("You can set up Pub/Sub manually later.");
     }
   }
 
@@ -300,7 +306,7 @@ The console will open in your browser.`,
   if (envVars.length > 0) {
     p.note(
       `Add these to your .env file:\n\n${envVars.join("\n")}`,
-      "Environment Variables",
+      "Environment Variables"
     );
   }
 
@@ -314,11 +320,11 @@ The console will open in your browser.`,
         : "! OAuth credentials not provided",
     options.skipPubsub
       ? "✗ Pub/Sub setup skipped"
-      : !domain
-        ? "! Pub/Sub setup skipped (no domain provided)"
-        : pubsubSuccess
+      : domain
+        ? pubsubSuccess
           ? "✓ Pub/Sub topic and subscription created"
-          : "! Pub/Sub setup incomplete (env vars provided for manual setup)",
+          : "! Pub/Sub setup incomplete (env vars provided for manual setup)"
+        : "! Pub/Sub setup skipped (no domain provided)",
   ].join("\n");
 
   p.note(summary, "Setup Summary");
@@ -355,7 +361,7 @@ function checkGcloudPrerequisites(): GcloudPrerequisites {
   const projectResult = spawnSync(
     "gcloud",
     ["config", "get-value", "project"],
-    { stdio: "pipe" },
+    { stdio: "pipe" }
   );
   const projectId =
     projectResult.status === 0
@@ -377,7 +383,7 @@ function enableGoogleApis(projectId: string): SetupResult {
   const result = spawnSync(
     "gcloud",
     ["services", "enable", ...apis, "--project", projectId],
-    { stdio: "pipe" },
+    { stdio: "pipe" }
   );
 
   if (result.status !== 0) {
@@ -395,7 +401,7 @@ function setupPubSubTopic(projectId: string, topicName: string): SetupResult {
   const createResult = spawnSync(
     "gcloud",
     ["pubsub", "topics", "create", topicName, "--project", projectId],
-    { stdio: "pipe" },
+    { stdio: "pipe" }
   );
 
   // Ignore "already exists" error
@@ -422,7 +428,7 @@ function setupPubSubTopic(projectId: string, topicName: string): SetupResult {
       "--project",
       projectId,
     ],
-    { stdio: "pipe" },
+    { stdio: "pipe" }
   );
 
   if (bindingResult.status !== 0) {
@@ -439,7 +445,7 @@ function setupPubSubSubscription(
   projectId: string,
   topicName: string,
   subscriptionName: string,
-  webhookUrl: string,
+  webhookUrl: string
 ): SetupResult {
   const createResult = spawnSync(
     "gcloud",
@@ -455,7 +461,7 @@ function setupPubSubSubscription(
       "--project",
       projectId,
     ],
-    { stdio: "pipe" },
+    { stdio: "pipe" }
   );
 
   // Ignore "already exists" error

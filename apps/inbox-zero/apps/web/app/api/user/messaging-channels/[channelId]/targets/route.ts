@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
-import { withEmailAccount } from "@/utils/middleware";
-import { MessagingProvider } from "@/generated/prisma/enums";
 import { createSlackClient, listChannels } from "@inboxzero/slack";
+import { NextResponse } from "next/server";
+import { MessagingProvider } from "@/generated/prisma/enums";
+import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export type GetChannelTargetsResponse = Awaited<ReturnType<typeof getData>>;
 
@@ -17,7 +17,7 @@ export const GET = withEmailAccount(
       logger: request.logger,
     });
     return NextResponse.json(result);
-  },
+  }
 );
 
 async function getData({
@@ -41,7 +41,7 @@ async function getData({
     },
   });
 
-  if (!channel || !channel.accessToken) {
+  if (!(channel && channel.accessToken)) {
     return { targets: [], error: "Channel not found or not connected" };
   }
 

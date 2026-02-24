@@ -36,7 +36,7 @@ describe("getAutomationJobMessage", () => {
 
   it("uses an LLM-generated message when a custom prompt is set", async () => {
     mockAiGenerateAutomationCheckInMessage.mockResolvedValueOnce(
-      "Three urgent client emails need your review. Want to triage them now?",
+      "Three urgent client emails need your review. Want to triage them now?"
     );
 
     const emailProvider = getMockEmailProvider({
@@ -52,19 +52,19 @@ describe("getAutomationJobMessage", () => {
     });
 
     expect(message).toBe(
-      "Three urgent client emails need your review. Want to triage them now?",
+      "Three urgent client emails need your review. Want to triage them now?"
     );
     expect(mockAiGenerateAutomationCheckInMessage).toHaveBeenCalledTimes(1);
     expect(mockAiGenerateAutomationCheckInMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         logger,
-      }),
+      })
     );
   });
 
   it("falls back to the custom prompt if custom prompt generation fails", async () => {
     mockAiGenerateAutomationCheckInMessage.mockRejectedValueOnce(
-      new Error("LLM unavailable"),
+      new Error("LLM unavailable")
     );
 
     const emailProvider = getMockEmailProvider({
@@ -97,7 +97,7 @@ describe("getAutomationJobMessage", () => {
     });
 
     expect(message).toBe(
-      "Your inbox looks clear right now. Want me to keep monitoring and ping again later?",
+      "Your inbox looks clear right now. Want me to keep monitoring and ping again later?"
     );
     expect(mockAiGenerateAutomationCheckInMessage).not.toHaveBeenCalled();
   });

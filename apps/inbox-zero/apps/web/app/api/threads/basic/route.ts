@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { withEmailProvider } from "@/utils/middleware";
 import type { ThreadsResponse } from "@/app/api/threads/route";
+import { withEmailProvider } from "@/utils/middleware";
 
 export type GetThreadsResponse = {
   threads: ThreadsResponse["threads"];
@@ -34,7 +34,7 @@ export const GET = withEmailProvider("threads/basic", async (request) => {
     });
     return NextResponse.json(
       { error: "Failed to fetch threads" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 });

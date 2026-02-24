@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildThreadingHeaders } from "./threading";
 
 describe("buildThreadingHeaders", () => {
@@ -50,7 +50,7 @@ describe("buildThreadingHeaders", () => {
 
     // .trim() should clean up the result
     expect(result.references).toBe(
-      "<msg1@example.com>   <msg2@example.com>".trim(),
+      "<msg1@example.com>   <msg2@example.com>".trim()
     );
   });
 

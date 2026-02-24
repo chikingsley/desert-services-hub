@@ -2,22 +2,24 @@ import { Client, type FlowControl, type HeadersInit } from "@upstash/qstash";
 import { after } from "next/server";
 import { env } from "@/env";
 import {
-  INTERNAL_API_KEY_HEADER,
   getInternalApiUrl,
+  INTERNAL_API_KEY_HEADER,
 } from "@/utils/internal-api";
 import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("upstash");
 
 function getQstashClient() {
-  if (!env.QSTASH_TOKEN) return null;
+  if (!env.QSTASH_TOKEN) {
+    return null;
+  }
   return new Client({ token: env.QSTASH_TOKEN });
 }
 
 export async function publishToQstash<T>(
   path: string,
   body: T,
-  flowControl?: FlowControl,
+  flowControl?: FlowControl
 ) {
   const client = getQstashClient();
   if (client) {
@@ -64,7 +66,7 @@ export async function bulkPublishToQstash<T>({
     await fallbackPublishToQstash(
       `${internalBase}${item.path}`,
       item.body,
-      undefined,
+      undefined
     );
   }
 }
@@ -107,7 +109,7 @@ export async function publishToQstashQueue<T>({
 async function fallbackPublishToQstash<T>(
   url: string,
   body: T,
-  headers?: HeadersInit,
+  headers?: HeadersInit
 ) {
   logger.warn("Qstash client not found");
 
@@ -118,7 +120,7 @@ async function fallbackPublishToQstash<T>(
         ? headers
         : headers && typeof headers === "object" && Symbol.iterator in headers
           ? Array.from(headers as Iterable<[string, string]>)
-          : headers,
+          : headers
   );
   internalHeaders.set("Content-Type", "application/json");
   internalHeaders.set(INTERNAL_API_KEY_HEADER, env.INTERNAL_API_KEY);

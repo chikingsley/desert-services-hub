@@ -12,9 +12,9 @@ import { db } from "@lib/db/client";
 import type { RetrievalStrategy } from "./types";
 
 interface FTSRow {
-  project_id: number;
   email_count: number;
   max_rank: number;
+  project_id: number;
 }
 
 const strategy: RetrievalStrategy = {
@@ -36,7 +36,7 @@ const strategy: RetrievalStrategy = {
            AND e.project_id IS NOT NULL
          GROUP BY e.project_id
          ORDER BY max_rank DESC, email_count DESC
-         LIMIT 20`,
+         LIMIT 20`
       )
       .all(subject);
 
@@ -50,7 +50,7 @@ const strategy: RetrievalStrategy = {
         `SELECT id FROM projects
          WHERE name ILIKE $1 OR address ILIKE $1
          ORDER BY updated_at DESC
-         LIMIT 20`,
+         LIMIT 20`
       )
       .all(`%${subject.slice(0, 100)}%`);
 

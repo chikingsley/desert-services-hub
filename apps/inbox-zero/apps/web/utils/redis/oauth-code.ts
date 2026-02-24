@@ -1,5 +1,5 @@
-import { redis } from "@/utils/redis";
 import { createHash } from "node:crypto";
+import { redis } from "@/utils/redis";
 
 // Not password hashing - creating a short cache key for OAuth authorization codes
 function createOAuthCodeCacheKey(code: string): string {
@@ -11,8 +11,8 @@ function getCodeKey(code: string) {
 }
 
 interface OAuthCodeResult {
-  status: "success";
   params: Record<string, string>;
+  status: "success";
 }
 
 const OAUTH_CODE_TTL_SECONDS = 60;
@@ -26,7 +26,7 @@ const memoryOAuthCodeCache = new Map<
 
 function isRedisConfigured() {
   return Boolean(
-    process.env.UPSTASH_REDIS_URL && process.env.UPSTASH_REDIS_TOKEN,
+    process.env.UPSTASH_REDIS_URL && process.env.UPSTASH_REDIS_TOKEN
   );
 }
 
@@ -69,7 +69,7 @@ export async function acquireOAuthCodeLock(code: string): Promise<boolean> {
 }
 
 export async function getOAuthCodeResult(
-  code: string,
+  code: string
 ): Promise<OAuthCodeResult | null> {
   const codeKey = getCodeKey(code);
 
@@ -94,14 +94,18 @@ export async function getOAuthCodeResult(
   const now = Date.now();
   cleanupExpiredMemoryEntries(now);
   const entry = memoryOAuthCodeCache.get(codeKey);
-  if (!entry) return null;
-  if (entry.value === "processing") return null;
+  if (!entry) {
+    return null;
+  }
+  if (entry.value === "processing") {
+    return null;
+  }
   return entry.value;
 }
 
 export async function setOAuthCodeResult(
   code: string,
-  params: Record<string, string>,
+  params: Record<string, string>
 ): Promise<void> {
   const codeKey = getCodeKey(code);
   const result: OAuthCodeResult = {

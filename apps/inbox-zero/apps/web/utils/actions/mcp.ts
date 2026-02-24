@@ -1,17 +1,17 @@
 "use server";
 
-import { actionClient } from "@/utils/actions/safe-action";
 import {
   disconnectMcpConnectionBody,
+  testMcpSchema,
   toggleMcpConnectionBody,
   toggleMcpToolBody,
 } from "@/utils/actions/mcp.validation";
-import prisma from "@/utils/prisma";
-import { SafeError } from "@/utils/error";
+import { actionClient } from "@/utils/actions/safe-action";
 import { mcpAgent } from "@/utils/ai/mcp/mcp-agent";
-import { getEmailAccountWithAi } from "@/utils/user/get";
+import { SafeError } from "@/utils/error";
+import prisma from "@/utils/prisma";
 import type { EmailForLLM } from "@/utils/types";
-import { testMcpSchema } from "@/utils/actions/mcp.validation";
+import { getEmailAccountWithAi } from "@/utils/user/get";
 
 export const disconnectMcpConnectionAction = actionClient
   .metadata({ name: "disconnectMcpConnection" })
@@ -21,7 +21,7 @@ export const disconnectMcpConnectionAction = actionClient
       await prisma.mcpConnection.delete({
         where: { id: connectionId, emailAccountId },
       });
-    },
+    }
   );
 
 export const toggleMcpConnectionAction = actionClient
@@ -36,7 +36,7 @@ export const toggleMcpConnectionAction = actionClient
         where: { id: connectionId, emailAccountId },
         data: { isActive },
       });
-    },
+    }
   );
 
 export const toggleMcpToolAction = actionClient
@@ -48,7 +48,7 @@ export const toggleMcpToolAction = actionClient
         where: { id: toolId, connection: { emailAccountId } },
         data: { isEnabled },
       });
-    },
+    }
   );
 
 export const testMcpAction = actionClient
@@ -60,7 +60,9 @@ export const testMcpAction = actionClient
       parsedInput: { from, subject, content },
     }) => {
       const emailAccount = await getEmailAccountWithAi({ emailAccountId });
-      if (!emailAccount) throw new SafeError("Email account not found");
+      if (!emailAccount) {
+        throw new SafeError("Email account not found");
+      }
 
       const testMessage: EmailForLLM = {
         id: "test-message-id",
@@ -76,5 +78,5 @@ export const testMcpAction = actionClient
         response: result?.response,
         toolCalls: result?.getToolCalls(),
       };
-    },
+    }
   );

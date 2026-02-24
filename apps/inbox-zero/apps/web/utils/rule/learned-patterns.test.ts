@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { saveLearnedPattern, saveLearnedPatterns } from "./learned-patterns";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { GroupItemSource, GroupItemType } from "@/generated/prisma/enums";
 import prisma from "@/utils/__mocks__/prisma";
-import { GroupItemType, GroupItemSource } from "@/generated/prisma/enums";
 import { isDuplicateError } from "@/utils/prisma-helpers";
+import { saveLearnedPattern, saveLearnedPatterns } from "./learned-patterns";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/utils/prisma");
@@ -107,7 +107,7 @@ describe("saveLearnedPattern", () => {
             value: "test@example.com",
           },
         },
-      }),
+      })
     );
   });
 
@@ -203,7 +203,7 @@ describe("saveLearnedPattern", () => {
             value: "test@example.com",
           },
         },
-      }),
+      })
     );
   });
 });

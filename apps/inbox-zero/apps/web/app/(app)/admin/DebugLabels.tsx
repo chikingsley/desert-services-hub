@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { useAction } from "next-safe-action/hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
+import { useCallback } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { Input } from "@/components/Input";
+import { toastError, toastSuccess } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -13,11 +14,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { toastSuccess, toastError } from "@/components/Toast";
 import { adminGetLabelsAction } from "@/utils/actions/admin";
 import {
-  getLabelsBody,
   type GetLabelsBody,
+  getLabelsBody,
 } from "@/utils/actions/admin.validation";
 
 export function DebugLabels() {
@@ -45,7 +45,7 @@ export function DebugLabels() {
     (data) => {
       execute(data);
     },
-    [execute],
+    [execute]
   );
 
   return (
@@ -57,14 +57,14 @@ export function DebugLabels() {
       <CardContent className="space-y-4">
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <Input
-            type="text"
-            name="emailAccountId"
+            error={errors.emailAccountId}
             label="Email Account ID"
+            name="emailAccountId"
             placeholder="Email Account ID"
             registerProps={register("emailAccountId")}
-            error={errors.emailAccountId}
+            type="text"
           />
-          <Button type="submit" loading={isExecuting}>
+          <Button loading={isExecuting} type="submit">
             Get Labels
           </Button>
         </form>

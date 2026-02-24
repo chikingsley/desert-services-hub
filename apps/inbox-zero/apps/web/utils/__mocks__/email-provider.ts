@@ -33,7 +33,7 @@ import type { EmailProvider } from "@/utils/email/types";
  * ```
  */
 export const createMockEmailProvider = (
-  overrides?: Partial<EmailProvider>,
+  overrides?: Partial<EmailProvider>
 ): EmailProvider =>
   ({
     name: "google",

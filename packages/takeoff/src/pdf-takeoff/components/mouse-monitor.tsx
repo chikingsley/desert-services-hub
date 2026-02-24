@@ -8,6 +8,10 @@ import { type ReactNode, useCallback, useEffect, useRef } from "react";
  */
 export interface MouseMonitorProps {
   /**
+   * Component over which mouse activity is monitored.
+   */
+  children: ReactNode;
+  /**
    * Callback triggered whenever the mouse moves not within the bounds of the
    * child component. This will keep triggering as long as the component is
    * rendered.
@@ -23,11 +27,6 @@ export interface MouseMonitorProps {
    * Y padding in pixels for the container to monitor mouse activity in.
    */
   paddingY: number;
-
-  /**
-   * Component over which mouse activity is monitored.
-   */
-  children: ReactNode;
 }
 
 /**

@@ -1,19 +1,19 @@
 import { after } from "next/server";
-import { ActionType } from "@/generated/prisma/enums";
 import type { ExecutedRule } from "@/generated/prisma/client";
-import type { Logger } from "@/utils/logger";
-import { callWebhook } from "@/utils/webhook";
-import type { ActionItem, EmailForAction } from "@/utils/ai/types";
-import type { EmailProvider } from "@/utils/email/types";
-import { enqueueDigestItem } from "@/utils/digest/index";
+import { ActionType } from "@/generated/prisma/enums";
 import { filterNullProperties } from "@/utils";
-import { labelMessageAndSync } from "@/utils/label.server";
-import { hasVariables } from "@/utils/template";
-import prisma from "@/utils/prisma";
+import type { ActionItem, EmailForAction } from "@/utils/ai/types";
 import { sendColdEmailNotification } from "@/utils/cold-email/send-notification";
+import { enqueueDigestItem } from "@/utils/digest/index";
 import { extractEmailAddress } from "@/utils/email";
+import type { EmailProvider } from "@/utils/email/types";
 import { captureException } from "@/utils/error";
+import { labelMessageAndSync } from "@/utils/label.server";
+import type { Logger } from "@/utils/logger";
 import { ensureEmailSendingEnabled } from "@/utils/mail";
+import prisma from "@/utils/prisma";
+import { hasVariables } from "@/utils/template";
+import { callWebhook } from "@/utils/webhook";
 
 const MODULE = "ai-actions";
 
@@ -129,7 +129,9 @@ const label: ActionFunction<{
     }
   }
 
-  if (!labelIdToUse) return;
+  if (!labelIdToUse) {
+    return;
+  }
 
   await labelMessageAndSync({
     provider: client,
@@ -147,7 +149,7 @@ const label: ActionFunction<{
         labelId: labelIdToUse!,
         emailAccountId,
         logger,
-      }),
+      })
     );
   }
 };
@@ -185,7 +187,7 @@ const draft: ActionFunction<{
     },
     draftArgs,
     userEmail,
-    executedRule,
+    executedRule
   );
   return { draftId: result.draftId };
 };
@@ -195,7 +197,9 @@ const reply: ActionFunction<{
   cc?: string | null;
   bcc?: string | null;
 }> = async ({ client, email, args }) => {
-  if (!args.content) return;
+  if (!args.content) {
+    return;
+  }
 
   await client.replyToEmail(
     {
@@ -211,7 +215,7 @@ const reply: ActionFunction<{
       textPlain: email.textPlain,
       textHtml: email.textHtml,
     },
-    args.content,
+    args.content
   );
 };
 
@@ -222,7 +226,9 @@ const send_email: ActionFunction<{
   cc?: string | null;
   bcc?: string | null;
 }> = async ({ client, args }) => {
-  if (!args.to || !args.subject || !args.content) return;
+  if (!(args.to && args.subject && args.content)) {
+    return;
+  }
 
   const emailArgs = {
     to: args.to,
@@ -241,7 +247,9 @@ const forward: ActionFunction<{
   cc?: string | null;
   bcc?: string | null;
 }> = async ({ client, email, args }) => {
-  if (!args.to) return;
+  if (!args.to) {
+    return;
+  }
 
   const forwardArgs = {
     messageId: email.id,
@@ -263,7 +271,7 @@ const forward: ActionFunction<{
       subject: email.headers.subject,
       date: email.headers.date,
     },
-    forwardArgs,
+    forwardArgs
   );
 };
 
@@ -280,7 +288,9 @@ const call_webhook: ActionFunction<{ url?: string | null }> = async ({
   userId,
   executedRule,
 }) => {
-  if (!args.url) return;
+  if (!args.url) {
+    return;
+  }
 
   const payload = {
     email: {
@@ -317,7 +327,9 @@ const digest: ActionFunction<{ id?: string }> = async ({
   args,
   logger,
 }) => {
-  if (!args.id) return;
+  if (!args.id) {
+    return;
+  }
   const actionId = args.id;
   await enqueueDigestItem({ email, emailAccountId, actionId, logger });
 };
@@ -347,7 +359,9 @@ const move_folder: ActionFunction<{
     }
   }
 
-  if (!folderIdToUse) return;
+  if (!folderIdToUse) {
+    return;
+  }
 
   await client.moveThreadToFolder(email.threadId, userEmail, folderIdToUse);
 
@@ -359,7 +373,7 @@ const move_folder: ActionFunction<{
         folderId: folderIdToUse!,
         emailAccountId,
         logger,
-      }),
+      })
     );
   }
 };
@@ -397,7 +411,7 @@ const notify_sender: ActionFunction<Record<string, unknown>> = async ({
         emailAccountId,
         extra: { actionType: ActionType.NOTIFY_SENDER },
         sampleRate: 0.01,
-      },
+      }
     );
     return;
   }

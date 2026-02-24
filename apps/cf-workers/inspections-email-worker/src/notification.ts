@@ -7,14 +7,14 @@
 import { EmailMessage } from "cloudflare:email";
 
 export interface NotificationData {
-  success: boolean;
-  siteName: string;
   contractor: string;
-  project: string;
+  error?: string;
   fileName: string;
   folderPath: string;
+  project: string;
   sharePointUrl?: string;
-  error?: string;
+  siteName: string;
+  success: boolean;
 }
 
 export async function sendNotification(

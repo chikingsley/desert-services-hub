@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import { usePostHog } from "posthog-js/react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ArchiveIcon,
   Loader2Icon,
@@ -9,18 +8,21 @@ import {
   TrashIcon,
   XIcon,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { usePostHog } from "posthog-js/react";
+import { useMemo, useState } from "react";
+import type { NewsletterFilterType } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/hooks";
 import {
-  useBulkUnsubscribe,
   useBulkApprove,
-  useBulkAutoArchive,
   useBulkArchive,
+  useBulkAutoArchive,
   useBulkDelete,
+  useBulkUnsubscribe,
 } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/hooks";
-import { PremiumTooltip, usePremium } from "@/components/PremiumAlert";
 import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { cn } from "@/utils";
+import type { NewsletterStatsResponse } from "@/app/api/user/stats/newsletters/route";
+import { DomainIcon } from "@/components/charts/DomainIcon";
+import { PremiumTooltip, usePremium } from "@/components/PremiumAlert";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -29,12 +31,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { DomainIcon } from "@/components/charts/DomainIcon";
-import { extractDomainFromEmail } from "@/utils/email";
-import type { NewsletterStatsResponse } from "@/app/api/user/stats/newsletters/route";
 import { NewsletterStatus } from "@/generated/prisma/enums";
-import type { NewsletterFilterType } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/hooks";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { cn } from "@/utils";
+import { extractDomainFromEmail } from "@/utils/email";
 
 type Newsletter = NewsletterStatsResponse["newsletters"][number];
 
@@ -55,15 +55,15 @@ function ActionButton({
 }) {
   return (
     <button
-      type="button"
-      onClick={onClick}
-      disabled={loading}
       className={cn(
-        "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap",
+        "flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 font-medium text-sm transition-colors",
         "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
         danger && "hover:text-red-600",
-        loading && "opacity-50 cursor-not-allowed",
+        loading && "cursor-not-allowed opacity-50"
       )}
+      disabled={loading}
+      onClick={onClick}
+      type="button"
     >
       {loading ? (
         <Loader2Icon className="size-4 animate-spin" />
@@ -157,9 +157,11 @@ export function BulkActions({
 
   // Check if all selected newsletters are already approved
   const allSelectedAreApproved = useMemo(() => {
-    if (selectedNewsletters.length === 0) return false;
+    if (selectedNewsletters.length === 0) {
+      return false;
+    }
     return selectedNewsletters.every(
-      (n) => n.status === NewsletterStatus.APPROVED,
+      (n) => n.status === NewsletterStatus.APPROVED
     );
   }, [selectedNewsletters]);
 
@@ -168,33 +170,33 @@ export function BulkActions({
       <AnimatePresence>
         {isVisible && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
             className="overflow-hidden"
+            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
           >
             <PremiumTooltip
-              showTooltip={!hasUnsubscribeAccess}
               openModal={openModal}
+              showTooltip={!hasUnsubscribeAccess}
             >
-              <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex items-center justify-between gap-3">
+              <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
                 {/* Left side: Close button and selection count */}
                 <div className="flex items-center gap-3">
                   <button
-                    type="button"
+                    className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700"
                     onClick={onClearSelection}
-                    className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded transition-colors"
+                    type="button"
                   >
                     <XIcon className="size-4" />
                   </button>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-gray-600 text-sm">
                     {selectedCount} of {totalCount} selected
                   </span>
                 </div>
 
                 {/* Right side: Action Buttons */}
-                <div className="flex items-center gap-1 flex-nowrap">
+                <div className="flex flex-nowrap items-center gap-1">
                   <ActionButton
                     icon={MailXIcon}
                     label="Unsubscribe"
@@ -217,17 +219,17 @@ export function BulkActions({
                   <ActionButton
                     icon={ArchiveIcon}
                     label="Archive"
+                    loading={isBulkArchiving}
                     loadingLabel="Archiving"
                     onClick={() => setArchiveDialogOpen(true)}
-                    loading={isBulkArchiving}
                   />
                   <ActionButton
+                    danger
                     icon={TrashIcon}
                     label="Delete"
-                    loadingLabel="Deleting"
-                    danger
-                    onClick={() => setDeleteDialogOpen(true)}
                     loading={isBulkDeleting}
+                    loadingLabel="Deleting"
+                    onClick={() => setDeleteDialogOpen(true)}
                   />
                 </div>
               </div>
@@ -237,7 +239,7 @@ export function BulkActions({
       </AnimatePresence>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog onOpenChange={setDeleteDialogOpen} open={deleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete all emails?</DialogTitle>
@@ -256,20 +258,20 @@ export function BulkActions({
                     extractDomainFromEmail(newsletter.name) || newsletter.name;
                   return (
                     <div
-                      key={newsletter.name}
                       className="flex items-center gap-3 px-3 py-2"
+                      key={newsletter.name}
                     >
                       <DomainIcon
                         domain={domain}
                         size={32}
                         variant="circular"
                       />
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-medium text-sm truncate">
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate font-medium text-sm">
                           {newsletter.fromName || newsletter.name}
                         </span>
                         {newsletter.fromName && (
-                          <span className="text-xs text-muted-foreground truncate">
+                          <span className="truncate text-muted-foreground text-xs">
                             {newsletter.name}
                           </span>
                         )}
@@ -283,17 +285,17 @@ export function BulkActions({
 
           <DialogFooter>
             <Button
-              variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
+              variant="outline"
             >
               Cancel
             </Button>
             <Button
-              variant="destructive"
               onClick={() => {
                 onBulkDelete(getSelectedValues());
                 setDeleteDialogOpen(false);
               }}
+              variant="destructive"
             >
               Delete
             </Button>
@@ -302,7 +304,7 @@ export function BulkActions({
       </Dialog>
 
       {/* Archive Confirmation Dialog */}
-      <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+      <Dialog onOpenChange={setArchiveDialogOpen} open={archiveDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Archive all emails?</DialogTitle>
@@ -320,20 +322,20 @@ export function BulkActions({
                     extractDomainFromEmail(newsletter.name) || newsletter.name;
                   return (
                     <div
-                      key={newsletter.name}
                       className="flex items-center gap-3 px-3 py-2"
+                      key={newsletter.name}
                     >
                       <DomainIcon
                         domain={domain}
                         size={32}
                         variant="circular"
                       />
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-medium text-sm truncate">
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate font-medium text-sm">
                           {newsletter.fromName || newsletter.name}
                         </span>
                         {newsletter.fromName && (
-                          <span className="text-xs text-muted-foreground truncate">
+                          <span className="truncate text-muted-foreground text-xs">
                             {newsletter.name}
                           </span>
                         )}
@@ -347,8 +349,8 @@ export function BulkActions({
 
           <DialogFooter>
             <Button
-              variant="outline"
               onClick={() => setArchiveDialogOpen(false)}
+              variant="outline"
             >
               Cancel
             </Button>
@@ -366,8 +368,8 @@ export function BulkActions({
 
       {/* Auto Archive Confirmation Dialog */}
       <Dialog
-        open={autoArchiveDialogOpen}
         onOpenChange={setAutoArchiveDialogOpen}
+        open={autoArchiveDialogOpen}
       >
         <DialogContent>
           <DialogHeader>
@@ -379,8 +381,8 @@ export function BulkActions({
           </DialogHeader>
           <DialogFooter>
             <Button
-              variant="outline"
               onClick={() => setAutoArchiveDialogOpen(false)}
+              variant="outline"
             >
               Cancel
             </Button>

@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
-import { aiPromptToRulesOld as aiPromptToRules } from "@/utils/ai/rule/prompt-to-rules-old";
-import { createRuleSchema } from "@/utils/ai/rule/create-rule-schema";
-import { ActionType } from "@/generated/prisma/enums";
+import { describe, expect, it, vi } from "vitest";
 import { getEmailAccount } from "@/__tests__/helpers";
+import { ActionType } from "@/generated/prisma/enums";
+import { createRuleSchema } from "@/utils/ai/rule/create-rule-schema";
+import { aiPromptToRulesOld as aiPromptToRules } from "@/utils/ai/rule/prompt-to-rules-old";
 
 // pnpm test-ai ai-prompt-to-rules
 
@@ -105,11 +105,11 @@ describe.runIf(isAiTest)("aiPromptToRules", () => {
       // Validate each rule against the schema
       for (const rule of result) {
         expect(() =>
-          createRuleSchema(emailAccount.account.provider).parse(rule),
+          createRuleSchema(emailAccount.account.provider).parse(rule)
         ).not.toThrow();
       }
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   it("should handle errors gracefully", async () => {
@@ -125,7 +125,7 @@ describe.runIf(isAiTest)("aiPromptToRules", () => {
         emailAccount,
         promptFile,
         isEditing: false,
-      }),
+      })
     ).rejects.toThrow();
   });
 
@@ -200,7 +200,7 @@ describe.runIf(isAiTest)("aiPromptToRules", () => {
         ],
       });
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   it(
@@ -240,7 +240,7 @@ describe.runIf(isAiTest)("aiPromptToRules", () => {
         ],
       });
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   it(
@@ -281,7 +281,7 @@ describe.runIf(isAiTest)("aiPromptToRules", () => {
         ],
       });
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   it(
@@ -323,10 +323,10 @@ describe.runIf(isAiTest)("aiPromptToRules", () => {
 
       // Verify template variable is preserved in the content
       const replyAction = result[0].actions.find(
-        (a) => a.type === ActionType.REPLY,
+        (a) => a.type === ActionType.REPLY
       );
       expect(replyAction?.fields?.content).toContain("{{firstName}}");
     },
-    TIMEOUT,
+    TIMEOUT
   );
 });

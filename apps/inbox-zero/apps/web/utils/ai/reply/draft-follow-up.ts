@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { createScopedLogger } from "@/utils/logger";
-import { createGenerateObject } from "@/utils/llms/index";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailForLLM } from "@/utils/types";
 import { getEmailListPrompt, getTodayForLLM } from "@/utils/ai/helpers";
+import { createGenerateObject } from "@/utils/llms/index";
 import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { createScopedLogger } from "@/utils/logger";
+import type { EmailForLLM } from "@/utils/types";
 
 const logger = createScopedLogger("DraftFollowUp");
 

@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { SparklesIcon } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { bulkCategorizeSendersAction } from "@/utils/actions/categorize";
-import { PremiumTooltip, usePremium } from "@/components/PremiumAlert";
-import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
-import type { ButtonProps } from "@/components/ui/button";
 import { useCategorizeProgress } from "@/app/(app)/[emailAccountId]/smart-categories/CategorizeProgress";
+import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
+import { PremiumTooltip, usePremium } from "@/components/PremiumAlert";
 import { Tooltip } from "@/components/Tooltip";
+import type { ButtonProps } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { bulkCategorizeSendersAction } from "@/utils/actions/categorize";
 
 export function CategorizeWithAiButton({
   buttonProps,
@@ -31,11 +31,12 @@ export function CategorizeWithAiButton({
         openPremiumModal={openPremiumModal}
       >
         <Button
-          type="button"
-          loading={isCategorizing}
           disabled={!hasAiAccess}
+          loading={isCategorizing}
           onClick={async () => {
-            if (isCategorizing) return;
+            if (isCategorizing) {
+              return;
+            }
             toast.promise(
               async () => {
                 setIsCategorizing(true);
@@ -62,9 +63,10 @@ export function CategorizeWithAiButton({
                 error: (err) => {
                   return `Error categorizing senders: ${err.message}`;
                 },
-              },
+              }
             );
           }}
+          type="button"
           {...buttonProps}
         >
           {buttonProps?.children || (
@@ -98,7 +100,7 @@ function CategorizeWithAiButtonTooltip({
   }
 
   return (
-    <PremiumTooltip showTooltip={!hasAiAccess} openModal={openPremiumModal}>
+    <PremiumTooltip openModal={openPremiumModal} showTooltip={!hasAiAccess}>
       {children}
     </PremiumTooltip>
   );

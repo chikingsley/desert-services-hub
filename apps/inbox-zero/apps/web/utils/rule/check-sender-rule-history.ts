@@ -1,15 +1,15 @@
 import sumBy from "lodash/sumBy";
-import prisma from "@/utils/prisma";
-import type { Logger } from "@/utils/logger";
-import type { EmailProvider } from "@/utils/email/types";
-import { extractEmailAddress } from "@/utils/email";
 import { ExecutedRuleStatus } from "@/generated/prisma/enums";
+import { extractEmailAddress } from "@/utils/email";
+import type { EmailProvider } from "@/utils/email/types";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 export interface SenderRuleHistory {
-  totalEmails: number;
-  ruleMatches: Map<string, { ruleName: string; count: number }>;
-  hasConsistentRule: boolean;
   consistentRuleName?: string;
+  hasConsistentRule: boolean;
+  ruleMatches: Map<string, { ruleName: string; count: number }>;
+  totalEmails: number;
 }
 
 /**
@@ -72,11 +72,15 @@ export async function checkSenderRuleHistory({
   const processedMessageIds = new Set<string>();
 
   for (const executedRule of executedRules) {
-    if (!executedRule.rule) continue;
+    if (!executedRule.rule) {
+      continue;
+    }
 
     // Avoid double-counting if we match both messageId and threadId for the same message
     const messageKey = executedRule.messageId || executedRule.threadId;
-    if (!messageKey || processedMessageIds.has(messageKey)) continue;
+    if (!messageKey || processedMessageIds.has(messageKey)) {
+      continue;
+    }
 
     processedMessageIds.add(messageKey);
 
@@ -94,7 +98,7 @@ export async function checkSenderRuleHistory({
   const totalEmailsFromSender = messages.length;
   const totalRuleMatches = sumBy(
     Array.from(ruleMatches.values()),
-    (rule) => rule.count,
+    (rule) => rule.count
   );
 
   // Check if there's a consistent rule

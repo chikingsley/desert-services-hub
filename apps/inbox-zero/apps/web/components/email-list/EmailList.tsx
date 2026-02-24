@@ -1,36 +1,36 @@
 "use client";
 
-import { useCallback, useRef, useState, useMemo } from "react";
-import { useQueryState } from "nuqs";
-import Link from "next/link";
-import { toast } from "sonner";
 import { ChevronsDownIcon } from "lucide-react";
+import Link from "next/link";
+import { useQueryState } from "nuqs";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { ActionButtonsBulk } from "@/components/ActionButtonsBulk";
+import { AlertBasic } from "@/components/Alert";
 import { Celebration } from "@/components/Celebration";
+import { Checkbox } from "@/components/Checkbox";
+import { EmailListItem } from "@/components/email-list/EmailListItem";
 import { EmailPanel } from "@/components/email-list/EmailPanel";
 import type { Thread } from "@/components/email-list/types";
-import { Tabs } from "@/components/Tabs";
 import { GroupHeading } from "@/components/GroupHeading";
-import { Checkbox } from "@/components/Checkbox";
+import { ButtonLoader } from "@/components/Loading";
+import { Tabs } from "@/components/Tabs";
 import { MessageText } from "@/components/Typography";
-import { AlertBasic } from "@/components/Alert";
-import { EmailListItem } from "@/components/email-list/EmailListItem";
+import { Button } from "@/components/ui/button";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { runAiRules } from "@/utils/queue/email-actions";
-import { Button } from "@/components/ui/button";
-import { ButtonLoader } from "@/components/Loading";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import {
   archiveEmails,
   deleteEmails,
   markReadThreads,
 } from "@/store/archive-queue";
-import { useAccount } from "@/providers/EmailAccountProvider";
 import { prefixPath } from "@/utils/path";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { runAiRules } from "@/utils/queue/email-actions";
 
 export function List({
   emails,
@@ -67,16 +67,20 @@ export function List({
         href: "/mail?tab=planned",
       },
     ],
-    [planned],
+    [planned]
   );
 
   // only show tabs if there are planned emails or categorized emails
   const showTabs = !!planned.length;
 
   const filteredEmails = useMemo(() => {
-    if (selectedTab === "planned") return planned;
+    if (selectedTab === "planned") {
+      return planned;
+    }
 
-    if (selectedTab === "all") return emails;
+    if (selectedTab === "all") {
+      return emails;
+    }
 
     return emails;
   }, [emails, selectedTab, planned]);
@@ -84,11 +88,11 @@ export function List({
   return (
     <>
       {showTabs && (
-        <div className="border-b border-gray-200">
+        <div className="border-gray-200 border-b">
           <GroupHeading
             leftContent={
               <div className="overflow-x-auto py-2 md:max-w-lg lg:max-w-xl xl:max-w-3xl 2xl:max-w-4xl">
-                <Tabs selected={selectedTab} tabs={tabs} breakpoint="xs" />
+                <Tabs breakpoint="xs" selected={selectedTab} tabs={tabs} />
               </div>
             }
           />
@@ -96,37 +100,37 @@ export function List({
       )}
       {emails.length ? (
         <EmailList
-          threads={filteredEmails}
-          showLoadMore={showLoadMore}
-          isLoadingMore={isLoadingMore}
-          handleLoadMore={handleLoadMore}
           emptyMessage={
             <div className="px-2">
               {selectedTab === "planned" ? (
                 <AlertBasic
-                  title="No planned emails"
                   description={
                     <>
                       Set rules on the{" "}
                       <Link
-                        href={prefixPath(emailAccountId, "/automation")}
                         className="font-semibold hover:underline"
+                        href={prefixPath(emailAccountId, "/automation")}
                       >
                         Assistant page
                       </Link>{" "}
                       for our AI to handle incoming emails for you.
                     </>
                   }
+                  title="No planned emails"
                 />
               ) : (
                 <AlertBasic
-                  title="All emails handled"
                   description="Great work!"
+                  title="All emails handled"
                 />
               )}
             </div>
           }
+          handleLoadMore={handleLoadMore}
+          isLoadingMore={isLoadingMore}
           refetch={refetch}
+          showLoadMore={showLoadMore}
+          threads={filteredEmails}
         />
       ) : (
         <div className="mt-20">
@@ -166,12 +170,12 @@ export function EmailList({
   const [openThreadId, setOpenThreadId] = useQueryState("thread-id");
   const closePanel = useCallback(
     () => setOpenThreadId(null),
-    [setOpenThreadId],
+    [setOpenThreadId]
   );
 
   const openedRow = useMemo(
     () => threads.find((thread) => thread.id === openThreadId),
-    [openThreadId, threads],
+    [openThreadId, threads]
   );
 
   // if checkbox for a row has been checked
@@ -200,7 +204,7 @@ export function EmailList({
         error: "There was an error running the AI rules :(",
       });
     },
-    [emailAccountId],
+    [emailAccountId]
   );
 
   const onArchive = useCallback(
@@ -224,10 +228,10 @@ export function EmailList({
           loading: "Archiving...",
           success: "Archived!",
           error: "There was an error archiving the email :(",
-        },
+        }
       );
     },
-    [refetch, emailAccountId],
+    [refetch, emailAccountId]
   );
 
   const listRef = useRef<HTMLUListElement>(null);
@@ -261,7 +265,7 @@ export function EmailList({
 
   function advanceToAdjacentThread() {
     const openedRowIndex = threads.findIndex(
-      (thread) => thread.id === openThreadId,
+      (thread) => thread.id === openThreadId
     );
 
     if (openedRowIndex === -1 || threads.length === 0 || threads.length === 1) {
@@ -301,7 +305,7 @@ export function EmailList({
         loading: "Archiving emails...",
         success: "Emails archived",
         error: "There was an error archiving the emails :(",
-      },
+      }
     );
   }, [selectedRows, refetch, emailAccountId]);
 
@@ -328,7 +332,7 @@ export function EmailList({
         loading: "Deleting emails...",
         success: "Emails deleted!",
         error: "There was an error deleting the emails :(",
-      },
+      }
     );
   }, [selectedRows, refetch, emailAccountId]);
 
@@ -345,7 +349,7 @@ export function EmailList({
       {
         success: "Running AI rules...",
         error: "There was an error running the AI rules :(",
-      },
+      }
     );
   }, [emailAccountId, selectedRows, threads]);
 
@@ -354,18 +358,18 @@ export function EmailList({
   return (
     <>
       {!(isEmpty && hideActionBarWhenEmpty) && (
-        <div className="flex items-center border-b border-l-4 border-border bg-background px-4 py-1">
+        <div className="flex items-center border-border border-b border-l-4 bg-background px-4 py-1">
           <div className="pl-1">
             <Checkbox checked={isAllSelected} onChange={onToggleSelectAll} />
           </div>
           <div className="ml-2">
             <ActionButtonsBulk
-              isPlanning={false}
               isArchiving={false}
               isDeleting={false}
-              onPlanAiAction={onPlanAiBulk}
+              isPlanning={false}
               onArchive={onArchiveBulk}
               onDelete={onTrashBulk}
+              onPlanAiAction={onPlanAiBulk}
             />
           </div>
           {/* <div className="ml-auto gap-1 flex items-center">
@@ -412,7 +416,9 @@ export function EmailList({
                   const alreadyOpen = !!openThreadId;
                   setOpenThreadId(thread.id);
 
-                  if (!alreadyOpen) scrollToId(thread.id);
+                  if (!alreadyOpen) {
+                    scrollToId(thread.id);
+                  }
 
                   markReadThreads({
                     threadIds: [thread.id],
@@ -423,7 +429,14 @@ export function EmailList({
 
                 return (
                   <EmailListItem
+                    closePanel={closePanel}
                     key={thread.id}
+                    onArchive={onArchive}
+                    onClick={onOpen}
+                    onPlanAiAction={onPlanAiAction}
+                    onSelected={onSetSelectedRow}
+                    opened={openThreadId === thread.id}
+                    provider={provider}
                     ref={(node) => {
                       const map = getMap();
                       if (node) {
@@ -432,28 +445,21 @@ export function EmailList({
                         map.delete(thread.id);
                       }
                     }}
-                    userEmail={userEmail}
-                    provider={provider}
-                    thread={thread}
-                    opened={openThreadId === thread.id}
-                    closePanel={closePanel}
-                    selected={selectedRows[thread.id]}
-                    onSelected={onSetSelectedRow}
-                    splitView={!!openThreadId}
-                    onClick={onOpen}
-                    onPlanAiAction={onPlanAiAction}
-                    onArchive={onArchive}
                     refetch={refetch}
+                    selected={selectedRows[thread.id]}
+                    splitView={!!openThreadId}
+                    thread={thread}
+                    userEmail={userEmail}
                   />
                 );
               })}
               {showLoadMore && (
                 <Button
-                  variant="outline"
                   className="mb-2 w-full"
-                  size={"sm"}
-                  onClick={handleLoadMore}
                   disabled={isLoadingMore}
+                  onClick={handleLoadMore}
+                  size={"sm"}
+                  variant="outline"
                 >
                   {
                     <>
@@ -472,12 +478,12 @@ export function EmailList({
           right={
             !!(openThreadId && openedRow) && (
               <EmailPanel
-                row={openedRow}
-                onPlanAiAction={onPlanAiAction}
-                onArchive={onArchive}
                 advanceToAdjacentThread={advanceToAdjacentThread}
                 close={closePanel}
+                onArchive={onArchive}
+                onPlanAiAction={onPlanAiAction}
                 refetch={refetch}
+                row={openedRow}
               />
             )
           }
@@ -496,11 +502,13 @@ function ResizeGroup({
 }) {
   const isMobile = useIsMobile();
 
-  if (!right) return left;
+  if (!right) {
+    return left;
+  }
 
   return (
     <ResizablePanelGroup direction={isMobile ? "vertical" : "horizontal"}>
-      <ResizablePanel style={{ overflow: "auto" }} defaultSize={50} minSize={0}>
+      <ResizablePanel defaultSize={50} minSize={0} style={{ overflow: "auto" }}>
         {left}
       </ResizablePanel>
       <ResizableHandle withHandle />

@@ -1,11 +1,11 @@
-import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getLastJob } from "@/app/(app)/[emailAccountId]/clean/helpers";
+import { Suspense } from "react";
 import { ConfirmationStep } from "@/app/(app)/[emailAccountId]/clean/ConfirmationStep";
-import { Card } from "@/components/ui/card";
+import { getLastJob } from "@/app/(app)/[emailAccountId]/clean/helpers";
 import { Loading } from "@/components/Loading";
-import { prefixPath } from "@/utils/path";
+import { Card } from "@/components/ui/card";
 import { checkUserOwnsEmailAccount } from "@/utils/email-account";
+import { prefixPath } from "@/utils/path";
 
 export default async function CleanPage({
   params,
@@ -16,16 +16,18 @@ export default async function CleanPage({
   await checkUserOwnsEmailAccount({ emailAccountId });
 
   const lastJob = await getLastJob({ emailAccountId });
-  if (!lastJob) redirect(prefixPath(emailAccountId, "/clean/onboarding"));
+  if (!lastJob) {
+    redirect(prefixPath(emailAccountId, "/clean/onboarding"));
+  }
 
   return (
     <Card className="my-4 max-w-2xl p-6 sm:mx-4 md:mx-auto">
       <Suspense fallback={<Loading />}>
         <ConfirmationStep
-          showFooter
           action={lastJob.action}
-          timeRange={lastJob.daysOld}
           instructions={lastJob.instructions ?? undefined}
+          reuseSettings={true}
+          showFooter
           skips={{
             reply: lastJob.skipReply ?? true,
             starred: lastJob.skipStarred ?? true,
@@ -33,7 +35,7 @@ export default async function CleanPage({
             receipt: lastJob.skipReceipt ?? false,
             attachment: lastJob.skipAttachment ?? false,
           }}
-          reuseSettings={true}
+          timeRange={lastJob.daysOld}
         />
       </Suspense>
     </Card>

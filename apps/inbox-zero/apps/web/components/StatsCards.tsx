@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/utils";
 
 export function StatsCards(props: {
@@ -13,20 +13,20 @@ export function StatsCards(props: {
     <div
       className={cn(
         "grid gap-2 md:grid-cols-2 md:gap-4",
-        props.stats.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4",
+        props.stats.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"
       )}
     >
       {props.stats.map((stat) => {
         return (
           <Card key={stat.name}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.name}</CardTitle>
+              <CardTitle className="font-medium text-sm">{stat.name}</CardTitle>
               {stat.icon}
             </CardHeader>
             <CardContent>
               <div className="">
-                <span className="text-2xl font-bold">{stat.value}</span>
-                <span className="ml-2 text-sm text-muted-foreground">
+                <span className="font-bold text-2xl">{stat.value}</span>
+                <span className="ml-2 text-muted-foreground text-sm">
                   {stat.subvalue}
                 </span>
               </div>

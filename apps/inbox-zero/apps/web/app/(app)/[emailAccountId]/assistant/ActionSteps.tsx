@@ -1,24 +1,23 @@
-import { useCallback, useMemo, useState } from "react";
-import TextareaAutosize from "react-textarea-autosize";
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import type {
-  useForm,
   Control,
+  FieldErrors,
   UseFormRegister,
   UseFormSetValue,
   UseFormWatch,
+  useForm,
 } from "react-hook-form";
-import type { FieldErrors } from "react-hook-form";
-import type { CreateRuleBody } from "@/utils/actions/rule.validation";
-import { ActionType } from "@/generated/prisma/enums";
+import TextareaAutosize from "react-textarea-autosize";
+import { RuleStep } from "@/app/(app)/[emailAccountId]/assistant/RuleStep";
 import { RuleSteps } from "@/app/(app)/[emailAccountId]/assistant/RuleSteps";
-import type { EmailLabel } from "@/providers/EmailProvider";
-import type { OutlookFolder } from "@/utils/outlook/folders";
-import { Button } from "@/components/ui/button";
+import { FolderSelector } from "@/components/FolderSelector";
 import { ErrorMessage, Input } from "@/components/Input";
-import { actionInputs } from "@/utils/action-item";
+import { LabelCombobox } from "@/components/LabelCombobox";
 import { TooltipExplanation } from "@/components/TooltipExplanation";
-import { hasVariables, TEMPLATE_VARIABLE_PATTERN } from "@/utils/template";
+import { MutedText } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -26,23 +25,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { FormControl, FormField, FormItem } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
-  SelectValue,
   SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { FormControl, FormField, FormItem } from "@/components/ui/form";
-import { Label } from "@/components/ui/label";
-import { canActionBeDelayed } from "@/utils/delayed-actions";
-import { FolderSelector } from "@/components/FolderSelector";
-import { cn } from "@/utils";
 import { WebhookDocumentationLink } from "@/components/WebhookDocumentation";
-import { LabelCombobox } from "@/components/LabelCombobox";
-import { RuleStep } from "@/app/(app)/[emailAccountId]/assistant/RuleStep";
-import { Card } from "@/components/ui/card";
-import { MutedText } from "@/components/Typography";
+import { ActionType } from "@/generated/prisma/enums";
+import type { EmailLabel } from "@/providers/EmailProvider";
+import { cn } from "@/utils";
+import { actionInputs } from "@/utils/action-item";
+import type { CreateRuleBody } from "@/utils/actions/rule.validation";
+import { canActionBeDelayed } from "@/utils/delayed-actions";
+import type { OutlookFolder } from "@/utils/outlook/folders";
+import { hasVariables, TEMPLATE_VARIABLE_PATTERN } from "@/utils/template";
 
 export function ActionSteps({
   actionFields,
@@ -79,28 +79,28 @@ export function ActionSteps({
 }) {
   return (
     <RuleSteps
-      onAdd={() => append({ type: ActionType.LABEL })}
-      addButtonLabel="Add Action"
       addButtonDisabled={false}
+      addButtonLabel="Add Action"
+      onAdd={() => append({ type: ActionType.LABEL })}
     >
       {actionFields?.map((field, i) => (
         <ActionCard
-          key={field.id}
           action={field}
-          index={i}
-          register={register}
-          watch={watch}
-          setValue={setValue}
           control={control}
-          errors={errors}
-          userLabels={userLabels}
-          isLoading={isLoading}
-          mutate={mutate}
           emailAccountId={emailAccountId}
-          remove={remove}
-          typeOptions={typeOptions}
+          errors={errors}
           folders={folders}
           foldersLoading={foldersLoading}
+          index={i}
+          isLoading={isLoading}
+          key={field.id}
+          mutate={mutate}
+          register={register}
+          remove={remove}
+          setValue={setValue}
+          typeOptions={typeOptions}
+          userLabels={userLabels}
+          watch={watch}
         />
       ))}
     </RuleSteps>
@@ -155,7 +155,7 @@ function ActionCard({
 
   const actionCanBeDelayed = useMemo(
     () => canActionBeDelayed(actionType),
-    [actionType],
+    [actionType]
   );
 
   const delayValue = watch(`actions.${index}.delayInMinutes`);
@@ -164,7 +164,7 @@ function ActionCard({
   // Helper function to determine if a field can use variables based on context
   const canFieldUseVariables = (
     field: { name: string; expandable?: boolean },
-    isFieldAiGenerated: boolean,
+    isFieldAiGenerated: boolean
   ) => {
     // Check if the field is visible - this is handled before calling the function
 
@@ -201,7 +201,9 @@ function ActionCard({
     const value = watch(`actions.${index}.${field.name}.value`);
     const isFieldVisible = !field.expandable || expandedFields || !!value;
 
-    if (!isFieldVisible) return false;
+    if (!isFieldVisible) {
+      return false;
+    }
 
     // For draft email content, only show variables if set manually
     if (field.name === "content" && actionType === ActionType.DRAFT_EMAIL) {
@@ -218,13 +220,13 @@ function ActionCard({
       name={`actions.${index}.type`}
       render={({ field }) => {
         const selectedOption = typeOptions.find(
-          (opt) => opt.value === field.value,
+          (opt) => opt.value === field.value
         );
         const SelectedIcon = selectedOption?.icon;
 
         return (
           <FormItem>
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select onValueChange={field.onChange} value={field.value}>
               <FormControl>
                 <SelectTrigger className="w-[180px]">
                   {selectedOption ? (
@@ -285,59 +287,61 @@ function ActionCard({
       expandedFields ||
       !!value;
 
-    if (!showField) return null;
+    if (!showField) {
+      return null;
+    }
 
     return (
       <div
-        key={field.name}
         className={cn(
-          "space-y-4 mx-auto w-full",
+          "mx-auto w-full space-y-4",
           field.expandable &&
             !value &&
             actionType !== ActionType.DRAFT_EMAIL &&
-            "opacity-80",
+            "opacity-80"
         )}
+        key={field.name}
       >
         <div>
           {field.name === "labelId" && actionType === ActionType.LABEL ? (
             <div>
               <div className="flex items-center gap-2">
                 {isAiGenerated ? (
-                  <div className="relative flex-1 min-w-[200px]">
+                  <div className="relative min-w-[200px] flex-1">
                     <Input
-                      type="text"
-                      name={`actions.${index}.${field.name}.name`}
-                      registerProps={register(
-                        `actions.${index}.${field.name}.name`,
-                      )}
                       className="pr-8"
+                      name={`actions.${index}.${field.name}.name`}
                       placeholder='e.g. {{choose "urgent", "normal", or "low"}}'
+                      registerProps={register(
+                        `actions.${index}.${field.name}.name`
+                      )}
+                      type="text"
                     />
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <div className="absolute top-1/2 right-2 -translate-y-1/2">
                       <TooltipExplanation
+                        className="text-gray-400"
                         side="right"
                         text="When enabled our AI will generate a value when processing the email. Put the prompt inside braces like so: {{your prompt here}}."
-                        className="text-gray-400"
                       />
                     </div>
                   </div>
                 ) : (
-                  <div className="flex-1 min-w-[200px]">
+                  <div className="min-w-[200px] flex-1">
                     <LabelCombobox
-                      userLabels={userLabels || []}
+                      emailAccountId={emailAccountId}
                       isLoading={isLoading}
                       mutate={mutate}
+                      onChangeValue={(newValue: string) => {
+                        setValue(
+                          `actions.${index}.${field.name}.value`,
+                          newValue
+                        );
+                      }}
+                      userLabels={userLabels || []}
                       value={{
                         id: value,
                         name: fieldValue?.name || null,
                       }}
-                      onChangeValue={(newValue: string) => {
-                        setValue(
-                          `actions.${index}.${field.name}.value`,
-                          newValue,
-                        );
-                      }}
-                      emailAccountId={emailAccountId}
                     />
                   </div>
                 )}
@@ -347,8 +351,8 @@ function ActionCard({
                     <>
                       <span className="text-muted-foreground">after</span>
                       <DelayInputControls
-                        index={index}
                         delayInMinutes={delayValue}
+                        index={index}
                         setValue={setValue}
                       />
                     </>
@@ -361,10 +365,6 @@ function ActionCard({
               <FolderSelector
                 folders={folders}
                 isLoading={foldersLoading}
-                value={{
-                  name: watch(`actions.${index}.folderName.value`) || "",
-                  id: watch(`actions.${index}.folderId.value`) || "",
-                }}
                 onChangeValue={(folderData) => {
                   if (folderData.name && folderData.id) {
                     setValue(`actions.${index}.folderName`, {
@@ -378,6 +378,10 @@ function ActionCard({
                     setValue(`actions.${index}.folderId`, undefined);
                   }
                 }}
+                value={{
+                  name: watch(`actions.${index}.folderName.value`) || "",
+                  id: watch(`actions.${index}.folderId.value`) || "",
+                }}
               />
             </div>
           ) : field.name === "content" &&
@@ -386,8 +390,8 @@ function ActionCard({
             <div>
               {isEmailAction && (
                 <Label
-                  htmlFor={`actions.${index}.${field.name}.value`}
                   className="mb-2 block"
+                  htmlFor={`actions.${index}.${field.name}.value`}
                 >
                   {field.label}
                 </Label>
@@ -403,17 +407,17 @@ function ActionCard({
             <div>
               {(isEmailAction || actionType === ActionType.CALL_WEBHOOK) && (
                 <Label
-                  htmlFor={`actions.${index}.${field.name}.value`}
                   className="mb-2 block"
+                  htmlFor={`actions.${index}.${field.name}.value`}
                 >
                   {field.label}
                 </Label>
               )}
               <Input
-                type="text"
                 name={`actions.${index}.${field.name}.value`}
-                registerProps={register(`actions.${index}.${field.name}.value`)}
                 placeholder={field.placeholder}
+                registerProps={register(`actions.${index}.${field.name}.value`)}
+                type="text"
               />
               {field.name === "url" &&
                 actionType === ActionType.CALL_WEBHOOK && (
@@ -440,21 +444,21 @@ function ActionCard({
         {hasVariables(value) &&
           canFieldUseVariables(field, isAiGenerated) &&
           field.name !== "labelId" && (
-            <div className="mt-2 whitespace-pre-wrap rounded-md bg-muted/50 p-2 font-mono text-sm text-foreground">
+            <div className="mt-2 whitespace-pre-wrap rounded-md bg-muted/50 p-2 font-mono text-foreground text-sm">
               {(value || "")
                 .split(new RegExp(`(${TEMPLATE_VARIABLE_PATTERN})`, "g"))
                 .map((part: string, idx: number) =>
                   part.startsWith("{{") ? (
                     <span
-                      key={idx}
                       className="rounded bg-blue-100 px-1 text-blue-500 dark:bg-blue-950 dark:text-blue-400"
+                      key={idx}
                     >
                       <sub className="font-sans">AI</sub>
                       {part}
                     </span>
                   ) : (
                     <span key={idx}>{part}</span>
-                  ),
+                  )
                 )}
             </div>
           )}
@@ -482,10 +486,10 @@ function ActionCard({
             <>
               <div className="mt-2 flex">
                 <Button
+                  className="flex items-center gap-1 text-muted-foreground text-xs"
+                  onClick={() => setExpandedFields(!expandedFields)}
                   size="xs"
                   variant="ghost"
-                  className="flex items-center gap-1 text-xs text-muted-foreground"
-                  onClick={() => setExpandedFields(!expandedFields)}
                 >
                   {expandedFields ? (
                     <>
@@ -512,8 +516,8 @@ function ActionCard({
         <div className="flex items-center space-x-2">
           <span className="text-muted-foreground">after</span>
           <DelayInputControls
-            index={index}
             delayInMinutes={delayValue}
+            index={index}
             setValue={setValue}
           />
         </div>
@@ -539,17 +543,17 @@ function ActionCard({
   const rightContent = (
     <>
       {isNotifySender ? (
-        <MutedText className="px-1 h-full flex items-center">
+        <MutedText className="flex h-full items-center px-1">
           Sends an automated notification from Inbox Zero informing the sender
           their email was filtered as cold outreach.
         </MutedText>
       ) : isDraftEmailWithoutManualContent ? (
-        <MutedText className="px-1 h-full flex items-center">
+        <MutedText className="flex h-full items-center px-1">
           Our AI generates a draft reply from your email history and knowledge
           base.
         </MutedText>
       ) : isEmailAction || actionType === ActionType.CALL_WEBHOOK ? (
-        <Card className="p-4 space-y-4">
+        <Card className="space-y-4 p-4">
           {fieldsContent}
           {shouldShowProTip && <VariableProTip />}
           {delayControls}
@@ -605,19 +609,19 @@ function ActionCard({
 
   return (
     <RuleStep
-      onRemove={() => remove(index)}
-      removeAriaLabel="Remove action"
-      leftContent={leftContent}
-      rightContent={rightContent}
-      onAddDelay={actionCanBeDelayed ? handleAddDelay : undefined}
-      onRemoveDelay={actionCanBeDelayed ? handleRemoveDelay : undefined}
       hasDelay={delayEnabled}
-      onUsePrompt={isLabelAction ? handleUsePrompt : undefined}
-      onUseLabel={isLabelAction ? handleUseLabel : undefined}
+      isManualMode={contentSetManually}
       isPromptMode={isPromptMode}
+      leftContent={leftContent}
+      onAddDelay={actionCanBeDelayed ? handleAddDelay : undefined}
+      onRemove={() => remove(index)}
+      onRemoveDelay={actionCanBeDelayed ? handleRemoveDelay : undefined}
       onSetManually={isDraftEmailAction ? handleSetManually : undefined}
       onUseAiDraft={isDraftEmailAction ? handleUseAiDraft : undefined}
-      isManualMode={contentSetManually}
+      onUseLabel={isLabelAction ? handleUseLabel : undefined}
+      onUsePrompt={isLabelAction ? handleUsePrompt : undefined}
+      removeAriaLabel="Remove action"
+      rightContent={rightContent}
     />
   );
 }
@@ -626,7 +630,7 @@ function VariableExamplesDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="xs" className="ml-auto">
+        <Button className="ml-auto" size="xs" variant="outline">
           See examples
         </Button>
       </DialogTrigger>
@@ -668,7 +672,7 @@ cal.com/example`}
 function VariableProTip() {
   return (
     <div className="mt-4 rounded-md bg-blue-50 p-3 dark:bg-blue-950/30">
-      <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+      <div className="flex items-center gap-2 text-blue-600 text-sm dark:text-blue-400">
         <span>
           ✨ Use {"{{"}variables{"}}"} for personalized content
         </span>
@@ -713,10 +717,9 @@ function DelayInputControls({
   return (
     <div className="flex items-center space-x-2">
       <Input
-        name={`delay-${index}`}
-        type="text"
-        placeholder="0"
         className="w-20"
+        name={`delay-${index}`}
+        placeholder="0"
         registerProps={{
           value: delayConfig.displayValue,
           onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -724,10 +727,11 @@ function DelayInputControls({
             delayConfig.handleValueChange(value, delayConfig.unit);
           },
         }}
+        type="text"
       />
       <Select
-        value={delayConfig.unit}
         onValueChange={delayConfig.handleUnitChange}
+        value={delayConfig.unit}
       >
         <SelectTrigger className="w-24">
           <SelectValue />
@@ -750,23 +754,28 @@ function DelayInputControls({
 
 // minutes to user-friendly UI format
 function getDisplayValueAndUnit(minutes: number | null | undefined) {
-  if (minutes === null || minutes === undefined)
+  if (minutes === null || minutes === undefined) {
     return { value: "", unit: "hours" };
-  if (minutes === -1 || minutes <= 0) return { value: "", unit: "hours" };
+  }
+  if (minutes === -1 || minutes <= 0) {
+    return { value: "", unit: "hours" };
+  }
 
   if (minutes >= 1440 && minutes % 1440 === 0) {
     return { value: (minutes / 1440).toString(), unit: "days" };
-  } else if (minutes >= 60 && minutes % 60 === 0) {
-    return { value: (minutes / 60).toString(), unit: "hours" };
-  } else {
-    return { value: minutes.toString(), unit: "minutes" };
   }
+  if (minutes >= 60 && minutes % 60 === 0) {
+    return { value: (minutes / 60).toString(), unit: "hours" };
+  }
+  return { value: minutes.toString(), unit: "minutes" };
 }
 
 // user-friendly UI format to minutes
 function convertToMinutes(value: string, unit: string) {
   const numValue = Number.parseInt(value, 10);
-  if (Number.isNaN(numValue) || numValue <= 0) return -1;
+  if (Number.isNaN(numValue) || numValue <= 0) {
+    return -1;
+  }
 
   switch (unit) {
     case "minutes":

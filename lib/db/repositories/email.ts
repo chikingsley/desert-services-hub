@@ -2,7 +2,6 @@
  * Email Repository
  */
 
-import { isSpam } from "@lib/email/spam-filter";
 import { db } from "@lib/db/client";
 import type {
   BodyLinkScanStatus,
@@ -11,6 +10,7 @@ import type {
   EmailClassification,
   InsertEmailData,
 } from "@lib/db/types";
+import { isSpam } from "@lib/email/spam-filter";
 
 // ============================================
 // Row Parser
@@ -571,9 +571,7 @@ export async function getEmailsWithoutProjectLink(
   classifications: EmailClassification[],
   limit = 1000
 ): Promise<Email[]> {
-  const placeholders = classifications
-    .map((_, i) => `$${i + 1}`)
-    .join(", ");
+  const placeholders = classifications.map((_, i) => `$${i + 1}`).join(", ");
   const limitIndex = classifications.length + 1;
   const rows = await db
     .query<Record<string, unknown>, (string | number)[]>(

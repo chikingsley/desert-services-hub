@@ -1,15 +1,15 @@
 "use client";
 
 import { useCallback } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { EmailThread } from "@/components/email-list/EmailThread";
+import { LoadingContent } from "@/components/LoadingContent";
+import { MutedText } from "@/components/Typography";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useDisplayedEmail } from "@/hooks/useDisplayedEmail";
-import { EmailThread } from "@/components/email-list/EmailThread";
 import { useThread } from "@/hooks/useThread";
-import { LoadingContent } from "@/components/LoadingContent";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useAccount } from "@/providers/EmailAccountProvider";
 import { isGoogleProvider } from "@/utils/email/provider-types";
-import { MutedText } from "@/components/Typography";
 
 export function EmailViewer() {
   const { provider } = useAccount();
@@ -20,19 +20,19 @@ export function EmailViewer() {
   const hideEmail = useCallback(() => showEmail(null), [showEmail]);
 
   return (
-    <Sheet open={!!threadId} onOpenChange={hideEmail}>
+    <Sheet onOpenChange={hideEmail} open={!!threadId}>
       <SheetContent
-        side="right"
-        size="5xl"
         className="overflow-y-auto bg-slate-100 p-0"
         overlay="transparent"
+        side="right"
+        size="5xl"
       >
         {isGoogleProvider(provider) ? (
           threadId && (
             <ThreadContent
-              threadId={threadId}
-              showReplyButton={showReplyButton}
               autoOpenReplyForMessageId={autoOpenReplyForMessageId ?? undefined}
+              showReplyButton={showReplyButton}
+              threadId={threadId}
             />
           )
         ) : (
@@ -62,21 +62,21 @@ export function ThreadContent({
     { id: threadId },
     {
       includeDrafts: true,
-    },
+    }
   );
 
   return (
     <ErrorBoundary extra={{ component: "ThreadContent", threadId }}>
-      <LoadingContent loading={isLoading} error={error}>
+      <LoadingContent error={error} loading={isLoading}>
         {data && (
           <EmailThread
+            autoOpenReplyForMessageId={autoOpenReplyForMessageId}
             key={data.thread.id}
             messages={data.thread.messages}
+            onSendSuccess={onSendSuccess}
             refetch={mutate}
             showReplyButton={showReplyButton}
-            autoOpenReplyForMessageId={autoOpenReplyForMessageId}
             topRightComponent={topRightComponent}
-            onSendSuccess={onSendSuccess}
             withHeader
           />
         )}

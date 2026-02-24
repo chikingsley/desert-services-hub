@@ -15,33 +15,34 @@
  *
  * Usage: bun run evals/permits/seed-dataset.ts [--count 200]
  */
-import { db } from "@lib/db/client";
+
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { db } from "@lib/db/client";
 
 const DIR = import.meta.dirname ?? join(process.cwd(), "evals/permits");
 const SAMPLE_COUNT = Number(
   process.argv.includes("--count")
     ? process.argv[process.argv.indexOf("--count") + 1]
-    : 200,
+    : 200
 );
 
 interface Permit {
-  id: string;
-  company_name: string | null;
-  project_name: string | null;
   address: string | null;
   city: string | null;
+  company_name: string | null;
+  id: string;
+  project_name: string | null;
   status: string | null;
 }
 
 interface Query {
   _id: string;
-  text: string;
   metadata: {
     type: string;
     permit_id: string;
   };
+  text: string;
 }
 
 function generateQueries(p: Permit): Query[] {
@@ -97,14 +98,16 @@ function generateQueries(p: Permit): Query[] {
 }
 
 async function main() {
-  console.log(`Seeding permit eval dataset (target: ${SAMPLE_COUNT} permits)...`);
+  console.log(
+    `Seeding permit eval dataset (target: ${SAMPLE_COUNT} permits)...`
+  );
 
   // Fetch all permits for corpus
   const allPermits = await db
     .query<Permit>(
       `SELECT id, company_name, project_name, address, city, status
        FROM dust_permits_filed_by_desert_services
-       ORDER BY id`,
+       ORDER BY id`
     )
     .all();
   console.log(`  ${allPermits.length} total permits in corpus`);
@@ -113,7 +116,9 @@ async function main() {
   // Active first, then with project names, stratify by company (max 5 per company)
   const perCompany = new Map<string, Permit[]>();
   for (const p of allPermits) {
-    if (!p.project_name || p.project_name.length <= 3) continue;
+    if (!p.project_name || p.project_name.length <= 3) {
+      continue;
+    }
     const key = p.company_name ?? "_unknown";
     const list = perCompany.get(key) ?? [];
     if (list.length < 5) {
@@ -130,7 +135,7 @@ async function main() {
   }
   const sampled = pool.slice(0, SAMPLE_COUNT);
   console.log(
-    `  ${sampled.length} permits sampled across ${new Set(sampled.map((p) => p.company_name)).size} companies`,
+    `  ${sampled.length} permits sampled across ${new Set(sampled.map((p) => p.company_name)).size} companies`
   );
 
   // Generate queries
@@ -149,12 +154,19 @@ async function main() {
         JSON.stringify({
           _id: p.id,
           title: [p.company_name, p.project_name].filter(Boolean).join(" - "),
-          text: [p.id, p.company_name, p.project_name, p.address, p.city, p.status]
+          text: [
+            p.id,
+            p.company_name,
+            p.project_name,
+            p.address,
+            p.city,
+            p.status,
+          ]
             .filter(Boolean)
             .join(" | "),
-        }),
+        })
       )
-      .join("\n") + "\n",
+      .join("\n") + "\n"
   );
   console.log(`  Wrote ${corpusPath}`);
 
@@ -162,7 +174,7 @@ async function main() {
   const queriesPath = join(DIR, "queries.jsonl");
   writeFileSync(
     queriesPath,
-    allQueries.map((q) => JSON.stringify(q)).join("\n") + "\n",
+    allQueries.map((q) => JSON.stringify(q)).join("\n") + "\n"
   );
   console.log(`  Wrote ${queriesPath}`);
 
@@ -185,7 +197,9 @@ async function main() {
     console.log(`  ${type}: ${count}`);
   }
 
-  console.log("\nDone. Run eval with: bun run evals/permits/eval.ts --strategy fts");
+  console.log(
+    "\nDone. Run eval with: bun run evals/permits/eval.ts --strategy fts"
+  );
   process.exit(0);
 }
 

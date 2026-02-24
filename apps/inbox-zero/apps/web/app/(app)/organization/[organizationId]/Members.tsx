@@ -1,10 +1,19 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import {
+  BarChart3,
+  BarChartIcon,
+  MoreHorizontal,
+  TrashIcon,
+  XIcon,
+} from "lucide-react";
 import Link from "next/link";
-import { useOrganizationMembers } from "@/hooks/useOrganizationMembers";
+import { useCallback, useMemo } from "react";
+import type { OrganizationMembersResponse } from "@/app/api/organizations/[organizationId]/members/route";
+import { InviteMemberModal } from "@/components/InviteMemberModal";
 import { LoadingContent } from "@/components/LoadingContent";
-import { useAccount } from "@/providers/EmailAccountProvider";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { TypographyH3 } from "@/components/Typography";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,23 +29,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  TrashIcon,
-  MoreHorizontal,
-  BarChart3,
-  BarChartIcon,
-  XIcon,
-} from "lucide-react";
-import { InviteMemberModal } from "@/components/InviteMemberModal";
+import { useExecutedRulesCount } from "@/hooks/useExecutedRulesCount";
+import { useOrganizationMembers } from "@/hooks/useOrganizationMembers";
+import { useOrganizationMembership } from "@/hooks/useOrganizationMembership";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import {
   cancelInvitationAction,
   removeMemberAction,
 } from "@/utils/actions/organization";
-import { toastSuccess, toastError } from "@/components/Toast";
-import type { OrganizationMembersResponse } from "@/app/api/organizations/[organizationId]/members/route";
-import { useExecutedRulesCount } from "@/hooks/useExecutedRulesCount";
-import { TypographyH3 } from "@/components/Typography";
-import { useOrganizationMembership } from "@/hooks/useOrganizationMembership";
 import { hasOrganizationAdminRole } from "@/utils/organizations/roles";
 
 type Member = OrganizationMembersResponse["members"][0];
@@ -52,13 +52,15 @@ export function Members({ organizationId }: { organizationId: string }) {
 
   // Create a Map for O(1) lookups instead of O(n) Array.find for each member
   const executedRulesCountMap = useMemo(() => {
-    if (!executedRulesData?.memberCounts) return new Map();
+    if (!executedRulesData?.memberCounts) {
+      return new Map();
+    }
 
     return new Map(
       executedRulesData.memberCounts.map((item) => [
         item.emailAccountId,
         item.executedRulesCount,
-      ]),
+      ])
     );
   }, [executedRulesData?.memberCounts]);
 
@@ -67,7 +69,7 @@ export function Members({ organizationId }: { organizationId: string }) {
       action: () => Promise<{ serverError?: string } | undefined>,
       errorTitle: string,
       successMessage: string,
-      errorMessage: string,
+      errorMessage: string
     ) => {
       try {
         const result = await action();
@@ -88,7 +90,7 @@ export function Members({ organizationId }: { organizationId: string }) {
         });
       }
     },
-    [mutate],
+    [mutate]
   );
 
   const handleRemoveMember = useCallback(
@@ -97,9 +99,9 @@ export function Members({ organizationId }: { organizationId: string }) {
         () => removeMemberAction({ memberId }),
         "Error removing member",
         "Member removed successfully",
-        "Failed to remove member",
+        "Failed to remove member"
       ),
-    [handleAction],
+    [handleAction]
   );
 
   const handleCancelInvitation = useCallback(
@@ -108,37 +110,37 @@ export function Members({ organizationId }: { organizationId: string }) {
         () => cancelInvitationAction({ invitationId }),
         "Error cancelling invitation",
         "Invitation cancelled successfully",
-        "Failed to cancel invitation",
+        "Failed to cancel invitation"
       ),
-    [handleAction],
+    [handleAction]
   );
 
   return (
-    <LoadingContent loading={isLoading} error={error}>
+    <LoadingContent error={error} loading={isLoading}>
       <div>
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <TypographyH3>Members ({data?.members.length || 0})</TypographyH3>
           {isAdmin && (
             <InviteMemberModal
-              organizationId={organizationId}
               onSuccess={mutate}
+              organizationId={organizationId}
             />
           )}
         </div>
 
-        <div className="space-y-4 mt-4">
+        <div className="mt-4 space-y-4">
           {data?.members.map((member) => {
             const executedRulesCount = executedRulesCountMap.get(
-              member.emailAccount.id,
+              member.emailAccount.id
             );
 
             return (
               <MemberCard
+                executedRulesCount={executedRulesCount}
+                isAdmin={isAdmin}
                 key={member.id}
                 member={member}
                 onRemove={handleRemoveMember}
-                executedRulesCount={executedRulesCount}
-                isAdmin={isAdmin}
               />
             );
           })}
@@ -147,7 +149,7 @@ export function Members({ organizationId }: { organizationId: string }) {
         {data?.members.length === 0 &&
           (!data?.pendingInvitations ||
             data.pendingInvitations.length === 0) && (
-            <div className="text-center py-12">
+            <div className="py-12 text-center">
               <p className="text-muted-foreground">
                 No members found in your organization.
               </p>
@@ -155,15 +157,15 @@ export function Members({ organizationId }: { organizationId: string }) {
           )}
 
         {data?.pendingInvitations && data.pendingInvitations.length > 0 && (
-          <div className="space-y-4 mt-8">
+          <div className="mt-8 space-y-4">
             <TypographyH3>
               Pending Invitations ({data.pendingInvitations.length})
             </TypographyH3>
             <div className="space-y-4">
               {data.pendingInvitations.map((invitation) => (
                 <PendingInvitationCard
-                  key={invitation.id}
                   invitation={invitation}
+                  key={invitation.id}
                   onCancel={handleCancelInvitation}
                 />
               ))}
@@ -185,10 +187,10 @@ function CardWrapper({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between p-4 border rounded-lg">
-      <div className="flex items-center space-x-4 flex-1 min-w-0">
+    <div className="flex items-center justify-between rounded-lg border p-4">
+      <div className="flex min-w-0 flex-1 items-center space-x-4">
         {avatar}
-        <div className="flex-1 min-w-0">{children}</div>
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
       {actions}
     </div>
@@ -210,38 +212,13 @@ function MemberCard({
 
   return (
     <CardWrapper
-      avatar={
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Avatar className="h-10 w-10 flex-shrink-0">
-                <AvatarImage
-                  src={member.emailAccount.image || ""}
-                  alt={member.emailAccount.name || member.emailAccount.email}
-                />
-                <AvatarFallback>
-                  {getInitials(
-                    member.emailAccount.name,
-                    member.emailAccount.email,
-                  )}
-                </AvatarFallback>
-              </Avatar>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>
-                Joined at: {new Date(member.createdAt).toLocaleDateString()}
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      }
       actions={
         isAdmin &&
         member.emailAccount.id !== emailAccountId &&
         member.emailAccount.id && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button size="sm" variant="outline">
                 <MoreHorizontal className="size-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -270,24 +247,49 @@ function MemberCard({
           </DropdownMenu>
         )
       }
+      avatar={
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Avatar className="h-10 w-10 flex-shrink-0">
+                <AvatarImage
+                  alt={member.emailAccount.name || member.emailAccount.email}
+                  src={member.emailAccount.image || ""}
+                />
+                <AvatarFallback>
+                  {getInitials(
+                    member.emailAccount.name,
+                    member.emailAccount.email
+                  )}
+                </AvatarFallback>
+              </Avatar>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                Joined at: {new Date(member.createdAt).toLocaleDateString()}
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      }
     >
       <div className="flex items-center space-x-3">
         <p className="font-medium">{member.emailAccount.name || "No name"}</p>
         <Badge
-          variant={member.role === "admin" ? "default" : "secondary"}
           className="text-xs"
+          variant={member.role === "admin" ? "default" : "secondary"}
         >
           {capitalizeRole(member.role)}
         </Badge>
       </div>
-      <div className="flex items-center space-x-3 mt-1">
-        <span className="text-xs text-muted-foreground">
+      <div className="mt-1 flex items-center space-x-3">
+        <span className="text-muted-foreground text-xs">
           {member.emailAccount.email}
         </span>
         {executedRulesCount !== undefined && (
           <>
-            <span className="text-xs text-muted-foreground">∣</span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">∣</span>
+            <span className="text-muted-foreground text-xs">
               {executedRulesCount.toLocaleString()} assistant processed emails
             </span>
           </>
@@ -306,6 +308,16 @@ function PendingInvitationCard({
 }) {
   return (
     <CardWrapper
+      actions={
+        <Button
+          onClick={() => onCancel(invitation.id)}
+          size="sm"
+          variant="outline"
+        >
+          <XIcon className="mr-2 size-4" />
+          Cancel
+        </Button>
+      }
       avatar={
         <TooltipProvider>
           <Tooltip>
@@ -325,30 +337,20 @@ function PendingInvitationCard({
           </Tooltip>
         </TooltipProvider>
       }
-      actions={
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onCancel(invitation.id)}
-        >
-          <XIcon className="size-4 mr-2" />
-          Cancel
-        </Button>
-      }
     >
       <div className="flex items-center space-x-3">
         <p className="font-medium">{invitation.email}</p>
-        <Badge variant="outline" className="text-xs">
+        <Badge className="text-xs" variant="outline">
           Pending
         </Badge>
         {invitation.role && (
-          <Badge variant="secondary" className="text-xs">
+          <Badge className="text-xs" variant="secondary">
             {capitalizeRole(invitation.role)}
           </Badge>
         )}
       </div>
-      <div className="flex items-center space-x-3 mt-1">
-        <span className="text-xs text-muted-foreground">
+      <div className="mt-1 flex items-center space-x-3">
+        <span className="text-muted-foreground text-xs">
           Invited by {invitation.inviter.name || invitation.inviter.email}
         </span>
       </div>

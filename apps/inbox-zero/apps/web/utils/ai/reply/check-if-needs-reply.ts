@@ -1,15 +1,15 @@
 import { z } from "zod";
+import { getUserInfoPrompt } from "@/utils/ai/helpers";
+import { PROMPT_SECURITY_INSTRUCTIONS } from "@/utils/ai/security";
 import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailForLLM } from "@/utils/types";
 import {
   stringifyEmailFromBody,
   stringifyEmailSimple,
 } from "@/utils/stringify-email";
+import type { EmailForLLM } from "@/utils/types";
 import { preprocessBooleanLike } from "@/utils/zod";
-import { getModel } from "@/utils/llms/model";
-import { getUserInfoPrompt } from "@/utils/ai/helpers";
-import { PROMPT_SECURITY_INSTRUCTIONS } from "@/utils/ai/security";
 
 export async function aiCheckIfNeedsReply({
   emailAccount,
@@ -21,8 +21,9 @@ export async function aiCheckIfNeedsReply({
   threadContextMessages: EmailForLLM[];
 }) {
   // If messageToSend somehow is null/undefined, default to no reply needed.
-  if (!messageToSend)
+  if (!messageToSend) {
     return { needsReply: false, rationale: "No message provided" };
+  }
 
   const userMessageForPrompt = messageToSend;
 
@@ -73,7 +74,7 @@ Decide if the message we are sending needs a reply. Respond with a JSON object w
         .describe("Brief one-line explanation for the decision."),
       needsReply: z.preprocess(
         preprocessBooleanLike,
-        z.boolean().describe("Whether a reply is needed."),
+        z.boolean().describe("Whether a reply is needed.")
       ),
     }),
   });

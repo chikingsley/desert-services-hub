@@ -9,9 +9,9 @@ export function AIChatButton() {
 
   return (
     <Button
+      onClick={() => toggleSidebar(["chat-sidebar"])}
       size="sm"
       variant="outline"
-      onClick={() => toggleSidebar(["chat-sidebar"])}
     >
       <MessageCircleIcon className="mr-2 size-4" />
       AI Chat

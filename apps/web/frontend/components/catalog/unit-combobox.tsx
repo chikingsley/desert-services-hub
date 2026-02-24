@@ -37,10 +37,10 @@ const STANDARD_UNITS = [
 ];
 
 interface UnitComboboxProps {
-  value: string;
-  onChange: (value: string) => void;
-  disabled?: boolean;
   className?: string;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+  value: string;
 }
 
 export function UnitCombobox({

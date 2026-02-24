@@ -1,13 +1,13 @@
 "use client";
 
-import useSWR from "swr";
 import Link from "next/link";
+import useSWR from "swr";
 import type { CleanHistoryResponse } from "@/app/api/clean/history/route";
 import { LoadingContent } from "@/components/LoadingContent";
-import { formatDateSimple } from "@/utils/date";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { prefixPath } from "@/utils/path";
 import { MutedText } from "@/components/Typography";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { formatDateSimple } from "@/utils/date";
+import { prefixPath } from "@/utils/path";
 
 export function CleanHistory() {
   const { emailAccountId } = useAccount();
@@ -15,14 +15,14 @@ export function CleanHistory() {
     useSWR<CleanHistoryResponse>("/api/clean/history");
 
   return (
-    <LoadingContent loading={isLoading} error={error}>
+    <LoadingContent error={error} loading={isLoading}>
       {data?.result.length ? (
         <div className="space-y-2">
           {data.result.map((job) => (
             <Link
+              className="block w-full cursor-pointer rounded-md border p-3 text-left transition-colors hover:bg-muted/50"
               href={prefixPath(emailAccountId, `/clean/run?jobId=${job.id}`)}
               key={job.id}
-              className="block w-full cursor-pointer rounded-md border p-3 text-left transition-colors hover:bg-muted/50"
             >
               <div className="flex items-center justify-between">
                 <div>

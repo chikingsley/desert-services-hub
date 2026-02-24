@@ -4,7 +4,7 @@ import { processSWRResponse } from "@/utils/swr";
 
 export function useApiKeys() {
   const swrResult = useSWR<ApiKeyResponse | { error: string }>(
-    "/api/user/api-keys",
+    "/api/user/api-keys"
   );
   return processSWRResponse<ApiKeyResponse>(swrResult);
 }

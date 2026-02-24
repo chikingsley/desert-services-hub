@@ -1,24 +1,24 @@
 "use client";
 
-import Link from "next/link";
 import {
-  ExternalLinkIcon,
-  Undo2Icon,
   ArchiveIcon,
   CheckIcon,
+  ExternalLinkIcon,
+  Undo2Icon,
 } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/Badge";
-import { cn } from "@/utils";
-import type { CleanThread } from "@/utils/redis/clean.types";
-import { formatShortDate } from "@/utils/date";
-import { Button } from "@/components/ui/button";
-import {
-  undoCleanInboxAction,
-  changeKeepToDoneAction,
-} from "@/utils/actions/clean";
 import { toastError } from "@/components/Toast";
-import { getGmailUrl } from "@/utils/url";
+import { Button } from "@/components/ui/button";
 import { CleanAction } from "@/generated/prisma/enums";
+import { cn } from "@/utils";
+import {
+  changeKeepToDoneAction,
+  undoCleanInboxAction,
+} from "@/utils/actions/clean";
+import { formatShortDate } from "@/utils/date";
+import type { CleanThread } from "@/utils/redis/clean.types";
+import { getGmailUrl } from "@/utils/url";
 
 type Status = "markedDone" | "markingDone" | "keep" | "labelled" | "processing";
 
@@ -50,7 +50,7 @@ export function EmailItem({
         "flex items-center rounded-md border p-2 text-sm transition-all duration-300",
         pending && "border-blue-500/30 bg-blue-50/50 dark:bg-blue-950/20",
         archive && "border-green-500/30",
-        label && "border-yellow-500/30",
+        label && "border-yellow-500/30"
       )}
     >
       <div className="min-w-0 flex-1">
@@ -65,20 +65,20 @@ export function EmailItem({
             <ExternalLinkIcon className="size-3" />
           </Link>
         </div>
-        <div className="truncate text-xs text-muted-foreground">
+        <div className="truncate text-muted-foreground text-xs">
           From: {email.from} • {formatShortDate(email.date)}
         </div>
       </div>
 
       <div className="ml-2 flex items-center space-x-2">
         <StatusBadge
-          status={status}
-          email={email}
           action={action}
-          undoState={undoState}
+          email={email}
+          emailAccountId={emailAccountId}
           setUndoing={setUndoing}
           setUndone={setUndone}
-          emailAccountId={emailAccountId}
+          status={status}
+          undoState={undoState}
         />
       </div>
     </div>
@@ -92,7 +92,7 @@ function StatusCircle({ status }: { status: Status }) {
         "mr-2 size-2 rounded-full",
         (status === "markedDone" || status === "markingDone") && "bg-green-500",
         status === "keep" && "bg-blue-500",
-        status === "labelled" && "bg-yellow-500",
+        status === "labelled" && "bg-yellow-500"
       )}
     />
   );
@@ -148,10 +148,10 @@ function StatusBadge({
         </span>
         <div className="hidden group-hover:inline-flex">
           <Button
-            size="xs"
-            variant="ghost"
             onClick={async () => {
-              if (undoState) return;
+              if (undoState) {
+                return;
+              }
 
               setUndoing(email.threadId);
 
@@ -167,6 +167,8 @@ function StatusBadge({
                 setUndone(email.threadId);
               }
             }}
+            size="xs"
+            variant="ghost"
           >
             <Undo2Icon className="size-3" />
             Undo
@@ -184,10 +186,10 @@ function StatusBadge({
         </span>
         <div className="hidden group-hover:inline-flex">
           <Button
-            size="xs"
-            variant="ghost"
             onClick={async () => {
-              if (undoState) return;
+              if (undoState) {
+                return;
+              }
 
               setUndoing(email.threadId);
 
@@ -202,6 +204,8 @@ function StatusBadge({
                 setUndone(email.threadId);
               }
             }}
+            size="xs"
+            variant="ghost"
           >
             {action === CleanAction.ARCHIVE ? (
               <>
@@ -230,7 +234,9 @@ function getStatus(email: CleanThread): Status {
   // The StatusBadge component will handle showing the undone state
 
   if (email.archive) {
-    if (email.status === "processing") return "markingDone";
+    if (email.status === "processing") {
+      return "markingDone";
+    }
     return "markedDone";
   }
 

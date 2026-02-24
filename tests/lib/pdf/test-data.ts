@@ -1,8 +1,8 @@
 // Shared test data for PDF generation tests
 // Uses max catalog items to test multipage layouts
 
-import { createLineItems } from "@/packages/estimates/catalog/catalog";
 import type { EditorEstimate, EditorSection } from "@lib/db/types";
+import { createLineItems } from "@/packages/estimates/catalog/catalog";
 
 // Create line items using actual catalog codes (max coverage)
 const catalogLineItems = createLineItems([
@@ -137,14 +137,14 @@ const sections: EditorSection[] = [
 
 // Convert catalog LineItem to EditorLineItem format and assign sections
 interface EditorLineItem {
+  cost: number;
+  description: string;
   id: string;
   item: string;
-  description: string;
   qty: number;
-  uom: string;
-  cost: number;
-  total: number;
   sectionId?: string;
+  total: number;
+  uom: string;
 }
 
 // Pattern rules for section assignment - checked in order

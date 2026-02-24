@@ -13,7 +13,7 @@ export const createOrganizationBody = z.object({
     .max(50, "Slug must be less than 50 characters")
     .regex(
       /^[a-z0-9-]+$/,
-      "Slug can only contain lowercase letters, numbers, and hyphens",
+      "Slug can only contain lowercase letters, numbers, and hyphens"
     ),
 });
 export type CreateOrganizationBody = z.infer<typeof createOrganizationBody>;
@@ -61,7 +61,7 @@ export const createOrganizationAndInviteBody = z.object({
         .string()
         .trim()
         .email()
-        .transform((val) => val.toLowerCase()),
+        .transform((val) => val.toLowerCase())
     )
     .min(1, "At least one email is required"),
   userName: z.string().nullable().optional(),

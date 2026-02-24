@@ -6,8 +6,12 @@ import {
 
 // very similar to apps/web/utils/parse/parseHtml.server.ts
 export function findUnsubscribeLink(html?: string | null): string | undefined {
-  if (typeof DOMParser === "undefined") return;
-  if (!html) return;
+  if (typeof DOMParser === "undefined") {
+    return;
+  }
+  if (!html) {
+    return;
+  }
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
@@ -50,10 +54,14 @@ export function findUnsubscribeLink(html?: string | null): string | undefined {
 }
 
 export function findCtaLink(
-  html?: string | null,
+  html?: string | null
 ): { ctaText: string; ctaLink: string } | undefined {
-  if (typeof DOMParser === "undefined") return;
-  if (!html) return;
+  if (typeof DOMParser === "undefined") {
+    return;
+  }
+  if (!html) {
+    return;
+  }
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
@@ -62,7 +70,9 @@ export function findCtaLink(
 
   const links = doc.querySelectorAll("a");
   for (const element of links) {
-    if (!element.textContent) continue;
+    if (!element.textContent) {
+      continue;
+    }
     if (containsCtaKeyword(element.textContent.toLowerCase())) {
       // capitalise first letter
       ctaText =
@@ -73,14 +83,21 @@ export function findCtaLink(
     }
   }
 
-  if (ctaLink && !ctaLink.startsWith("http") && !ctaLink.startsWith("mailto:"))
+  if (
+    ctaLink &&
+    !ctaLink.startsWith("http") &&
+    !ctaLink.startsWith("mailto:")
+  ) {
     ctaLink = `https://${ctaLink}`;
+  }
 
   return ctaText && ctaLink ? { ctaText, ctaLink } : undefined;
 }
 
 export function htmlToText(html: string): string {
-  if (typeof DOMParser === "undefined") return "";
+  if (typeof DOMParser === "undefined") {
+    return "";
+  }
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
   return doc.body.textContent || "";
@@ -94,7 +111,9 @@ export function removeReplyFromTextPlain(text: string) {
 }
 
 export function isMarketingEmail(html: string) {
-  if (typeof DOMParser === "undefined") return "";
+  if (typeof DOMParser === "undefined") {
+    return "";
+  }
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
 
@@ -110,7 +129,11 @@ export function isMarketingEmail(html: string) {
 export function cleanUnsubscribeLink(unsubscribeLink?: string) {
   // remove < > from start and end of unsubscribeLink
   let cleanedLink = unsubscribeLink;
-  if (cleanedLink?.startsWith("<")) cleanedLink = cleanedLink.slice(1);
-  if (cleanedLink?.endsWith(">")) cleanedLink = cleanedLink.slice(0, -1);
+  if (cleanedLink?.startsWith("<")) {
+    cleanedLink = cleanedLink.slice(1);
+  }
+  if (cleanedLink?.endsWith(">")) {
+    cleanedLink = cleanedLink.slice(0, -1);
+  }
   return cleanedLink;
 }

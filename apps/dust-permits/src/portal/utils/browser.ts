@@ -18,9 +18,9 @@ export type { BrowserInstance } from "@/portal/types";
  */
 export interface BrowserOptions {
   headless?: boolean;
-  operation: keyof typeof config.scripts;
   keepOpen?: boolean;
   keepOpenTimeoutMs?: number;
+  operation: keyof typeof config.scripts;
 }
 
 const DEFAULT_KEEP_OPEN_TIMEOUT_MS = 15 * 60 * 1000;
@@ -212,16 +212,16 @@ export async function withBrowser<
 // ============================================================================
 
 export interface BrowserSession {
+  currentOperation: string | null;
   instance: BrowserInstance;
   isLoggedIn: boolean;
-  portalReady: boolean;
-  startedAtMs: number;
   lastActivityAtMs: number;
+  lastError: string | null;
   lastKeepAliveAtMs: number | null;
   lastLoginAtMs: number | null;
-  lastError: string | null;
   operationDepth: number;
-  currentOperation: string | null;
+  portalReady: boolean;
+  startedAtMs: number;
 }
 
 let globalSession: BrowserSession | null = null;
@@ -234,43 +234,43 @@ const RELOGIN_CIRCUIT_BREAKER_COOLDOWN_MS = 5 * 60 * 1000;
 
 export interface BrowserSessionStatus {
   active: boolean;
-  isLoggedIn: boolean;
-  portalReady: boolean;
   busy: boolean;
   currentOperation: string | null;
-  startedAt: string | null;
-  lastActivityAt: string | null;
-  lastKeepAliveAt: string | null;
-  lastLoginAt: string | null;
-  lastError: string | null;
   currentUrl: string | null;
+  isLoggedIn: boolean;
   keepAliveEnabled: boolean;
   keepAliveIntervalMs: number;
-  viewportWidth: number;
+  lastActivityAt: string | null;
+  lastError: string | null;
+  lastKeepAliveAt: string | null;
+  lastLoginAt: string | null;
+  portalReady: boolean;
+  startedAt: string | null;
   viewportHeight: number;
+  viewportWidth: number;
 }
 
 export interface BrowserKeepAliveResult {
-  success: boolean;
   active: boolean;
   isLoggedIn: boolean;
   portalReady: boolean;
-  skipped: boolean;
   reason?: string;
   reloginAttempted?: boolean;
   reloginSucceeded?: boolean;
+  skipped: boolean;
+  success: boolean;
 }
 
 export interface BrowserClipboardWriteResult {
-  success: boolean;
   inserted: boolean;
   reason?: string;
+  success: boolean;
 }
 
 export interface BrowserClipboardReadResult {
+  reason?: string;
   success: boolean;
   text: string;
-  reason?: string;
 }
 
 function touchSessionActivity(): void {

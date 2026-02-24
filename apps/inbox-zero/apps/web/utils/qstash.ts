@@ -4,13 +4,13 @@ import { isValidInternalApiKey } from "@/utils/internal-api";
 import type { NextHandler, RequestWithLogger } from "@/utils/middleware";
 
 export function withQstashOrInternal(
-  handler: NextHandler<RequestWithLogger>,
+  handler: NextHandler<RequestWithLogger>
 ): NextHandler<RequestWithLogger> {
   return async (request, context) => {
     if (env.QSTASH_TOKEN) {
       const verified = verifySignatureAppRouter(
         (req: Request, params?: { params?: Record<string, string> }) =>
-          handler(req as RequestWithLogger, normalizeContext(params)),
+          handler(req as RequestWithLogger, normalizeContext(params))
       );
       return verified(request, context);
     }

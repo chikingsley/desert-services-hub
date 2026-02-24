@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { statsByPeriodQuerySchema } from "@/app/api/user/stats/by-period/validation";
 import { withEmailAccount } from "@/utils/middleware";
 import { getStatsByPeriod } from "./controller";
-import { statsByPeriodQuerySchema } from "@/app/api/user/stats/by-period/validation";
 
 export const GET = withEmailAccount(
   async (request) => {
@@ -21,5 +21,5 @@ export const GET = withEmailAccount(
 
     return NextResponse.json(result);
   },
-  { allowOrgAdmins: true },
+  { allowOrgAdmins: true }
 );

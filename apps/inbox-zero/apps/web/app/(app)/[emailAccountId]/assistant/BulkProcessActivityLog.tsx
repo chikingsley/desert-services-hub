@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { CheckCircle2Icon, LoaderIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import useSWR from "swr";
-import type { BatchExecutedRulesResponse } from "@/app/api/user/executed-rules/batch/route";
 import type { ThreadsResponse } from "@/app/api/threads/route";
+import type { BatchExecutedRulesResponse } from "@/app/api/user/executed-rules/batch/route";
 import { Badge } from "@/components/Badge";
 
 export type ActivityLogEntry = {
@@ -28,14 +28,16 @@ export function ActivityLog({
   title?: string;
   loading?: boolean;
 }) {
-  if (entries.length === 0 && !loading) return null;
+  if (entries.length === 0 && !loading) {
+    return null;
+  }
 
   return (
-    <div className="w-full min-w-0 rounded-lg border bg-muted overflow-hidden">
+    <div className="w-full min-w-0 overflow-hidden rounded-lg border bg-muted">
       <div className="flex items-center justify-between border-b px-3 py-2">
-        <h3 className="text-sm font-medium">{title}</h3>
+        <h3 className="font-medium text-sm">{title}</h3>
         {processingCount > 0 && !paused && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {processingCount} processing
           </span>
         )}
@@ -43,13 +45,13 @@ export function ActivityLog({
       <div className="max-h-72 overflow-y-auto overflow-x-hidden">
         <div className="space-y-1 p-2">
           {entries.length === 0 && loading && (
-            <div className="flex items-center gap-2 px-2 py-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 px-2 py-3 text-muted-foreground text-xs">
               <LoaderIcon className="h-3.5 w-3.5 animate-spin" />
               Fetching emails...
             </div>
           )}
           {entries.map((entry) => (
-            <ActivityLogRow key={entry.id} entry={entry} paused={paused} />
+            <ActivityLogRow entry={entry} key={entry.id} paused={paused} />
           ))}
         </div>
       </div>
@@ -92,7 +94,7 @@ function ActivityLogRow({
             )}
           </span>
         </div>
-        <div className="truncate text-muted-foreground mt-0.5">
+        <div className="mt-0.5 truncate text-muted-foreground">
           {entry.subject}
         </div>
       </div>
@@ -128,7 +130,7 @@ export function BulkProcessActivityLog({
   loading?: boolean;
 }) {
   const [activityLog, setActivityLog] = useState<InternalActivityLogEntry[]>(
-    [],
+    []
   );
 
   // Clear activity log when a new run starts
@@ -159,12 +161,14 @@ export function BulkProcessActivityLog({
       : null,
     {
       refreshInterval: messageIds.length > 0 && !allCompleted ? 2000 : 0,
-    },
+    }
   );
 
   // Update activity log when threads are queued or rules are executed
   useEffect(() => {
-    if (!threads.length) return;
+    if (!threads.length) {
+      return;
+    }
 
     setActivityLog((prev) => {
       const existingMessageIds = new Set(prev.map((entry) => entry.messageId));
@@ -172,13 +176,19 @@ export function BulkProcessActivityLog({
 
       for (const threadId of processedThreadIds) {
         const thread = threads.find((t) => t.id === threadId);
-        if (!thread) continue;
+        if (!thread) {
+          continue;
+        }
 
         const message = thread.messages?.[thread.messages.length - 1];
-        if (!message) continue;
+        if (!message) {
+          continue;
+        }
 
         // Check if already in log (using current state, not stale closure)
-        if (existingMessageIds.has(message.id)) continue;
+        if (existingMessageIds.has(message.id)) {
+          continue;
+        }
 
         const executedRule = executedRulesData?.rulesMap[message.id]?.[0];
 
@@ -196,18 +206,24 @@ export function BulkProcessActivityLog({
         existingMessageIds.add(message.id);
       }
 
-      if (newEntries.length === 0) return prev;
+      if (newEntries.length === 0) {
+        return prev;
+      }
       return [...newEntries, ...prev].slice(0, 50); // Keep last 50
     });
   }, [processedThreadIds, executedRulesData, threads]);
 
   // Update existing entries when rules complete
   useEffect(() => {
-    if (!executedRulesData) return;
+    if (!executedRulesData) {
+      return;
+    }
 
     setActivityLog((prev) =>
       prev.map((entry) => {
-        if (entry.status === "completed") return entry;
+        if (entry.status === "completed") {
+          return entry;
+        }
 
         const executedRule = executedRulesData.rulesMap[entry.messageId]?.[0];
         if (executedRule) {
@@ -218,7 +234,7 @@ export function BulkProcessActivityLog({
           };
         }
         return entry;
-      }),
+      })
     );
   }, [executedRulesData]);
 
@@ -238,15 +254,15 @@ export function BulkProcessActivityLog({
 
   // Count items currently being processed (in queue, not completed)
   const processingCount = activityLog.filter(
-    (entry) => aiQueue.has(entry.threadId) && entry.status !== "completed",
+    (entry) => aiQueue.has(entry.threadId) && entry.status !== "completed"
   ).length;
 
   return (
     <ActivityLog
       entries={entries}
-      processingCount={processingCount}
-      paused={paused}
       loading={loading}
+      paused={paused}
+      processingCount={processingCount}
     />
   );
 }

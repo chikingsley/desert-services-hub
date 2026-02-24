@@ -1,3 +1,5 @@
+import type { EditorEstimate } from "@lib/db/types";
+import { z } from "zod";
 import {
   EstimatePayloadValidationError,
   validateCreateEstimatePayload,
@@ -6,8 +8,6 @@ import {
   normalizeCatalogLineItems,
   type RawCatalogLineItem,
 } from "@/packages/estimates/estimating/estimate-payload-validation-line-items";
-import type { EditorEstimate } from "@lib/db/types";
-import { z } from "zod";
 
 const stringOrNullSchema = z.union([z.string(), z.null()]);
 const LINE_ITEM_PREFIX_RE = /^Line item\s+\d+:/;

@@ -1,6 +1,6 @@
 import { sendInvitationEmail } from "@inboxzero/resend";
-import { generateSecureToken } from "@/utils/api-key";
 import { env } from "@/env";
+import { generateSecureToken } from "@/utils/api-key";
 
 export async function sendOrganizationInvitation({
   email,

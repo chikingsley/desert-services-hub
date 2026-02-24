@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
 import { withAuth } from "@/utils/middleware";
 import { fetchAndCheckIsAdmin } from "@/utils/organizations/access";
+import prisma from "@/utils/prisma";
 
 export type GetExecutedRulesCountResponse = Awaited<
   ReturnType<typeof getExecutedRulesCount>
@@ -18,7 +18,7 @@ export const GET = withAuth(
     const result = await getExecutedRulesCount({ organizationId });
 
     return NextResponse.json(result);
-  },
+  }
 );
 
 async function getExecutedRulesCount({

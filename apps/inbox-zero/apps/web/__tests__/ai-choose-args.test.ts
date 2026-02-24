@@ -1,9 +1,9 @@
 import { describe, expect, test, vi } from "vitest";
-import type { ParsedMessage } from "@/utils/types";
-import { getActionItemsWithAiArgs } from "@/utils/ai/choose-rule/choose-args";
-import { getEmailAccount, getAction, getRule } from "@/__tests__/helpers";
+import { getAction, getEmailAccount, getRule } from "@/__tests__/helpers";
 import { ActionType } from "@/generated/prisma/enums";
+import { getActionItemsWithAiArgs } from "@/utils/ai/choose-rule/choose-args";
 import { createScopedLogger } from "@/utils/logger";
+import type { ParsedMessage } from "@/utils/types";
 
 // pnpm test-ai ai-choose-args
 
@@ -29,7 +29,7 @@ describe.runIf(isAiTest)("getActionItemsWithAiArgs", () => {
       selectedRule: rule,
       client: {} as any,
       modelType: "default",
-      logger: logger,
+      logger,
     });
 
     expect(result).toEqual(actions);
@@ -53,7 +53,7 @@ describe.runIf(isAiTest)("getActionItemsWithAiArgs", () => {
       selectedRule: rule,
       client: {} as any,
       modelType: "default",
-      logger: logger,
+      logger,
     });
 
     expect(result).toHaveLength(1);
@@ -72,7 +72,7 @@ describe.runIf(isAiTest)("getActionItemsWithAiArgs", () => {
       ];
       const rule = getRule(
         "Choose this when the price of an items is asked for",
-        actions,
+        actions
       );
 
       const result = await getActionItemsWithAiArgs({
@@ -84,7 +84,7 @@ describe.runIf(isAiTest)("getActionItemsWithAiArgs", () => {
         selectedRule: rule,
         client: {} as any,
         modelType: "default",
-        logger: logger,
+        logger,
       });
 
       expect(result).toHaveLength(1);
@@ -94,7 +94,7 @@ describe.runIf(isAiTest)("getActionItemsWithAiArgs", () => {
       });
       console.debug("Generated content:\n", result[0].content);
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test("should handle multiple actions with mixed AI needs", async () => {
@@ -115,7 +115,7 @@ describe.runIf(isAiTest)("getActionItemsWithAiArgs", () => {
       selectedRule: rule,
       client: {} as any,
       modelType: "default",
-      logger: logger,
+      logger,
     });
 
     expect(result).toHaveLength(2);
@@ -141,7 +141,7 @@ Matt`,
     ];
     const rule = getRule(
       "Use this when someone asks about the price of fruits",
-      actions,
+      actions
     );
 
     const result = await getActionItemsWithAiArgs({
@@ -154,7 +154,7 @@ Matt`,
       selectedRule: rule,
       client: {} as any,
       modelType: "default",
-      logger: logger,
+      logger,
     });
 
     expect(result).toHaveLength(2);
@@ -197,7 +197,7 @@ Matt`,
         selectedRule: rule,
         client: {} as any,
         modelType: "default",
-        logger: logger,
+        logger,
       });
 
       expect(result).toHaveLength(1);
@@ -208,7 +208,7 @@ Matt`,
 
       console.debug("Generated label:", result[0].label);
     },
-    TIMEOUT,
+    TIMEOUT
   );
 });
 

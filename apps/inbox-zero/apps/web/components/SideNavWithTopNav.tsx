@@ -1,16 +1,16 @@
 "use client";
 
-import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
+import { SidebarRight } from "@/components/SidebarRight";
+import { SideNav } from "@/components/SideNav";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { SideNav } from "@/components/SideNav";
-import { SidebarRight } from "@/components/SidebarRight";
 import { cn } from "@/utils";
 
 const CrispWithNoSSR = dynamic(() => import("@/components/CrispChat"));
@@ -26,13 +26,13 @@ function ContentWrapper({ children }: { children: React.ReactNode }) {
     <div
       className={cn(
         "flex-1 transition-all duration-200 ease-linear",
-        isRightSidebarOpen && "lg:mr-[450px]",
+        isRightSidebarOpen && "lg:mr-[450px]"
       )}
     >
       <SidebarInset
         className={cn(
-          "overflow-hidden bg-background pt-9 max-w-full",
-          noTopPadding && "pt-0",
+          "max-w-full overflow-hidden bg-background pt-9",
+          noTopPadding && "pt-0"
         )}
       >
         {children}
@@ -53,7 +53,9 @@ export function SideNavWithTopNav({
 }) {
   const pathname = usePathname();
 
-  if (!pathname) return null;
+  if (!pathname) {
+    return null;
+  }
 
   // Ugly code. May change the onboarding path later so we don't need to do this.
   // Only return children for the onboarding or onboarding-brief pages: /[emailAccountId]/onboarding or /[emailAccountId]/onboarding-brief
@@ -61,8 +63,9 @@ export function SideNavWithTopNav({
   if (
     segments.length === 2 &&
     (segments[1] === "onboarding" || segments[1] === "onboarding-brief")
-  )
+  ) {
     return children;
+  }
 
   return (
     <SidebarProvider
@@ -79,9 +82,9 @@ export function SideNavWithTopNav({
 
 function MobileHeader() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-9 md:hidden">
+    <header className="fixed top-0 right-0 left-0 z-50 h-9 md:hidden">
       <div className="flex h-full items-center px-4">
-        <SidebarTrigger name="left-sidebar" className="size-6" />
+        <SidebarTrigger className="size-6" name="left-sidebar" />
       </div>
     </header>
   );

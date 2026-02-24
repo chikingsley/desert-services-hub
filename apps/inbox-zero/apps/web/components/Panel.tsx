@@ -3,9 +3,9 @@ import type React from "react";
 
 interface PanelProps {
   children: React.ReactNode;
-  title?: string;
   classes?: string;
   full?: boolean;
+  title?: string;
   white?: boolean;
 }
 
@@ -15,11 +15,11 @@ export const Panel = (props: PanelProps) => {
       className={clsx(
         "rounded-lg bg-white text-gray-700 shadow",
         !props.full && "px-8 py-7",
-        props.classes,
+        props.classes
       )}
     >
       {props.title && (
-        <h3 className="mb-4 text-lg font-medium leading-6 text-primary">
+        <h3 className="mb-4 font-medium text-lg text-primary leading-6">
           {props.title}
         </h3>
       )}
@@ -38,7 +38,7 @@ export const GradientPanel = (props: PanelProps) => {
           })}
         >
           {props.title && (
-            <h3 className="mb-4 text-lg font-medium leading-6 text-primary">
+            <h3 className="mb-4 font-medium text-lg text-primary leading-6">
               {props.title}
             </h3>
           )}

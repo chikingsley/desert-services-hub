@@ -5,7 +5,7 @@ export const saveMultiAccountPremiumBody = z.object({
     .array(
       z.object({
         email: z.string(),
-      }),
+      })
     )
     .optional(),
 });

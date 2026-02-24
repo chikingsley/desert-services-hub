@@ -34,23 +34,23 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { formatDate } from "@/lib/utils";
 
 interface Takeoff {
+  created_at: string;
   id: string;
   name: string;
   status: string;
-  created_at: string;
   updated_at: string;
 }
 
 interface TakeoffsApiResponse {
+  facets: {
+    statuses: Array<{ status: string; count: number }>;
+  };
   items: Takeoff[];
   pagination: {
     page: number;
     perPage: number;
     total: number;
     totalPages: number;
-  };
-  facets: {
-    statuses: Array<{ status: string; count: number }>;
   };
 }
 

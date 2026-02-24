@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Card, CardContent } from "@/components/new-landing/common/Card";
 import { CardWrapper } from "@/components/new-landing/common/CardWrapper";
 import {
@@ -10,7 +11,6 @@ import {
   SectionSubtitle,
 } from "@/components/new-landing/common/Typography";
 import { cn } from "@/utils";
-import Image from "next/image";
 
 type Award = {
   title: string;
@@ -62,35 +62,35 @@ export function Awards() {
         if you want total control.
       </SectionSubtitle>
       <SectionContent
+        className="mt-20 grid grid-cols-1 gap-x-5 gap-y-20 md:grid-cols-2 lg:grid-cols-4 lg:gap-y-0"
         noMarginTop
-        className="mt-20 gap-x-5 gap-y-20 lg:gap-y-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
       >
         {awards.map((award) => (
           <CardWrapper
+            className={cn(award.hideOnMobile && "hidden md:block")}
+            key={award.title}
             padding="sm"
             rounded="sm"
-            key={award.title}
-            className={cn(award.hideOnMobile && "hidden md:block")}
           >
             <Card
+              className="relative h-full gap-3 pt-24 text-center"
               variant="extra-rounding"
-              className="gap-3 h-full relative pt-24 text-center"
             >
               <CardContent>
                 <Image
+                  alt={award.title}
                   className={cn(
                     "absolute left-1/2 -translate-x-1/2 -translate-y-20",
-                    award.top || "top-0",
+                    award.top || "top-0"
                   )}
-                  src={award.image}
-                  alt={award.title}
-                  width={award.imageSize || defaultAwardImageSize}
                   height={award.imageSize || defaultAwardImageSize}
+                  src={award.image}
+                  width={award.imageSize || defaultAwardImageSize}
                 />
-                <Paragraph color="gray-900" size="md" className="font-bold">
+                <Paragraph className="font-bold" color="gray-900" size="md">
                   {award.title}
                 </Paragraph>
-                <Paragraph size="sm" className="mt-4">
+                <Paragraph className="mt-4" size="sm">
                   {award.description}
                 </Paragraph>
               </CardContent>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, type RefCallback } from "react";
+import { type RefCallback, useCallback, useEffect, useState } from "react";
 
 interface UseTableKeyboardNavigationOptions<T> {
   items: T[];
@@ -22,12 +22,14 @@ export function useTableKeyboardNavigation<T>({
         }
       };
     },
-    [rowRefs],
+    [rowRefs]
   );
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (!items.length) return;
+      if (!items.length) {
+        return;
+      }
 
       // Check if we're in an editable element (input, textarea, or contenteditable)
       const target = e.target as HTMLElement;
@@ -37,7 +39,9 @@ export function useTableKeyboardNavigation<T>({
         target.getAttribute("contenteditable") === "true" ||
         target.closest("[contenteditable=true]") !== null;
 
-      if (isEditableElement) return;
+      if (isEditableElement) {
+        return;
+      }
 
       if (e.key === "ArrowUp") {
         e.preventDefault();
@@ -45,13 +49,13 @@ export function useTableKeyboardNavigation<T>({
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((prev) =>
-          prev >= items.length - 1 ? items.length - 1 : prev + 1,
+          prev >= items.length - 1 ? items.length - 1 : prev + 1
         );
       } else if (onKeyAction && selectedIndex >= 0) {
         onKeyAction(selectedIndex, e.key);
       }
     },
-    [items.length, onKeyAction, selectedIndex],
+    [items.length, onKeyAction, selectedIndex]
   );
 
   // Make sure the selected row is visible

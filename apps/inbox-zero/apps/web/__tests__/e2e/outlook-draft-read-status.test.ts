@@ -10,11 +10,11 @@
  */
 
 import { beforeAll, describe, expect, test, vi } from "vitest";
-import prisma from "@/utils/prisma";
-import { createEmailProvider } from "@/utils/email/provider";
 import { findOldMessage } from "@/__tests__/e2e/helpers";
+import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("test");
 const RUN_E2E_TESTS = process.env.RUN_E2E_TESTS;
@@ -79,7 +79,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
         const draftResult = await provider.draftEmail(
           beforeDraft,
           { content: "Test draft for read status verification" },
-          emailAccountEmail,
+          emailAccountEmail
         );
         draftId = draftResult.draftId;
 
@@ -93,9 +93,9 @@ describe.skipIf(!RUN_E2E_TESTS)(
         }
         await provider.markReadThread(
           testMessage.threadId,
-          !wasOriginallyUnread,
+          !wasOriginallyUnread
         );
       }
     }, 30_000);
-  },
+  }
 );

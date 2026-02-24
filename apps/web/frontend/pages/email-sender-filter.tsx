@@ -20,10 +20,10 @@ import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 import type { SenderOption } from "./emails-helpers";
 
 interface SenderFilterProps {
-  selectedSenders: SenderOption[];
   onAddSender: (sender: SenderOption) => void;
-  onRemoveSender: (email: string) => void;
   onClearSenders: () => void;
+  onRemoveSender: (email: string) => void;
+  selectedSenders: SenderOption[];
 }
 
 export function SenderFilter({

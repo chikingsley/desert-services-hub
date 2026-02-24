@@ -1,7 +1,7 @@
 "use client";
 
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ButtonList } from "@/components/ButtonList";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { Personas } from "./examples";
 
 export function PersonaDialog({
@@ -16,13 +16,15 @@ export function PersonaDialog({
   personas: Personas;
 }) {
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
       <DialogContent>
-        <DialogTitle className="text-lg font-medium">
+        <DialogTitle className="font-medium text-lg">
           Choose a persona
         </DialogTitle>
 
         <ButtonList
+          columns={3}
+          emptyMessage=""
           items={Object.entries(personas).map(([id, persona]) => ({
             id,
             name: persona.label,
@@ -31,8 +33,6 @@ export function PersonaDialog({
             onSelect(id);
             setIsOpen(false);
           }}
-          emptyMessage=""
-          columns={3}
         />
       </DialogContent>
     </Dialog>

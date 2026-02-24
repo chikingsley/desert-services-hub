@@ -11,7 +11,7 @@ const ignoreList = ["@github.com", "@google.com", "@gmail.com", "@slack.com"];
 
 export async function findNewsletters(
   gmail: gmail_v1.Gmail,
-  userEmail: string,
+  userEmail: string
 ) {
   const messages = await queryBatchMessagesPages(gmail, {
     query: "newsletter",
@@ -27,9 +27,11 @@ export async function findNewsletters(
       .map((message) => message.headers.from)
       .filter(
         (from) =>
-          !ignoreList.find((ignore) => from.includes(ignore)) &&
-          !from.includes(userEmail),
-      ),
+          !(
+            ignoreList.find((ignore) => from.includes(ignore)) ||
+            from.includes(userEmail)
+          )
+      )
   );
 }
 

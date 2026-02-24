@@ -40,17 +40,17 @@ const RUN_SPIKE = TEST_PERMIT_ID !== "";
 // =============================================================================
 
 interface MapFeature {
-  type: "polygon" | "point" | "polyline" | "unknown";
-  coordinates: { lat: number; lng: number }[];
   attributes?: Record<string, unknown>;
+  coordinates: { lat: number; lng: number }[];
   source: string;
+  type: "polygon" | "point" | "polyline" | "unknown";
 }
 
 interface MapFeaturesResult {
-  success: boolean;
-  features: MapFeature[];
-  error?: string;
   debug?: unknown;
+  error?: string;
+  features: MapFeature[];
+  success: boolean;
 }
 
 // =============================================================================

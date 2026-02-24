@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Badge } from "@/components/ui/badge";
 
 type NavItem = {
   name: string;
@@ -31,24 +31,24 @@ export function SideNavMenu({
   return (
     <SidebarMenu>
       {items.map((item) => (
-        <SidebarMenuItem key={item.name} className="font-semibold">
+        <SidebarMenuItem className="font-semibold" key={item.name}>
           <SidebarMenuButton
             asChild
-            isActive={item.active || activeHref === item.href}
             className="h-9"
-            tooltip={item.name}
+            isActive={item.active || activeHref === item.href}
             sidebarName="left-sidebar"
+            tooltip={item.name}
           >
             <Link href={item.href}>
               <item.icon />
               <span>{item.name}</span>
               {item.new && (
-                <Badge variant="green" className="ml-auto text-[10px]">
+                <Badge className="ml-auto text-[10px]" variant="green">
                   New!
                 </Badge>
               )}
               {item.beta && (
-                <Badge variant="secondary" className="ml-auto text-[10px]">
+                <Badge className="ml-auto text-[10px]" variant="secondary">
                   Beta
                 </Badge>
               )}

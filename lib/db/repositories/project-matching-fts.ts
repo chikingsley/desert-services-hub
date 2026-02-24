@@ -18,12 +18,12 @@ import type {
 } from "./types";
 
 interface ProjectDetailRow {
+  account_id: number | null;
+  address: string | null;
+  contractor: string | null;
   id: number;
   name: string;
-  contractor: string | null;
-  address: string | null;
   outlook_folder: string | null;
-  account_id: number | null;
   updated_at: string;
 }
 
@@ -204,7 +204,9 @@ export async function findProjectCandidatesFts(
   // Build decision
   const best = candidates[0] ?? null;
   const runnerUp = candidates[1] ?? null;
-  const gap = runnerUp ? (best?.score ?? 0) - runnerUp.score : (best?.score ?? 0);
+  const gap = runnerUp
+    ? (best?.score ?? 0) - runnerUp.score
+    : (best?.score ?? 0);
   const decision: ProjectMatchDecision = {
     best,
     runnerUp,

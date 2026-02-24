@@ -1,9 +1,5 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
-import { getEmailTerminology } from "@/utils/terminology";
 import {
   AlertCircleIcon,
   ArchiveIcon,
@@ -32,36 +28,40 @@ import {
   Users2Icon,
   ZapIcon,
 } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useMemo, useState } from "react";
+import { AccountSwitcher } from "@/components/AccountSwitcher";
+import { LoadingContent } from "@/components/LoadingContent";
 import { Logo } from "@/components/Logo";
-import { useComposeModal } from "@/providers/ComposeModalProvider";
+import { NavUser } from "@/components/NavUser";
+import { SideNavMenu } from "@/components/SideNavMenu";
+import { CommandShortcut } from "@/components/ui/command";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroupLabel,
   SidebarGroup,
-  SidebarHeader,
   SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenu,
-  useSidebar,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import { SideNavMenu } from "@/components/SideNavMenu";
-import { CommandShortcut } from "@/components/ui/command";
-import { useSplitLabels } from "@/hooks/useLabels";
-import { LoadingContent } from "@/components/LoadingContent";
 import {
   useCleanerEnabled,
   useIntegrationsEnabled,
   useMeetingBriefsEnabled,
 } from "@/hooks/useFeatureFlags";
-import { AccountSwitcher } from "@/components/AccountSwitcher";
+import { useSplitLabels } from "@/hooks/useLabels";
+import { useComposeModal } from "@/providers/ComposeModalProvider";
 import { useAccount } from "@/providers/EmailAccountProvider";
-import { prefixPath } from "@/utils/path";
 import { isGoogleProvider } from "@/utils/email/provider-types";
-import { NavUser } from "@/components/NavUser";
+import { prefixPath } from "@/utils/path";
+import { getEmailTerminology } from "@/utils/terminology";
 
 type NavItem = {
   name: string;
@@ -100,7 +100,7 @@ export const useNavigation = () => {
         icon: CalendarIcon,
       },
     ],
-    [currentEmailAccountId],
+    [currentEmailAccountId]
   );
 
   const cleanupItems: NavItem[] = useMemo(
@@ -131,7 +131,7 @@ export const useNavigation = () => {
           ]
         : []),
     ],
-    [currentEmailAccountId, provider, showCleaner],
+    [currentEmailAccountId, provider, showCleaner]
   );
 
   const moreItems: NavItem[] = useMemo(
@@ -162,7 +162,7 @@ export const useNavigation = () => {
           ]
         : []),
     ],
-    [currentEmailAccountId, showMeetingBriefs, showIntegrations],
+    [currentEmailAccountId, showMeetingBriefs, showIntegrations]
   );
 
   return {
@@ -239,7 +239,7 @@ export function SideNav({ ...props }: React.ComponentProps<typeof Sidebar>) {
             },
           ]
         : [],
-    [showMailNav],
+    [showMailNav]
   );
 
   const { state } = useSidebar();
@@ -248,7 +248,7 @@ export function SideNav({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="gap-0 pb-0">
         {state.includes("left-sidebar") ? (
-          <div className="flex items-center rounded-md pl-2 pr-0.5 py-3 text-foreground justify-between">
+          <div className="flex items-center justify-between rounded-md py-3 pr-0.5 pl-2 text-foreground">
             <Link href="/setup">
               <Logo className="h-3.5" />
             </Link>
@@ -270,18 +270,18 @@ export function SideNav({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <>
               <SidebarGroup>
                 <SidebarGroupLabel>Manage</SidebarGroupLabel>
-                <SideNavMenu items={navigation.manageItems} activeHref={path} />
+                <SideNavMenu activeHref={path} items={navigation.manageItems} />
               </SidebarGroup>
               <SidebarGroup>
                 <SidebarGroupLabel>Cleanup</SidebarGroupLabel>
                 <SideNavMenu
-                  items={navigation.cleanupItems}
                   activeHref={path}
+                  items={navigation.cleanupItems}
                 />
               </SidebarGroup>
               <SidebarGroup>
                 <SidebarGroupLabel>More</SidebarGroupLabel>
-                <SideNavMenu items={navigation.moreItems} activeHref={path} />
+                <SideNavMenu activeHref={path} items={navigation.moreItems} />
               </SidebarGroup>
             </>
           )}
@@ -303,7 +303,7 @@ export function SideNav({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </Link>
         </SidebarMenuButton>
 
-        <SideNavMenu items={visibleBottomLinks} activeHref={path} />
+        <SideNavMenu activeHref={path} items={visibleBottomLinks} />
 
         <NavUser />
       </SidebarFooter>
@@ -365,11 +365,11 @@ function MailNav({ path }: { path: string }) {
       </SidebarGroup>
 
       <SidebarGroup>
-        <SideNavMenu items={topMailLinks} activeHref={path} />
+        <SideNavMenu activeHref={path} items={topMailLinks} />
       </SidebarGroup>
       <SidebarGroup>
         <SidebarGroupLabel>Categories</SidebarGroupLabel>
-        <SideNavMenu items={bottomMailLinks} activeHref={path} />
+        <SideNavMenu activeHref={path} items={bottomMailLinks} />
       </SidebarGroup>
 
       <SidebarGroup>
@@ -378,9 +378,9 @@ function MailNav({ path }: { path: string }) {
         </SidebarGroupLabel>
         <LoadingContent loading={isLoading}>
           {visibleLabels.length > 0 ? (
-            <SideNavMenu items={labelNavItems} activeHref={path} />
+            <SideNavMenu activeHref={path} items={labelNavItems} />
           ) : (
-            <div className="px-3 py-2 text-xs text-muted-foreground">
+            <div className="px-3 py-2 text-muted-foreground text-xs">
               No {terminology.label.plural}
             </div>
           )}
@@ -389,9 +389,9 @@ function MailNav({ path }: { path: string }) {
           {hiddenLabels.length > 0 && (
             <>
               <button
-                type="button"
+                className="flex w-full items-center px-3 py-2 text-muted-foreground text-sm hover:bg-accent hover:text-accent-foreground"
                 onClick={() => setShowHiddenLabels(!showHiddenLabels)}
-                className="flex w-full items-center px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                type="button"
               >
                 {showHiddenLabels ? (
                   <ChevronDownIcon className="mr-1 size-4" />
@@ -402,7 +402,7 @@ function MailNav({ path }: { path: string }) {
               </button>
 
               {showHiddenLabels && (
-                <SideNavMenu items={hiddenLabelNavItems} activeHref={path} />
+                <SideNavMenu activeHref={path} items={hiddenLabelNavItems} />
               )}
             </>
           )}

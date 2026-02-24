@@ -1,9 +1,9 @@
+import {
+  type AutomationCheckInEmailAccount,
+  aiGenerateAutomationCheckInMessage,
+} from "@/utils/ai/automation-jobs/generate-check-in-message";
 import type { EmailProvider } from "@/utils/email/types";
 import type { Logger } from "@/utils/logger";
-import {
-  aiGenerateAutomationCheckInMessage,
-  type AutomationCheckInEmailAccount,
-} from "@/utils/ai/automation-jobs/generate-check-in-message";
 
 export async function getAutomationJobMessage({
   prompt,

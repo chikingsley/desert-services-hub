@@ -1,9 +1,9 @@
 import { tool } from "ai";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { getEmail, getEmailAccount } from "@/__tests__/helpers";
 import { mcpAgent } from "@/utils/ai/mcp/mcp-agent";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { getEmailAccount, getEmail } from "@/__tests__/helpers";
 
 // Run with: pnpm test-ai ai-mcp-agent
 
@@ -127,13 +127,13 @@ describe.runIf(isAiTest)(
               .string()
               .min(1)
               .describe(
-                "Semantic search query over your entire Notion workspace",
+                "Semantic search query over your entire Notion workspace"
               ),
             query_type: z
               .enum(["internal", "user"])
               .optional()
               .describe(
-                "Specify type of the query as either 'internal' or 'user'",
+                "Specify type of the query as either 'internal' or 'user'"
               ),
             filters: z
               .object({
@@ -300,7 +300,7 @@ The requested page "${id}" could not be found or you don't have access to it.`;
         const toolNames = toolCalls?.map((tc) => tc.toolName);
         expect(toolNames?.some((name) => name.includes("hubspot"))).toBe(true);
       },
-      TIMEOUT,
+      TIMEOUT
     );
 
     test(
@@ -343,7 +343,7 @@ The requested page "${id}" could not be found or you don't have access to it.`;
         const toolNames = toolCalls?.map((tc) => tc.toolName);
         expect(toolNames?.some((name) => name.includes("notion"))).toBe(true);
       },
-      TIMEOUT,
+      TIMEOUT
     );
 
     test(
@@ -390,7 +390,7 @@ The requested page "${id}" could not be found or you don't have access to it.`;
         const hasNotion = toolNames.some((name) => name.includes("notion"));
         expect(hasHubSpot && hasNotion).toBe(true);
       },
-      TIMEOUT,
+      TIMEOUT
     );
 
     test(
@@ -421,7 +421,7 @@ The requested page "${id}" could not be found or you don't have access to it.`;
 
         expect(result).toBeNull();
       },
-      TIMEOUT,
+      TIMEOUT
     );
 
     test(
@@ -436,8 +436,8 @@ The requested page "${id}" could not be found or you don't have access to it.`;
 
         expect(result).toBeNull();
       },
-      TIMEOUT,
+      TIMEOUT
     );
   },
-  TIMEOUT,
+  TIMEOUT
 );

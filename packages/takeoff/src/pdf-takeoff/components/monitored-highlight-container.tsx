@@ -10,9 +10,9 @@ import { MouseMonitor } from "./mouse-monitor";
  */
 export interface MonitoredHighlightContainerProps {
   /**
-   * A callback triggered whenever the mouse hovers over a highlight.
+   * Component to monitor mouse activity over. This should be a highlight within the {@link PdfHighlighter}.
    */
-  onMouseEnter?(): void;
+  children: ReactNode;
 
   /**
    * What tip to automatically display whenever a mouse hovers over a highlight.
@@ -20,17 +20,16 @@ export interface MonitoredHighlightContainerProps {
    * highlight, but will disappear once it no longer hovers both.
    */
   highlightTip?: Tip;
+  /**
+   * A callback triggered whenever the mouse hovers over a highlight.
+   */
+  onMouseEnter?(): void;
 
   /**
    * A callback triggered whenever the mouse completely moves out from both the
    * highlight (children) and any highlightTip.
    */
   onMouseLeave?(): void;
-
-  /**
-   * Component to monitor mouse activity over. This should be a highlight within the {@link PdfHighlighter}.
-   */
-  children: ReactNode;
 }
 
 /**

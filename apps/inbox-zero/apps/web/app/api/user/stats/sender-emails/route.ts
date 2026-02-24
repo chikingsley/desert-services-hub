@@ -1,10 +1,10 @@
+import { zodPeriod } from "@inboxzero/tinybird";
+import { format } from "date-fns/format";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { format } from "date-fns/format";
-import { zodPeriod } from "@inboxzero/tinybird";
+import { Prisma } from "@/generated/prisma/client";
 import { withEmailAccount } from "@/utils/middleware";
 import prisma from "@/utils/prisma";
-import { Prisma } from "@/generated/prisma/client";
 
 const senderEmailsQuery = z.object({
   fromEmail: z.string(),
@@ -16,7 +16,7 @@ export type SenderEmailsQuery = z.infer<typeof senderEmailsQuery>;
 export type SenderEmailsResponse = Awaited<ReturnType<typeof getSenderEmails>>;
 
 async function getSenderEmails(
-  options: SenderEmailsQuery & { emailAccountId: string },
+  options: SenderEmailsQuery & { emailAccountId: string }
 ) {
   const { fromEmail, period, fromDate, toDate, emailAccountId } = options;
 
@@ -58,7 +58,7 @@ async function getSenderEmails(
 
   const senderEmails =
     await prisma.$queryRaw<Array<{ startOfPeriod: Date; count: number }>>(
-      query,
+      query
     );
 
   return {
@@ -89,5 +89,5 @@ export const GET = withEmailAccount(
     });
 
     return NextResponse.json(result);
-  },
+  }
 );

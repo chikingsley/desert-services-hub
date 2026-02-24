@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   HashIcon,
   LockIcon,
@@ -9,8 +7,20 @@ import {
   SlackIcon,
   XIcon,
 } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
+import { useEffect, useRef, useState } from "react";
+import type { GetSlackAuthUrlResponse } from "@/app/api/slack/auth-url/route";
+import { LoadingContent } from "@/components/LoadingContent";
+import { toastError, toastInfo, toastSuccess } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemSeparator,
+  ItemTitle,
+} from "@/components/ui/item";
 import {
   Select,
   SelectContent,
@@ -18,15 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LoadingContent } from "@/components/LoadingContent";
-import {
-  Item,
-  ItemContent,
-  ItemTitle,
-  ItemActions,
-  ItemSeparator,
-} from "@/components/ui/item";
-import { toastSuccess, toastError, toastInfo } from "@/components/Toast";
+import type { MessagingProvider } from "@/generated/prisma/enums";
 import {
   useChannelTargets,
   useMessagingChannels,
@@ -36,11 +38,8 @@ import {
   linkSlackWorkspaceAction,
   updateSlackChannelAction,
 } from "@/utils/actions/messaging-channels";
+import { captureException, getActionErrorMessage } from "@/utils/error";
 import { fetchWithAccount } from "@/utils/fetch";
-import { captureException } from "@/utils/error";
-import { getActionErrorMessage } from "@/utils/error";
-import type { GetSlackAuthUrlResponse } from "@/app/api/slack/auth-url/route";
-import type { MessagingProvider } from "@/generated/prisma/enums";
 
 const PROVIDER_CONFIG: Record<
   MessagingProvider,
@@ -70,7 +69,7 @@ export function ConnectedAppsSection({
   const connectedChannels =
     channelsData?.channels.filter((channel) => channel.isConnected) ?? [];
   const hasSlack = connectedChannels.some(
-    (channel) => channel.provider === "SLACK",
+    (channel) => channel.provider === "SLACK"
   );
   const slackAvailable =
     channelsData?.availableProviders?.includes("SLACK") ?? false;
@@ -96,11 +95,12 @@ export function ConnectedAppsSection({
           toastError({ description: msg ?? "Failed to link Slack" });
         }
       },
-    },
+    }
   );
 
-  if (!isLoading && !slackAvailable && connectedChannels.length === 0)
+  if (!(isLoading || slackAvailable) && connectedChannels.length === 0) {
     return null;
+  }
 
   const handleConnectSlack = async () => {
     setConnectingSlack(true);
@@ -136,7 +136,9 @@ export function ConnectedAppsSection({
   };
 
   const handleLinkSlack = () => {
-    if (!existingWorkspace) return;
+    if (!existingWorkspace) {
+      return;
+    }
     executeLinkSlack({ teamId: existingWorkspace.teamId });
   };
 
@@ -152,10 +154,10 @@ export function ConnectedAppsSection({
             existingWorkspace ? (
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
-                  size="sm"
                   disabled={linkStatus === "executing"}
                   onClick={handleLinkSlack}
+                  size="sm"
+                  variant="outline"
                 >
                   <SlackIcon className="mr-2 h-4 w-4" />
                   {linkStatus === "executing"
@@ -163,21 +165,23 @@ export function ConnectedAppsSection({
                     : `Link to ${existingWorkspace.teamName}`}
                 </Button>
                 <button
-                  type="button"
-                  className="text-xs text-muted-foreground underline underline-offset-4"
+                  className="text-muted-foreground text-xs underline underline-offset-4"
                   onClick={() => {
-                    if (authUrl) window.location.href = authUrl;
+                    if (authUrl) {
+                      window.location.href = authUrl;
+                    }
                   }}
+                  type="button"
                 >
                   Install manually
                 </button>
               </div>
             ) : (
               <Button
-                variant="outline"
-                size="sm"
                 disabled={connectingSlack || isLoading}
                 onClick={handleConnectSlack}
+                size="sm"
+                variant="outline"
               >
                 <SlackIcon className="mr-2 h-4 w-4" />
                 {connectingSlack ? "Connecting..." : "Connect Slack"}
@@ -186,14 +190,14 @@ export function ConnectedAppsSection({
           ) : null}
         </ItemActions>
       </Item>
-      <LoadingContent loading={isLoading} error={error} loadingComponent={null}>
+      <LoadingContent error={error} loading={isLoading} loadingComponent={null}>
         {connectedChannels.length > 0 && (
           <div className="space-y-2 px-4 pb-3">
             {connectedChannels.map((channel) => (
               <ConnectedChannelRow
-                key={channel.id}
                 channel={channel}
                 emailAccountId={emailAccountId}
+                key={channel.id}
                 onUpdate={mutateChannels}
               />
             ))}
@@ -257,7 +261,7 @@ function ConnectedChannelRow({
             getActionErrorMessage(error.error) ?? "Failed to disconnect",
         });
       },
-    },
+    }
   );
 
   const { execute: executeSetTarget, status: setTargetStatus } = useAction(
@@ -274,7 +278,7 @@ function ConnectedChannelRow({
             getActionErrorMessage(error.error) ?? "Failed to update channel",
         });
       },
-    },
+    }
   );
 
   return (
@@ -296,17 +300,24 @@ function ConnectedChannelRow({
             <div className="space-y-1">
               {selectionState.showCurrentChannel ? (
                 <button
-                  type="button"
-                  className="text-xs text-muted-foreground underline underline-offset-4"
+                  className="text-muted-foreground text-xs underline underline-offset-4"
                   onClick={() => setSelectingTarget(true)}
+                  type="button"
                 >
                   #{channel.channelName || channel.channelId}
                 </button>
               ) : (
                 <Select
+                  disabled={
+                    isLoadingTargets ||
+                    hasTargetLoadError ||
+                    setTargetStatus === "executing"
+                  }
                   onValueChange={(value) => {
                     const target = privateTargets?.find((t) => t.id === value);
-                    if (!target) return;
+                    if (!target) {
+                      return;
+                    }
 
                     executeSetTarget({
                       channelId: channel.id,
@@ -314,11 +325,6 @@ function ConnectedChannelRow({
                       targetName: target.name,
                     });
                   }}
-                  disabled={
-                    isLoadingTargets ||
-                    hasTargetLoadError ||
-                    setTargetStatus === "executing"
-                  }
                 >
                   <SelectTrigger className="h-8 w-52 text-xs">
                     <SelectValue
@@ -339,7 +345,7 @@ function ConnectedChannelRow({
                       </SelectItem>
                     ))}
                     {!isLoadingTargets && privateTargets.length === 0 && (
-                      <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                      <div className="px-2 py-1.5 text-muted-foreground text-xs">
                         No private channels found
                       </div>
                     )}
@@ -348,7 +354,7 @@ function ConnectedChannelRow({
               )}
 
               {selectionState.showInviteHint && (
-                <div className="text-xs text-muted-foreground">
+                <div className="text-muted-foreground text-xs">
                   Invite the bot with{" "}
                   <code className="rounded bg-muted px-1">
                     /invite @InboxZero
@@ -359,14 +365,14 @@ function ConnectedChannelRow({
 
               {(selectionState.showErrorHint ||
                 selectionState.showCancelSelection) && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-muted-foreground text-xs">
                   {selectionState.showErrorHint && (
                     <>
                       <span>Unable to load Slack channels.</span>
                       <button
-                        type="button"
                         className="underline underline-offset-4"
                         onClick={() => mutateTargets()}
+                        type="button"
                       >
                         Retry
                       </button>
@@ -374,9 +380,9 @@ function ConnectedChannelRow({
                   )}
                   {selectionState.showCancelSelection && (
                     <button
-                      type="button"
                       className="underline underline-offset-4"
                       onClick={() => setSelectingTarget(false)}
+                      type="button"
                     >
                       Cancel
                     </button>
@@ -389,11 +395,11 @@ function ConnectedChannelRow({
       </div>
 
       <Button
-        variant="ghost"
-        size="icon"
         className="h-7 w-7"
         disabled={disconnectStatus === "executing"}
         onClick={() => executeDisconnect({ channelId: channel.id })}
+        size="icon"
+        variant="ghost"
       >
         <XIcon className="h-4 w-4" />
       </Button>
@@ -408,8 +414,12 @@ export function useSlackNotifications(enabled: boolean) {
   const handled = useRef(false);
 
   useEffect(() => {
-    if (!enabled) return;
-    if (handled.current) return;
+    if (!enabled) {
+      return;
+    }
+    if (handled.current) {
+      return;
+    }
 
     const message = searchParams.get("message");
     const error = searchParams.get("error");
@@ -417,7 +427,9 @@ export function useSlackNotifications(enabled: boolean) {
     const errorDetail = searchParams.get("error_detail");
     const resolvedReason = resolveSlackErrorReason(errorReason, errorDetail);
 
-    if (!message && !error && !errorReason && !errorDetail) return;
+    if (!(message || error || errorReason || errorDetail)) {
+      return;
+    }
 
     handled.current = true;
 
@@ -456,7 +468,7 @@ export function useSlackNotifications(enabled: boolean) {
 }
 
 function getSlackConnectionFailedDescription(
-  errorReason: string | null,
+  errorReason: string | null
 ): string {
   if (errorReason === "oauth_invalid_code") {
     return "Slack returned an invalid or expired code. Please try connecting again.";
@@ -476,10 +488,14 @@ function getSlackConnectionFailedDescription(
 
 function resolveSlackErrorReason(
   errorReason: string | null,
-  errorDetail: string | null,
+  errorDetail: string | null
 ): string | null {
-  if (errorReason) return errorReason;
-  if (!errorDetail) return null;
+  if (errorReason) {
+    return errorReason;
+  }
+  if (!errorDetail) {
+    return null;
+  }
 
   const normalized = errorDetail.toLowerCase();
 

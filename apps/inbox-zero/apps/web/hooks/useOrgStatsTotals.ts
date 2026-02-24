@@ -4,7 +4,7 @@ import type { OrgStatsParams } from "@/app/api/organizations/[organizationId]/st
 
 export function useOrgStatsTotals(
   organizationId: string,
-  options?: OrgStatsParams,
+  options?: OrgStatsParams
 ) {
   const params = new URLSearchParams();
   if (options?.fromDate) {
@@ -16,6 +16,6 @@ export function useOrgStatsTotals(
   const queryString = params.toString();
 
   return useSWR<OrgTotalsResponse>(
-    `/api/organizations/${organizationId}/stats/totals${queryString ? `?${queryString}` : ""}`,
+    `/api/organizations/${organizationId}/stats/totals${queryString ? `?${queryString}` : ""}`
   );
 }

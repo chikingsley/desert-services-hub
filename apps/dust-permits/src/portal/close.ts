@@ -182,11 +182,11 @@ export async function clickClosePermitButton(
  * Tracks which fields were successfully filled or checked.
  */
 export interface ClosePermitFormState {
+  acreChecked: boolean;
+  buildingsChecked: boolean;
+  gravelChecked: boolean;
   hasForm: boolean;
   reasonFilled: boolean;
-  gravelChecked: boolean;
-  buildingsChecked: boolean;
-  acreChecked: boolean;
 }
 
 /**

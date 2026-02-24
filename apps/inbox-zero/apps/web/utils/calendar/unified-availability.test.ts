@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { getUnifiedCalendarAvailability } from "./unified-availability";
-import prisma from "@/utils/prisma";
-import { createGoogleAvailabilityProvider } from "./providers/google-availability";
-import { createMicrosoftAvailabilityProvider } from "./providers/microsoft-availability";
-import type { BusyPeriod } from "./availability-types";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCalendarConnection } from "@/__tests__/helpers";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import type { BusyPeriod } from "./availability-types";
+import { createGoogleAvailabilityProvider } from "./providers/google-availability";
+import { createMicrosoftAvailabilityProvider } from "./providers/microsoft-availability";
+import { getUnifiedCalendarAvailability } from "./unified-availability";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/utils/prisma");
@@ -33,7 +33,7 @@ describe("getUnifiedCalendarAvailability", () => {
         fetchBusyPeriods: vi.fn().mockResolvedValue([]),
       };
       vi.mocked(createGoogleAvailabilityProvider).mockReturnValue(
-        mockGoogleProvider as any,
+        mockGoogleProvider as any
       );
 
       // User passes midnight UTC on Nov 17
@@ -53,7 +53,7 @@ describe("getUnifiedCalendarAvailability", () => {
         expect.objectContaining({
           timeMin: expect.stringContaining("2025-11-17T00:00:00"),
           timeMax: expect.stringContaining("2025-11-17T23:59:59"),
-        }),
+        })
       );
     });
 
@@ -67,7 +67,7 @@ describe("getUnifiedCalendarAvailability", () => {
         fetchBusyPeriods: vi.fn().mockResolvedValue([]),
       };
       vi.mocked(createGoogleAvailabilityProvider).mockReturnValue(
-        mockGoogleProvider as any,
+        mockGoogleProvider as any
       );
 
       await getUnifiedCalendarAvailability({
@@ -85,7 +85,7 @@ describe("getUnifiedCalendarAvailability", () => {
         expect.objectContaining({
           timeMin: expect.stringContaining("2025-11-17T00:00:00"),
           timeMax: expect.stringContaining("2025-11-17T23:59:59"),
-        }),
+        })
       );
     });
 
@@ -98,7 +98,7 @@ describe("getUnifiedCalendarAvailability", () => {
         fetchBusyPeriods: vi.fn().mockResolvedValue([]),
       };
       vi.mocked(createGoogleAvailabilityProvider).mockReturnValue(
-        mockGoogleProvider as any,
+        mockGoogleProvider as any
       );
 
       await getUnifiedCalendarAvailability({
@@ -113,7 +113,7 @@ describe("getUnifiedCalendarAvailability", () => {
         expect.objectContaining({
           timeMin: expect.stringContaining("2025-11-17T00:00:00"),
           timeMax: expect.stringContaining("2025-11-17T23:59:59"),
-        }),
+        })
       );
     });
 
@@ -126,7 +126,7 @@ describe("getUnifiedCalendarAvailability", () => {
         fetchBusyPeriods: vi.fn().mockResolvedValue([]),
       };
       vi.mocked(createGoogleAvailabilityProvider).mockReturnValue(
-        mockGoogleProvider as any,
+        mockGoogleProvider as any
       );
 
       // ISO datetime string - should extract the date part
@@ -143,7 +143,7 @@ describe("getUnifiedCalendarAvailability", () => {
         expect.objectContaining({
           timeMin: expect.stringContaining("2025-11-17T00:00:00"),
           timeMax: expect.stringContaining("2025-11-17T23:59:59"),
-        }),
+        })
       );
     });
   });
@@ -166,7 +166,7 @@ describe("getUnifiedCalendarAvailability", () => {
         fetchBusyPeriods: vi.fn().mockResolvedValue(mockBusyPeriods),
       };
       vi.mocked(createGoogleAvailabilityProvider).mockReturnValue(
-        mockGoogleProvider as any,
+        mockGoogleProvider as any
       );
 
       const result = await getUnifiedCalendarAvailability({
@@ -202,7 +202,7 @@ describe("getUnifiedCalendarAvailability", () => {
         fetchBusyPeriods: vi.fn().mockResolvedValue(mockBusyPeriods),
       };
       vi.mocked(createGoogleAvailabilityProvider).mockReturnValue(
-        mockGoogleProvider as any,
+        mockGoogleProvider as any
       );
 
       const result = await getUnifiedCalendarAvailability({
@@ -237,7 +237,7 @@ describe("getUnifiedCalendarAvailability", () => {
         fetchBusyPeriods: vi.fn().mockResolvedValue(mockBusyPeriods),
       };
       vi.mocked(createGoogleAvailabilityProvider).mockReturnValue(
-        mockGoogleProvider as any,
+        mockGoogleProvider as any
       );
 
       const result = await getUnifiedCalendarAvailability({
@@ -276,7 +276,7 @@ describe("getUnifiedCalendarAvailability", () => {
         ]),
       };
       vi.mocked(createGoogleAvailabilityProvider).mockReturnValue(
-        mockGoogleProvider as any,
+        mockGoogleProvider as any
       );
 
       const mockMicrosoftProvider = {
@@ -288,7 +288,7 @@ describe("getUnifiedCalendarAvailability", () => {
         ]),
       };
       vi.mocked(createMicrosoftAvailabilityProvider).mockReturnValue(
-        mockMicrosoftProvider as any,
+        mockMicrosoftProvider as any
       );
 
       const result = await getUnifiedCalendarAvailability({

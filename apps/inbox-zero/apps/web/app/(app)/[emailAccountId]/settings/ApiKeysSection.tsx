@@ -1,18 +1,10 @@
 "use client";
 
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   ApiKeysCreateButtonModal,
   ApiKeysDeactivateButton,
 } from "@/app/(app)/[emailAccountId]/settings/ApiKeysCreateForm";
-import { Item, ItemContent, ItemTitle, ItemActions } from "@/components/ui/item";
+import { LoadingContent } from "@/components/LoadingContent";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,8 +13,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemTitle,
+} from "@/components/ui/item";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useApiKeys } from "@/hooks/useApiKeys";
-import { LoadingContent } from "@/components/LoadingContent";
 
 export function ApiKeysSection() {
   const { data, isLoading, error, mutate } = useApiKeys();
@@ -37,7 +42,7 @@ export function ApiKeysSection() {
       <ItemActions>
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
+            <Button size="sm" variant="outline">
               View keys{keyCount > 0 ? ` (${keyCount})` : ""}
             </Button>
           </DialogTrigger>
@@ -45,7 +50,7 @@ export function ApiKeysSection() {
             <DialogHeader>
               <DialogTitle>API Keys</DialogTitle>
             </DialogHeader>
-            <LoadingContent loading={isLoading} error={error}>
+            <LoadingContent error={error} loading={isLoading}>
               {keyCount > 0 ? (
                 <Table>
                   <TableHeader>
@@ -73,7 +78,7 @@ export function ApiKeysSection() {
                   </TableBody>
                 </Table>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   No API keys yet.
                 </p>
               )}

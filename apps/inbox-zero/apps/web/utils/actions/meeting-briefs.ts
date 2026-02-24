@@ -1,15 +1,15 @@
 "use server";
 
-import { actionClient } from "@/utils/actions/safe-action";
 import {
   sendDebugBriefBody,
   updateMeetingBriefsEnabledBody,
   updateMeetingBriefsMinutesBeforeBody,
 } from "@/utils/actions/meeting-briefs.validation";
-import prisma from "@/utils/prisma";
-import { runMeetingBrief } from "@/utils/meeting-briefs/process";
+import { actionClient } from "@/utils/actions/safe-action";
 import type { CalendarEvent } from "@/utils/calendar/event-types";
 import { SafeError } from "@/utils/error";
+import { runMeetingBrief } from "@/utils/meeting-briefs/process";
+import prisma from "@/utils/prisma";
 
 export const updateMeetingBriefsEnabledAction = actionClient
   .metadata({ name: "updateMeetingBriefsEnabled" })
@@ -34,7 +34,7 @@ export const updateMeetingBriefsMinutesBeforeAction = actionClient
           meetingBriefingsMinutesBefore: minutesBefore,
         },
       });
-    },
+    }
   );
 
 export const sendBriefAction = actionClient
@@ -90,5 +90,5 @@ export const sendBriefAction = actionClient
         isTestSend: true,
         logger,
       });
-    },
+    }
   );

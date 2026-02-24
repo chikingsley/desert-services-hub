@@ -22,6 +22,7 @@ ALTER TABLE documents ADD COLUMN IF NOT EXISTS local_path TEXT;
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS downloaded_at TIMESTAMPTZ;
 
 -- Step 2: Backfill existing documents from linked attachments (COALESCE preserves existing values)
+-- Only reference columns that exist on attachments in the initial schema.
 DO $$
 BEGIN
   IF to_regclass('public.attachments') IS NULL THEN
@@ -33,19 +34,16 @@ BEGIN
     outlook_attachment_id = a.attachment_id,
     content_type = COALESCE(d.content_type, a.content_type),
     file_size = COALESCE(d.file_size, a.size),
-    file_extension = COALESCE(d.file_extension, a.file_extension),
     storage_bucket = COALESCE(d.storage_bucket, a.storage_bucket),
     storage_path = COALESCE(d.storage_path, a.storage_path),
     extracted_text = COALESCE(d.extracted_text, a.extracted_text),
-    content_hash = COALESCE(d.content_hash, a.content_hash),
-    extraction_attempts = COALESCE(d.extraction_attempts, a.extraction_attempts),
-    last_attempted_at = COALESCE(d.last_attempted_at, a.last_attempted_at),
     extracted_at = COALESCE(d.extracted_at, a.extracted_at)
   FROM attachments a
   WHERE a.id = d.attachment_id;
 END $$;
 
 -- Step 3: Insert unlinked attachments (no parsed document yet)
+-- Only reference columns that exist on attachments in the initial schema.
 DO $$
 BEGIN
   IF to_regclass('public.attachments') IS NULL THEN
@@ -54,17 +52,15 @@ BEGIN
 
   INSERT INTO documents (
     source, email_id, outlook_attachment_id, file_name, content_type,
-    file_size, file_extension, storage_bucket, storage_path,
-    extracted_text, content_hash, extraction_status, extraction_error,
-    extraction_attempts, last_attempted_at, extracted_at,
-    document_type, created_at, updated_at
+    file_size, storage_bucket, storage_path,
+    extracted_text, extraction_status, extraction_error,
+    extracted_at, document_type, created_at
   )
   SELECT
     'email_attachment', a.email_id, a.attachment_id, a.name, a.content_type,
-    a.size, a.file_extension, a.storage_bucket, a.storage_path,
-    a.extracted_text, a.content_hash, a.extraction_status, a.extraction_error,
-    a.extraction_attempts, a.last_attempted_at, a.extracted_at,
-    'unknown', a.created_at, a.updated_at
+    a.size, a.storage_bucket, a.storage_path,
+    a.extracted_text, a.extraction_status, a.extraction_error,
+    a.extracted_at, 'unknown', a.created_at
   FROM attachments a
   WHERE NOT EXISTS (
     SELECT 1 FROM documents d WHERE d.attachment_id = a.id
@@ -81,12 +77,12 @@ BEGIN
   INSERT INTO documents (
     source, monday_asset_id, monday_item_id, monday_column_id,
     file_name, file_extension, file_size, local_path, downloaded_at,
-    document_type, extraction_status, created_at, updated_at
+    document_type, extraction_status, created_at
   )
   SELECT
     'monday_asset', ma.monday_asset_id, ma.monday_item_id, ma.column_id,
     ma.file_name, ma.file_extension, ma.file_size, ma.local_path, ma.downloaded_at,
-    'unknown', 'downloaded', ma.created_at, ma.updated_at
+    'unknown', 'downloaded', ma.created_at
   FROM monday_assets ma;
 END $$;
 

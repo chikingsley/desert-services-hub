@@ -39,16 +39,16 @@ export type MeetingBriefingEmailProps = {
 
 function renderGuestBriefings(guests: GuestBriefing[]) {
   return guests.map((guest, guestIndex) => (
-    <div key={`guest-${guestIndex}`} className={guestIndex > 0 ? "mt-4" : ""}>
-      <Text className="text-sm text-gray-800 mt-0 mb-1">
+    <div className={guestIndex > 0 ? "mt-4" : ""} key={`guest-${guestIndex}`}>
+      <Text className="mt-0 mb-1 text-gray-800 text-sm">
         <strong>
           {guest.name} ({guest.email})
         </strong>
       </Text>
       {guest.bullets.map((bullet, bulletIndex) => (
         <Text
+          className="mt-0 mb-0 pl-2 text-gray-800 text-sm"
           key={`bullet-${guestIndex}-${bulletIndex}`}
-          className="text-sm text-gray-800 mt-0 mb-0 pl-2"
         >
           - {bullet}
         </Text>
@@ -58,14 +58,16 @@ function renderGuestBriefings(guests: GuestBriefing[]) {
 }
 
 function renderInternalTeamNote(internalTeamMembers: InternalTeamMember[]) {
-  if (internalTeamMembers.length === 0) return null;
+  if (internalTeamMembers.length === 0) {
+    return null;
+  }
 
   const names = internalTeamMembers
     .map((member) => member.name || member.email)
     .join(", ");
 
   return (
-    <Text className="text-xs text-gray-500 mt-4 mb-0 italic">
+    <Text className="mt-4 mb-0 text-gray-500 text-xs italic">
       Also attending: {names} (internal team members - no briefing included)
     </Text>
   );
@@ -87,30 +89,30 @@ export default function MeetingBriefingEmail({
         <Body className="bg-white font-sans">
           <Container className="mx-auto w-full max-w-[600px] p-0">
             <Section className="px-8 pt-6 pb-2">
-              <Text className="text-base text-gray-900 mt-0 mb-0">
+              <Text className="mt-0 mb-0 text-base text-gray-900">
                 Briefing for <strong>{meetingTitle}</strong>
               </Text>
-              <Text className="text-base text-gray-900 mt-0 mb-0">
+              <Text className="mt-0 mb-0 text-base text-gray-900">
                 Starting at <strong>{formattedTime}</strong>
               </Text>
             </Section>
 
             <Section className="px-8 pt-2 pb-6">
               {videoConferenceLink && (
-                <Text className="text-sm text-gray-700 mt-0 mb-2">
+                <Text className="mt-0 mb-2 text-gray-700 text-sm">
                   - Join link:{" "}
                   <Link
-                    href={videoConferenceLink}
                     className="text-blue-600 underline"
+                    href={videoConferenceLink}
                   >
                     {videoConferenceLink}
                   </Link>
                 </Text>
               )}
               {eventUrl && (
-                <Text className="text-sm text-gray-700 mt-0 mb-0">
+                <Text className="mt-0 mb-0 text-gray-700 text-sm">
                   - Calendar link:{" "}
-                  <Link href={eventUrl} className="text-blue-600 underline">
+                  <Link className="text-blue-600 underline" href={eventUrl}>
                     {eventUrl}
                   </Link>
                 </Text>
@@ -120,28 +122,28 @@ export default function MeetingBriefingEmail({
             <Section className="px-8 pb-4">
               {renderGuestBriefings(briefingContent.guests)}
               {renderInternalTeamNote(
-                briefingContent.internalTeamMembers ?? [],
+                briefingContent.internalTeamMembers ?? []
               )}
             </Section>
 
             <Section className="px-8 pb-6">
-              <Text className="text-xs text-gray-400 mt-0 mb-0 italic">
+              <Text className="mt-0 mb-0 text-gray-400 text-xs italic">
                 Note: This briefing is AI-generated and may be inaccurate,
                 especially for common names.
               </Text>
             </Section>
 
-            <Hr className="border-solid border-gray-300 my-6 mx-8" />
+            <Hr className="mx-8 my-6 border-gray-300 border-solid" />
 
             <Section className="px-8 pb-8">
-              <Text className="text-xs text-gray-500 mt-0 mb-2">
+              <Text className="mt-0 mb-2 text-gray-500 text-xs">
                 You're receiving this briefing because you enabled Meeting
                 Briefs in your Inbox Zero settings.
               </Text>
-              <Text className="text-xs text-gray-500 mt-0 mb-0">
+              <Text className="mt-0 mb-0 text-gray-500 text-xs">
                 <Link
-                  href={`${baseUrl}/${emailAccountId}/briefs`}
                   className="text-gray-600 underline"
+                  href={`${baseUrl}/${emailAccountId}/briefs`}
                 >
                   Manage settings
                 </Link>
@@ -193,7 +195,7 @@ MeetingBriefingEmail.PreviewProps = {
 };
 
 export function generateMeetingBriefingSubject(
-  props: Pick<MeetingBriefingEmailProps, "meetingTitle" | "formattedTime">,
+  props: Pick<MeetingBriefingEmailProps, "meetingTitle" | "formattedTime">
 ): string {
   const { meetingTitle, formattedTime } = props;
 

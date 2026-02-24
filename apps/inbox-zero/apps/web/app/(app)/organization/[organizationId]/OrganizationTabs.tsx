@@ -1,9 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { LoadingContent } from "@/components/LoadingContent";
 import { TabSelect } from "@/components/TabSelect";
 import { PageHeading } from "@/components/Typography";
-import { LoadingContent } from "@/components/LoadingContent";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOrganization } from "@/hooks/useOrganization";
 import { useOrganizationMembership } from "@/hooks/useOrganizationMembership";
@@ -46,15 +46,15 @@ export function OrganizationTabs({ organizationId }: OrganizationTabsProps) {
   return (
     <div>
       <LoadingContent
-        loading={isLoading}
         error={error}
+        loading={isLoading}
         loadingComponent={<Skeleton className="mb-2 h-8 w-48" />}
       >
         {organization?.name && (
           <PageHeading className="mb-2">{organization.name}</PageHeading>
         )}
       </LoadingContent>
-      <div className="border-b border-neutral-200">
+      <div className="border-neutral-200 border-b">
         <TabSelect options={tabs} selected={selected} />
       </div>
     </div>

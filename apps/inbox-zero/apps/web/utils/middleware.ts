@@ -1,29 +1,29 @@
-import { ZodError } from "zod";
-import { type NextRequest, NextResponse, after } from "next/server";
 import { randomUUID } from "node:crypto";
 import * as Sentry from "@sentry/nextjs";
-import { captureException, checkCommonErrors, SafeError } from "@/utils/error";
+import { after, type NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { env } from "@/env";
-import { logErrorToPosthog } from "@/utils/error.server";
-import { createScopedLogger, type Logger } from "@/utils/logger";
-import { flushLoggerSafely } from "@/utils/logger-flush";
 import { auth } from "@/utils/auth";
-import { getEmailAccount } from "@/utils/redis/account-validation";
-import { getCallerEmailAccount } from "@/utils/organizations/access";
 import {
   EMAIL_ACCOUNT_HEADER,
   MICROSOFT_AUTH_EXPIRED_ERROR_CODE,
   NO_REFRESH_TOKEN_ERROR_CODE,
 } from "@/utils/config";
-import prisma from "@/utils/prisma";
 import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
+import { captureException, checkCommonErrors, SafeError } from "@/utils/error";
+import { logErrorToPosthog } from "@/utils/error.server";
+import { createScopedLogger, type Logger } from "@/utils/logger";
+import { flushLoggerSafely } from "@/utils/logger-flush";
+import { getCallerEmailAccount } from "@/utils/organizations/access";
+import prisma from "@/utils/prisma";
+import { getEmailAccount } from "@/utils/redis/account-validation";
 
 const logger = createScopedLogger("middleware");
 
 export type NextHandler<T extends NextRequest = NextRequest> = (
   req: T,
-  context: { params: Promise<Record<string, string>> },
+  context: { params: Promise<Record<string, string>> }
 ) => Promise<Response>;
 
 export interface RequestWithLogger extends NextRequest {
@@ -55,10 +55,10 @@ function withMiddleware<T extends NextRequest>(
   handler: NextHandler<T>,
   middleware?: (
     req: NextRequest,
-    options?: MiddlewareOptions,
+    options?: MiddlewareOptions
   ) => Promise<T | Response>,
   options?: MiddlewareOptions,
-  scope?: string,
+  scope?: string
 ): NextHandler {
   return async (req, context) => {
     const requestId = req.headers.get("x-request-id") || randomUUID();
@@ -108,7 +108,7 @@ function withMiddleware<T extends NextRequest>(
               errorCode: NO_REFRESH_TOKEN_ERROR_CODE,
               isKnownError: true,
             },
-            { status: 401 },
+            { status: 401 }
           );
         }
 
@@ -119,7 +119,7 @@ function withMiddleware<T extends NextRequest>(
               errorCode: MICROSOFT_AUTH_EXPIRED_ERROR_CODE,
               isKnownError: true,
             },
-            { status: 401 },
+            { status: 401 }
           );
         }
       }
@@ -132,7 +132,7 @@ function withMiddleware<T extends NextRequest>(
         }
         return NextResponse.json(
           { error: { issues: error.issues }, isKnownError: true },
-          { status: 400 },
+          { status: 400 }
         );
       }
 
@@ -143,12 +143,12 @@ function withMiddleware<T extends NextRequest>(
           req.url,
           apiError.type,
           "unknown",
-          reqLogger,
+          reqLogger
         ); // TODO: add emailAccountId
 
         return NextResponse.json(
           { error: apiError.message, isKnownError: true },
-          { status: apiError.code },
+          { status: apiError.code }
         );
       }
 
@@ -159,7 +159,7 @@ function withMiddleware<T extends NextRequest>(
       if (error instanceof SafeError) {
         return NextResponse.json(
           { error: error.safeMessage, isKnownError: true },
-          { status: 400 },
+          { status: 400 }
         );
       }
 
@@ -183,20 +183,20 @@ function withMiddleware<T extends NextRequest>(
 
       return NextResponse.json(
         { error: "An unexpected error occurred" },
-        { status: 500 },
+        { status: 500 }
       );
     }
   };
 }
 
 async function authMiddleware(
-  req: NextRequest,
+  req: NextRequest
 ): Promise<RequestWithAuth | Response> {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json(
       { error: "Unauthorized", isKnownError: true },
-      { status: 401 },
+      { status: 401 }
     );
   }
 
@@ -211,10 +211,12 @@ async function authMiddleware(
 
 async function emailAccountMiddleware(
   req: NextRequest,
-  options?: MiddlewareOptions,
+  options?: MiddlewareOptions
 ): Promise<RequestWithEmailAccount | Response> {
   const authReq = await authMiddleware(req);
-  if (authReq instanceof Response) return authReq;
+  if (authReq instanceof Response) {
+    return authReq;
+  }
 
   const userId = authReq.auth.userId;
 
@@ -223,7 +225,7 @@ async function emailAccountMiddleware(
   if (!emailAccountId) {
     return NextResponse.json(
       { error: "Email account ID is required", isKnownError: true },
-      { status: 403 },
+      { status: 403 }
     );
   }
 
@@ -236,14 +238,14 @@ async function emailAccountMiddleware(
     // Check if user is admin or owner and is in the same org as the target email account
     const callerEmailAccount = await getCallerEmailAccount(
       userId,
-      emailAccountId,
+      emailAccountId
     );
 
     if (!callerEmailAccount) {
       emailAccountLogger.error("Org admin access denied");
       return NextResponse.json(
         { error: "Insufficient permissions", isKnownError: true },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -264,14 +266,14 @@ async function emailAccountMiddleware(
 
     if (!targetMember?.allowOrgAdminAnalytics) {
       emailAccountLogger.error(
-        "Member has not enabled org admin analytics access",
+        "Member has not enabled org admin analytics access"
       );
       return NextResponse.json(
         {
           error: "Analytics access not permitted by this member",
           isKnownError: true,
         },
-        { status: 403 },
+        { status: 403 }
       );
     }
 
@@ -299,7 +301,7 @@ async function emailAccountMiddleware(
     emailAccountLogger.error("Invalid email account ID");
     return NextResponse.json(
       { error: "Invalid account ID", isKnownError: true },
-      { status: 403 },
+      { status: 403 }
     );
   }
 
@@ -315,11 +317,13 @@ async function emailAccountMiddleware(
 }
 
 async function emailProviderMiddleware(
-  req: NextRequest,
+  req: NextRequest
 ): Promise<RequestWithEmailProvider | Response> {
   // First run email account middleware
   const emailAccountReq = await emailAccountMiddleware(req);
-  if (emailAccountReq instanceof Response) return emailAccountReq;
+  if (emailAccountReq instanceof Response) {
+    return emailAccountReq;
+  }
 
   const { userId, emailAccountId } = emailAccountReq.auth;
 
@@ -341,7 +345,7 @@ async function emailProviderMiddleware(
     if (!emailAccount) {
       return NextResponse.json(
         { error: "Email account not found", isKnownError: true },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -371,7 +375,7 @@ async function emailProviderMiddleware(
 
     return NextResponse.json(
       { error: "Failed to initialize email provider" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -382,41 +386,41 @@ async function emailProviderMiddleware(
 export function withError(
   scope: string,
   handler: NextHandler<RequestWithLogger>,
-  options?: MiddlewareOptions,
+  options?: MiddlewareOptions
 ): NextHandler;
 export function withError(
   handler: NextHandler<RequestWithLogger>,
-  options?: MiddlewareOptions,
+  options?: MiddlewareOptions
 ): NextHandler;
 export function withError(
   scopeOrHandler: string | NextHandler | NextHandler<RequestWithLogger>,
   handlerOrOptions?: NextHandler<RequestWithLogger> | MiddlewareOptions,
-  options?: MiddlewareOptions,
+  options?: MiddlewareOptions
 ): NextHandler {
   if (typeof scopeOrHandler === "string") {
     return withMiddleware(
       handlerOrOptions as NextHandler<RequestWithLogger>,
       undefined,
       options,
-      scopeOrHandler,
+      scopeOrHandler
     );
   }
   return withMiddleware(
     scopeOrHandler as NextHandler,
     undefined,
-    handlerOrOptions as MiddlewareOptions,
+    handlerOrOptions as MiddlewareOptions
   );
 }
 
 // withAuth overloads
 export function withAuth(
   scope: string,
-  handler: NextHandler<RequestWithAuth>,
+  handler: NextHandler<RequestWithAuth>
 ): NextHandler;
 export function withAuth(handler: NextHandler<RequestWithAuth>): NextHandler;
 export function withAuth(
   scopeOrHandler: string | NextHandler<RequestWithAuth>,
-  handler?: NextHandler<RequestWithAuth>,
+  handler?: NextHandler<RequestWithAuth>
 ): NextHandler {
   if (typeof scopeOrHandler === "string") {
     return withMiddleware(handler!, authMiddleware, undefined, scopeOrHandler);
@@ -428,57 +432,57 @@ export function withAuth(
 export function withEmailAccount(
   scope: string,
   handler: NextHandler<RequestWithEmailAccount>,
-  options?: MiddlewareOptions,
+  options?: MiddlewareOptions
 ): NextHandler;
 export function withEmailAccount(
   handler: NextHandler<RequestWithEmailAccount>,
-  options?: MiddlewareOptions,
+  options?: MiddlewareOptions
 ): NextHandler;
 export function withEmailAccount(
   scopeOrHandler: string | NextHandler<RequestWithEmailAccount>,
   handlerOrOptions?: NextHandler<RequestWithEmailAccount> | MiddlewareOptions,
-  options?: MiddlewareOptions,
+  options?: MiddlewareOptions
 ): NextHandler {
   if (typeof scopeOrHandler === "string") {
     return withMiddleware(
       handlerOrOptions as NextHandler<RequestWithEmailAccount>,
       emailAccountMiddleware,
       options,
-      scopeOrHandler,
+      scopeOrHandler
     );
   }
   return withMiddleware(
     scopeOrHandler,
     emailAccountMiddleware,
-    handlerOrOptions as MiddlewareOptions,
+    handlerOrOptions as MiddlewareOptions
   );
 }
 
 // withEmailProvider overloads
 export function withEmailProvider(
   scope: string,
-  handler: NextHandler<RequestWithEmailProvider>,
+  handler: NextHandler<RequestWithEmailProvider>
 ): NextHandler;
 export function withEmailProvider(
-  handler: NextHandler<RequestWithEmailProvider>,
+  handler: NextHandler<RequestWithEmailProvider>
 ): NextHandler;
 export function withEmailProvider(
   scopeOrHandler: string | NextHandler<RequestWithEmailProvider>,
-  handler?: NextHandler<RequestWithEmailProvider>,
+  handler?: NextHandler<RequestWithEmailProvider>
 ): NextHandler {
   if (typeof scopeOrHandler === "string") {
     return withMiddleware(
       handler!,
       emailProviderMiddleware,
       undefined,
-      scopeOrHandler,
+      scopeOrHandler
     );
   }
   return withMiddleware(scopeOrHandler, emailProviderMiddleware);
 }
 
 function isErrorWithConfigAndHeaders(
-  error: unknown,
+  error: unknown
 ): error is { config: { headers: unknown } } {
   return (
     typeof error === "object" &&

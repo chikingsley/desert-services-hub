@@ -5,7 +5,6 @@
  * Each test verifies that actual values flow through the system correctly.
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { findItem } from "@/packages/estimates/catalog/catalog";
 import { db } from "@lib/db/client";
 import type {
   EstimateLineItemRow,
@@ -21,6 +20,7 @@ import {
   getEstimatePdf,
   updateEstimate,
 } from "@/api/estimates/estimates-by-id";
+import { findItem } from "@/packages/estimates/catalog/catalog";
 
 // ============================================================================
 // Test Constants - Unique values we can search for in outputs

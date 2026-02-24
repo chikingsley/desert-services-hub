@@ -1,10 +1,10 @@
-import prisma from "@/utils/prisma";
 import type { EmailProvider } from "@/utils/email/types";
-import type { Logger } from "@/utils/logger";
 import {
   getFilebotFrom,
   getFilebotReplyTo,
 } from "@/utils/filebot/is-filebot-email";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import { escapeHtml } from "@/utils/string";
 
 // ============================================================================
@@ -12,17 +12,17 @@ import { escapeHtml } from "@/utils/string";
 // ============================================================================
 
 interface SourceMessageInfo {
-  threadId: string;
   headerMessageId: string;
   references?: string;
+  threadId: string;
 }
 
 interface FilingNotificationParams {
   emailProvider: EmailProvider;
-  userEmail: string;
   filingId: string;
-  sourceMessage: SourceMessageInfo;
   logger: Logger;
+  sourceMessage: SourceMessageInfo;
+  userEmail: string;
 }
 
 // ============================================================================

@@ -32,28 +32,28 @@ import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 interface PermitFromApi {
-  id: string;
-  project_name: string | null;
-  company_name: string | null;
-  status: string | null;
-  submitted_date: string | null;
-  effective_date: string | null;
-  expiration_date: string | null;
   address: string | null;
   city: string | null;
+  company_name: string | null;
+  effective_date: string | null;
+  expiration_date: string | null;
+  id: string;
   project_db_name: string | null;
+  project_name: string | null;
+  status: string | null;
+  submitted_date: string | null;
 }
 
 interface PermitsApiResponse {
+  facets: {
+    statuses: Array<{ status: string; count: number }>;
+  };
   items: PermitFromApi[];
   pagination: {
     page: number;
     perPage: number;
     total: number;
     totalPages: number;
-  };
-  facets: {
-    statuses: Array<{ status: string; count: number }>;
   };
 }
 

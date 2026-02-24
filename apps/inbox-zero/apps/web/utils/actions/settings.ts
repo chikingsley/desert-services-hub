@@ -1,24 +1,23 @@
 "use server";
 
-import { actionClient } from "@/utils/actions/safe-action";
+import { env } from "@/env";
+import type { Prisma } from "@/generated/prisma/client";
+import { ActionType, SystemType } from "@/generated/prisma/enums";
+import { actionClient, actionClientUser } from "@/utils/actions/safe-action";
 import {
   saveAiSettingsBody,
-  saveEmailUpdateSettingsBody,
   saveDigestScheduleBody,
-  updateDigestItemsBody,
+  saveEmailUpdateSettingsBody,
   toggleDigestBody,
+  updateDigestItemsBody,
 } from "@/utils/actions/settings.validation";
+import { clearSpecificErrorMessages, ErrorType } from "@/utils/error-messages";
 import { DEFAULT_PROVIDER, Provider } from "@/utils/llms/config";
 import prisma from "@/utils/prisma";
 import {
   calculateNextScheduleDate,
   createCanonicalTimeOfDay,
 } from "@/utils/schedule";
-import { actionClientUser } from "@/utils/actions/safe-action";
-import { ActionType, SystemType } from "@/generated/prisma/enums";
-import type { Prisma } from "@/generated/prisma/client";
-import { clearSpecificErrorMessages, ErrorType } from "@/utils/error-messages";
-import { env } from "@/env";
 
 export const updateEmailSettingsAction = actionClient
   .metadata({ name: "updateEmailSettings" })
@@ -35,7 +34,7 @@ export const updateEmailSettingsAction = actionClient
           summaryEmailFrequency,
         },
       });
-    },
+    }
   );
 
 export const updateAiSettingsAction = actionClientUser
@@ -48,7 +47,7 @@ export const updateAiSettingsAction = actionClientUser
     }) => {
       if (aiProvider === Provider.AZURE && !env.AZURE_RESOURCE_NAME) {
         throw new Error(
-          "Azure provider requires AZURE_RESOURCE_NAME to be configured on the server",
+          "Azure provider requires AZURE_RESOURCE_NAME to be configured on the server"
         );
       }
 
@@ -74,7 +73,7 @@ export const updateAiSettingsAction = actionClientUser
         ],
         logger,
       });
-    },
+    }
   );
 
 export const updateDigestScheduleAction = actionClient
@@ -132,7 +131,7 @@ export const updateDigestItemsAction = actionClient
           }
 
           const hasDigestAction = rule.actions.some(
-            (action) => action.type === ActionType.DIGEST,
+            (action) => action.type === ActionType.DIGEST
           );
 
           if (enabled && !hasDigestAction) {
@@ -152,12 +151,12 @@ export const updateDigestItemsAction = actionClient
               },
             });
           }
-        },
+        }
       );
 
       await Promise.all(promises);
       return { success: true };
-    },
+    }
   );
 
 export const toggleDigestAction = actionClient
@@ -210,5 +209,5 @@ export const toggleDigestAction = actionClient
       }
 
       return { success: true };
-    },
+    }
   );

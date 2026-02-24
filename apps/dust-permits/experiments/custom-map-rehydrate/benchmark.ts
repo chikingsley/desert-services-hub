@@ -19,14 +19,14 @@ import { runRehydratedPipeline } from "./pipeline";
 import type { Bounds, LatLng } from "./types";
 
 interface InputPermit {
-  permitId: string;
-  projectName?: string | null;
   address?: string | null;
   city?: string | null;
-  parcel?: string | null;
-  status?: string | null;
-  projectId?: number | null;
   docCount?: number;
+  parcel?: string | null;
+  permitId: string;
+  projectId?: number | null;
+  projectName?: string | null;
+  status?: string | null;
 }
 
 type PredictionSource =
@@ -39,57 +39,43 @@ type PredictionSource =
   | "none";
 
 interface CliArgs {
-  inputPath: string;
-  outputPath: string;
-  limit: number | null;
-  parallel: number;
-  maxApns: number;
-  iouGrid: number;
-  minIou: number;
-  minAreaRatio: number;
-  maxAreaRatio: number;
-  maxCentroidErrorM: number;
-  withDocClues: boolean;
-  docContainer: string;
-  docLimit: number;
-  docMinConfidence: number;
-  docMaxCoordDeltaM: number;
   docClipMinAreaShare: number;
-  docCoordinateParcelOverride: boolean;
+  docContainer: string;
   docCoordinateParcelMaxDeltaM: number;
   docCoordinateParcelMinDeltaM: number;
+  docCoordinateParcelOverride: boolean;
+  docLimit: number;
+  docMaxCoordDeltaM: number;
+  docMinConfidence: number;
+  docSizeMinScale: number;
   docSizeNormalize: boolean;
   docSizeOverageRatio: number;
-  docSizeMinScale: number;
-  withGeminiClues: boolean;
-  geminiModel: string;
-  geminiMaxDocs: number;
   geminiMaxDocBytes: number;
+  geminiMaxDocs: number;
+  geminiModel: string;
   geminiOnlyWhenMissingCoords: boolean;
   googleMapsApiKey?: string;
-  recordHistory: boolean;
   historyPath: string;
+  inputPath: string;
+  iouGrid: number;
   label: string | null;
+  limit: number | null;
+  maxApns: number;
+  maxAreaRatio: number;
+  maxCentroidErrorM: number;
+  minAreaRatio: number;
+  minIou: number;
+  outputPath: string;
+  parallel: number;
+  recordHistory: boolean;
+  withDocClues: boolean;
+  withGeminiClues: boolean;
 }
 
 type BenchmarkStatus = "scored" | "skipped" | "error";
 
 interface BenchmarkResult {
-  permitId: string;
-  status: BenchmarkStatus;
-  reason: string | null;
-  hints: {
-    projectName: string | null;
-    address: string | null;
-    city: string | null;
-    parcelRaw: string | null;
-    apnCandidates: string[];
-  };
-  prediction: {
-    source: PredictionSource;
-    apnsUsed: string[];
-    polygonCount: number;
-  };
+  debug: string[];
   documentClues: {
     enabled: boolean;
     docsUsed: number;
@@ -105,6 +91,13 @@ interface BenchmarkResult {
     polygonVertices: number;
     centroid: LatLng;
   } | null;
+  hints: {
+    projectName: string | null;
+    address: string | null;
+    city: string | null;
+    parcelRaw: string | null;
+    apnCandidates: string[];
+  };
   metrics: {
     centroidErrorM: number;
     areaRatio: number;
@@ -113,7 +106,14 @@ interface BenchmarkResult {
     passArea: boolean;
     passIou: boolean;
   } | null;
-  debug: string[];
+  permitId: string;
+  prediction: {
+    source: PredictionSource;
+    apnsUsed: string[];
+    polygonCount: number;
+  };
+  reason: string | null;
+  status: BenchmarkStatus;
 }
 
 const EARTH_RADIUS_M = 6_371_000;

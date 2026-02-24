@@ -1,10 +1,10 @@
-import { z } from "zod";
-import { createGenerateObject } from "@/utils/llms";
 import type { gmail_v1 } from "@googleapis/gmail";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { z } from "zod";
 import type { EmailSummary } from "@/utils/ai/report/summarize-emails";
-import { createScopedLogger } from "@/utils/logger";
+import { createGenerateObject } from "@/utils/llms";
 import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("email-report-label-analysis");
 
@@ -17,14 +17,14 @@ const labelAnalysisSchema = z.object({
       suggestion: z.string().describe("Specific suggestion"),
       reason: z.string().describe("Reason for this suggestion"),
       impact: z.enum(["high", "medium", "low"]).describe("Expected impact"),
-    }),
+    })
   ),
 });
 
 export async function aiAnalyzeLabelOptimization(
   emailSummaries: EmailSummary[],
   emailAccount: EmailAccountWithAI,
-  gmailLabels: gmail_v1.Schema$Label[],
+  gmailLabels: gmail_v1.Schema$Label[]
 ): Promise<z.infer<typeof labelAnalysisSchema>> {
   const system = `You are a Gmail organization expert. Analyze the user's current labels and email patterns to suggest specific optimizations that will improve their email organization and workflow efficiency.
 
@@ -38,7 +38,7 @@ ${emailSummaries
   .slice(0, 30)
   .map(
     (email, i) =>
-      `${i + 1}. From: ${email.sender} | Subject: ${email.subject} | Category: ${email.category} | Summary: ${email.summary}`,
+      `${i + 1}. From: ${email.sender} | Subject: ${email.subject} | Category: ${email.category} | Summary: ${email.summary}`
   )
   .join("\n")}
 

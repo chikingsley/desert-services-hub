@@ -1,9 +1,9 @@
 import { z } from "zod";
+import { env } from "@/env";
 import { ActionType, LogicalOperator } from "@/generated/prisma/enums";
+import { NINETY_DAYS_MINUTES } from "@/utils/date";
 import { isMicrosoftProvider } from "@/utils/email/provider-types";
 import { isDefined } from "@/utils/types";
-import { env } from "@/env";
-import { NINETY_DAYS_MINUTES } from "@/utils/date";
 
 const conditionSchema = z
   .object({
@@ -11,13 +11,13 @@ const conditionSchema = z
       .enum([LogicalOperator.AND, LogicalOperator.OR])
       .nullable()
       .describe(
-        "The conditional operator to use. AND means all conditions must be true for the rule to match. OR means any condition can be true for the rule to match. This does not impact sub-conditions.",
+        "The conditional operator to use. AND means all conditions must be true for the rule to match. OR means any condition can be true for the rule to match. This does not impact sub-conditions."
       ),
     aiInstructions: z
       .string()
       .nullable()
       .describe(
-        "Instructions for the AI to determine when to apply this rule. For example: 'Apply this rule to emails about product updates' or 'Use this rule for messages discussing project deadlines'. Be specific about the email content or characteristics that should trigger this rule.",
+        "Instructions for the AI to determine when to apply this rule. For example: 'Apply this rule to emails about product updates' or 'Use this rule for messages discussing project deadlines'. Be specific about the email content or characteristics that should trigger this rule."
       ),
     static: z
       .object({
@@ -27,7 +27,7 @@ const conditionSchema = z
       })
       .nullable()
       .describe(
-        "The static conditions to match. If multiple static conditions are specified, the rule will match if ALL of the conditions match (AND operation)",
+        "The static conditions to match. If multiple static conditions are specified, the rule will match if ALL of the conditions match (AND operation)"
       ),
   })
   .describe("The conditions to match");
@@ -58,7 +58,7 @@ const actionSchema = (provider: string) =>
     type: z
       .enum([...getAvailableActions(provider), ...getExtraActions()])
       .describe(
-        `The type of the action. '${ActionType.DIGEST}' means emails will be added to the digest email the user receives. ${isMicrosoftProvider(provider) ? `'${ActionType.LABEL}' means emails will be categorized in Outlook.` : ""}`,
+        `The type of the action. '${ActionType.DIGEST}' means emails will be added to the digest email the user receives. ${isMicrosoftProvider(provider) ? `'${ActionType.LABEL}' means emails will be categorized in Outlook.` : ""}`
       ),
     fields: z
       .object({
@@ -107,7 +107,7 @@ const actionSchema = (provider: string) =>
       })
       .nullable()
       .describe(
-        "The fields to use for the action. Static text can be combined with dynamic values using double braces {{}}. For example: 'Hi {{sender's name}}' or 'Re: {{subject}}' or '{{when I'm available for a meeting}}'. Dynamic values will be replaced with actual email data when the rule is executed. Dynamic values are generated in real time by the AI. Only use dynamic values where absolutely necessary. Otherwise, use plain static text. A field can be also be fully static or fully dynamic.",
+        "The fields to use for the action. Static text can be combined with dynamic values using double braces {{}}. For example: 'Hi {{sender's name}}' or 'Re: {{subject}}' or '{{when I'm available for a meeting}}'. Dynamic values will be replaced with actual email data when the rule is executed. Dynamic values are generated in real time by the AI. Only use dynamic values where absolutely necessary. Otherwise, use plain static text. A field can be also be fully static or fully dynamic."
       ),
     delayInMinutes: z
       .number()
@@ -121,7 +121,7 @@ export const createRuleSchema = (provider: string) =>
     name: z
       .string()
       .describe(
-        "A short, concise name for the rule (preferably a single word). For example: 'Marketing', 'Newsletters', 'Urgent', 'Receipts'. Avoid verbose names like 'Archive and label marketing emails'.",
+        "A short, concise name for the rule (preferably a single word). For example: 'Marketing', 'Newsletters', 'Urgent', 'Receipts'. Avoid verbose names like 'Archive and label marketing emails'."
       ),
     condition: conditionSchema,
     actions: z.array(actionSchema(provider)).describe("The actions to take"),

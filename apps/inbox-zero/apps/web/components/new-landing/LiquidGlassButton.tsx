@@ -2,8 +2,8 @@ import * as React from "react";
 
 interface LiquidGlassButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  className?: string;
   children?: React.ReactNode;
+  className?: string;
 }
 
 export function LiquidGlassButton({
@@ -16,9 +16,9 @@ export function LiquidGlassButton({
 
   return (
     <>
-      <button type={type ?? "button"} className={className} {...props}>
+      <button className={className} type={type ?? "button"} {...props}>
         <div
-          className="group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-full p-8 font-semibold text-black transition-all duration-300 hover:p-9 hover:[&>div]:rounded-[4rem] will-change-transform"
+          className="group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-full p-8 font-semibold text-black transition-all duration-300 will-change-transform hover:p-9 hover:[&>div]:rounded-[4rem]"
           style={{
             boxShadow:
               "0px 14.3px 38.74px 3.9px #0000001A, 0px 0px 4.16px 0px #0000000D",
@@ -41,45 +41,45 @@ export function LiquidGlassButton({
           </div>
         </div>
       </button>
-      <svg className="hidden" aria-hidden>
+      <svg aria-hidden className="hidden">
         <filter
+          filterUnits="objectBoundingBox"
+          height="100%"
           id={filterId}
+          width="100%"
           x="0%"
           y="0%"
-          width="100%"
-          height="100%"
-          filterUnits="objectBoundingBox"
         >
           <feTurbulence
-            type="fractalNoise"
             baseFrequency="0.01 0.01"
             numOctaves="1"
-            seed="5"
             result="turbulence"
+            seed="5"
+            type="fractalNoise"
           />
           <feComponentTransfer in="turbulence" result="mapped">
-            <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
-            <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
-            <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
+            <feFuncR amplitude="1" exponent="10" offset="0.5" type="gamma" />
+            <feFuncG amplitude="0" exponent="1" offset="0" type="gamma" />
+            <feFuncB amplitude="0" exponent="1" offset="0.5" type="gamma" />
           </feComponentTransfer>
-          <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
+          <feGaussianBlur in="turbulence" result="softMap" stdDeviation="3" />
           <feSpecularLighting
             in="softMap"
-            surfaceScale="5"
-            specularConstant="1"
-            specularExponent="100"
             lightingColor="white"
             result="specLight"
+            specularConstant="1"
+            specularExponent="100"
+            surfaceScale="5"
           >
             <fePointLight x="-200" y="-200" z="300" />
           </feSpecularLighting>
           <feComposite
             in="specLight"
-            operator="arithmetic"
             k1="0"
             k2="1"
             k3="1"
             k4="0"
+            operator="arithmetic"
             result="litImage"
           />
           <feDisplacementMap

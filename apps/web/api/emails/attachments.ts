@@ -3,17 +3,18 @@
  *
  * Provides attachment listing and download for a specific email.
  */
-import { createGraphClient } from "@lib/graph/client";
+
 import { db } from "@lib/db/client";
 import {
   getAttachmentById,
   getAttachmentsForEmail,
 } from "@lib/db/repositories/attachment";
+import { createGraphClient } from "@lib/graph/client";
 
 interface ApiEmailAttachment {
+  contentType: string | null;
   id: string; // "db:<pk>" or "graph:<graphAttachmentId>"
   name: string;
-  contentType: string | null;
   size: number | null;
 }
 
@@ -28,9 +29,9 @@ interface ListEmailAttachmentsResponse {
 const NUMERIC_ID_RE = /^[0-9]+$/;
 
 interface DownloadAttachmentMeta {
-  graphAttachmentId: string;
-  filename: string;
   contentType: string;
+  filename: string;
+  graphAttachmentId: string;
 }
 
 function safeFilename(name: string): string {

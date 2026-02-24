@@ -4,10 +4,10 @@ import { useNavigate } from "react-router";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 
 interface NewEstimateButtonProps {
-  className?: string;
-  variant?: "default" | "outline" | "ghost";
-  size?: "default" | "sm" | "lg";
   children?: React.ReactNode;
+  className?: string;
+  size?: "default" | "sm" | "lg";
+  variant?: "default" | "outline" | "ghost";
 }
 
 export function NewEstimateButton({

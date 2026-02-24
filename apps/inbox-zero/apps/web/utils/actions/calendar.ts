@@ -1,14 +1,14 @@
 "use server";
 
-import { actionClient } from "@/utils/actions/safe-action";
 import {
   disconnectCalendarBody,
   toggleCalendarBody,
-  updateTimezoneBody,
   updateBookingLinkBody,
+  updateTimezoneBody,
 } from "@/utils/actions/calendar.validation";
-import prisma from "@/utils/prisma";
+import { actionClient } from "@/utils/actions/safe-action";
 import { SafeError } from "@/utils/error";
+import prisma from "@/utils/prisma";
 
 export const disconnectCalendarAction = actionClient
   .metadata({ name: "disconnectCalendar" })
@@ -31,7 +31,7 @@ export const disconnectCalendarAction = actionClient
       });
 
       return { success: true };
-    },
+    }
   );
 
 export const toggleCalendarAction = actionClient
@@ -57,7 +57,7 @@ export const toggleCalendarAction = actionClient
       }
 
       return { success: true };
-    },
+    }
   );
 
 export const updateEmailAccountTimezoneAction = actionClient

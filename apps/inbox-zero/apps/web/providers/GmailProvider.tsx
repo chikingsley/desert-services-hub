@@ -16,8 +16,8 @@ export type GmailLabel = {
 export type GmailLabels = Record<string, GmailLabel>;
 
 interface Context {
-  userLabels: GmailLabels;
   labelsIsLoading: boolean;
+  userLabels: GmailLabels;
 }
 
 const GmailContext = createContext<Context>({
@@ -48,7 +48,7 @@ export function GmailProvider(props: { children: React.ReactNode }) {
 
   const value = useMemo(
     () => ({ userLabels, labelsIsLoading: isLoading }),
-    [userLabels, isLoading],
+    [userLabels, isLoading]
   );
 
   return (

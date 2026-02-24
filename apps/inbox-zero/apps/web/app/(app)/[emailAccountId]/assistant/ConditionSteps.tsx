@@ -1,33 +1,33 @@
+import { useEffect } from "react";
 import type {
   Control,
+  FieldError,
+  FieldErrors,
   UseFormRegister,
   UseFormSetValue,
   UseFormWatch,
 } from "react-hook-form";
-import type { FieldError, FieldErrors } from "react-hook-form";
-import { useEffect } from "react";
-import { Input, Label, ErrorMessage } from "@/components/Input";
+import TextareaAutosize from "react-textarea-autosize";
+import { RuleStep } from "@/app/(app)/[emailAccountId]/assistant/RuleStep";
+import { RuleSteps } from "@/app/(app)/[emailAccountId]/assistant/RuleSteps";
+import { ErrorMessage, Input, Label } from "@/components/Input";
 import { toastError } from "@/components/Toast";
-import { LogicalOperator } from "@/generated/prisma/enums";
-import { ConditionType } from "@/utils/config";
-import { isConversationStatusType } from "@/utils/reply-tracker/conversation-status-config";
-import type {
-  CreateRuleBody,
-  ZodCondition,
-} from "@/utils/actions/rule.validation";
+import { TooltipExplanation } from "@/components/TooltipExplanation";
+import { FormControl, FormField, FormItem } from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
-  SelectValue,
   SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { FormControl, FormField, FormItem } from "@/components/ui/form";
-import { RuleStep } from "@/app/(app)/[emailAccountId]/assistant/RuleStep";
-import { SystemType } from "@/generated/prisma/enums";
-import TextareaAutosize from "react-textarea-autosize";
-import { RuleSteps } from "@/app/(app)/[emailAccountId]/assistant/RuleSteps";
-import { TooltipExplanation } from "@/components/TooltipExplanation";
+import { LogicalOperator, SystemType } from "@/generated/prisma/enums";
+import type {
+  CreateRuleBody,
+  ZodCondition,
+} from "@/utils/actions/rule.validation";
+import { ConditionType } from "@/utils/config";
+import { isConversationStatusType } from "@/utils/reply-tracker/conversation-status-config";
 
 // UI-level condition types
 type UIConditionType = "from" | "to" | "subject" | "prompt";
@@ -42,7 +42,7 @@ const MAX_CONDITIONS = CONDITION_TYPE_OPTIONS.length;
 
 // Convert backend condition to UI type
 function getUIConditionType(
-  condition: ZodCondition,
+  condition: ZodCondition
 ): UIConditionType | undefined {
   if (condition.type === ConditionType.AI) {
     return "prompt";
@@ -51,10 +51,18 @@ function getUIConditionType(
   // With the new structure, each STATIC condition should only have one field
   // We set the active field to "" (empty string) and others to null
   // So we check which field is not null to determine the UI type
-  if (condition.from !== null) return "from";
-  if (condition.to !== null) return "to";
-  if (condition.subject !== null) return "subject";
-  if (condition.body !== null) return "subject"; // body maps to subject in UI
+  if (condition.from !== null) {
+    return "from";
+  }
+  if (condition.to !== null) {
+    return "to";
+  }
+  if (condition.subject !== null) {
+    return "subject";
+  }
+  if (condition.body !== null) {
+    return "subject"; // body maps to subject in UI
+  }
   // Return undefined if no field is populated (new/unselected condition)
   return undefined;
 }
@@ -68,7 +76,7 @@ function allowMultipleConditions(systemType: SystemType | null | undefined) {
 
 // Convert UI type to backend condition
 function getConditionFromUIType(
-  uiType: UIConditionType | undefined,
+  uiType: UIConditionType | undefined
 ): ZodCondition | never {
   if (!uiType) {
     // Create empty condition with no field selected
@@ -176,20 +184,20 @@ export function ConditionSteps({
 
   return (
     <RuleSteps
+      addButtonDisabled={!canAddMoreConditions}
+      addButtonLabel="Add Condition"
+      addButtonTooltip={
+        maxConditionsReached
+          ? "Maximum number of conditions reached."
+          : canAddMoreConditions
+            ? undefined
+            : "You can only set one condition for this rule."
+      }
       onAdd={() => {
         // Create empty condition with no default selection
         const newCondition = getConditionFromUIType(undefined);
         appendCondition(newCondition);
       }}
-      addButtonLabel="Add Condition"
-      addButtonDisabled={!canAddMoreConditions}
-      addButtonTooltip={
-        maxConditionsReached
-          ? "Maximum number of conditions reached."
-          : !canAddMoreConditions
-            ? "You can only set one condition for this rule."
-            : undefined
-      }
     >
       {conditionFields.map((condition, index) => {
         const currentCondition = watch(`conditions.${index}`);
@@ -222,12 +230,12 @@ export function ConditionSteps({
               const usedUITypes = new Set(
                 conditions
                   .map((c, idx) =>
-                    idx === index ? undefined : getUIConditionType(c),
+                    idx === index ? undefined : getUIConditionType(c)
                   )
                   .filter(
                     (type): type is UIConditionType =>
-                      type !== undefined && type !== null,
-                  ),
+                      type !== undefined && type !== null
+                  )
               );
 
               // Determine operator display logic:
@@ -253,11 +261,11 @@ export function ConditionSteps({
                     onValueChange={(value: UIConditionType) => {
                       // Check if we have duplicate UI condition types
                       const prospectiveUITypes = conditions.map((c, idx) =>
-                        idx === index ? value : getUIConditionType(c),
+                        idx === index ? value : getUIConditionType(c)
                       );
                       const configuredTypes = prospectiveUITypes.filter(
                         (type): type is UIConditionType =>
-                          type !== undefined && type !== null,
+                          type !== undefined && type !== null
                       );
                       const uniqueUITypes = new Set(configuredTypes);
 
@@ -276,7 +284,7 @@ export function ConditionSteps({
                       if (value === "prompt" && index !== 0) {
                         const currentConditionAtIndex = conditions[index];
                         const currentConditionType = getUIConditionType(
-                          currentConditionAtIndex,
+                          currentConditionAtIndex
                         );
 
                         // Build new conditions array with AI Prompt at position 0
@@ -303,19 +311,19 @@ export function ConditionSteps({
                     <div className="flex items-center gap-2">
                       {index === 0 ? null : showOperatorSelector ? (
                         <Select
-                          value={
-                            conditionalOperator === LogicalOperator.OR
-                              ? "or"
-                              : "and"
-                          }
                           onValueChange={(value) => {
                             setValue(
                               "conditionalOperator",
                               value === "or"
                                 ? LogicalOperator.OR
-                                : LogicalOperator.AND,
+                                : LogicalOperator.AND
                             );
                           }}
+                          value={
+                            conditionalOperator === LogicalOperator.OR
+                              ? "or"
+                              : "and"
+                          }
                         >
                           <FormControl>
                             <SelectTrigger className="w-[80px]">
@@ -350,7 +358,7 @@ export function ConditionSteps({
                       {CONDITION_TYPE_OPTIONS.filter(
                         (option) =>
                           !usedUITypes.has(option.value) ||
-                          option.value === uiType,
+                          option.value === uiType
                       ).map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
@@ -380,9 +388,9 @@ export function ConditionSteps({
             key={condition.id}
           >
             <RuleStep
+              leftContent={leftContent}
               onRemove={() => removeCondition(index)}
               removeAriaLabel="Remove condition"
-              leftContent={leftContent}
               rightContent={(() => {
                 const currentCondition = watch(`conditions.${index}`);
                 const uiType = getUIConditionType(currentCondition);
@@ -393,8 +401,8 @@ export function ConditionSteps({
                       {isFirstCondition && (
                         <div className="mb-2">
                           <Label
-                            name={`conditions.${index}.instructions`}
                             label="That matches:"
+                            name={`conditions.${index}.instructions`}
                           />
                         </div>
                       )}
@@ -432,10 +440,6 @@ export function ConditionSteps({
                   return (
                     <div className="relative">
                       <Input
-                        type="text"
-                        name={`conditions.${index}.from`}
-                        registerProps={register(`conditions.${index}.from`)}
-                        placeholder="hello@example.com OR support@test.com"
                         className="pr-8"
                         error={
                           (
@@ -444,13 +448,17 @@ export function ConditionSteps({
                             }
                           )?.from
                         }
+                        name={`conditions.${index}.from`}
+                        placeholder="hello@example.com OR support@test.com"
+                        registerProps={register(`conditions.${index}.from`)}
+                        type="text"
                       />
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                      <div className="absolute top-1/2 right-2 -translate-y-1/2">
                         <TooltipExplanation
-                          text={getFilterTooltipText("from")}
+                          className="text-gray-400"
                           side="right"
                           size="sm"
-                          className="text-gray-400"
+                          text={getFilterTooltipText("from")}
                         />
                       </div>
                     </div>
@@ -461,10 +469,6 @@ export function ConditionSteps({
                   return (
                     <div className="relative">
                       <Input
-                        type="text"
-                        name={`conditions.${index}.to`}
-                        registerProps={register(`conditions.${index}.to`)}
-                        placeholder="hello@example.com OR support@test.com"
                         className="pr-8"
                         error={
                           (
@@ -473,13 +477,17 @@ export function ConditionSteps({
                             }
                           )?.to
                         }
+                        name={`conditions.${index}.to`}
+                        placeholder="hello@example.com OR support@test.com"
+                        registerProps={register(`conditions.${index}.to`)}
+                        type="text"
                       />
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                      <div className="absolute top-1/2 right-2 -translate-y-1/2">
                         <TooltipExplanation
-                          text={getFilterTooltipText("to")}
+                          className="text-gray-400"
                           side="right"
                           size="sm"
-                          className="text-gray-400"
+                          text={getFilterTooltipText("to")}
                         />
                       </div>
                     </div>
@@ -490,10 +498,6 @@ export function ConditionSteps({
                   return (
                     <div className="relative">
                       <Input
-                        type="text"
-                        name={`conditions.${index}.subject`}
-                        registerProps={register(`conditions.${index}.subject`)}
-                        placeholder="Receipt for your purchase"
                         className="pr-8"
                         error={
                           (
@@ -502,13 +506,17 @@ export function ConditionSteps({
                             }
                           )?.subject
                         }
+                        name={`conditions.${index}.subject`}
+                        placeholder="Receipt for your purchase"
+                        registerProps={register(`conditions.${index}.subject`)}
+                        type="text"
                       />
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                      <div className="absolute top-1/2 right-2 -translate-y-1/2">
                         <TooltipExplanation
-                          text="Only apply this rule to emails with this subject. e.g. Receipt for your purchase"
+                          className="text-gray-400"
                           side="right"
                           size="sm"
-                          className="text-gray-400"
+                          text="Only apply this rule to emails with this subject. e.g. Receipt for your purchase"
                         />
                       </div>
                     </div>

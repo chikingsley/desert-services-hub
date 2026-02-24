@@ -26,10 +26,10 @@ import {
 } from "@lib/db/repositories/types";
 
 interface DocumentHintCollection {
-  contractorHints: string[];
-  projectHints: string[];
   addressHints: string[];
+  contractorHints: string[];
   estimateReferenceHints: string[];
+  projectHints: string[];
   queryHints: string[];
 }
 

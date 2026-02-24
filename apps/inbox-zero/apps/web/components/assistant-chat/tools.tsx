@@ -1,42 +1,42 @@
-import { useState } from "react";
-import { useQueryState } from "nuqs";
-import type {
-  UpdateAboutTool,
-  UpdateRuleConditionsTool,
-  UpdateRuleConditionsOutput,
-  UpdateRuleActionsTool,
-  UpdateRuleActionsOutput,
-  UpdateLearnedPatternsTool,
-  AddToKnowledgeBaseTool,
-  CreateRuleTool,
-  ManageInboxTool,
-} from "@/utils/ai/assistant/chat";
-import { isDefined } from "@/utils/types";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   ChevronRightIcon,
+  ExternalLinkIcon,
   EyeIcon,
+  FileDiffIcon,
   SparklesIcon,
   TrashIcon,
-  FileDiffIcon,
-  ExternalLinkIcon,
 } from "lucide-react";
+import { useQueryState } from "nuqs";
+import { useState } from "react";
+import { RuleDialog } from "@/app/(app)/[emailAccountId]/assistant/RuleDialog";
+import { ExpandableText } from "@/components/ExpandableText";
 import { toastError, toastSuccess } from "@/components/Toast";
 import { Tooltip } from "@/components/Tooltip";
-import { deleteRuleAction } from "@/utils/actions/rule";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { ExpandableText } from "@/components/ExpandableText";
-import { RuleDialog } from "@/app/(app)/[emailAccountId]/assistant/RuleDialog";
-import { useDialogState } from "@/hooks/useDialogState";
-import { getEmailTerminology } from "@/utils/terminology";
-import { formatShortDate } from "@/utils/date";
-import { getEmailSearchUrl } from "@/utils/url";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useDialogState } from "@/hooks/useDialogState";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { deleteRuleAction } from "@/utils/actions/rule";
+import type {
+  AddToKnowledgeBaseTool,
+  CreateRuleTool,
+  ManageInboxTool,
+  UpdateAboutTool,
+  UpdateLearnedPatternsTool,
+  UpdateRuleActionsOutput,
+  UpdateRuleActionsTool,
+  UpdateRuleConditionsOutput,
+  UpdateRuleConditionsTool,
+} from "@/utils/ai/assistant/chat";
+import { formatShortDate } from "@/utils/date";
+import { getEmailTerminology } from "@/utils/terminology";
+import { isDefined } from "@/utils/types";
+import { getEmailSearchUrl } from "@/utils/url";
 
 export type ThreadLookup = Map<
   string,
@@ -71,7 +71,7 @@ function CollapsibleToolCard({
 
   return (
     <Card className="mb-4 p-4">
-      <Collapsible open={open} onOpenChange={setOpen}>
+      <Collapsible onOpenChange={setOpen} open={open}>
         <CollapsibleTrigger className="flex w-full items-center gap-2 text-sm">
           <ChevronRightIcon
             className={`size-4 shrink-0 text-muted-foreground transition-transform duration-200 ${open ? "rotate-90" : ""}`}
@@ -108,13 +108,13 @@ export function SearchInboxResult({ output }: { output: unknown }) {
   return (
     <CollapsibleToolCard summary={`Searched inbox (${totalReturned} messages)`}>
       {queryUsed && (
-        <div className="text-xs text-muted-foreground">
+        <div className="text-muted-foreground text-xs">
           Query: <span className="font-mono">{queryUsed}</span>
         </div>
       )}
 
       {summary && summary.unread > 0 && (
-        <div className="text-xs text-muted-foreground">
+        <div className="text-muted-foreground text-xs">
           {summary.unread} unread
         </div>
       )}
@@ -123,8 +123,8 @@ export function SearchInboxResult({ output }: { output: unknown }) {
         <div className="max-h-96 space-y-1 overflow-y-auto">
           {messages.map((msg) => (
             <div
-              key={msg.messageId}
               className="rounded-md bg-muted px-3 py-2 text-sm"
+              key={msg.messageId}
             >
               <div className="flex items-baseline justify-between gap-2">
                 <span
@@ -132,7 +132,7 @@ export function SearchInboxResult({ output }: { output: unknown }) {
                 >
                   {msg.from}
                 </span>
-                <span className="shrink-0 text-xs text-muted-foreground">
+                <span className="shrink-0 text-muted-foreground text-xs">
                   {formatShortDate(new Date(msg.date), { lowercase: true })}
                 </span>
               </div>
@@ -140,7 +140,7 @@ export function SearchInboxResult({ output }: { output: unknown }) {
                 {msg.subject}
               </div>
               {msg.snippet && (
-                <div className="mt-0.5 truncate text-xs text-muted-foreground/70">
+                <div className="mt-0.5 truncate text-muted-foreground/70 text-xs">
                   {msg.snippet}
                 </div>
               )}
@@ -203,22 +203,22 @@ export function ManageInboxResult({
     .filter(isDefined);
 
   return (
-    <CollapsibleToolCard summary={summaryText} initialOpen={isInProgress}>
+    <CollapsibleToolCard initialOpen={isInProgress} summary={summaryText}>
       <div className="space-y-1 text-sm">
         {isInProgress && (
-          <div className="text-xs text-muted-foreground">
+          <div className="text-muted-foreground text-xs">
             Processing senders now...
           </div>
         )}
 
         {typeof failedCount === "number" && failedCount > 0 && (
-          <div className="text-xs text-red-500">Failed: {failedCount}</div>
+          <div className="text-red-500 text-xs">Failed: {failedCount}</div>
         )}
 
         {resolvedThreads && resolvedThreads.length > 0 && (
           <div className="space-y-1">
             {resolvedThreads.map((thread, i) => (
-              <div key={i} className="rounded-md bg-muted px-3 py-2 text-sm">
+              <div className="rounded-md bg-muted px-3 py-2 text-sm" key={i}>
                 <div className="truncate">{thread.from}</div>
                 <div className="truncate text-muted-foreground">
                   {thread.subject}
@@ -232,18 +232,18 @@ export function ManageInboxResult({
           <div className="space-y-1">
             {senders.map((sender) => (
               <div
-                key={sender}
                 className="flex items-center justify-between gap-2 rounded-md bg-muted px-3 py-1.5 text-xs"
+                key={sender}
               >
                 <span className="truncate">{sender}</span>
                 <a
-                  href={getEmailSearchUrl(sender, userEmail, provider)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="shrink-0 text-muted-foreground hover:text-foreground"
                   aria-label={`View ${sender} in ${
                     provider === "microsoft" ? "Outlook" : "Gmail"
                   }`}
+                  className="shrink-0 text-muted-foreground hover:text-foreground"
+                  href={getEmailSearchUrl(sender, userEmail, provider)}
+                  rel="noopener noreferrer"
+                  target="_blank"
                 >
                   <ExternalLinkIcon className="size-3.5" />
                 </a>
@@ -271,12 +271,12 @@ export function CreatedRuleToolCard({
   return (
     <ToolCard>
       <ToolCardHeader
+        actions={ruleId && <RuleActions ruleId={ruleId} />}
         title={
           <>
             {ruleId ? "New rule created:" : "Creating rule:"} {args.name}
           </>
         }
-        actions={ruleId && <RuleActions ruleId={ruleId} />}
       />
 
       <div className="space-y-2">
@@ -312,10 +312,10 @@ export function CreatedRuleToolCard({
       </div>
 
       <div className="space-y-2">
-        <h3 className="text-sm font-medium text-muted-foreground">Actions</h3>
+        <h3 className="font-medium text-muted-foreground text-sm">Actions</h3>
         <div className="space-y-2">
           {args.actions.map((action, i) => (
-            <div key={i} className="rounded-md bg-muted p-2 text-sm">
+            <div className="rounded-md bg-muted p-2 text-sm" key={i}>
               <div className="font-medium capitalize">
                 {action.type.toLowerCase().replace("_", " ")}
               </div>
@@ -361,18 +361,18 @@ export function UpdatedRuleConditions({
   return (
     <ToolCard>
       <ToolCardHeader
-        title={<>Updated Conditions</>}
         actions={
           <div className="flex items-center gap-1">
             {hasChanges && (
               <DiffToggleButton
-                showChanges={showChanges}
                 onToggle={() => setShowChanges(!showChanges)}
+                showChanges={showChanges}
               />
             )}
             <RuleActions ruleId={ruleId} />
           </div>
         }
+        title={<>Updated Conditions</>}
       />
 
       <div className="rounded-md bg-muted p-2 text-sm">
@@ -407,9 +407,9 @@ export function UpdatedRuleConditions({
 
       {hasChanges && (
         <CollapsibleDiff
+          originalText={originalConditions?.aiInstructions || undefined}
           showChanges={showChanges}
           title="Instructions:"
-          originalText={originalConditions?.aiInstructions || undefined}
           updatedText={updatedConditions?.aiInstructions || undefined}
         />
       )}
@@ -440,26 +440,36 @@ export function UpdatedRuleActions({
   const formatActions = <
     T extends { type: string; fields: Record<string, string | null> },
   >(
-    actions: T[],
+    actions: T[]
   ) => {
     return actions
       .map((action) => {
         const parts = [`Type: ${action.type}`];
-        if (action.fields?.label)
+        if (action.fields?.label) {
           parts.push(
-            `${getEmailTerminology(provider).label.action}: ${action.fields.label}`,
+            `${getEmailTerminology(provider).label.action}: ${action.fields.label}`
           );
-        if (action.fields?.content)
+        }
+        if (action.fields?.content) {
           parts.push(`Content: ${action.fields.content}`);
-        if (action.fields?.to) parts.push(`To: ${action.fields.to}`);
-        if (action.fields?.cc) parts.push(`CC: ${action.fields.cc}`);
-        if (action.fields?.bcc) parts.push(`BCC: ${action.fields.bcc}`);
-        if (action.fields?.subject)
+        }
+        if (action.fields?.to) {
+          parts.push(`To: ${action.fields.to}`);
+        }
+        if (action.fields?.cc) {
+          parts.push(`CC: ${action.fields.cc}`);
+        }
+        if (action.fields?.bcc) {
+          parts.push(`BCC: ${action.fields.bcc}`);
+        }
+        if (action.fields?.subject) {
           parts.push(`Subject: ${action.fields.subject}`);
-        if (action.fields?.webhookUrl || action.fields?.url)
+        }
+        if (action.fields?.webhookUrl || action.fields?.url) {
           parts.push(
-            `Webhook: ${action.fields.webhookUrl || action.fields.url}`,
+            `Webhook: ${action.fields.webhookUrl || action.fields.url}`
           );
+        }
         return parts.join(", ");
       })
       .join("\n");
@@ -468,26 +478,28 @@ export function UpdatedRuleActions({
   return (
     <ToolCard>
       <ToolCardHeader
-        title={<>Updated Actions</>}
         actions={
           <div className="flex items-center gap-1">
             {hasChanges && (
               <DiffToggleButton
-                showChanges={showChanges}
                 onToggle={() => setShowChanges(!showChanges)}
+                showChanges={showChanges}
               />
             )}
             <RuleActions ruleId={ruleId} />
           </div>
         }
+        title={<>Updated Actions</>}
       />
 
       <div className="space-y-2">
         {args.actions.map((actionItem, i) => {
-          if (!actionItem) return null;
+          if (!actionItem) {
+            return null;
+          }
 
           return (
-            <div key={i} className="rounded-md bg-muted p-2 text-sm">
+            <div className="rounded-md bg-muted p-2 text-sm" key={i}>
               <div className="font-medium capitalize">
                 {actionItem.type.toLowerCase().replace("_", " ")}
               </div>
@@ -499,9 +511,9 @@ export function UpdatedRuleActions({
 
       {hasChanges && (
         <CollapsibleDiff
+          originalText={formatActions(originalActions || [])}
           showChanges={showChanges}
           title="Actions:"
-          originalText={formatActions(originalActions || [])}
           updatedText={formatActions(updatedActions || [])}
         />
       )}
@@ -519,16 +531,18 @@ export function UpdatedLearnedPatterns({
   return (
     <ToolCard>
       <ToolCardHeader
-        title={<>Updated Learned Patterns</>}
         actions={<RuleActions ruleId={ruleId} />}
+        title={<>Updated Learned Patterns</>}
       />
 
       <div className="space-y-2">
         {args.learnedPatterns.map((pattern, i) => {
-          if (!pattern) return null;
+          if (!pattern) {
+            return null;
+          }
 
           return (
-            <div key={i} className="rounded-md bg-muted p-2 text-sm">
+            <div className="rounded-md bg-muted p-2 text-sm" key={i}>
               {pattern.include &&
                 Object.values(pattern.include).some(Boolean) && (
                   <div className="mb-1">
@@ -584,12 +598,12 @@ export function AddToKnowledgeBase({
   return (
     <ToolCard>
       <ToolCardHeader
-        title={<>Added to Knowledge Base</>}
         actions={
-          <Button variant="link" onClick={() => setTab("rules")}>
+          <Button onClick={() => setTab("rules")} variant="link">
             View Knowledge Base
           </Button>
         }
+        title={<>Added to Knowledge Base</>}
       />
       <div className="rounded-md bg-muted p-3 text-sm">
         <div className="font-medium">{args.title}</div>
@@ -608,16 +622,14 @@ function RuleActions({ ruleId }: { ruleId: string }) {
       {/* Don't use tooltips as they force scroll to bottom */}
       <div className="flex items-center gap-1">
         <Button
-          variant="ghost"
-          size="sm"
           className="h-8 w-8 p-0"
           onClick={() => ruleDialog.onOpen({ ruleId })}
+          size="sm"
+          variant="ghost"
         >
           <EyeIcon className="size-4" />
         </Button>
         <Button
-          variant="ghost"
-          size="sm"
           className="h-8 w-8 p-0"
           onClick={async () => {
             const yes = confirm("Are you sure you want to delete this rule?");
@@ -638,16 +650,18 @@ function RuleActions({ ruleId }: { ruleId: string }) {
               }
             }
           }}
+          size="sm"
+          variant="ghost"
         >
           <TrashIcon className="size-4" />
         </Button>
       </div>
 
       <RuleDialog
-        ruleId={ruleDialog.data?.ruleId}
+        editMode={false}
         isOpen={ruleDialog.isOpen}
         onClose={ruleDialog.onClose}
-        editMode={false}
+        ruleId={ruleDialog.data?.ruleId}
       />
     </>
   );
@@ -682,10 +696,10 @@ function DiffToggleButton({
   return (
     <Tooltip content={showChanges ? "Hide Changes" : "Show Changes"}>
       <Button
-        variant="ghost"
-        size="sm"
         className="h-8 w-8 p-0"
         onClick={onToggle}
+        size="sm"
+        variant="ghost"
       >
         <FileDiffIcon className="size-4" />
       </Button>
@@ -704,21 +718,23 @@ function CollapsibleDiff({
   originalText?: string;
   updatedText?: string;
 }) {
-  if (!showChanges) return null;
+  if (!showChanges) {
+    return null;
+  }
 
   return (
     <div className="overflow-hidden">
       <div className="space-y-2">
-        <div className="text-xs font-medium text-muted-foreground">{title}</div>
-        <div className="rounded-md border bg-muted/30 p-3 font-mono text-sm overflow-auto max-h-96">
+        <div className="font-medium text-muted-foreground text-xs">{title}</div>
+        <div className="max-h-96 overflow-auto rounded-md border bg-muted/30 p-3 font-mono text-sm">
           {originalText && (
-            <div className="mb-2 rounded bg-red-50 px-2 py-1 text-red-800 dark:bg-red-950/30 dark:text-red-200 whitespace-pre-wrap break-words overflow-auto max-h-48">
+            <div className="mb-2 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded bg-red-50 px-2 py-1 text-red-800 dark:bg-red-950/30 dark:text-red-200">
               <span className="mr-2 text-red-500">-</span>
               {originalText}
             </div>
           )}
           {updatedText && (
-            <div className="rounded bg-green-50 px-2 py-1 text-green-800 dark:bg-green-950/30 dark:text-green-200 whitespace-pre-wrap break-words overflow-auto max-h-48">
+            <div className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded bg-green-50 px-2 py-1 text-green-800 dark:bg-green-950/30 dark:text-green-200">
               <span className="mr-2 text-green-500">+</span>
               {updatedText}
             </div>
@@ -743,16 +759,31 @@ function renderActionFields(fields: {
   const fieldEntries = [];
 
   // Only add fields that have actual values
-  if (fields.label) fieldEntries.push(["Label", fields.label]);
-  if (fields.subject) fieldEntries.push(["Subject", fields.subject]);
-  if (fields.to) fieldEntries.push(["To", fields.to]);
-  if (fields.cc) fieldEntries.push(["CC", fields.cc]);
-  if (fields.bcc) fieldEntries.push(["BCC", fields.bcc]);
-  if (fields.content) fieldEntries.push(["Content", fields.content]);
-  if (fields.url || fields.webhookUrl)
+  if (fields.label) {
+    fieldEntries.push(["Label", fields.label]);
+  }
+  if (fields.subject) {
+    fieldEntries.push(["Subject", fields.subject]);
+  }
+  if (fields.to) {
+    fieldEntries.push(["To", fields.to]);
+  }
+  if (fields.cc) {
+    fieldEntries.push(["CC", fields.cc]);
+  }
+  if (fields.bcc) {
+    fieldEntries.push(["BCC", fields.bcc]);
+  }
+  if (fields.content) {
+    fieldEntries.push(["Content", fields.content]);
+  }
+  if (fields.url || fields.webhookUrl) {
     fieldEntries.push(["URL", fields.url || fields.webhookUrl]);
+  }
 
-  if (fieldEntries.length === 0) return null;
+  if (fieldEntries.length === 0) {
+    return null;
+  }
 
   return (
     <div className="mt-1">
@@ -778,7 +809,7 @@ type ManageInboxAction =
   | "bulk_archive_senders";
 
 function parseManageInboxAction(
-  action: string | undefined,
+  action: string | undefined
 ): ManageInboxAction | undefined {
   if (
     action === "archive_threads" ||

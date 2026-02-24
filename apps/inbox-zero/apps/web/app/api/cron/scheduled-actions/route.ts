@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { withError } from "@/utils/middleware";
-import { hasCronSecret, hasPostCronSecret } from "@/utils/cron";
-import { captureException } from "@/utils/error";
-import prisma from "@/utils/prisma";
+import { env } from "@/env";
 import { ScheduledActionStatus } from "@/generated/prisma/enums";
+import { hasCronSecret, hasPostCronSecret } from "@/utils/cron";
 import { createEmailProvider } from "@/utils/email/provider";
+import { captureException } from "@/utils/error";
+import type { Logger } from "@/utils/logger";
+import { withError } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 import { executeScheduledAction } from "@/utils/scheduled-actions/executor";
 import { markQStashActionAsExecuting } from "@/utils/scheduled-actions/scheduler";
-import { env } from "@/env";
-import type { Logger } from "@/utils/logger";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -18,7 +18,7 @@ const BATCH_SIZE = 100;
 export const GET = withError("cron/scheduled-actions", async (request) => {
   if (!hasCronSecret(request)) {
     captureException(
-      new Error("Unauthorized request: api/cron/scheduled-actions"),
+      new Error("Unauthorized request: api/cron/scheduled-actions")
     );
     return new Response("Unauthorized", { status: 401 });
   }
@@ -36,7 +36,7 @@ export const GET = withError("cron/scheduled-actions", async (request) => {
 export const POST = withError("cron/scheduled-actions", async (request) => {
   if (!(await hasPostCronSecret(request))) {
     captureException(
-      new Error("Unauthorized cron request: api/cron/scheduled-actions"),
+      new Error("Unauthorized cron request: api/cron/scheduled-actions")
     );
     return new Response("Unauthorized", { status: 401 });
   }
@@ -99,7 +99,7 @@ async function processScheduledActions(logger: Logger) {
       }
 
       const markedAction = await markQStashActionAsExecuting(
-        scheduledAction.id,
+        scheduledAction.id
       );
       if (!markedAction) {
         skipped += 1;
@@ -115,7 +115,7 @@ async function processScheduledActions(logger: Logger) {
       const executionResult = await executeScheduledAction(
         scheduledAction,
         provider,
-        actionLogger,
+        actionLogger
       );
 
       if (executionResult.success) {

@@ -5,9 +5,11 @@ export function hasOrganizationAdminRole(role: string): boolean {
 }
 
 export function isOrganizationAdmin(
-  members: Array<{ role: string }> | undefined,
+  members: Array<{ role: string }> | undefined
 ): boolean {
-  if (!members || members.length === 0) return false;
+  if (!members || members.length === 0) {
+    return false;
+  }
 
   return members.some((member) => hasOrganizationAdminRole(member.role));
 }

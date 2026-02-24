@@ -1,12 +1,12 @@
-import { describe, expect, test, vi } from "vitest";
 import stripIndent from "strip-indent";
-import { processUserRequest } from "@/utils/ai/assistant/process-user-request";
-import type { ParsedMessage, ParsedMessageHeaders } from "@/utils/types";
+import { describe, expect, test, vi } from "vitest";
+import { getEmailAccount } from "@/__tests__/helpers";
 import type { GroupItem, Prisma } from "@/generated/prisma/client";
 import { GroupItemType, LogicalOperator } from "@/generated/prisma/enums";
-import { getEmailAccount } from "@/__tests__/helpers";
+import { processUserRequest } from "@/utils/ai/assistant/process-user-request";
 import { createScopedLogger } from "@/utils/logger";
 import type { RuleWithRelations } from "@/utils/rule/types";
+import type { ParsedMessage, ParsedMessageHeaders } from "@/utils/types";
 
 // pnpm test-ai ai-process-user-request
 
@@ -67,12 +67,12 @@ describe(
 
       const toolCalls = result.steps.flatMap((step) => step.toolCalls);
       const updateInstructionsToolCall = toolCalls.find(
-        (toolCall) => toolCall?.toolName === "update_ai_instructions",
+        (toolCall) => toolCall?.toolName === "update_ai_instructions"
       );
 
       expect(updateInstructionsToolCall).toBeDefined();
       expect(
-        (updateInstructionsToolCall!.input as { ruleName: string }).ruleName,
+        (updateInstructionsToolCall!.input as { ruleName: string }).ruleName
       ).toBe("Partnership Rule");
     });
 
@@ -120,7 +120,7 @@ describe(
       const toolCalls = result.steps.flatMap((step) => step.toolCalls);
 
       const toolCall = toolCalls.find(
-        (toolCall) => toolCall?.toolName === "update_ai_instructions",
+        (toolCall) => toolCall?.toolName === "update_ai_instructions"
       );
 
       expect(toolCall).toBeDefined();
@@ -162,7 +162,7 @@ describe(
 
       const toolCalls = result.steps.flatMap((step) => step.toolCalls);
       const updateStaticConditionsToolCall = toolCalls.find(
-        (toolCall) => toolCall?.toolName === "update_static_conditions",
+        (toolCall) => toolCall?.toolName === "update_static_conditions"
       );
 
       expect(updateStaticConditionsToolCall).toBeDefined();
@@ -173,7 +173,7 @@ describe(
       expect(staticConditionsInput.ruleName).toBe("Receipt Rule");
       expect(
         staticConditionsInput.staticConditions?.subject?.includes("shipping") ||
-          staticConditionsInput.staticConditions?.subject?.includes("Shipped"),
+          staticConditionsInput.staticConditions?.subject?.includes("Shipped")
       ).toBe(true);
     });
 
@@ -234,12 +234,12 @@ describe(
 
       const toolCalls = result.steps.flatMap((step) => step.toolCalls);
       const removeFromGroupToolCall = toolCalls.find(
-        (toolCall) => toolCall?.toolName === "remove_from_group",
+        (toolCall) => toolCall?.toolName === "remove_from_group"
       );
 
       expect(removeFromGroupToolCall).toBeDefined();
       expect((removeFromGroupToolCall!.input as { value: string }).value).toBe(
-        "david@hello.com",
+        "david@hello.com"
       );
     });
 
@@ -297,7 +297,7 @@ describe(
 
       const toolCalls = result.steps.flatMap((step) => step.toolCalls);
       const addToGroupToolCall = toolCalls.find(
-        (toolCall) => toolCall?.toolName === "add_to_group",
+        (toolCall) => toolCall?.toolName === "add_to_group"
       );
 
       expect(addToGroupToolCall).toBeDefined();
@@ -339,12 +339,12 @@ describe(
 
       const toolCalls = result.steps.flatMap((step) => step.toolCalls);
       const updateSenderCategoryToolCall = toolCalls.find(
-        (toolCall) => toolCall?.toolName === "update_sender_category",
+        (toolCall) => toolCall?.toolName === "update_sender_category"
       );
 
       expect(updateSenderCategoryToolCall).toBeDefined();
       expect(
-        (updateSenderCategoryToolCall!.input as { category: string }).category,
+        (updateSenderCategoryToolCall!.input as { category: string }).category
       ).toBe("Sales");
     });
 
@@ -383,28 +383,28 @@ describe(
       const toolCalls = result.steps.flatMap((step) => step.toolCalls);
 
       const updateStaticConditionsToolCall = toolCalls.find(
-        (toolCall) => toolCall?.toolName === "update_static_conditions",
+        (toolCall) => toolCall?.toolName === "update_static_conditions"
       );
       const updateAiInstructionsToolCall = toolCalls.find(
-        (toolCall) => toolCall?.toolName === "update_ai_instructions",
+        (toolCall) => toolCall?.toolName === "update_ai_instructions"
       );
 
       expect(
-        updateStaticConditionsToolCall || updateAiInstructionsToolCall,
+        updateStaticConditionsToolCall || updateAiInstructionsToolCall
       ).toBeDefined();
       if (updateStaticConditionsToolCall) {
         expect(
           (updateStaticConditionsToolCall.input as { ruleName: string })
-            .ruleName,
+            .ruleName
         ).toBe("Sales Rule");
       }
       if (updateAiInstructionsToolCall) {
         expect(
-          (updateAiInstructionsToolCall.input as { ruleName: string }).ruleName,
+          (updateAiInstructionsToolCall.input as { ruleName: string }).ruleName
         ).toBe("Sales Rule");
       }
     });
-  },
+  }
 );
 
 function getRule(rule: Partial<RuleWithRelations>): RuleWithRelations {
@@ -443,7 +443,7 @@ function getRule(rule: Partial<RuleWithRelations>): RuleWithRelations {
 function getParsedMessage(
   message: Omit<Partial<ParsedMessage>, "headers"> & {
     headers?: Partial<ParsedMessageHeaders>;
-  },
+  }
 ): ParsedMessage {
   const defaultHeaders: ParsedMessageHeaders = {
     from: "test@example.com",

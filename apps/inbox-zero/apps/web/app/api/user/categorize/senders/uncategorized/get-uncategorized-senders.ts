@@ -1,7 +1,7 @@
-import { extractEmailAddress } from "@/utils/email";
-import { getSenders } from "./get-senders";
-import prisma from "@/utils/prisma";
 import type { Sender } from "@/app/api/user/categorize/senders/batch/handle-batch-validation";
+import { extractEmailAddress } from "@/utils/email";
+import prisma from "@/utils/prisma";
+import { getSenders } from "./get-senders";
 
 const MAX_ITERATIONS = 200;
 

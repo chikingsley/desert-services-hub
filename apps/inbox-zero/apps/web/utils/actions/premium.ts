@@ -1,24 +1,24 @@
 "use server";
 
-import { z } from "zod";
 import uniq from "lodash/uniq";
-import prisma from "@/utils/prisma";
+import { z } from "zod";
+import { changePremiumStatusSchema } from "@/app/(app)/admin/validation";
 import { env } from "@/env";
+import { PremiumTier } from "@/generated/prisma/enums";
+import {
+  actionClientUser,
+  adminActionClient,
+} from "@/utils/actions/safe-action";
+import { ONE_MONTH_MS, ONE_YEAR_MS } from "@/utils/date";
+import { SafeError } from "@/utils/error";
 import { isAdminForPremium, isOnHigherTier, isPremium } from "@/utils/premium";
+import { createPremiumForUser } from "@/utils/premium/create-premium";
 import {
   cancelPremiumLemon,
   syncPremiumSeats,
   upgradeToPremiumLemon,
 } from "@/utils/premium/server";
-import { changePremiumStatusSchema } from "@/app/(app)/admin/validation";
-import { PremiumTier } from "@/generated/prisma/enums";
-import { ONE_MONTH_MS, ONE_YEAR_MS } from "@/utils/date";
-import {
-  actionClientUser,
-  adminActionClient,
-} from "@/utils/actions/safe-action";
-import { SafeError } from "@/utils/error";
-import { createPremiumForUser } from "@/utils/premium/create-premium";
+import prisma from "@/utils/prisma";
 
 const TEN_YEARS = 10 * 365 * 24 * 60 * 60 * 1000;
 
@@ -40,13 +40,17 @@ export const decrementUnsubscribeCreditAction = actionClientUser
       },
     });
 
-    if (!user) throw new SafeError("User not found");
+    if (!user) {
+      throw new SafeError("User not found");
+    }
 
     const isUserPremium = isPremium(
       user.premium?.lemonSqueezyRenewsAt || null,
-      user.premium?.stripeSubscriptionStatus || null,
+      user.premium?.stripeSubscriptionStatus || null
     );
-    if (isUserPremium) return;
+    if (isUserPremium) {
+      return;
+    }
 
     const currentMonth = new Date().getMonth() + 1;
 
@@ -67,8 +71,9 @@ export const decrementUnsubscribeCreditAction = actionClientUser
         },
       });
     } else {
-      if (!premium?.unsubscribeCredits || premium.unsubscribeCredits <= 0)
+      if (!premium?.unsubscribeCredits || premium.unsubscribeCredits <= 0) {
         return;
+      }
 
       // decrement the monthly credits
       await prisma.premium.update({
@@ -99,10 +104,13 @@ export const updateMultiAccountPremiumAction = actionClientUser
       },
     });
 
-    if (!user) throw new SafeError("User not found");
+    if (!user) {
+      throw new SafeError("User not found");
+    }
 
-    if (!isAdminForPremium(user.premium?.admins || [], userId))
+    if (!isAdminForPremium(user.premium?.admins || [], userId)) {
       throw new SafeError("Not admin");
+    }
 
     // check all users exist
     const uniqueEmails = uniq(emails);
@@ -119,7 +127,7 @@ export const updateMultiAccountPremiumAction = actionClientUser
     for (const userToAdd of otherUsers) {
       if (isOnHigherTier(userToAdd.premium?.tier, premium.tier)) {
         throw new SafeError(
-          "One of the users you are adding to your plan already has premium and cannot be added.",
+          "One of the users you are adding to your plan already has premium and cannot be added."
         );
       }
     }
@@ -133,7 +141,7 @@ export const updateMultiAccountPremiumAction = actionClientUser
 
     // Determine which users to disconnect (those not in the new email list)
     const usersToDisconnect = currentUsers.filter(
-      (u) => u.id !== userId && !uniqueEmails.includes(u.email),
+      (u) => u.id !== userId && !uniqueEmails.includes(u.email)
     );
 
     // delete premium for other users when adding them to this premium plan
@@ -159,11 +167,11 @@ export const updateMultiAccountPremiumAction = actionClientUser
     // Set pending invites to exactly match non-existing users in the email list
     // Exclude emails that belong to the user's own EmailAccount records
     const userEmailAccounts = new Set(
-      user.emailAccounts?.map((ea) => ea.email) || [],
+      user.emailAccounts?.map((ea) => ea.email) || []
     );
     const nonExistingUsers = uniqueEmails.filter(
       (email) =>
-        !users.some((u) => u.email === email) && !userEmailAccounts.has(email),
+        !(users.some((u) => u.email === email) || userEmailAccounts.has(email))
     );
     await prisma.premium.update({
       where: { id: premium.id },
@@ -221,7 +229,9 @@ export const adminChangePremiumStatusAction = adminActionClient
         },
       });
 
-      if (!userToUpgrade?.user) throw new SafeError("User not found");
+      if (!userToUpgrade?.user) {
+        throw new SafeError("User not found");
+      }
 
       const lemonSqueezySubscriptionId: number | null = null;
       const lemonSqueezySubscriptionItemId: number | null = null;
@@ -273,7 +283,7 @@ export const adminChangePremiumStatusAction = adminActionClient
       } else {
         throw new SafeError("User not premium.");
       }
-    },
+    }
   );
 
 export const claimPremiumAdminAction = actionClientUser
@@ -284,9 +294,15 @@ export const claimPremiumAdminAction = actionClientUser
       select: { premium: { select: { id: true, admins: true } } },
     });
 
-    if (!user) throw new SafeError("User not found");
-    if (!user.premium?.id) throw new SafeError("User does not have a premium");
-    if (user.premium?.admins.length) throw new SafeError("Already has admin");
+    if (!user) {
+      throw new SafeError("User not found");
+    }
+    if (!user.premium?.id) {
+      throw new SafeError("User does not have a premium");
+    }
+    if (user.premium?.admins.length) {
+      throw new SafeError("Already has admin");
+    }
 
     await prisma.premium.update({
       where: { id: user.premium.id },

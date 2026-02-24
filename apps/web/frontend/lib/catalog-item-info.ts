@@ -1,8 +1,8 @@
 export interface CatalogItemInfo {
   code: string;
-  name: string;
+  defaultQty?: number;
   description: string;
+  name: string;
   price: number;
   unit: string;
-  defaultQty?: number;
 }

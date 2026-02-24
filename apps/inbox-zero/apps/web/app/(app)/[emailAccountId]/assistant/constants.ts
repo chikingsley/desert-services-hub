@@ -1,16 +1,16 @@
 import {
-  TagIcon,
-  MailIcon,
-  ReplyIcon,
-  SendIcon,
-  ForwardIcon,
   ArchiveIcon,
-  MailOpenIcon,
-  ShieldCheckIcon,
-  WebhookIcon,
+  BellIcon,
   FileTextIcon,
   FolderInputIcon,
-  BellIcon,
+  ForwardIcon,
+  MailIcon,
+  MailOpenIcon,
+  ReplyIcon,
+  SendIcon,
+  ShieldCheckIcon,
+  TagIcon,
+  WebhookIcon,
 } from "lucide-react";
 import { ActionType } from "@/generated/prisma/enums";
 

@@ -1,19 +1,19 @@
-import { z } from "zod";
 import { InvalidArgumentError } from "ai";
-import { createGenerateObject } from "@/utils/llms";
-import { withRetry } from "@/utils/llms/retry";
-import { stringifyEmail } from "@/utils/stringify-email";
-import type { Logger } from "@/utils/logger";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailForLLM, RuleWithActions } from "@/utils/types";
-import { LogicalOperator } from "@/generated/prisma/enums";
+import { z } from "zod";
 import type { ActionType } from "@/generated/prisma/enums";
-import { getModel, type ModelType } from "@/utils/llms/model";
+import { LogicalOperator } from "@/generated/prisma/enums";
 import { getUserInfoPrompt } from "@/utils/ai/helpers";
 import {
   PLAIN_TEXT_OUTPUT_INSTRUCTION,
   PROMPT_SECURITY_INSTRUCTIONS,
 } from "@/utils/ai/security";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel, type ModelType } from "@/utils/llms/model";
+import { withRetry } from "@/utils/llms/retry";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import { stringifyEmail } from "@/utils/stringify-email";
+import type { EmailForLLM, RuleWithActions } from "@/utils/types";
 
 /**
  * AI Argument Generator for Email Actions
@@ -100,15 +100,15 @@ export async function aiGenerateArgs({
         schemaDescription: "The arguments for the rule",
         schema: z.object(
           Object.fromEntries(
-            parameters.map((p) => [`${p.type}-${p.actionId}`, p.parameters]),
-          ),
+            parameters.map((p) => [`${p.type}-${p.actionId}`, p.parameters])
+          )
         ),
       }),
     {
       retryIf: (error: unknown) => InvalidArgumentError.isInstance(error),
       maxRetries: 3,
       delayMs: 1000,
-    },
+    }
   );
 
   const result = aiResponse.object;
@@ -175,9 +175,7 @@ function printConditions(condition: RuleWithActions) {
   }
 
   return result.join(
-    condition.conditionalOperator === LogicalOperator.AND
-      ? "\nAND\n"
-      : "\nOR\n",
+    condition.conditionalOperator === LogicalOperator.AND ? "\nAND\n" : "\nOR\n"
   );
 }
 

@@ -1,16 +1,16 @@
 import type { Client } from "@microsoft/microsoft-graph-client";
-import { getCalendarClientWithRefresh } from "@/utils/outlook/calendar-client";
 import type {
   CalendarEvent,
   CalendarEventProvider,
 } from "@/utils/calendar/event-types";
 import type { Logger } from "@/utils/logger";
+import { getCalendarClientWithRefresh } from "@/utils/outlook/calendar-client";
 
 export interface MicrosoftCalendarConnectionParams {
   accessToken: string | null;
-  refreshToken: string | null;
-  expiresAt: number | null;
   emailAccountId: string;
+  expiresAt: number | null;
+  refreshToken: string | null;
 }
 
 type MicrosoftEvent = {
@@ -79,8 +79,8 @@ export class MicrosoftCalendarEventProvider implements CalendarEventProvider {
         event.attendees?.some(
           (a) =>
             a.emailAddress?.address?.toLowerCase() ===
-            attendeeEmail.toLowerCase(),
-        ),
+            attendeeEmail.toLowerCase()
+        )
       )
       .slice(0, maxResults)
       .map((event) => this.parseEvent(event));

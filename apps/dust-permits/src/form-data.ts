@@ -71,20 +71,15 @@ export function oneYearFromNow(): string {
 
 export interface FormData {
   // ===========================================================================
-  // Page 1: Applicant Information (in form order)
+  // Metadata
   // ===========================================================================
 
-  // siTable:1 - "Provide an email address where we can send the permit"
-  permitContact: {
-    email: string;
-    name: string;
-    phone: string;
-  };
-
-  // siTable:2 - "Did you receive a no-permit violation?"
-  violation: {
-    hasViolation: boolean;
-    permitNumber?: string;
+  _meta: {
+    companyInDatabase: boolean;
+    skipApplicantSection: boolean;
+    noiPermitId: string | null;
+    ltfNumber: string | null;
+    extractionSource: "noi+plan" | "noi-only" | "manual" | "test";
   };
 
   // siTable:4 - "Applicant" (relationship checkboxes + company info)
@@ -104,84 +99,6 @@ export interface FormData {
     zip: string;
     phone: string;
     email: string;
-  };
-
-  // siTable:5 - "Applicant President/Owner"
-  presidentOwner: {
-    firstName: string;
-    lastName: string;
-    address1: string;
-    address2?: string;
-    city: string;
-    state: string;
-    zip: string;
-    phone: string;
-    email: string;
-  };
-
-  // siTable:6 - "Is the Applicant a wholly owned subsidiary?"
-  subsidiary: {
-    isSubsidiary: boolean;
-    parentEntityType?: EntityType;
-    parentName?: string;
-    parentAddress1?: string;
-    parentAddress2?: string;
-    parentCity?: string;
-    parentState?: string;
-    parentZip?: string;
-    parentPhone?: string;
-    parentEmail?: string;
-    parentStateOfIncorporation?: string;
-  };
-
-  // siTable:7 - "Is the Applicant the Property Owner or Developer?"
-  propertyOwner: {
-    isDifferent: boolean;
-    entityType?: EntityType;
-    name?: string;
-    address1?: string;
-    address2?: string;
-    city?: string;
-    state?: string;
-    zip?: string;
-    phone?: string;
-    fax?: string;
-    contactFirstName?: string;
-    contactLastName?: string;
-    contactPhone?: string;
-    contactEmail?: string;
-  };
-
-  // ===========================================================================
-  // Page 3: Project Details
-  // ===========================================================================
-
-  // siTable:8 - "Primary Project Contact"
-  primaryContact: {
-    firstName: string;
-    lastName: string;
-    title: string;
-    email: string;
-    phone: string;
-    companyName: string;
-    mobile?: string;
-    fax?: string;
-  };
-
-  project: {
-    name: string;
-    description: string;
-    startDate: string;
-    endDate: string;
-    bulkMaterialsCubicYards: number;
-    hasDemolition: boolean;
-  };
-
-  site: {
-    name: string;
-    latitude: number | null;
-    longitude: number | null;
-    acresDisturbed: number;
   };
 
   // ===========================================================================
@@ -484,6 +401,51 @@ export interface FormData {
   };
 
   // ===========================================================================
+  // Page 5: Submit Application
+  // ===========================================================================
+
+  page5: {
+    /** Accelerated Processing checkbox - expedited permit processing (extra fee) */
+    acceleratedProcessing: boolean;
+  };
+
+  // ===========================================================================
+  // Payment (Point & Pay pages 1-2, after submit redirect)
+  // ===========================================================================
+
+  payment: {
+    card: {
+      nameOnCard: string;
+      cardNumber: string;
+      expiryMonth: string;
+      expiryYear: string;
+      cvv: string;
+    };
+    billing: {
+      firstName: string;
+      lastName: string;
+      addressLine1: string;
+      addressLine2?: string;
+      country: string;
+      city: string;
+      state: string;
+      postalCode: string;
+      email: string;
+      phone: string;
+    };
+  };
+  // ===========================================================================
+  // Page 1: Applicant Information (in form order)
+  // ===========================================================================
+
+  // siTable:1 - "Provide an email address where we can send the permit"
+  permitContact: {
+    email: string;
+    name: string;
+    phone: string;
+  };
+
+  // ===========================================================================
   // Page 4: Post-K Sections (Water Tier Requirements per Category)
   // ===========================================================================
 
@@ -566,51 +528,88 @@ export interface FormData {
     };
   };
 
-  // ===========================================================================
-  // Page 5: Submit Application
-  // ===========================================================================
-
-  page5: {
-    /** Accelerated Processing checkbox - expedited permit processing (extra fee) */
-    acceleratedProcessing: boolean;
+  // siTable:5 - "Applicant President/Owner"
+  presidentOwner: {
+    firstName: string;
+    lastName: string;
+    address1: string;
+    address2?: string;
+    city: string;
+    state: string;
+    zip: string;
+    phone: string;
+    email: string;
   };
 
   // ===========================================================================
-  // Payment (Point & Pay pages 1-2, after submit redirect)
+  // Page 3: Project Details
   // ===========================================================================
 
-  payment: {
-    card: {
-      nameOnCard: string;
-      cardNumber: string;
-      expiryMonth: string;
-      expiryYear: string;
-      cvv: string;
-    };
-    billing: {
-      firstName: string;
-      lastName: string;
-      addressLine1: string;
-      addressLine2?: string;
-      country: string;
-      city: string;
-      state: string;
-      postalCode: string;
-      email: string;
-      phone: string;
-    };
+  // siTable:8 - "Primary Project Contact"
+  primaryContact: {
+    firstName: string;
+    lastName: string;
+    title: string;
+    email: string;
+    phone: string;
+    companyName: string;
+    mobile?: string;
+    fax?: string;
   };
 
-  // ===========================================================================
-  // Metadata
-  // ===========================================================================
+  project: {
+    name: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+    bulkMaterialsCubicYards: number;
+    hasDemolition: boolean;
+  };
 
-  _meta: {
-    companyInDatabase: boolean;
-    skipApplicantSection: boolean;
-    noiPermitId: string | null;
-    ltfNumber: string | null;
-    extractionSource: "noi+plan" | "noi-only" | "manual" | "test";
+  // siTable:7 - "Is the Applicant the Property Owner or Developer?"
+  propertyOwner: {
+    isDifferent: boolean;
+    entityType?: EntityType;
+    name?: string;
+    address1?: string;
+    address2?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    phone?: string;
+    fax?: string;
+    contactFirstName?: string;
+    contactLastName?: string;
+    contactPhone?: string;
+    contactEmail?: string;
+  };
+
+  site: {
+    name: string;
+    latitude: number | null;
+    longitude: number | null;
+    acresDisturbed: number;
+  };
+
+  // siTable:6 - "Is the Applicant a wholly owned subsidiary?"
+  subsidiary: {
+    isSubsidiary: boolean;
+    parentEntityType?: EntityType;
+    parentName?: string;
+    parentAddress1?: string;
+    parentAddress2?: string;
+    parentCity?: string;
+    parentState?: string;
+    parentZip?: string;
+    parentPhone?: string;
+    parentEmail?: string;
+    parentStateOfIncorporation?: string;
+  };
+
+  // siTable:2 - "Did you receive a no-permit violation?"
+  violation: {
+    hasViolation: boolean;
+    permitNumber?: string;
   };
 }
 
@@ -1342,15 +1341,6 @@ export function buildFormData(input?: BuildFormDataInput): FormData {
 // ============================================================================
 
 export interface Page1State {
-  permitContact: {
-    hasEmail: boolean;
-    hasName: boolean;
-    hasPhone: boolean;
-  };
-  violation: {
-    hasAnswer: boolean;
-    hasPermitNumber: boolean;
-  };
   applicant: {
     // Relationship checkboxes
     propertyOwnerChecked: boolean;
@@ -1368,6 +1358,11 @@ export interface Page1State {
     hasPhone: boolean;
     hasEmail: boolean;
   };
+  permitContact: {
+    hasEmail: boolean;
+    hasName: boolean;
+    hasPhone: boolean;
+  };
   presidentOwner: {
     hasFirstName: boolean;
     hasLastName: boolean;
@@ -1378,19 +1373,6 @@ export interface Page1State {
     hasZip: boolean;
     hasPhone: boolean;
     hasEmail: boolean;
-  };
-  subsidiary: {
-    hasAnswer: boolean;
-    hasParentEntityType: boolean;
-    hasParentName: boolean;
-    hasParentAddress1: boolean;
-    hasParentAddress2: boolean;
-    hasParentCity: boolean;
-    hasParentState: boolean;
-    hasParentZip: boolean;
-    hasParentPhone: boolean;
-    hasParentEmail: boolean;
-    hasParentStateOfIncorporation: boolean;
   };
   propertyOwner: {
     hasAnswer: boolean;
@@ -1407,6 +1389,23 @@ export interface Page1State {
     hasContactLastName: boolean;
     hasContactPhone: boolean;
     hasContactEmail: boolean;
+  };
+  subsidiary: {
+    hasAnswer: boolean;
+    hasParentEntityType: boolean;
+    hasParentName: boolean;
+    hasParentAddress1: boolean;
+    hasParentAddress2: boolean;
+    hasParentCity: boolean;
+    hasParentState: boolean;
+    hasParentZip: boolean;
+    hasParentPhone: boolean;
+    hasParentEmail: boolean;
+    hasParentStateOfIncorporation: boolean;
+  };
+  violation: {
+    hasAnswer: boolean;
+    hasPermitNumber: boolean;
   };
 }
 
@@ -1677,6 +1676,8 @@ export interface Page4State {
     hasOtherMethodQty: boolean;
     hasOtherMethodSize: boolean;
   };
+  /** Total disturbed acres was entered */
+  hasTotalDisturbedAcres: boolean;
   /** Post-K sections (Water Requirements & Acres per Category) */
   postK: {
     b1: { hasWaterTier: boolean; hasAvgDailyAcres: boolean };
@@ -1694,8 +1695,6 @@ export interface Page4State {
     j: { hasWaterTier: boolean; hasAvgDailyAcres: boolean };
     d4: { hasCubicYardsImport: boolean; hasCubicYardsExport: boolean };
   };
-  /** Total disturbed acres was entered */
-  hasTotalDisturbedAcres: boolean;
 }
 
 /**

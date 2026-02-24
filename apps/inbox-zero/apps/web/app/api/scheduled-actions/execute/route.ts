@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { withError } from "@/utils/middleware";
-import { markQStashActionAsExecuting } from "@/utils/scheduled-actions/scheduler";
-import { executeScheduledAction } from "@/utils/scheduled-actions/executor";
-import prisma from "@/utils/prisma";
 import { ScheduledActionStatus } from "@/generated/prisma/enums";
 import { createEmailProvider } from "@/utils/email/provider";
+import { withError } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 import { withQstashOrInternal } from "@/utils/qstash";
+import { executeScheduledAction } from "@/utils/scheduled-actions/executor";
+import { markQStashActionAsExecuting } from "@/utils/scheduled-actions/scheduler";
 
 export const maxDuration = 300; // 5 minutes
 
@@ -79,7 +79,7 @@ export const POST = withError(
 
       // Mark as executing to prevent duplicate processing
       const markedAction = await markQStashActionAsExecuting(
-        scheduledAction.id,
+        scheduledAction.id
       );
       if (!markedAction) {
         logger.warn("Action already being processed or completed", {
@@ -105,7 +105,7 @@ export const POST = withError(
       const executionResult = await executeScheduledAction(
         scheduledAction,
         provider,
-        logger,
+        logger
       );
 
       if (executionResult.success) {
@@ -114,16 +114,15 @@ export const POST = withError(
           executedActionId: executionResult.executedActionId,
         });
         return new Response("Action executed successfully", { status: 200 });
-      } else {
-        logger.error("Failed to execute QStash scheduled action", {
-          scheduledActionId: scheduledAction.id,
-          error: executionResult.error,
-        });
-        return new Response("Action execution failed", { status: 500 });
       }
+      logger.error("Failed to execute QStash scheduled action", {
+        scheduledActionId: scheduledAction.id,
+        error: executionResult.error,
+      });
+      return new Response("Action execution failed", { status: 500 });
     } catch (error) {
       logger.error("QStash scheduled action execution failed", { error });
       return new Response("Internal server error", { status: 500 });
     }
-  }),
+  })
 );

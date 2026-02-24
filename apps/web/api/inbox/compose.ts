@@ -9,12 +9,12 @@
  * Only writable mailboxes (chi@, contracts@, dustpermits@) are permitted.
  */
 
+import { db } from "@lib/db/client";
 import {
   createComposeClient,
   type GraphComposeClient,
   WRITABLE_MAILBOXES,
 } from "@lib/graph/client";
-import { db } from "@lib/db/client";
 import { z } from "zod";
 
 // Singleton Graph client (app auth, reused across requests)
@@ -59,7 +59,7 @@ const sendSchema = z.object({
 function zodErrorResponse(error: z.ZodError): Response {
   return Response.json(
     { error: "Invalid request", details: error.flatten() },
-    { status: 400 },
+    { status: 400 }
   );
 }
 
@@ -122,7 +122,7 @@ export async function replyToThread(req: Request): Promise<Response> {
     if (!emailRow?.message_id) {
       return Response.json(
         { error: "Email not found or missing Graph message ID" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -147,7 +147,7 @@ export async function replyToThread(req: Request): Promise<Response> {
     console.error("Failed to create reply draft:", error);
     return Response.json(
       { error: "Failed to create reply draft" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

@@ -116,8 +116,8 @@ export function getProjectsFolder(name: string): string {
 // =============================================================================
 
 export interface VariantResult {
-  isVariant: boolean;
   baseName: string;
+  isVariant: boolean;
   suffix: string | null;
 }
 

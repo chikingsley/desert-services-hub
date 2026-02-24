@@ -1,8 +1,8 @@
 "use client";
 
-import * as React from "react";
-import { ArchiveIcon, Loader2Icon } from "lucide-react";
 import { useAtomValue } from "jotai";
+import { ArchiveIcon, Loader2Icon } from "lucide-react";
+import * as React from "react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -13,14 +13,14 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
-import { useComposeModal } from "@/providers/ComposeModalProvider";
-import { refetchEmailListAtom } from "@/store/email";
-import { archiveEmails } from "@/store/archive-queue";
-import { useDisplayedEmail } from "@/hooks/useDisplayedEmail";
-import { useAccount } from "@/providers/EmailAccountProvider";
 import { useCommandPaletteCommands } from "@/hooks/useCommandPaletteCommands";
+import { useDisplayedEmail } from "@/hooks/useDisplayedEmail";
 import { fuzzySearch } from "@/lib/commands/fuzzy-search";
 import type { Command, CommandSection } from "@/lib/commands/types";
+import { useComposeModal } from "@/providers/ComposeModalProvider";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { archiveEmails } from "@/store/archive-queue";
+import { refetchEmailListAtom } from "@/store/email";
 
 const SECTION_ORDER: CommandSection[] = [
   "actions",
@@ -123,7 +123,9 @@ export function CommandK() {
   // memoized handlers to avoid re-renders
   const handleOpenChange = React.useCallback((isOpen: boolean) => {
     setOpen(isOpen);
-    if (!isOpen) setSearch("");
+    if (!isOpen) {
+      setSearch("");
+    }
   }, []);
 
   const commandProps = React.useMemo(
@@ -136,7 +138,7 @@ export function CommandK() {
         }
       },
     }),
-    [],
+    []
   );
 
   // keyboard shortcuts
@@ -150,7 +152,9 @@ export function CommandK() {
       }
 
       // don't handle other shortcuts when palette is open
-      if (open) return;
+      if (open) {
+        return;
+      }
 
       // escape to close email preview
       if (e.key === "Escape") {
@@ -162,7 +166,9 @@ export function CommandK() {
       }
 
       // only handle shortcuts when focus is on body
-      if (document?.activeElement?.tagName !== "BODY") return;
+      if (document?.activeElement?.tagName !== "BODY") {
+        return;
+      }
 
       // e for archive
       if ((e.key === "e" || e.key === "E") && !(e.metaKey || e.ctrlKey)) {
@@ -188,14 +194,14 @@ export function CommandK() {
 
   return (
     <CommandDialog
-      open={open}
-      onOpenChange={handleOpenChange}
       commandProps={commandProps}
+      onOpenChange={handleOpenChange}
+      open={open}
     >
       <CommandInput
+        onValueChange={setSearch}
         placeholder="Type a command or search..."
         value={search}
-        onValueChange={setSearch}
       />
       <CommandList>
         {isLoading ? (
@@ -207,12 +213,14 @@ export function CommandK() {
             <CommandEmpty>No results found.</CommandEmpty>
             {SECTION_ORDER.map((section, index) => {
               const sectionCommands = groupedCommands[section];
-              if (sectionCommands.length === 0) return null;
+              if (sectionCommands.length === 0) {
+                return null;
+              }
 
               const showSeparator =
                 index > 0 &&
                 SECTION_ORDER.slice(0, index).some(
-                  (s) => groupedCommands[s].length > 0,
+                  (s) => groupedCommands[s].length > 0
                 );
 
               return (
@@ -222,8 +230,8 @@ export function CommandK() {
                     {sectionCommands.map((command) => (
                       <CommandItem
                         key={command.id}
-                        value={`${command.id} ${command.label} ${command.keywords?.join(" ") || ""}`}
                         onSelect={() => executeCommand(command)}
+                        value={`${command.id} ${command.label} ${command.keywords?.join(" ") || ""}`}
                       >
                         {command.icon && (
                           <command.icon className="mr-2 h-4 w-4" />
@@ -231,7 +239,7 @@ export function CommandK() {
                         <div className="flex flex-1 flex-col">
                           <span>{command.label}</span>
                           {command.description && (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-muted-foreground text-xs">
                               {command.description}
                             </span>
                           )}
@@ -248,7 +256,7 @@ export function CommandK() {
           </>
         )}
       </CommandList>
-      <div className="flex items-center justify-center gap-4 border-t px-3 py-2 text-xs text-muted-foreground">
+      <div className="flex items-center justify-center gap-4 border-t px-3 py-2 text-muted-foreground text-xs">
         <span className="flex items-center gap-1">
           <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">
             ↑↓

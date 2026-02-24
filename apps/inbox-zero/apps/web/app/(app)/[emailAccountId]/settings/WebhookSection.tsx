@@ -1,10 +1,8 @@
 "use client";
 
-import { CopyInput } from "@/components/CopyInput";
 import { RegenerateSecretButton } from "@/app/(app)/[emailAccountId]/settings/WebhookGenerate";
-import { useUser } from "@/hooks/useUser";
+import { CopyInput } from "@/components/CopyInput";
 import { LoadingContent } from "@/components/LoadingContent";
-import { Item, ItemContent, ItemTitle, ItemActions } from "@/components/ui/item";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,6 +12,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemTitle,
+} from "@/components/ui/item";
+import { useUser } from "@/hooks/useUser";
 
 export function WebhookSection() {
   const { data, isLoading, error, mutate } = useUser();
@@ -26,7 +31,7 @@ export function WebhookSection() {
       <ItemActions>
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
+            <Button size="sm" variant="outline">
               View Secret
             </Button>
           </DialogTrigger>
@@ -39,11 +44,11 @@ export function WebhookSection() {
                 Assistant &gt; Rules.
               </DialogDescription>
             </DialogHeader>
-            <LoadingContent loading={isLoading} error={error}>
+            <LoadingContent error={error} loading={isLoading}>
               {data && (
                 <div className="space-y-4">
                   {!!data.webhookSecret && (
-                    <CopyInput value={data.webhookSecret} masked />
+                    <CopyInput masked value={data.webhookSecret} />
                   )}
                   <RegenerateSecretButton
                     hasSecret={!!data.webhookSecret}

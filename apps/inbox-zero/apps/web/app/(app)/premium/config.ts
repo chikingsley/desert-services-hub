@@ -234,7 +234,7 @@ const professionalTier: Tier = {
     monthly: 0,
     annually: discount(
       pricing.PROFESSIONAL_MONTHLY,
-      pricing.PROFESSIONAL_ANNUALLY,
+      pricing.PROFESSIONAL_ANNUALLY
     ),
   },
   description: "For teams and growing businesses handling high email volumes.",
@@ -292,7 +292,9 @@ export function getLemonSubscriptionTier({
   variantId: number;
 }): PremiumTier {
   const tier = variantIdToTier[variantId];
-  if (!tier) throw new Error(`Unknown variant id: ${variantId}`);
+  if (!tier) {
+    throw new Error(`Unknown variant id: ${variantId}`);
+  }
   return tier;
 }
 

@@ -1,23 +1,23 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/Input";
 import {
-  adminProcessHistorySchema,
   type AdminProcessHistoryOptions,
+  adminProcessHistorySchema,
 } from "@/app/(app)/admin/validation";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@/components/Input";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import {
+  adminCleanupDraftsAction,
   adminDeleteAccountAction,
+  adminDisableAllRulesAction,
   adminProcessHistoryAction,
   adminWatchEmailsAction,
-  adminDisableAllRulesAction,
-  adminCleanupDraftsAction,
 } from "@/utils/actions/admin";
 import { adminCheckPermissionsAction } from "@/utils/actions/permissions";
-import { toastError, toastSuccess } from "@/components/Toast";
 import { getActionErrorMessage } from "@/utils/error";
 
 export const AdminUserControls = () => {
@@ -36,7 +36,7 @@ export const AdminUserControls = () => {
           description: "Error processing history",
         });
       },
-    },
+    }
   );
   const { execute: checkPermissions, isExecuting: isCheckingPermissions } =
     useAction(adminCheckPermissionsAction, {
@@ -64,7 +64,7 @@ export const AdminUserControls = () => {
       onSuccess: (result) => {
         const results = result.data?.results || [];
         const successCount = results.filter(
-          (r) => r.status === "success",
+          (r) => r.status === "success"
         ).length;
         const errorCount = results.filter((r) => r.status === "error").length;
         const description =
@@ -84,7 +84,7 @@ export const AdminUserControls = () => {
           description: getActionErrorMessage(error.error),
         });
       },
-    },
+    }
   );
   const { execute: disableRules, isExecuting: isDisablingRules } = useAction(
     adminDisableAllRulesAction,
@@ -101,7 +101,7 @@ export const AdminUserControls = () => {
           description: getActionErrorMessage(error.error),
         });
       },
-    },
+    }
   );
   const { execute: cleanupDrafts, isExecuting: isCleaningDrafts } = useAction(
     adminCleanupDraftsAction,
@@ -118,7 +118,7 @@ export const AdminUserControls = () => {
           description: getActionErrorMessage(error.error),
         });
       },
-    },
+    }
   );
   const { execute: deleteAccount, isExecuting: isDeleting } = useAction(
     adminDeleteAccountAction,
@@ -135,7 +135,7 @@ export const AdminUserControls = () => {
           description: "Error deleting user",
         });
       },
-    },
+    }
   );
 
   const {
@@ -149,64 +149,64 @@ export const AdminUserControls = () => {
   return (
     <form className="max-w-sm space-y-4">
       <Input
-        type="email"
-        name="email"
-        label="Email"
-        registerProps={register("email", { required: true })}
         error={errors.email}
+        label="Email"
+        name="email"
+        registerProps={register("email", { required: true })}
+        type="email"
       />
       <div className="flex gap-2">
         <Button
-          variant="outline"
           loading={isProcessing}
           onClick={() => {
             processHistory({ emailAddress: getValues("email") });
           }}
+          variant="outline"
         >
           Process History
         </Button>
         <Button
-          variant="outline"
           loading={isCheckingPermissions}
           onClick={() => {
             checkPermissions({ email: getValues("email") });
           }}
+          variant="outline"
         >
           Check Permissions
         </Button>
         <Button
-          variant="outline"
           loading={isWatching}
           onClick={() => {
             watchEmails({ email: getValues("email") });
           }}
+          variant="outline"
         >
           Watch
         </Button>
         <Button
-          variant="outline"
           loading={isDisablingRules}
           onClick={() => {
             disableRules({ email: getValues("email") });
           }}
+          variant="outline"
         >
           Disable Rules
         </Button>
         <Button
-          variant="outline"
           loading={isCleaningDrafts}
           onClick={() => {
             cleanupDrafts({ email: getValues("email") });
           }}
+          variant="outline"
         >
           Cleanup Drafts
         </Button>
         <Button
-          variant="destructive"
           loading={isDeleting}
           onClick={() => {
             deleteAccount({ email: getValues("email") });
           }}
+          variant="destructive"
         >
           Delete User
         </Button>

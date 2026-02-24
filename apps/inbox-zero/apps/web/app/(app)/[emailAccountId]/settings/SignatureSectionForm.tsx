@@ -1,26 +1,26 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
 import { useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { useAction } from "next-safe-action/hooks";
 import { Button } from "@/components/Button";
-import { saveSignatureAction } from "@/utils/actions/user";
-import type { SaveSignatureBody } from "@/utils/actions/user.validation";
-import { fetchSignaturesFromProviderAction } from "@/utils/actions/email-account";
+import { ClientOnly } from "@/components/ClientOnly";
+import { Tiptap, type TiptapHandle } from "@/components/editor/Tiptap";
 import {
   FormSection,
   FormSectionLeft,
   FormSectionRight,
   SubmitButtonWrapper,
 } from "@/components/Form";
-import { Tiptap, type TiptapHandle } from "@/components/editor/Tiptap";
 import { toastError, toastInfo, toastSuccess } from "@/components/Toast";
-import { ClientOnly } from "@/components/ClientOnly";
 import { useAccount } from "@/providers/EmailAccountProvider";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { getActionErrorMessage } from "@/utils/error";
+import { fetchSignaturesFromProviderAction } from "@/utils/actions/email-account";
+import { saveSignatureAction } from "@/utils/actions/user";
+import type { SaveSignatureBody } from "@/utils/actions/user.validation";
 import { saveSignatureBody } from "@/utils/actions/user.validation";
 import { isGoogleProvider } from "@/utils/email/provider-types";
+import { getActionErrorMessage } from "@/utils/error";
 
 export const SignatureSectionForm = ({
   signature,
@@ -50,47 +50,45 @@ export const SignatureSectionForm = ({
           description: getActionErrorMessage(error.error),
         });
       },
-    },
+    }
   );
   const { executeAsync: executeFetchSignatures } = useAction(
-    fetchSignaturesFromProviderAction.bind(null, emailAccountId),
+    fetchSignaturesFromProviderAction.bind(null, emailAccountId)
   );
 
   const handleEditorChange = useCallback(
     (html: string) => {
       setValue("signature", html);
     },
-    [setValue],
+    [setValue]
   );
 
   return (
     <form onSubmit={handleSubmit(execute)}>
       <FormSection>
         <FormSectionLeft
-          title="Signature"
           description="Appended at the end of all outgoing messages."
+          title="Signature"
         />
         <div className="md:col-span-2">
           <FormSectionRight>
             <div className="sm:col-span-full">
               <ClientOnly>
                 <Tiptap
-                  ref={editorRef}
+                  className="min-h-[100px]"
                   initialContent={defaultSignature}
                   onChange={handleEditorChange}
-                  className="min-h-[100px]"
+                  ref={editorRef}
                 />
               </ClientOnly>
             </div>
           </FormSectionRight>
           <SubmitButtonWrapper>
             <div className="flex gap-2">
-              <Button type="submit" size="lg" loading={isExecuting}>
+              <Button loading={isExecuting} size="lg" type="submit">
                 Save
               </Button>
               <Button
-                type="button"
-                size="lg"
                 color="white"
                 onClick={async () => {
                   const result = await executeFetchSignatures();
@@ -124,6 +122,8 @@ export const SignatureSectionForm = ({
                     });
                   }
                 }}
+                size="lg"
+                type="button"
               >
                 Load from {isGmail ? "Gmail" : "Outlook"}
               </Button>

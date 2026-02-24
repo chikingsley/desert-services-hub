@@ -1,12 +1,15 @@
 import { z } from "zod";
-import type { Logger } from "@/utils/logger";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailForLLM } from "@/utils/types";
-import { getEmailListPrompt, getTodayForLLM } from "@/utils/ai/helpers";
-import { preprocessBooleanLike } from "@/utils/zod";
-import { getModel } from "@/utils/llms/model";
+import {
+  getEmailListPrompt,
+  getTodayForLLM,
+  getUserInfoPrompt,
+} from "@/utils/ai/helpers";
 import { createGenerateObject } from "@/utils/llms";
-import { getUserInfoPrompt } from "@/utils/ai/helpers";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import type { EmailForLLM } from "@/utils/types";
+import { preprocessBooleanLike } from "@/utils/zod";
 
 const system = `You are an email history analysis agent. Your task is to analyze the provided historical email threads and extract relevant information that would be helpful for drafting a response to the current email thread.
 
@@ -58,7 +61,7 @@ const schema = z.object({
   summary: z
     .string()
     .describe(
-      "A concise summary of relevant historical context, including key points, commitments, deadlines, from past conversations.",
+      "A concise summary of relevant historical context, including key points, commitments, deadlines, from past conversations."
     ),
 });
 
@@ -79,7 +82,9 @@ export async function aiExtractFromEmailHistory({
       historicalCount: historicalMessages.length,
     });
 
-    if (historicalMessages.length === 0) return null;
+    if (historicalMessages.length === 0) {
+      return null;
+    }
 
     const prompt = getUserPrompt({
       currentThreadMessages,

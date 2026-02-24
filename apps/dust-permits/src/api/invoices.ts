@@ -34,12 +34,12 @@ export const invoicePdfSchema = z.object({
 export type InvoicePdfInput = z.infer<typeof invoicePdfSchema>;
 
 export interface InvoicePdfResult {
-  success: boolean;
+  error?: string;
   invoiceNumber: string;
+  pdfBase64?: string;
   pdfPath?: string;
   pdfUrl?: string;
-  pdfBase64?: string;
-  error?: string;
+  success: boolean;
 }
 
 // ============================================

@@ -1,11 +1,11 @@
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { ParsedMessage } from "@/utils/types";
 import type { EmailProvider } from "@/utils/email/types";
-import type { Logger } from "@/utils/logger";
 import { captureException } from "@/utils/error";
-import { handleOutboundReply } from "./outbound";
-import { cleanupThreadAIDrafts, trackSentDraftStatus } from "./draft-tracking";
 import { clearFollowUpLabel } from "@/utils/follow-up/labels";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import type { ParsedMessage } from "@/utils/types";
+import { cleanupThreadAIDrafts, trackSentDraftStatus } from "./draft-tracking";
+import { handleOutboundReply } from "./outbound";
 
 export async function handleOutboundMessage({
   emailAccount,

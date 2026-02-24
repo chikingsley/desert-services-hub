@@ -1,13 +1,13 @@
-import { useState } from "react";
 import {
   Check,
+  ChevronRight,
   ChevronsUpDown,
   FolderIcon,
-  ChevronRight,
   Loader2,
   X,
 } from "lucide-react";
-import { cn } from "@/utils";
+import { useState } from "react";
+import type { FieldError } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -22,15 +22,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn } from "@/utils";
 import { FOLDER_SEPARATOR, type OutlookFolder } from "@/utils/outlook/folders";
-import type { FieldError } from "react-hook-form";
 
 interface FolderItemProps {
+  displayPath?: string;
   folder: OutlookFolder;
   level: number;
-  value: { name: string; id: string };
   onSelect: (folderId: string) => void;
-  displayPath?: string;
+  value: { name: string; id: string };
 }
 
 function FolderItem({
@@ -43,34 +43,34 @@ function FolderItem({
   return (
     <div key={folder.id}>
       <CommandItem
-        key={`${folder.id}-${level}`}
-        value={folder.id}
-        onSelect={() => onSelect(folder.id)}
         data-folder-id={folder.id}
         data-level={level}
+        key={`${folder.id}-${level}`}
+        onSelect={() => onSelect(folder.id)}
+        value={folder.id}
       >
         <Check
           className={cn(
             "mr-2 h-4 w-4",
-            value.id === folder.id ? "opacity-100" : "opacity-0",
+            value.id === folder.id ? "opacity-100" : "opacity-0"
           )}
         />
         <div className="flex items-center gap-2">
           {level > 0 &&
             Array.from({ length: level }, (_, i) => (
-              <ChevronRight key={i} className="h-3 w-3 text-muted-foreground" />
+              <ChevronRight className="h-3 w-3 text-muted-foreground" key={i} />
             ))}
           <FolderIcon className="h-4 w-4" />
           <span>{displayPath || folder.displayName}</span>
         </div>
       </CommandItem>
       {folder.childFolders?.map((child) => (
-        <div key={child.id} className={""}>
+        <div className={""} key={child.id}>
           <FolderItem
             folder={child}
             level={level + 1}
-            value={value}
             onSelect={onSelect}
+            value={value}
           />
         </div>
       ))}
@@ -79,12 +79,12 @@ function FolderItem({
 }
 
 interface FolderSelectorProps {
+  error?: FieldError;
   folders: OutlookFolder[];
   isLoading: boolean;
-  value: { name: string; id: string };
   onChangeValue: (value: { name: string; id: string }) => void;
   placeholder?: string;
-  error?: FieldError;
+  value: { name: string; id: string };
 }
 
 export function FolderSelector({
@@ -100,7 +100,7 @@ export function FolderSelector({
 
   const findFolderById = (
     folderList: OutlookFolder[],
-    targetId: string,
+    targetId: string
   ): OutlookFolder | null => {
     for (const folder of folderList) {
       if (folder.id === targetId) {
@@ -108,7 +108,9 @@ export function FolderSelector({
       }
       if (folder.childFolders && folder.childFolders.length > 0) {
         const found = findFolderById(folder.childFolders, targetId);
-        if (found) return found;
+        if (found) {
+          return found;
+        }
       }
     }
     return null;
@@ -127,7 +129,7 @@ export function FolderSelector({
   function filterFoldersRecursively(
     folderList: OutlookFolder[],
     query: string,
-    parentPath = "",
+    parentPath = ""
   ): { folder: OutlookFolder; displayPath: string }[] {
     const results: { folder: OutlookFolder; displayPath: string }[] = [];
 
@@ -142,7 +144,7 @@ export function FolderSelector({
         const childResults = filterFoldersRecursively(
           folder.childFolders,
           query,
-          currentPath,
+          currentPath
         );
         results.push(...childResults);
       }
@@ -153,12 +155,14 @@ export function FolderSelector({
 
   const buildFolderPath = (folderId: string): string => {
     const folder = findFolderById(folders, folderId);
-    if (!folder) return "";
+    if (!folder) {
+      return "";
+    }
 
     const findPath = (
       folderList: OutlookFolder[],
       targetId: string,
-      currentPath: string[] = [],
+      currentPath: string[] = []
     ): string[] | null => {
       for (const f of folderList) {
         const newPath = [...currentPath, f.displayName];
@@ -169,7 +173,9 @@ export function FolderSelector({
 
         if (f.childFolders && f.childFolders.length > 0) {
           const result = findPath(f.childFolders, targetId, newPath);
-          if (result) return result;
+          if (result) {
+            return result;
+          }
         }
       }
       return null;
@@ -193,16 +199,16 @@ export function FolderSelector({
 
   return (
     <div>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover onOpenChange={setOpen} open={open}>
         <PopoverTrigger asChild>
           <Button
-            variant="outline"
-            role="combobox"
             aria-expanded={open}
             className="w-full justify-between"
             disabled={isLoading}
+            role="combobox"
+            variant="outline"
           >
-            <div className="flex items-center gap-2 flex-1">
+            <div className="flex flex-1 items-center gap-2">
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -220,14 +226,14 @@ export function FolderSelector({
             <div className="flex items-center gap-1">
               {value.id && !isLoading && (
                 <Button
-                  variant="ghost"
-                  size="sm"
                   className="h-6 w-6 p-0 hover:bg-muted"
                   onClick={(e) => {
                     e.stopPropagation();
                     onChangeValue({ name: "", id: "" });
                   }}
+                  size="sm"
                   title="Clear folder selection"
+                  variant="ghost"
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -239,9 +245,9 @@ export function FolderSelector({
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
           <Command>
             <CommandInput
+              onValueChange={setSearchQuery}
               placeholder="Search folders..."
               value={searchQuery}
-              onValueChange={setSearchQuery}
             />
             <CommandList
               onWheelCapture={(e) => {
@@ -251,7 +257,7 @@ export function FolderSelector({
             >
               {isLoading ? (
                 <div className="flex items-center justify-center py-6">
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   <span>Loading folders...</span>
                 </div>
               ) : (
@@ -261,12 +267,12 @@ export function FolderSelector({
                     {filteredFolders.map(({ folder, displayPath }) => {
                       return (
                         <FolderItem
-                          key={folder.id}
-                          folder={folder}
-                          level={0}
-                          value={value}
-                          onSelect={handleFolderSelect}
                           displayPath={displayPath}
+                          folder={folder}
+                          key={folder.id}
+                          level={0}
+                          onSelect={handleFolderSelect}
+                          value={value}
                         />
                       );
                     })}
@@ -278,7 +284,7 @@ export function FolderSelector({
         </PopoverContent>
       </Popover>
       {error && (
-        <div className="mt-1 text-sm text-red-600 dark:text-red-400">
+        <div className="mt-1 text-red-600 text-sm dark:text-red-400">
           {error.message}
         </div>
       )}

@@ -16,22 +16,22 @@ export type ProjectMatchReviewSource =
   | "email_resolver";
 
 interface ReviewRow {
+  account_id_hint: number | null;
+  address_hint: string | null;
+  alias_hints: unknown;
+  candidates: unknown;
+  contractor_hint: string | null;
+  created_at: string;
+  decision: unknown;
   id: number;
+  note: string | null;
+  primary_text: string;
+  resolution_note: string | null;
+  resolved_at: string | null;
+  selected_project_id: number | null;
   source: string;
   source_key: string;
   status: ProjectMatchReviewStatus;
-  primary_text: string;
-  alias_hints: unknown;
-  contractor_hint: string | null;
-  address_hint: string | null;
-  account_id_hint: number | null;
-  candidates: unknown;
-  decision: unknown;
-  selected_project_id: number | null;
-  note: string | null;
-  resolution_note: string | null;
-  resolved_at: string | null;
-  created_at: string;
   updated_at: string;
 }
 

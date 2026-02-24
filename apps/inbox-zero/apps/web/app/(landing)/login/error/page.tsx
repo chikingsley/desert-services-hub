@@ -1,18 +1,18 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { BasicLayout } from "@/components/layouts/BasicLayout";
+import { CrispChatLoggedOutVisible } from "@/components/CrispChat";
 import { ErrorPage } from "@/components/ErrorPage";
+import { Loading } from "@/components/Loading";
+import { LoadingContent } from "@/components/LoadingContent";
+import { BasicLayout } from "@/components/layouts/BasicLayout";
+import { Button } from "@/components/ui/button";
 import { env } from "@/env";
 import { useUser } from "@/hooks/useUser";
-import { LoadingContent } from "@/components/LoadingContent";
-import { Loading } from "@/components/Loading";
-import { WELCOME_PATH } from "@/utils/config";
-import { CrispChatLoggedOutVisible } from "@/components/CrispChat";
 import { getAndClearAuthErrorCookie } from "@/utils/auth-cookies";
+import { WELCOME_PATH } from "@/utils/config";
 
 const errorMessages: Record<string, { title: string; description: string }> = {
   email_not_found: {
@@ -47,9 +47,13 @@ function LoginErrorContent() {
     }
   }, [data, router]);
 
-  if (isLoading) return <Loading />;
+  if (isLoading) {
+    return <Loading />;
+  }
   // will redirect to welcome if user is logged in
-  if (data?.id) return <Loading />;
+  if (data?.id) {
+    return <Loading />;
+  }
 
   const errorInfo = errorCode ? errorMessages[errorCode] : null;
   const title = errorInfo?.title || "Error Logging In";
@@ -59,15 +63,15 @@ function LoginErrorContent() {
     : `Please try again. ${supportText}`;
 
   return (
-    <LoadingContent loading={isLoading} error={error}>
+    <LoadingContent error={error} loading={isLoading}>
       <ErrorPage
-        title={title}
-        description={description}
         button={
           <Button asChild>
             <Link href="/login">Log In</Link>
           </Button>
         }
+        description={description}
+        title={title}
       />
       {/* <AutoLogOut loggedIn={!!session?.user.email} /> */}
     </LoadingContent>

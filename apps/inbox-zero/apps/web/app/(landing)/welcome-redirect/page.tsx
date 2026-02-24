@@ -8,7 +8,9 @@ export default async function WelcomeRedirectPage(props: {
   const searchParams = await props.searchParams;
   const session = await auth();
 
-  if (!session?.user) redirect("/login");
+  if (!session?.user) {
+    redirect("/login");
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
@@ -16,8 +18,14 @@ export default async function WelcomeRedirectPage(props: {
   });
 
   // Session exists but user doesn't - invalid state, log out
-  if (!user) redirect("/logout");
-  if (searchParams.force) redirect("/onboarding");
-  if (user.completedOnboardingAt) redirect("/setup");
+  if (!user) {
+    redirect("/logout");
+  }
+  if (searchParams.force) {
+    redirect("/onboarding");
+  }
+  if (user.completedOnboardingAt) {
+    redirect("/setup");
+  }
   redirect("/onboarding");
 }

@@ -16,9 +16,9 @@ export type BadgeVariant =
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: BadgeVariant;
   icon?: React.ReactNode;
   size?: "sm" | "md";
+  variant?: BadgeVariant;
 }
 
 export function Badge({
@@ -28,37 +28,37 @@ export function Badge({
   size = "md",
 }: BadgeProps) {
   const badgeOuterStyle = cva(
-    "rounded-[8px] w-fit h-fit font-medium p-[1px] bg-gradient-to-b shrink-0",
+    "h-fit w-fit shrink-0 rounded-[8px] bg-gradient-to-b p-[1px] font-medium",
     {
       variants: {
         variant: {
-          blue: "text-new-blue-600 from-new-blue-150 to-new-blue-200 shadow-[0px_2px_3.4px_0px_#CFD9F938,0px_1px_1px_0px_#CFD9F994]",
+          blue: "from-new-blue-150 to-new-blue-200 text-new-blue-600 shadow-[0px_2px_3.4px_0px_#CFD9F938,0px_1px_1px_0px_#CFD9F994]",
           purple:
-            "text-new-purple-600 from-new-purple-200 to-new-purple-300 shadow-[0px_2px_3.4px_0px_#CFD9F938,0px_1px_1px_0px_#CFD9F994]",
+            "from-new-purple-200 to-new-purple-300 text-new-purple-600 shadow-[0px_2px_3.4px_0px_#CFD9F938,0px_1px_1px_0px_#CFD9F994]",
           "dark-blue":
-            "text-new-indigo-600 from-new-indigo-150 to-new-indigo-200 shadow-[0px_2px_3.4px_0px_#CFD9F938,0px_1px_1px_0px_#CFD9F994]",
+            "from-new-indigo-150 to-new-indigo-200 text-new-indigo-600 shadow-[0px_2px_3.4px_0px_#CFD9F938,0px_1px_1px_0px_#CFD9F994]",
           green:
-            "text-new-green-600 from-new-green-150 to-new-green-200 shadow-[0px_2px_3.4px_0px_#CFF9DE38,0px_1px_1px_0px_#76D98F1C]",
+            "from-new-green-150 to-new-green-200 text-new-green-600 shadow-[0px_2px_3.4px_0px_#CFF9DE38,0px_1px_1px_0px_#76D98F1C]",
           yellow:
-            "text-new-yellow-500 from-new-yellow-150 to-new-yellow-200 shadow-[0px_2px_3.4px_0px_#F9EDCF38,0px_1px_1px_0px_#F9ECCF94]",
+            "from-new-yellow-150 to-new-yellow-200 text-new-yellow-500 shadow-[0px_2px_3.4px_0px_#F9EDCF38,0px_1px_1px_0px_#F9ECCF94]",
           brown:
-            "text-new-brown-500 from-new-brown-150 to-new-brown-200 shadow-[0px_2px_3.4px_0px_#F0D4BA38,0px_1px_1px_0px_#F9E0CF94]",
-          red: "text-new-red-500 from-new-red-150 to-new-red-200 shadow-[0px_2px_3.4px_0px_#F9CFD326,0px_1px_1px_0px_#F9CFD08A]",
+            "from-new-brown-150 to-new-brown-200 text-new-brown-500 shadow-[0px_2px_3.4px_0px_#F0D4BA38,0px_1px_1px_0px_#F9E0CF94]",
+          red: "from-new-red-150 to-new-red-200 text-new-red-500 shadow-[0px_2px_3.4px_0px_#F9CFD326,0px_1px_1px_0px_#F9CFD08A]",
           "light-blue":
-            "text-new-cyan-500 from-new-cyan-100 to-new-cyan-200 shadow-[0px_2px_3.4px_0px_#E6E6E638,0px_1px_1px_0px_#B1B1B11C]",
+            "from-new-cyan-100 to-new-cyan-200 text-new-cyan-500 shadow-[0px_2px_3.4px_0px_#E6E6E638,0px_1px_1px_0px_#B1B1B11C]",
           orange:
-            "text-new-orange-600 from-new-orange-150 to-new-orange-200 shadow-[0px_2px_3.4px_0px_#F9D3CF38,0px_1px_1px_0px_#F9E5CF94]",
-          pink: "text-new-pink-500 from-new-pink-150 to-new-pink-200 shadow-[0px_2px_3.4px_0px_#F9CFD326,0px_1px_1px_0px_#F9CFD08A]",
-          gray: "text-new-gray-500 from-new-gray-150 to-new-gray-200 shadow-[0px_2px_3.4px_0px_#E6E6E638,0px_1px_1px_0px_#B1B1B11C]",
+            "from-new-orange-150 to-new-orange-200 text-new-orange-600 shadow-[0px_2px_3.4px_0px_#F9D3CF38,0px_1px_1px_0px_#F9E5CF94]",
+          pink: "from-new-pink-150 to-new-pink-200 text-new-pink-500 shadow-[0px_2px_3.4px_0px_#F9CFD326,0px_1px_1px_0px_#F9CFD08A]",
+          gray: "from-new-gray-150 to-new-gray-200 text-new-gray-500 shadow-[0px_2px_3.4px_0px_#E6E6E638,0px_1px_1px_0px_#B1B1B11C]",
           "dark-gray":
-            "text-new-gray-600 from-new-gray-150 to-new-gray-200 shadow-[0px_2px_3.4px_0px_#E6E6E638,0px_1px_1px_0px_#B1B1B11C]",
+            "from-new-gray-150 to-new-gray-200 text-new-gray-600 shadow-[0px_2px_3.4px_0px_#E6E6E638,0px_1px_1px_0px_#B1B1B11C]",
         },
       },
-    },
+    }
   );
 
   const badgeInnerStyle = cva(
-    "flex items-center gap-1 rounded-[7px] py-0.5 px-2 w-fit h-fit font-medium bg-gradient-to-b",
+    "flex h-fit w-fit items-center gap-1 rounded-[7px] bg-gradient-to-b px-2 py-0.5 font-medium",
     {
       variants: {
         variant: {
@@ -76,13 +76,13 @@ export function Badge({
           "dark-gray": "from-new-gray-50 to-new-gray-100",
         },
       },
-    },
+    }
   );
 
   const badgeTextStyle = cva("text-xs", {
     variants: {
       size: {
-        sm: "text-[9px] font-bold",
+        sm: "font-bold text-[9px]",
         md: "text-xs",
       },
     },

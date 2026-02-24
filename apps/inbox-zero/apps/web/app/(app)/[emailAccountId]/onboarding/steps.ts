@@ -29,7 +29,7 @@ export const STEP_ORDER = [
 ] as const;
 
 export function getStepNumber(
-  stepKey: (typeof STEP_KEYS)[keyof typeof STEP_KEYS],
+  stepKey: (typeof STEP_KEYS)[keyof typeof STEP_KEYS]
 ): number {
   const index = STEP_ORDER.indexOf(stepKey);
   return index === -1 ? 1 : index + 1;

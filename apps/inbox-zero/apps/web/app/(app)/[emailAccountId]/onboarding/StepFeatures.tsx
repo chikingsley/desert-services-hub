@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   ArrowRightIcon,
   ChartBarIcon,
@@ -10,11 +9,12 @@ import {
   SparklesIcon,
   ZapIcon,
 } from "lucide-react";
-import { MutedText, PageHeading, TypographyP } from "@/components/Typography";
+import { useState } from "react";
 import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
 import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
-import { cn } from "@/utils";
+import { MutedText, PageHeading, TypographyP } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/utils";
 import { saveOnboardingFeaturesAction } from "@/utils/actions/onboarding";
 
 // `value` is the value that will be saved to the database
@@ -54,36 +54,36 @@ const choices = [
 
 export function StepFeatures({ onNext }: { onNext: () => void }) {
   const [selectedChoices, setSelectedChoices] = useState<Map<string, boolean>>(
-    new Map(),
+    new Map()
   );
 
   return (
     <OnboardingWrapper className="py-0">
-      <IconCircle size="lg" className="mx-auto">
+      <IconCircle className="mx-auto" size="lg">
         <ZapIcon className="size-6" />
       </IconCircle>
 
-      <div className="text-center mt-4">
+      <div className="mt-4 text-center">
         <PageHeading>How would you like to use Inbox Zero?</PageHeading>
-        <TypographyP className="mt-2 max-w-lg mx-auto">
+        <TypographyP className="mx-auto mt-2 max-w-lg">
           Select as many as you want.
         </TypographyP>
 
-        <div className="grid gap-4 mt-4 max-w-3xl mx-auto">
+        <div className="mx-auto mt-4 grid max-w-3xl gap-4">
           {choices.map((choice) => (
             <button
-              type="button"
-              key={choice.value}
               className={cn(
-                "rounded-xl border bg-card p-4 text-card-foreground shadow-sm text-left flex items-center gap-4 transition-all min-h-24",
+                "flex min-h-24 items-center gap-4 rounded-xl border bg-card p-4 text-left text-card-foreground shadow-sm transition-all",
                 selectedChoices.get(choice.value) &&
-                  "border-blue-600 ring-2 ring-blue-100",
+                  "border-blue-600 ring-2 ring-blue-100"
               )}
+              key={choice.value}
               onClick={() => {
                 setSelectedChoices((prev) =>
-                  new Map(prev).set(choice.value, !prev.get(choice.value)),
+                  new Map(prev).set(choice.value, !prev.get(choice.value))
                 );
               }}
+              type="button"
             >
               <IconCircle size="sm">{choice.icon}</IconCircle>
 
@@ -95,9 +95,8 @@ export function StepFeatures({ onNext }: { onNext: () => void }) {
           ))}
         </div>
 
-        <div className="flex w-full max-w-xs mx-auto mt-6">
+        <div className="mx-auto mt-6 flex w-full max-w-xs">
           <Button
-            type="button"
             className="w-full"
             onClick={() => {
               // Get all selected features (only the ones that are true)
@@ -110,9 +109,10 @@ export function StepFeatures({ onNext }: { onNext: () => void }) {
 
               onNext();
             }}
+            type="button"
           >
             Continue
-            <ArrowRightIcon className="size-4 ml-2" />
+            <ArrowRightIcon className="ml-2 size-4" />
           </Button>
         </div>
       </div>

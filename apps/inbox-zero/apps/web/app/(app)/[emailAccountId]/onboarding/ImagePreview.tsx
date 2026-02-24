@@ -12,13 +12,13 @@ export function OnboardingImagePreview({
   height: number;
 }) {
   return (
-    <div className="ml-auto text-muted-foreground rounded-tl-2xl rounded-bl-2xl pl-4 py-4 bg-slate-50 border-y border-l border-slate-200 overflow-hidden max-h-[600px]">
+    <div className="ml-auto max-h-[600px] overflow-hidden rounded-tl-2xl rounded-bl-2xl border-slate-200 border-y border-l bg-slate-50 py-4 pl-4 text-muted-foreground">
       <Image
-        src={src}
         alt={alt}
-        width={width}
+        className="rounded-tl-xl rounded-bl-xl border-slate-200 border-y border-l"
         height={height}
-        className="rounded-tl-xl rounded-bl-xl border-y border-l border-slate-200"
+        src={src}
+        width={width}
       />
     </div>
   );

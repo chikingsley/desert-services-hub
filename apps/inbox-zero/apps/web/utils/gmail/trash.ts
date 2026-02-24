@@ -1,7 +1,7 @@
 import type { gmail_v1 } from "@googleapis/gmail";
 import { publishDelete, type TinybirdEmailAction } from "@inboxzero/tinybird";
-import { createScopedLogger } from "@/utils/logger";
 import { withGmailRetry } from "@/utils/gmail/retry";
+import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("gmail/trash");
 
@@ -21,7 +21,7 @@ export async function trashThread(options: {
     gmail.users.threads.trash({
       userId: "me",
       id: threadId,
-    }),
+    })
   );
 
   const publishPromise = publishDelete({
@@ -47,14 +47,13 @@ export async function trashThread(options: {
         error,
       });
       return { status: 200 };
-    } else {
-      logger.error("Failed to trash thread", {
-        email: ownerEmail,
-        threadId,
-        error,
-      });
-      throw error;
     }
+    logger.error("Failed to trash thread", {
+      email: ownerEmail,
+      threadId,
+      error,
+    });
+    throw error;
   }
 
   if (publishResult.status === "rejected") {
@@ -78,6 +77,6 @@ export async function trashMessage(options: {
     gmail.users.messages.trash({
       userId: "me",
       id: messageId,
-    }),
+    })
   );
 }

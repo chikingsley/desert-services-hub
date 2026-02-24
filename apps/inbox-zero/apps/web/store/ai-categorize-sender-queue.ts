@@ -1,17 +1,16 @@
-import { useMemo } from "react";
 import { atom, useAtomValue } from "jotai";
 import pRetry from "p-retry";
+import { useMemo } from "react";
 import { jotaiStore } from "@/store";
-import { exponentialBackoff } from "@/utils/sleep";
-import { sleep } from "@/utils/sleep";
 import { categorizeSenderAction } from "@/utils/actions/categorize";
 import { aiQueue } from "@/utils/queue/ai-queue";
+import { exponentialBackoff, sleep } from "@/utils/sleep";
 
 type CategorizationStatus = "pending" | "processing" | "completed";
 
 interface QueueItem {
-  status: CategorizationStatus;
   categoryId?: string;
+  status: CategorizationStatus;
 }
 
 const aiCategorizeSenderQueueAtom = atom<Map<string, QueueItem>>(new Map());
@@ -54,7 +53,7 @@ export const useAiCategorizationQueueItem = (id: string) => {
 const hasProcessingItemsAtom = atom((get) => {
   const queue = get(aiCategorizeSenderQueueAtom);
   return Array.from(queue.values()).some(
-    (item) => item.status === "processing",
+    (item) => item.status === "processing"
   );
 });
 
@@ -80,7 +79,7 @@ function processAiCategorizeSenderQueue({
       async (attemptCount) => {
         // biome-ignore lint/suspicious/noConsole: frontend
         console.log(
-          `Queue: aiCategorizeSender. Processing ${sender}${attemptCount > 1 ? ` (attempt ${attemptCount})` : ""}`,
+          `Queue: aiCategorizeSender. Processing ${sender}${attemptCount > 1 ? ` (attempt ${attemptCount})` : ""}`
         );
 
         const result = await categorizeSenderAction(emailAccountId, {
@@ -101,7 +100,7 @@ function processAiCategorizeSenderQueue({
           return newQueue;
         });
       },
-      { retries: 3 },
+      { retries: 3 }
     );
   });
 

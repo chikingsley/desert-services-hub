@@ -151,13 +151,13 @@ export function Testimonials() {
   const variant = useTestimonialsVariant();
 
   return (
-    <div className="relative isolate bg-white pb-20 pt-24">
+    <div className="relative isolate bg-white pt-24 pb-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-xl text-center">
-          <h2 className="text-lg font-semibold leading-8 tracking-tight text-blue-600">
+          <h2 className="font-semibold text-blue-600 text-lg leading-8 tracking-tight">
             Inbox Zero Love
           </h2>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <p className="mt-2 font-bold text-3xl text-gray-900 tracking-tight sm:text-4xl">
             Join thousands who spend less time on email
           </p>
         </div>
@@ -176,22 +176,22 @@ function TestimonialsContent() {
   return (
     <>
       {/* Mobile */}
-      <div className="mx-auto mt-16 grid max-w-2xl gap-4 text-sm leading-6 text-gray-900 sm:hidden">
+      <div className="mx-auto mt-16 grid max-w-2xl gap-4 text-gray-900 text-sm leading-6 sm:hidden">
         {mobileTestimonials.map((testimonial) => (
           <figure
-            key={testimonial.author.name}
             className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-gray-900/5"
+            key={testimonial.author.name}
           >
             <blockquote className="text-gray-900">
               <p>{`"${testimonial.body}"`}</p>
             </blockquote>
             <figcaption className="mt-6 flex items-center gap-x-4">
               <Image
-                className="h-10 w-10 rounded-full bg-gray-50"
-                src={testimonial.author.imageUrl}
                 alt={testimonial.author.name}
-                width={40}
+                className="h-10 w-10 rounded-full bg-gray-50"
                 height={40}
+                src={testimonial.author.imageUrl}
+                width={40}
               />
               <div>
                 <div className="font-semibold">{testimonial.author.name}</div>
@@ -207,18 +207,18 @@ function TestimonialsContent() {
       </div>
 
       {/* Desktop */}
-      <div className="mx-auto mt-16 hidden max-w-2xl grid-cols-1 grid-rows-1 gap-8 text-sm leading-6 text-gray-900 sm:mt-20 sm:grid sm:grid-cols-2 xl:mx-0 xl:max-w-none xl:grid-flow-col xl:grid-cols-4">
+      <div className="mx-auto mt-16 hidden max-w-2xl grid-cols-1 grid-rows-1 gap-8 text-gray-900 text-sm leading-6 sm:mt-20 sm:grid sm:grid-cols-2 xl:mx-0 xl:max-w-none xl:grid-flow-col xl:grid-cols-4">
         <figure className="rounded-2xl bg-white shadow-lg ring-1 ring-gray-900/5 sm:col-span-2 xl:col-start-2 xl:row-end-1">
-          <blockquote className="p-6 text-lg font-semibold leading-7 tracking-tight text-gray-900 sm:p-12 sm:text-xl sm:leading-8">
+          <blockquote className="p-6 font-semibold text-gray-900 text-lg leading-7 tracking-tight sm:p-12 sm:text-xl sm:leading-8">
             <p>{`"${featuredTestimonial.body}"`}</p>
           </blockquote>
-          <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-4 border-t border-gray-900/10 px-6 py-4 sm:flex-nowrap">
+          <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-4 border-gray-900/10 border-t px-6 py-4 sm:flex-nowrap">
             <Image
-              className="h-10 w-10 flex-none rounded-full bg-gray-50"
-              src={featuredTestimonial.author.imageUrl}
               alt={featuredTestimonial.author.name}
-              width={40}
+              className="h-10 w-10 flex-none rounded-full bg-gray-50"
               height={40}
+              src={featuredTestimonial.author.imageUrl}
+              width={40}
             />
             <div className="flex-auto">
               <div className="font-semibold">
@@ -229,48 +229,48 @@ function TestimonialsContent() {
               </div>
             </div>
             <Image
-              className="h-8 w-auto flex-none"
-              src={featuredTestimonial.author.logoUrl}
               alt=""
+              className="h-8 w-auto flex-none"
               height={32}
-              width={98}
+              src={featuredTestimonial.author.logoUrl}
               unoptimized
+              width={98}
             />
           </figcaption>
         </figure>
 
         {desktopTestimonials.map((columnGroup, columnGroupIdx) => (
           <div
-            key={columnGroupIdx}
             className="space-y-8 xl:contents xl:space-y-0"
+            key={columnGroupIdx}
           >
             {columnGroup.map((column, columnIdx) => (
               <div
-                key={columnIdx}
                 className={clsx(
                   (columnGroupIdx === 0 && columnIdx === 0) ||
                     (columnGroupIdx === desktopTestimonials.length - 1 &&
                       columnIdx === columnGroup.length - 1)
                     ? "xl:row-span-2"
                     : "xl:row-start-1",
-                  "space-y-8",
+                  "space-y-8"
                 )}
+                key={columnIdx}
               >
                 {column.map((testimonial) => (
                   <figure
-                    key={testimonial.author.handle}
                     className="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-gray-900/5"
+                    key={testimonial.author.handle}
                   >
                     <blockquote className="text-gray-900">
                       <p>{`"${testimonial.body}"`}</p>
                     </blockquote>
                     <figcaption className="mt-6 flex items-center gap-x-4">
                       <Image
-                        className="h-10 w-10 rounded-full bg-gray-50"
-                        src={testimonial.author.imageUrl}
                         alt=""
-                        width={40}
+                        className="h-10 w-10 rounded-full bg-gray-50"
                         height={40}
+                        src={testimonial.author.imageUrl}
+                        width={40}
                       />
                       <div>
                         <div className="font-semibold">
@@ -304,8 +304,8 @@ function SenjaWidgetContent() {
       <div
         className="senja-embed"
         data-id="321e14fc-aa08-41f8-8dfd-ed3cd75d1308"
-        data-mode="shadow"
         data-lazyload="false"
+        data-mode="shadow"
         style={{ display: "block", width: "100%" }}
       />
     </div>

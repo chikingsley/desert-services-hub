@@ -1,10 +1,10 @@
+import {
+  extendZodWithOpenApi,
+  OpenAPIRegistry,
+  OpenApiGeneratorV3,
+} from "@asteasolutions/zod-to-openapi";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
-import {
-  OpenAPIRegistry,
-  extendZodWithOpenApi,
-} from "@asteasolutions/zod-to-openapi";
 import {
   statsByPeriodQuerySchema,
   statsByPeriodResponseSchema,

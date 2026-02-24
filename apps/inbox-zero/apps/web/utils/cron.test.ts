@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { hasCronSecret } from "./cron";
-import type { RequestWithLogger } from "@/utils/middleware";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createScopedLogger } from "@/utils/logger";
+import type { RequestWithLogger } from "@/utils/middleware";
+import { hasCronSecret } from "./cron";
 
 const logger = createScopedLogger("test");
 
@@ -10,7 +10,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/env", () => ({ env: { CRON_SECRET: "test-secret-123" } }));
 
 function createMockRequestWithLogger(
-  headers?: Record<string, string>,
+  headers?: Record<string, string>
 ): RequestWithLogger {
   const request = new Request("https://example.com", {
     headers: headers ? new Headers(headers) : undefined,

@@ -6,7 +6,6 @@ import { testAction } from "./test-action";
 export function TestActionButton() {
   return (
     <Button
-      variant="destructive"
       onClick={async () => {
         try {
           const res = await testAction();
@@ -15,6 +14,7 @@ export function TestActionButton() {
           alert(`Action failed: ${error}`);
         }
       }}
+      variant="destructive"
     >
       Test Action
     </Button>

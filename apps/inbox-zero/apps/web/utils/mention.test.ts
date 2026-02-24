@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { convertMentionsToLabels, convertLabelsToDisplay } from "./mention";
+import { describe, expect, it } from "vitest";
+import { convertLabelsToDisplay, convertMentionsToLabels } from "./mention";
 
 describe("convertMentionsToLabels", () => {
   it("converts single mention to label", () => {

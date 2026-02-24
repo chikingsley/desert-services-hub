@@ -4,41 +4,41 @@ import { Badge } from "@/apps/web/frontend/components/ui/badge";
 import { TableCell, TableRow } from "@/apps/web/frontend/components/ui/table";
 
 export interface ProjectRowData {
-  id: number;
-  name: string;
-  contractor: string | null;
-  address: string | null;
-  location_city: string | null;
-  contract_status: string;
-  dust_permit_status: string;
-  noi_status: string;
-  swppp_status: string;
-  signs_status: string;
-  document_count: number;
-  email_count: number;
   account_name: string | null;
-  contract_packet_status: string | null;
-  contract_packet_type: string | null;
-  contract_packet_owner: string | null;
+  address: string | null;
+  contract_packet_document_count: number;
+  contract_packet_executed_at: string | null;
+  contract_packet_is_sla_breached: boolean;
+  contract_packet_minutes_since_received: number | null;
   contract_packet_next_action: string | null;
+  contract_packet_owner: string | null;
   contract_packet_received_at: string | null;
   contract_packet_sent_back_at: string | null;
-  contract_packet_executed_at: string | null;
-  contract_packet_minutes_since_received: number | null;
-  contract_packet_is_sla_breached: boolean;
-  contract_packet_document_count: number;
+  contract_packet_status: string | null;
+  contract_packet_type: string | null;
+  contract_status: string;
+  contractor: string | null;
+  document_count: number;
+  dust_permit_status: string;
+  email_count: number;
+  id: number;
+  location_city: string | null;
+  name: string;
+  noi_status: string;
+  signs_status: string;
+  swppp_status: string;
 }
 
 interface ActionPill {
+  className: string;
   key: string;
   label: string;
-  className: string;
 }
 
 interface IntakeLane {
+  className: string;
   key: "work_auth_direct" | "work_auth_waiting_contract" | "contract_packet";
   label: string;
-  className: string;
 }
 
 const ACTION_BADGE_LIMIT = 3;

@@ -13,11 +13,15 @@ export function validateIdpMetadata(xml: string): boolean {
 
     const findElement = <T = Record<string, unknown>>(
       obj: Record<string, unknown> | undefined,
-      localName: string,
+      localName: string
     ): T | undefined => {
-      if (!obj || typeof obj !== "object") return undefined;
+      if (!obj || typeof obj !== "object") {
+        return undefined;
+      }
 
-      if (obj[localName]) return obj[localName] as T;
+      if (obj[localName]) {
+        return obj[localName] as T;
+      }
 
       for (const key in obj) {
         if (key.endsWith(`:${localName}`)) {
@@ -30,39 +34,41 @@ export function validateIdpMetadata(xml: string): boolean {
 
     const getElementArray = <T = Record<string, unknown>>(
       obj: Record<string, unknown> | undefined,
-      localName: string,
+      localName: string
     ): T[] => {
       const element = findElement<T>(obj, localName);
-      if (!element) return [];
+      if (!element) {
+        return [];
+      }
       return Array.isArray(element) ? element : [element];
     };
 
     let entityDescriptor = findElement<Record<string, unknown>>(
       metadata,
-      "EntityDescriptor",
+      "EntityDescriptor"
     );
 
     if (!entityDescriptor) {
       const entitiesDescriptor = findElement<Record<string, unknown>>(
         metadata,
-        "EntitiesDescriptor",
+        "EntitiesDescriptor"
       );
       if (entitiesDescriptor) {
         const entityDescriptors = getElementArray<Record<string, unknown>>(
           entitiesDescriptor,
-          "EntityDescriptor",
+          "EntityDescriptor"
         );
         entityDescriptor = entityDescriptors[0];
       }
     }
 
-    if (!entityDescriptor || !entityDescriptor["@_entityID"]) {
+    if (!(entityDescriptor && entityDescriptor["@_entityID"])) {
       return false;
     }
 
     const idpDescriptor = findElement<Record<string, unknown>>(
       entityDescriptor,
-      "IDPSSODescriptor",
+      "IDPSSODescriptor"
     );
     if (!idpDescriptor) {
       return false;
@@ -70,7 +76,7 @@ export function validateIdpMetadata(xml: string): boolean {
 
     const keyDescriptors = getElementArray<Record<string, unknown>>(
       idpDescriptor,
-      "KeyDescriptor",
+      "KeyDescriptor"
     );
     if (keyDescriptors.length === 0) {
       return false;
@@ -86,7 +92,7 @@ export function validateIdpMetadata(xml: string): boolean {
 
     const keyInfo = findElement<Record<string, unknown>>(
       selectedKeyDescriptor,
-      "KeyInfo",
+      "KeyInfo"
     );
     if (!keyInfo) {
       return false;
@@ -99,7 +105,7 @@ export function validateIdpMetadata(xml: string): boolean {
 
     const x509Certificate = findElement<string | string[]>(
       x509Data,
-      "X509Certificate",
+      "X509Certificate"
     );
     let certificate: string | undefined;
 
@@ -117,7 +123,7 @@ export function validateIdpMetadata(xml: string): boolean {
 
     const singleSignOnServices = getElementArray<Record<string, unknown>>(
       idpDescriptor,
-      "SingleSignOnService",
+      "SingleSignOnService"
     );
     if (singleSignOnServices.length === 0) {
       return false;
@@ -129,7 +135,7 @@ export function validateIdpMetadata(xml: string): boolean {
       (service) =>
         service &&
         service["@_Binding"] ===
-          "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+          "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
     );
 
     if (httpRedirectService?.["@_Location"]) {
@@ -139,7 +145,7 @@ export function validateIdpMetadata(xml: string): boolean {
         (service) =>
           service &&
           service["@_Binding"] ===
-            "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+            "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
       );
 
       if (httpPostService?.["@_Location"]) {
@@ -147,7 +153,7 @@ export function validateIdpMetadata(xml: string): boolean {
       } else {
         // Fall back to any available service
         const anyService = singleSignOnServices.find(
-          (service) => service?.["@_Location"],
+          (service) => service?.["@_Location"]
         );
         entryPoint = anyService?.["@_Location"] as string | undefined;
       }

@@ -1,8 +1,8 @@
-import prisma from "@/utils/prisma";
 import { ActionType } from "@/generated/prisma/enums";
 import { createEmailProvider } from "@/utils/email/provider";
-import { calculateSimilarity } from "@/utils/similarity-score";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import { calculateSimilarity } from "@/utils/similarity-score";
 
 const STALE_DAYS = 3;
 
@@ -35,7 +35,13 @@ export async function cleanupAIDraftsForAccount({
   });
 
   if (staleDrafts.length === 0) {
-    return { total: 0, deleted: 0, skippedModified: 0, alreadyGone: 0, errors: 0 };
+    return {
+      total: 0,
+      deleted: 0,
+      skippedModified: 0,
+      alreadyGone: 0,
+      errors: 0,
+    };
   }
 
   const provider = await createEmailProvider({
@@ -50,12 +56,14 @@ export async function cleanupAIDraftsForAccount({
   let errors = 0;
 
   for (const action of staleDrafts) {
-    if (!action.draftId) continue;
+    if (!action.draftId) {
+      continue;
+    }
 
     try {
       const draftDetails = await provider.getDraft(action.draftId);
 
-      if (!draftDetails?.textPlain && !draftDetails?.textHtml) {
+      if (!(draftDetails?.textPlain || draftDetails?.textHtml)) {
         await prisma.executedAction.update({
           where: { id: action.id },
           data: { wasDraftSent: false },
@@ -64,10 +72,7 @@ export async function cleanupAIDraftsForAccount({
         continue;
       }
 
-      const similarityScore = calculateSimilarity(
-        action.content,
-        draftDetails,
-      );
+      const similarityScore = calculateSimilarity(action.content, draftDetails);
 
       if (similarityScore !== 1.0) {
         skippedModified++;
@@ -98,5 +103,11 @@ export async function cleanupAIDraftsForAccount({
     errors,
   });
 
-  return { total: staleDrafts.length, deleted, skippedModified, alreadyGone, errors };
+  return {
+    total: staleDrafts.length,
+    deleted,
+    skippedModified,
+    alreadyGone,
+    errors,
+  };
 }

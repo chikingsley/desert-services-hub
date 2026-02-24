@@ -1,32 +1,30 @@
+import groupBy from "lodash/groupBy";
 import { after } from "next/server";
-import type { ParsedMessage, RuleWithActions } from "@/utils/types";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { analyzeSenderPattern } from "@/app/api/ai/analyze-sender-pattern/call-analyze-pattern-api";
+import type { Rule } from "@/generated/prisma/client";
 import {
   ActionType,
   ExecutedRuleStatus,
   GroupItemSource,
   SystemType,
 } from "@/generated/prisma/enums";
-import type { Rule } from "@/generated/prisma/client";
-import type { ActionItem } from "@/utils/ai/types";
-import { findMatchingRules } from "@/utils/ai/choose-rule/match-rules";
+import { filterNullProperties } from "@/utils";
+import { sanitizeActionFields } from "@/utils/action-item";
 import { getActionItemsWithAiArgs } from "@/utils/ai/choose-rule/choose-args";
 import { executeAct } from "@/utils/ai/choose-rule/execute";
-import prisma from "@/utils/prisma";
-import { withPrismaRetry } from "@/utils/prisma-retry";
+import { findMatchingRules } from "@/utils/ai/choose-rule/match-rules";
 import type { MatchReason } from "@/utils/ai/choose-rule/types";
 import { serializeMatchReasons } from "@/utils/ai/choose-rule/types";
-import { sanitizeActionFields } from "@/utils/action-item";
+import type { ActionItem } from "@/utils/ai/types";
+import { ConditionType } from "@/utils/config";
+import { internalDateToDate } from "@/utils/date";
 import { extractEmailAddress } from "@/utils/email";
-import { filterNullProperties } from "@/utils";
-import { analyzeSenderPattern } from "@/app/api/ai/analyze-sender-pattern/call-analyze-pattern-api";
-import {
-  scheduleDelayedActions,
-  cancelScheduledActions,
-} from "@/utils/scheduled-actions/scheduler";
-import groupBy from "lodash/groupBy";
 import type { EmailProvider } from "@/utils/email/types";
 import type { ModelType } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import { withPrismaRetry } from "@/utils/prisma-retry";
 import {
   CONVERSATION_STATUS_TYPES,
   isConversationStatusType,
@@ -37,9 +35,11 @@ import {
 } from "@/utils/reply-tracker/handle-conversation-status";
 import { removeConflictingThreadStatusLabels } from "@/utils/reply-tracker/label-helpers";
 import { saveLearnedPattern } from "@/utils/rule/learned-patterns";
-import { internalDateToDate } from "@/utils/date";
-import { ConditionType } from "@/utils/config";
-import type { Logger } from "@/utils/logger";
+import {
+  cancelScheduledActions,
+  scheduleDelayedActions,
+} from "@/utils/scheduled-actions/scheduler";
+import type { ParsedMessage, RuleWithActions } from "@/utils/types";
 
 const MODULE = "ai/choose-rule";
 
@@ -110,10 +110,10 @@ export async function runRules({
 
   // Separate regular matches from conversation meta-rule
   const regularMatches = conversationAwareMatches.filter(
-    (m) => !isConversationRule(m.rule.id),
+    (m) => !isConversationRule(m.rule.id)
   );
   const conversationMatch = conversationAwareMatches.find((m) =>
-    isConversationRule(m.rule.id),
+    isConversationRule(m.rule.id)
   );
 
   // Resolve conversation meta-rule to actual rule (e.g., TO_REPLY)
@@ -175,7 +175,7 @@ export async function runRules({
               emailAccount: { connect: { id: emailAccount.id } },
             },
           }),
-        { logger },
+        { logger }
       );
     }
 
@@ -216,7 +216,7 @@ export async function runRules({
       modelType,
       batchTimestamp,
       logger,
-      skipArchive,
+      skipArchive
     );
 
     executedRules.push({
@@ -234,10 +234,10 @@ function prepareRulesWithMetaRule(rules: RuleWithActions[]): {
 } {
   // Separate conversation status rules from regular rules
   const conversationRules = rules.filter((r) =>
-    isConversationStatusType(r.systemType),
+    isConversationStatusType(r.systemType)
   );
   const regularRules = rules.filter(
-    (r) => !isConversationStatusType(r.systemType),
+    (r) => !isConversationStatusType(r.systemType)
   );
 
   // If any conversation status rules are enabled, create a meta-rule
@@ -284,7 +284,7 @@ async function executeMatchedRule(
   modelType: ModelType,
   batchTimestamp: Date,
   logger: Logger,
-  skipArchive?: boolean,
+  skipArchive?: boolean
 ) {
   let actionItems = await getActionItemsWithAiArgs({
     message,
@@ -298,14 +298,14 @@ async function executeMatchedRule(
 
   if (skipArchive) {
     actionItems = actionItems.filter(
-      (item) => item.type !== ActionType.ARCHIVE,
+      (item) => item.type !== ActionType.ARCHIVE
     );
   }
 
   const { immediateActions, delayedActions } = groupBy(actionItems, (item) =>
     item.delayInMinutes != null && item.delayInMinutes > 0
       ? "delayedActions"
-      : "immediateActions",
+      : "immediateActions"
   );
 
   if (isTest) {
@@ -348,7 +348,7 @@ async function executeMatchedRule(
         },
         include: { actionItems: true },
       }),
-    { logger },
+    { logger }
   );
 
   if (rule.systemType === SystemType.COLD_EMAIL) {
@@ -423,7 +423,7 @@ async function executeMatchedRule(
             where: { id: executedRule.id },
             data: { status: ExecutedRuleStatus.APPLIED },
           }),
-        { logger },
+        { logger }
       );
     }
   }
@@ -462,8 +462,8 @@ async function analyzeSenderPatternIfAiMatch({
             emailAccountId,
             from: fromAddress,
           },
-          logger,
-        ),
+          logger
+        )
       );
     }
   }
@@ -476,13 +476,21 @@ function shouldAnalyzeSenderPattern({
   isTest: boolean;
   result: { rule?: Rule | null; matchReasons?: MatchReason[] };
 }) {
-  if (isTest) return false;
-  if (!result.rule) return false;
-  if (isConversationStatusType(result.rule.systemType)) return false;
+  if (isTest) {
+    return false;
+  }
+  if (!result.rule) {
+    return false;
+  }
+  if (isConversationStatusType(result.rule.systemType)) {
+    return false;
+  }
 
   // Cold email blocker has its own AI analysis and stores senders in ColdEmail table
   // No need for learned pattern analysis
-  if (result.rule.systemType === SystemType.COLD_EMAIL) return false;
+  if (result.rule.systemType === SystemType.COLD_EMAIL) {
+    return false;
+  }
 
   // skip if we already matched for static reasons
   // learnings only needed for rules that would run through an ai
@@ -490,7 +498,7 @@ function shouldAnalyzeSenderPattern({
     result.matchReasons?.some(
       (reason) =>
         reason.type === ConditionType.STATIC ||
-        reason.type === ConditionType.LEARNED_PATTERN,
+        reason.type === ConditionType.LEARNED_PATTERN
     )
   ) {
     return false;
@@ -565,7 +573,7 @@ export async function ensureConversationRuleContinuity({
   }
 
   const hasConversationMetaRuleInMatches = matches.some((match) =>
-    isConversationRule(match.rule.id),
+    isConversationRule(match.rule.id)
   );
 
   if (hasConversationMetaRuleInMatches) {
@@ -574,7 +582,7 @@ export async function ensureConversationRuleContinuity({
 
   logger.info(
     "Automatically adding conversation meta rule due to previous application in thread",
-    { module: MODULE },
+    { module: MODULE }
   );
 
   // Find the meta rule in regularRules
@@ -618,7 +626,7 @@ export function limitDraftEmailActions<
       .map((action) => ({
         action,
         hasFixedContent: Boolean(action.content?.trim()),
-      })),
+      }))
   );
 
   if (draftCandidates.length <= 1) {
@@ -641,7 +649,7 @@ export function limitDraftEmailActions<
   return matches.map((match) => {
     const hasExtraDrafts = match.rule.actions.some(
       (action) =>
-        action.type === ActionType.DRAFT_EMAIL && action.id !== selectedDraftId,
+        action.type === ActionType.DRAFT_EMAIL && action.id !== selectedDraftId
     );
 
     if (!hasExtraDrafts) {
@@ -655,7 +663,7 @@ export function limitDraftEmailActions<
         actions: match.rule.actions.filter(
           (action) =>
             action.type !== ActionType.DRAFT_EMAIL ||
-            action.id === selectedDraftId,
+            action.id === selectedDraftId
         ),
       },
     };

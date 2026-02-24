@@ -1,21 +1,21 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  ensureConversationRuleContinuity,
-  CONVERSATION_TRACKING_META_RULE_ID,
-  limitDraftEmailActions,
-  runRules,
-} from "./run-rules";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getAction, getEmail, getEmailAccount } from "@/__tests__/helpers";
+import type { Action } from "@/generated/prisma/client";
 import {
   ActionType,
   ExecutedRuleStatus,
   SystemType,
 } from "@/generated/prisma/enums";
-import type { Action } from "@/generated/prisma/client";
-import { ConditionType } from "@/utils/config";
 import prisma from "@/utils/__mocks__/prisma";
-import type { RuleWithActions } from "@/utils/types";
-import { getAction, getEmailAccount, getEmail } from "@/__tests__/helpers";
+import { ConditionType } from "@/utils/config";
 import { createScopedLogger } from "@/utils/logger";
+import type { RuleWithActions } from "@/utils/types";
+import {
+  CONVERSATION_TRACKING_META_RULE_ID,
+  ensureConversationRuleContinuity,
+  limitDraftEmailActions,
+  runRules,
+} from "./run-rules";
 
 const logger = createScopedLogger("test");
 
@@ -53,7 +53,7 @@ const threadId = "thread-1";
 const createRule = (
   id: string,
   systemType: SystemType | null = null,
-  actions: Action[] = [],
+  actions: Action[] = []
 ): RuleWithActions => ({
   id,
   name: `Rule ${id}`,
@@ -487,7 +487,7 @@ describe("limitDraftEmailActions", () => {
           content: null,
           ruleId: "to-reply-resolved",
         }),
-      ],
+      ]
     );
 
     const resolvedMatches = [
@@ -509,7 +509,7 @@ describe("limitDraftEmailActions", () => {
 
     expect(result[0].rule.actions).toHaveLength(2);
     expect(
-      result[0].rule.actions.find((a) => a.type === ActionType.DRAFT_EMAIL)?.id,
+      result[0].rule.actions.find((a) => a.type === ActionType.DRAFT_EMAIL)?.id
     ).toBe("draft-guest");
     expect(result[1].rule.actions).toHaveLength(1);
     expect(result[1].rule.actions[0].type).toBe(ActionType.LABEL);
@@ -540,12 +540,12 @@ describe("limitDraftEmailActions", () => {
           content: null,
           ruleId: "to-reply-resolved",
         }),
-      ],
+      ]
     );
 
     const result = limitDraftEmailActions(
       [{ rule: guestsRule }, { rule: toReplyRuleResolved }],
-      logger,
+      logger
     );
 
     expect(result[0].rule.actions).toHaveLength(1);
@@ -615,7 +615,7 @@ describe("runRules - double draft prevention", () => {
 
     vi.mocked(getActionItemsWithAiArgs).mockImplementation(
       async ({ selectedRule }) =>
-        selectedRule.actions.map((a) => ({ ...a, type: a.type as ActionType })),
+        selectedRule.actions.map((a) => ({ ...a, type: a.type as ActionType }))
     );
 
     const executedDraftContents: (string | null)[] = [];
@@ -646,7 +646,7 @@ describe("runRules - double draft prevention", () => {
             executedRuleId: `exec-${createCallCount}`,
           })),
         };
-      },
+      }
     );
 
     const message = {
@@ -671,7 +671,7 @@ describe("runRules - double draft prevention", () => {
 
     expect(executedDraftContents).toHaveLength(1);
     expect(executedDraftContents[0]).toBe(
-      "Hi {{name}}, Please submit via our form.",
+      "Hi {{name}}, Please submit via our form."
     );
   });
 });

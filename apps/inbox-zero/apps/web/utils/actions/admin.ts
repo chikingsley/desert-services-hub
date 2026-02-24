@@ -1,23 +1,23 @@
 "use server";
 
 import { z } from "zod";
-import { deleteUser } from "@/utils/user/delete";
-import prisma from "@/utils/prisma";
-import { adminActionClient } from "@/utils/actions/safe-action";
-import { SafeError } from "@/utils/error";
-import { createEmailProvider } from "@/utils/email/provider";
-import { hash } from "@/utils/hash";
 import {
-  hashEmailBody,
-  convertGmailUrlBody,
-  getLabelsBody,
-  watchEmailsBody,
-  getUserInfoBody,
-  disableAllRulesBody,
   cleanupDraftsBody,
+  convertGmailUrlBody,
+  disableAllRulesBody,
+  getLabelsBody,
+  getUserInfoBody,
+  hashEmailBody,
+  watchEmailsBody,
 } from "@/utils/actions/admin.validation";
-import { ensureEmailAccountsWatched } from "@/utils/email/watch-manager";
+import { adminActionClient } from "@/utils/actions/safe-action";
 import { cleanupAIDraftsForAccount } from "@/utils/ai/draft-cleanup";
+import { createEmailProvider } from "@/utils/email/provider";
+import { ensureEmailAccountsWatched } from "@/utils/email/watch-manager";
+import { SafeError } from "@/utils/error";
+import { hash } from "@/utils/hash";
+import prisma from "@/utils/prisma";
+import { deleteUser } from "@/utils/user/delete";
 
 export const adminProcessHistoryAction = adminActionClient
   .metadata({ name: "adminProcessHistory" })
@@ -26,7 +26,7 @@ export const adminProcessHistoryAction = adminActionClient
       emailAddress: z.string(),
       historyId: z.number().optional(),
       startHistoryId: z.number().optional(),
-    }),
+    })
   )
   .action(
     async ({
@@ -72,7 +72,7 @@ export const adminProcessHistoryAction = adminActionClient
           conversationId: startHistoryId?.toString(),
         },
       });
-    },
+    }
   );
 
 export const adminDeleteAccountAction = adminActionClient
@@ -81,13 +81,15 @@ export const adminDeleteAccountAction = adminActionClient
   .action(async ({ parsedInput: { email }, ctx: { logger } }) => {
     try {
       const userToDelete = await prisma.user.findUnique({ where: { email } });
-      if (!userToDelete) throw new SafeError("User not found");
+      if (!userToDelete) {
+        throw new SafeError("User not found");
+      }
 
       await deleteUser({ userId: userToDelete.id, logger });
     } catch (error) {
       logger.error("Failed to delete user", { email, error });
       throw new SafeError(
-        `Failed to delete user: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to delete user: ${error instanceof Error ? error.message : String(error)}`
       );
     }
 
@@ -149,7 +151,7 @@ export const adminConvertGmailUrlAction = adminActionClient
 
       if (!message) {
         throw new SafeError(
-          `Could not find message with RFC822 Message-ID: ${cleanMessageId}`,
+          `Could not find message with RFC822 Message-ID: ${cleanMessageId}`
         );
       }
 
@@ -171,10 +173,10 @@ export const adminConvertGmailUrlAction = adminActionClient
 
       return {
         threadId: thread.id,
-        messages: messages,
+        messages,
         rfc822MessageId: cleanMessageId,
       };
-    },
+    }
   );
 
 export const adminGetLabelsAction = adminActionClient
@@ -265,7 +267,7 @@ export const adminGetUserInfoAction = adminActionClient
         : [];
 
     const lastExecutedMap = new Map(
-      lastExecutedRules.map((r) => [r.emailAccountId, r._max.createdAt]),
+      lastExecutedRules.map((r) => [r.emailAccountId, r._max.createdAt])
     );
 
     return {

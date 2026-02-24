@@ -1,9 +1,9 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { generateFollowUpDraft } from "./generate-draft";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { EmailProvider } from "@/utils/email/types";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
 import { createScopedLogger } from "@/utils/logger";
 import type { ParsedMessage } from "@/utils/types";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailProvider } from "@/utils/email/types";
+import { generateFollowUpDraft } from "./generate-draft";
 
 vi.mock("server-only", () => ({}));
 
@@ -65,7 +65,7 @@ const createMockEmailAccount = (): EmailAccountWithAI =>
 const createMockMessage = (
   overrides: Partial<ParsedMessage> & {
     headers?: Partial<ParsedMessage["headers"]>;
-  } = {},
+  } = {}
 ): ParsedMessage => {
   const { headers: headerOverrides, ...rest } = overrides;
   return {
@@ -92,7 +92,7 @@ const createMockMessage = (
 };
 
 const createMockProvider = (
-  overrides: Partial<Record<keyof EmailProvider, unknown>> = {},
+  overrides: Partial<Record<keyof EmailProvider, unknown>> = {}
 ): EmailProvider =>
   ({
     getThread: vi.fn().mockResolvedValue({
@@ -158,7 +158,7 @@ describe("generateFollowUpDraft", () => {
         content: expect.any(String),
       }),
       "user@example.com",
-      undefined,
+      undefined
     );
   });
 
@@ -199,7 +199,7 @@ describe("generateFollowUpDraft", () => {
         content: expect.any(String),
       }),
       "user@example.com",
-      undefined,
+      undefined
     );
   });
 
@@ -249,7 +249,7 @@ describe("generateFollowUpDraft", () => {
         to: "bob@external.com",
       }),
       "user@example.com",
-      undefined,
+      undefined
     );
   });
 
@@ -273,13 +273,13 @@ describe("generateFollowUpDraft", () => {
     expect(mockProvider.draftEmail).not.toHaveBeenCalled();
     expect(mockLogger.warn).toHaveBeenCalledWith(
       "Thread has no messages",
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
   it("succeeds even when tracker update fails after draft creation", async () => {
     vi.mocked(prisma.threadTracker.update).mockRejectedValue(
-      new Error("Record to update not found"),
+      new Error("Record to update not found")
     );
 
     const externalMessage = createMockMessage({

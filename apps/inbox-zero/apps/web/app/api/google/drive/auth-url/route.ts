@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { withEmailAccount } from "@/utils/middleware";
 import {
-  getGoogleDriveOAuth2Url,
   type GoogleDriveAccessLevel,
+  getGoogleDriveOAuth2Url,
 } from "@/utils/drive/client";
 import { DRIVE_STATE_COOKIE_NAME } from "@/utils/drive/constants";
+import { withEmailAccount } from "@/utils/middleware";
 import {
   generateOAuthState,
   oauthStateCookieOptions,
@@ -26,11 +26,11 @@ export const GET = withEmailAccount(
     response.cookies.set(
       DRIVE_STATE_COOKIE_NAME,
       state,
-      oauthStateCookieOptions,
+      oauthStateCookieOptions
     );
 
     return response;
-  },
+  }
 );
 
 const getAuthUrl = ({

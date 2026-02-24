@@ -19,7 +19,7 @@ function getResearchCacheKey(
   userId: string,
   source: ResearchSource,
   email: string,
-  name: string | undefined,
+  name: string | undefined
 ) {
   const normalizedEmail = email.trim().toLowerCase();
   const normalizedName = name?.trim().toLowerCase() ?? "";
@@ -38,9 +38,11 @@ function getUserKeyPattern(userId: string, source?: ResearchSource) {
 
 export async function clearCachedResearchForUser(
   userId: string,
-  source?: ResearchSource,
+  source?: ResearchSource
 ): Promise<number> {
-  if (!isRedisConfigured()) return 0;
+  if (!isRedisConfigured()) {
+    return 0;
+  }
 
   const pattern = getUserKeyPattern(userId, source);
   let deletedCount = 0;
@@ -83,13 +85,15 @@ export async function getCachedResearch(
   userId: string,
   source: ResearchSource,
   email: string,
-  name: string | undefined,
+  name: string | undefined
 ): Promise<string | null> {
-  if (!isRedisConfigured()) return null;
+  if (!isRedisConfigured()) {
+    return null;
+  }
 
   try {
     return await redis.get<string>(
-      getResearchCacheKey(userId, source, email, name),
+      getResearchCacheKey(userId, source, email, name)
     );
   } catch (error) {
     logger.error("Failed to get cached research", { source, email, error });
@@ -102,9 +106,11 @@ export async function setCachedResearch(
   source: ResearchSource,
   email: string,
   name: string | undefined,
-  content: string,
+  content: string
 ): Promise<void> {
-  if (!isRedisConfigured()) return;
+  if (!isRedisConfigured()) {
+    return;
+  }
 
   if (!content?.trim()) {
     logger.warn("Skipping cache: content is empty", { source, email });

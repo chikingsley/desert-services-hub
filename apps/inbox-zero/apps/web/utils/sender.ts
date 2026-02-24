@@ -1,5 +1,5 @@
-import prisma from "@/utils/prisma";
 import { extractEmailAddress } from "@/utils/email";
+import prisma from "@/utils/prisma";
 
 export async function findSenderByEmail({
   emailAccountId,
@@ -8,7 +8,9 @@ export async function findSenderByEmail({
   emailAccountId: string;
   email: string;
 }) {
-  if (!email) return null;
+  if (!email) {
+    return null;
+  }
   const extractedEmail = extractEmailAddress(email);
 
   const newsletter = await prisma.newsletter.findFirst({
@@ -18,12 +20,15 @@ export async function findSenderByEmail({
     },
   });
 
-  if (!newsletter) return null;
+  if (!newsletter) {
+    return null;
+  }
   if (
     newsletter.email !== extractedEmail ||
     newsletter.email.endsWith(`<${extractedEmail}>`)
-  )
+  ) {
     return null;
+  }
 
   return newsletter;
 }

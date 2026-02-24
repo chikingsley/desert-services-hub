@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { AlertCircle } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -10,8 +10,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { logOut } from "@/utils/user";
 import { env } from "@/env";
+import { logOut } from "@/utils/user";
 
 // TODO would be better to have a consistent definition here. didn't want to break things.
 export function ErrorDisplay(props: {
@@ -25,7 +25,7 @@ export function ErrorDisplay(props: {
     return (
       <Empty>
         <EmptyHeader>
-          <EmptyMedia variant="icon" className="bg-destructive/10">
+          <EmptyMedia className="bg-destructive/10" variant="icon">
             <AlertCircle className="text-destructive" />
           </EmptyMedia>
           <EmptyTitle>There was an error</EmptyTitle>
@@ -39,7 +39,7 @@ export function ErrorDisplay(props: {
     return (
       <Empty>
         <EmptyHeader>
-          <EmptyMedia variant="icon" className="bg-destructive/10">
+          <EmptyMedia className="bg-destructive/10" variant="icon">
             <AlertCircle className="text-destructive" />
           </EmptyMedia>
           <EmptyTitle>There was an error</EmptyTitle>
@@ -61,22 +61,22 @@ export function ErrorDisplay(props: {
 export const NotLoggedIn = () => {
   return (
     <div className="flex flex-col items-center justify-center sm:p-20 md:p-32">
-      <div className="text-lg text-gray-700">You are not signed in 😞</div>
+      <div className="text-gray-700 text-lg">You are not signed in 😞</div>
       <Button
-        variant="outline"
         className="mt-2"
         onClick={() => logOut("/login")}
+        variant="outline"
       >
         Sign in
       </Button>
       <div className="mt-8">
         <Image
-          src="/images/illustrations/falling.svg"
           alt=""
-          width={400}
-          height={400}
-          unoptimized
           className="dark:brightness-90 dark:invert"
+          height={400}
+          src="/images/illustrations/falling.svg"
+          unoptimized
+          width={400}
         />
       </div>
     </div>
@@ -84,10 +84,14 @@ export const NotLoggedIn = () => {
 };
 
 const safeErrorToString = (
-  error: string | object | undefined,
+  error: string | object | undefined
 ): string | null => {
-  if (!error) return null;
-  if (typeof error === "string") return error;
+  if (!error) {
+    return null;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
   if (typeof error === "object") {
     // Handle Zod validation errors with issues array
     if ("issues" in error && Array.isArray(error.issues)) {

@@ -14,7 +14,7 @@ const OPENROUTER_MODELS_URLS = [
 ];
 const OUTPUT_FILE = new URL(
   "../utils/llms/pricing.generated.ts",
-  import.meta.url,
+  import.meta.url
 );
 
 const openRouterModelSchema = z.object({
@@ -56,7 +56,7 @@ async function main() {
   await writeFile(OUTPUT_FILE, fileContents, "utf8");
 
   console.log(
-    `Generated ${Object.keys(pricingByModel).length} pricing entries at ${fileURLToPath(OUTPUT_FILE)}`,
+    `Generated ${Object.keys(pricingByModel).length} pricing entries at ${fileURLToPath(OUTPUT_FILE)}`
   );
 }
 
@@ -69,7 +69,9 @@ async function fetchOpenRouterModels(headers: Record<string, string>) {
       const json = (await response.json()) as unknown;
       const parsed = openRouterModelsResponseSchema.safeParse(json);
 
-      if (parsed.success) return parsed.data;
+      if (parsed.success) {
+        return parsed.data;
+      }
 
       const issues = parsed.error.issues
         .map((issue) => {
@@ -78,22 +80,26 @@ async function fetchOpenRouterModels(headers: Record<string, string>) {
         })
         .join("; ");
       lastError = new Error(
-        `Invalid OpenRouter models response from ${url}: ${issues}`,
+        `Invalid OpenRouter models response from ${url}: ${issues}`
       );
       continue;
     }
 
-    if (response.status === 404) continue;
+    if (response.status === 404) {
+      continue;
+    }
 
     lastError = new Error(
-      `Failed to fetch OpenRouter models from ${url}: [${response.status}] ${await response.text()}`,
+      `Failed to fetch OpenRouter models from ${url}: [${response.status}] ${await response.text()}`
     );
   }
 
-  if (lastError) throw lastError;
+  if (lastError) {
+    throw lastError;
+  }
 
   throw new Error(
-    `Failed to fetch OpenRouter models from all endpoints: ${OPENROUTER_MODELS_URLS.join(", ")}`,
+    `Failed to fetch OpenRouter models from all endpoints: ${OPENROUTER_MODELS_URLS.join(", ")}`
   );
 }
 
@@ -102,14 +108,16 @@ function buildPricingMap(payload: OpenRouterModelsResponse) {
 
   for (const model of payload.data) {
     const pricing = parsePricing(model.pricing);
-    if (!pricing) continue;
+    if (!pricing) {
+      continue;
+    }
     openRouterPricingByModelId[model.id] = pricing;
   }
 
   const supportedModelPricing: Record<string, ModelPricing> = {};
   const unresolvedModels: string[] = [];
   const supportedModelIds = Object.keys(STATIC_MODEL_PRICING).sort((a, b) =>
-    a.localeCompare(b),
+    a.localeCompare(b)
   );
 
   for (const supportedModelId of supportedModelIds) {
@@ -129,7 +137,7 @@ function buildPricingMap(payload: OpenRouterModelsResponse) {
 
   if (unresolvedModels.length) {
     console.log(
-      `No OpenRouter pricing match for ${unresolvedModels.length} supported models`,
+      `No OpenRouter pricing match for ${unresolvedModels.length} supported models`
     );
   }
 
@@ -137,11 +145,15 @@ function buildPricingMap(payload: OpenRouterModelsResponse) {
 }
 
 function parsePricing(pricing: OpenRouterModel["pricing"]) {
-  if (!pricing) return null;
+  if (!pricing) {
+    return null;
+  }
 
   const input = parsePrice(pricing.prompt);
   const output = parsePrice(pricing.completion);
-  if (input === null || output === null) return null;
+  if (input === null || output === null) {
+    return null;
+  }
 
   const cachedInput = parsePrice(pricing.input_cache_read) ?? input;
 
@@ -153,8 +165,12 @@ function parsePricing(pricing: OpenRouterModel["pricing"]) {
 }
 
 function parsePrice(value: string | number | null | undefined) {
-  if (typeof value === "number") return Number.isFinite(value) ? value : null;
-  if (typeof value !== "string") return null;
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value !== "string") {
+    return null;
+  }
 
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) ? parsed : null;
@@ -177,7 +193,7 @@ function buildOpenRouterModelIdCandidates(supportedModelId: string): string[] {
       `anthropic/${noOnlineSuffix}`,
       `google/${noOnlineSuffix}`,
       `meta-llama/${noOnlineSuffix}`,
-      `moonshotai/${noOnlineSuffix}`,
+      `moonshotai/${noOnlineSuffix}`
     );
   }
 

@@ -1,13 +1,13 @@
-import Link from "next/link";
 import { AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 export default function NoAccessPage() {
   return (

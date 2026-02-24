@@ -21,7 +21,7 @@ export async function withRetry<T>(
     retryIf: (error: unknown) => boolean;
     maxRetries: number;
     delayMs: number;
-  },
+  }
 ): Promise<T> {
   let lastError: unknown;
 
@@ -68,9 +68,15 @@ export function isTransientNetworkError(error: unknown): boolean {
         code?: string;
         cause?: { code?: string };
       };
-      if (cause.message) errorText += ` ${cause.message}`;
-      if (cause.code) errorText += ` ${cause.code}`;
-      if (cause.cause?.code) errorText += ` ${cause.cause.code}`;
+      if (cause.message) {
+        errorText += ` ${cause.message}`;
+      }
+      if (cause.code) {
+        errorText += ` ${cause.code}`;
+      }
+      if (cause.cause?.code) {
+        errorText += ` ${cause.cause.code}`;
+      }
     }
   } else {
     try {
@@ -98,7 +104,7 @@ export async function withNetworkRetry<T>(
   options: {
     label: string;
     shouldRetry?: (error: unknown) => boolean;
-  },
+  }
 ): Promise<T> {
   const { label, shouldRetry } = options;
 
@@ -135,9 +141,9 @@ export async function withNetworkRetry<T>(
 }
 
 interface LLMErrorInfo {
-  retryable: boolean;
   isRateLimit: boolean;
   retryAfterMs?: number;
+  retryable: boolean;
 }
 
 /**
@@ -188,13 +194,13 @@ export function extractLLMErrorInfo(error: unknown): LLMErrorInfo {
 
   if (retryAfterHeader) {
     const seconds = Number.parseInt(retryAfterHeader, 10);
-    if (!Number.isNaN(seconds)) {
-      retryAfterMs = seconds * 1000;
-    } else {
+    if (Number.isNaN(seconds)) {
       const retryDate = new Date(retryAfterHeader);
       if (!Number.isNaN(retryDate.getTime())) {
         retryAfterMs = Math.max(0, retryDate.getTime() - Date.now());
       }
+    } else {
+      retryAfterMs = seconds * 1000;
     }
   }
 
@@ -221,7 +227,7 @@ export async function withLLMRetry<T>(
   options: {
     label: string;
     maxRetries?: number;
-  },
+  }
 ): Promise<T> {
   const { label, maxRetries = 3 } = options;
 

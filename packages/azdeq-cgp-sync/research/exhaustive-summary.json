@@ -2,9 +2,7 @@
   "generatedAt": "2026-02-21T06:45:21Z",
   "endpoint": "https://my.azdeq.gov/deq-search/service/permit/cgp",
   "extractionMethod": "ltfid range crawl (1..116955) with per-id retry",
-  "knownHardFailingLtfIds": [
-    89926
-  ],
+  "knownHardFailingLtfIds": [89926],
   "totals": {
     "totalRows": 21670,
     "distinctLtf": 21670,

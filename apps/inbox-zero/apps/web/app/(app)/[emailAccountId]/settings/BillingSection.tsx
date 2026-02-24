@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePremium } from "@/components/PremiumAlert";
 import { ManageSubscription } from "@/app/(app)/premium/ManageSubscription";
 import { LoadingContent } from "@/components/LoadingContent";
+import { usePremium } from "@/components/PremiumAlert";
 import { Button } from "@/components/ui/button";
 import {
   Item,
+  ItemActions,
   ItemContent,
   ItemTitle,
-  ItemActions,
 } from "@/components/ui/item";
 import type { PremiumTier } from "@/generated/prisma/enums";
 
@@ -24,13 +24,11 @@ export function BillingSection() {
         premium.stripeSubscriptionId) ? (
         <Item size="sm">
           <ItemContent>
-            <ItemTitle>
-              {getPlanDisplayName(premium.tier)} plan
-            </ItemTitle>
+            <ItemTitle>{getPlanDisplayName(premium.tier)} plan</ItemTitle>
           </ItemContent>
           <ItemActions>
             <ManageSubscription premium={premium} />
-            <Button asChild variant="outline" size="sm">
+            <Button asChild size="sm" variant="outline">
               <Link href="/settings">Open settings</Link>
             </Button>
           </ItemActions>
@@ -41,7 +39,7 @@ export function BillingSection() {
             <ItemTitle>No active plan</ItemTitle>
           </ItemContent>
           <ItemActions>
-            <Button asChild variant="outline" size="sm">
+            <Button asChild size="sm" variant="outline">
               <Link href="/settings">Open settings</Link>
             </Button>
           </ItemActions>
@@ -52,7 +50,9 @@ export function BillingSection() {
 }
 
 function getPlanDisplayName(tier: PremiumTier | null | undefined): string {
-  if (!tier) return "Premium";
+  if (!tier) {
+    return "Premium";
+  }
 
   const tierMap: Partial<Record<PremiumTier, string>> = {
     STARTER_MONTHLY: "Starter",

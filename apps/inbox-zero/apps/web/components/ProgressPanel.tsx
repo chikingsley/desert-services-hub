@@ -1,9 +1,9 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { cn } from "@/utils";
 import { LoadingMiniSpinner } from "@/components/Loading";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/utils";
 
 export function ProgressPanel({
   totalItems,
@@ -22,26 +22,28 @@ export function ProgressPanel({
   const progress = (totalProcessed / totalItems) * 100;
   const isCompleted = progress === 100;
 
-  if (!totalItems) return null;
+  if (!totalItems) {
+    return null;
+  }
 
   return (
     <div className="pt-4 pb-2">
       <AnimatePresence mode="wait">
         <motion.div
-          key="progress"
-          initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          initial={{ opacity: 1 }}
+          key="progress"
           transition={{ duration: 0.3 }}
         >
           <Progress
-            value={progress}
             innerClassName={isCompleted ? "bg-green-500" : "bg-blue-500"}
+            value={progress}
           />
-          <div className="mt-2 flex justify-between text-sm" aria-live="polite">
+          <div aria-live="polite" className="mt-2 flex justify-between text-sm">
             <span
               className={cn(
                 "text-muted-foreground",
-                isCompleted ? "text-green-500" : "",
+                isCompleted ? "text-green-500" : ""
               )}
             >
               {isCompleted ? (

@@ -4,7 +4,7 @@ import type { OrgStatsParams } from "@/app/api/organizations/[organizationId]/st
 
 export function useOrgStatsEmailBuckets(
   organizationId: string,
-  options?: OrgStatsParams,
+  options?: OrgStatsParams
 ) {
   const params = new URLSearchParams();
   if (options?.fromDate) {
@@ -16,6 +16,6 @@ export function useOrgStatsEmailBuckets(
   const queryString = params.toString();
 
   return useSWR<OrgEmailBucketsResponse>(
-    `/api/organizations/${organizationId}/stats/email-buckets${queryString ? `?${queryString}` : ""}`,
+    `/api/organizations/${organizationId}/stats/email-buckets${queryString ? `?${queryString}` : ""}`
   );
 }

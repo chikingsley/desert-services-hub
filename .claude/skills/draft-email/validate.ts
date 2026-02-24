@@ -9,10 +9,10 @@
 type Severity = "error" | "warning";
 
 interface Issue {
-  severity: Severity;
-  rule: string;
-  message: string;
   match?: string;
+  message: string;
+  rule: string;
+  severity: Severity;
 }
 
 const FORBIDDEN_PHRASES = [

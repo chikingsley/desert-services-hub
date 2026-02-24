@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useAction } from "next-safe-action/hooks";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Badge } from "@/components/Badge";
+import { Input } from "@/components/Input";
 import { SettingCard } from "@/components/SettingCard";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Toggle } from "@/components/Toggle";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,35 +18,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/Input";
-import { Toggle } from "@/components/Toggle";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/Badge";
 import { useActionTiming } from "@/hooks/useActionTiming";
 import { useEmailAccountFull } from "@/hooks/useEmailAccountFull";
 import { useFollowUpRemindersEnabled } from "@/hooks/useFeatureFlags";
 import { useAccount } from "@/providers/EmailAccountProvider";
-import { useAction } from "next-safe-action/hooks";
 import {
+  scanFollowUpRemindersAction,
   toggleFollowUpRemindersAction,
   updateFollowUpSettingsAction,
-  scanFollowUpRemindersAction,
 } from "@/utils/actions/follow-up-reminders";
 import {
-  type SaveFollowUpSettingsFormInput,
   DEFAULT_FOLLOW_UP_DAYS,
+  type SaveFollowUpSettingsFormInput,
 } from "@/utils/actions/follow-up-reminders.validation";
-import { toast } from "sonner";
-import { toastError, toastSuccess } from "@/components/Toast";
+import { isGoogleProvider } from "@/utils/email/provider-types";
+import { FOLLOW_UP_LABEL } from "@/utils/label";
 import { getEmailTerminology } from "@/utils/terminology";
 import { getGmailBasicSearchUrl } from "@/utils/url";
-import { FOLLOW_UP_LABEL } from "@/utils/label";
-import { isGoogleProvider } from "@/utils/email/provider-types";
 
 export function FollowUpRemindersSetting() {
   const isFeatureEnabled = useFollowUpRemindersEnabled();
 
-  if (!isFeatureEnabled) return null;
+  if (!isFeatureEnabled) {
+    return null;
+  }
 
   return <FollowUpRemindersSettingContent />;
 }
@@ -62,12 +64,14 @@ function FollowUpRemindersSettingContent() {
           description: error.error?.serverError ?? "Failed to update settings",
         });
       },
-    },
+    }
   );
 
   const handleToggle = useCallback(
     (enable: boolean) => {
-      if (!data) return;
+      if (!data) {
+        return;
+      }
 
       const optimisticData = {
         ...data,
@@ -77,12 +81,11 @@ function FollowUpRemindersSettingContent() {
       mutate(optimisticData as typeof data, false);
       executeToggle({ enabled: enable });
     },
-    [data, mutate, executeToggle],
+    [data, mutate, executeToggle]
   );
 
   return (
     <SettingCard
-      title="Follow-up reminders"
       description="Get reminded when you haven't heard back or haven't replied."
       right={
         isLoading ? (
@@ -90,20 +93,20 @@ function FollowUpRemindersSettingContent() {
         ) : (
           <div className="flex items-center gap-2">
             {enabled && (
-              <Dialog open={open} onOpenChange={setOpen}>
+              <Dialog onOpenChange={setOpen} open={open}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button size="sm" variant="outline">
                     Configure
                   </Button>
                 </DialogTrigger>
                 <FollowUpSettingsDialog
                   emailAccountId={data?.id ?? ""}
                   emailAddress={data?.email ?? ""}
-                  followUpAwaitingReplyDays={data?.followUpAwaitingReplyDays}
-                  followUpNeedsReplyDays={data?.followUpNeedsReplyDays}
                   followUpAutoDraftEnabled={
                     data?.followUpAutoDraftEnabled ?? true
                   }
+                  followUpAwaitingReplyDays={data?.followUpAwaitingReplyDays}
+                  followUpNeedsReplyDays={data?.followUpNeedsReplyDays}
                   onSuccess={() => {
                     mutate();
                     setOpen(false);
@@ -112,14 +115,15 @@ function FollowUpRemindersSettingContent() {
               </Dialog>
             )}
             <Toggle
-              name="follow-up-enabled"
-              enabled={enabled}
-              onChange={handleToggle}
               disabled={!data}
+              enabled={enabled}
+              name="follow-up-enabled"
+              onChange={handleToggle}
             />
           </div>
         )
       }
+      title="Follow-up reminders"
     />
   );
 }
@@ -172,7 +176,7 @@ function FollowUpSettingsDialog({
           description: error.error?.serverError ?? "Failed to save settings",
         });
       },
-    },
+    }
   );
 
   const { execute: executeScan, isExecuting: isScanning } = useAction(
@@ -192,7 +196,7 @@ function FollowUpSettingsDialog({
           });
         }
       },
-    },
+    }
   );
 
   const onSubmit = (formData: SaveFollowUpSettingsFormInput) => {
@@ -219,36 +223,36 @@ function FollowUpSettingsDialog({
         </DialogDescription>
       </DialogHeader>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <Input
-          type="number"
-          name="followUpAwaitingReplyDays"
-          label="Remind me when they haven't replied after"
-          registerProps={register("followUpAwaitingReplyDays")}
           error={errors.followUpAwaitingReplyDays}
-          min={0.001}
+          label="Remind me when they haven't replied after"
           max={90}
-          step={0.001}
+          min={0.001}
+          name="followUpAwaitingReplyDays"
+          registerProps={register("followUpAwaitingReplyDays")}
           rightText="days"
+          step={0.001}
+          type="number"
         />
 
         <Input
-          type="number"
-          name="followUpNeedsReplyDays"
-          label="Remind me when I haven't replied after"
-          registerProps={register("followUpNeedsReplyDays")}
           error={errors.followUpNeedsReplyDays}
-          min={0.001}
+          label="Remind me when I haven't replied after"
           max={90}
-          step={0.001}
+          min={0.001}
+          name="followUpNeedsReplyDays"
+          registerProps={register("followUpNeedsReplyDays")}
           rightText="days"
+          step={0.001}
+          type="number"
         />
 
         <div className="flex items-center justify-between">
           <div>
             <label
+              className="block font-medium text-foreground text-sm"
               htmlFor="followUpAutoDraftEnabled"
-              className="block text-sm font-medium text-foreground"
             >
               Auto-generate drafts
             </label>
@@ -257,20 +261,17 @@ function FollowUpSettingsDialog({
             </p>
           </div>
           <Toggle
-            name="followUpAutoDraftEnabled"
             enabled={autoDraftValue}
+            name="followUpAutoDraftEnabled"
             onChange={(value) => setValue("followUpAutoDraftEnabled", value)}
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <Button type="submit" size="sm" loading={isExecuting}>
+          <Button loading={isExecuting} size="sm" type="submit">
             Save
           </Button>
           <Button
-            type="button"
-            variant="outline"
-            size="sm"
             loading={isScanning}
             onClick={() => {
               startScanTiming();
@@ -280,6 +281,9 @@ function FollowUpSettingsDialog({
               });
               executeScan({});
             }}
+            size="sm"
+            type="button"
+            variant="outline"
           >
             Find follow-ups
           </Button>
@@ -291,12 +295,12 @@ function FollowUpSettingsDialog({
 
 function showScanCompleteToast(
   provider: string | undefined,
-  emailAddress: string,
+  emailAddress: string
 ) {
   if (isGoogleProvider(provider)) {
     const searchUrl = getGmailBasicSearchUrl(
       emailAddress,
-      `label:${FOLLOW_UP_LABEL}`,
+      `label:${FOLLOW_UP_LABEL}`
     );
     toast.success("Scan complete!", {
       description: "View your follow-ups in Gmail.",

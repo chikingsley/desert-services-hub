@@ -25,9 +25,9 @@ type StormwaterKind = "noi-guide" | "quickstart";
 type CliDomain = "safety" | "quoting" | "stormwater";
 
 interface CliRoute {
+  actionArg?: string;
   domain?: string;
   kindArg?: string;
-  actionArg?: string;
   rest: string[];
 }
 

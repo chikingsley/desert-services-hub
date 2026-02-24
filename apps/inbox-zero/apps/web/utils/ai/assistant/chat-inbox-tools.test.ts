@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ParsedMessage } from "@/utils/types";
 import prisma from "@/utils/__mocks__/prisma";
-import { createScopedLogger } from "@/utils/logger";
 import { createEmailProvider } from "@/utils/email/provider";
+import { createScopedLogger } from "@/utils/logger";
+import type { ParsedMessage } from "@/utils/types";
 import { replyEmailTool, sendEmailTool } from "./chat-inbox-tools";
 
 vi.mock("server-only", () => ({}));
@@ -41,7 +41,9 @@ describe("chat inbox tools", () => {
       logger,
     });
 
-    if (!toolInstance.execute) throw new Error("sendEmailTool execute missing");
+    if (!toolInstance.execute) {
+      throw new Error("sendEmailTool execute missing");
+    }
 
     const result = await toolInstance.execute(
       {
@@ -49,7 +51,7 @@ describe("chat inbox tools", () => {
         subject: "Hello",
         messageHtml: "<p>Hi there</p>",
       },
-      {} as any,
+      {} as any
     );
 
     expect(sendEmailWithHtml).toHaveBeenCalledWith({
@@ -102,21 +104,22 @@ describe("chat inbox tools", () => {
       logger,
     });
 
-    if (!toolInstance.execute)
+    if (!toolInstance.execute) {
       throw new Error("replyEmailTool execute missing");
+    }
 
     const result = await toolInstance.execute(
       {
         messageId: "message-1",
         content: "Thanks for the update.",
       },
-      {} as any,
+      {} as any
     );
 
     expect(getMessage).toHaveBeenCalledWith("message-1");
     expect(replyToEmail).toHaveBeenCalledWith(
       message,
-      "Thanks for the update.",
+      "Thanks for the update."
     );
     expect(result).toMatchObject({
       success: true,

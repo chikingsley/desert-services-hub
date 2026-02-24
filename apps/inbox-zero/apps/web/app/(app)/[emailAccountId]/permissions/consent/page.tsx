@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { PageHeading, TypographyP } from "@/components/Typography";
-import { useAccount } from "@/providers/EmailAccountProvider";
+import { useState } from "react";
 import { toastError } from "@/components/Toast";
+import { PageHeading, TypographyP } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import { getAccountLinkingUrl } from "@/utils/account-linking";
 
 export default function PermissionsConsentPage() {
@@ -44,16 +44,16 @@ export default function PermissionsConsentPage() {
 
       <Button
         className="mt-4"
-        onClick={handleReconnect}
-        loading={isReconnecting}
         disabled={isReconnecting || accountLoading}
+        loading={isReconnecting}
+        onClick={handleReconnect}
       >
         Reconnect account
       </Button>
 
       <p className="mt-8 text-center text-muted-foreground">
         Having trouble?{" "}
-        <Link href="/logout" className="underline hover:text-primary">
+        <Link className="underline hover:text-primary" href="/logout">
           Sign out
         </Link>{" "}
         and sign back in again.
@@ -61,12 +61,12 @@ export default function PermissionsConsentPage() {
 
       <div className="mt-8">
         <Image
-          src="/images/illustrations/falling.svg"
           alt=""
-          width={400}
-          height={400}
-          unoptimized
           className="dark:brightness-90 dark:invert"
+          height={400}
+          src="/images/illustrations/falling.svg"
+          unoptimized
+          width={400}
         />
       </div>
     </div>

@@ -1,11 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { SystemType } from "@/generated/prisma/enums";
 import { getRuleConfig } from "@/utils/rule/consts";
 import type { RuleWithActions } from "@/utils/types";
 
 function getCustomizedRules(conversationRules: RuleWithActions[]) {
   return conversationRules.filter((r) => {
-    if (!r.enabled || !r.instructions || !r.systemType) return false;
+    if (!(r.enabled && r.instructions && r.systemType)) {
+      return false;
+    }
     const defaultInstructions = getRuleConfig(r.systemType).instructions;
     return r.instructions !== defaultInstructions;
   });
@@ -14,7 +16,7 @@ function getCustomizedRules(conversationRules: RuleWithActions[]) {
 function createMockRule(
   systemType: SystemType,
   instructions: string | null,
-  enabled = true,
+  enabled = true
 ): RuleWithActions {
   return {
     id: `rule-${systemType}`,
@@ -36,15 +38,15 @@ describe("getCustomizedRules", () => {
       createMockRule(SystemType.TO_REPLY, "Emails I need to respond to"),
       createMockRule(
         SystemType.FYI,
-        "Important emails I should know about, but don't need to reply to",
+        "Important emails I should know about, but don't need to reply to"
       ),
       createMockRule(
         SystemType.AWAITING_REPLY,
-        "Emails where I'm waiting for someone to get back to me",
+        "Emails where I'm waiting for someone to get back to me"
       ),
       createMockRule(
         SystemType.ACTIONED,
-        "Conversations that are done, nothing left to do",
+        "Conversations that are done, nothing left to do"
       ),
     ];
 
@@ -57,11 +59,11 @@ describe("getCustomizedRules", () => {
       createMockRule(SystemType.TO_REPLY, "Emails I need to respond to"),
       createMockRule(
         SystemType.FYI,
-        "Important emails from my team that I should read",
+        "Important emails from my team that I should read"
       ),
       createMockRule(
         SystemType.AWAITING_REPLY,
-        "Emails where I'm waiting for someone to get back to me",
+        "Emails where I'm waiting for someone to get back to me"
       ),
     ];
 
@@ -75,7 +77,7 @@ describe("getCustomizedRules", () => {
       createMockRule(
         SystemType.TO_REPLY,
         "Custom to reply instructions",
-        false,
+        false
       ),
     ];
 

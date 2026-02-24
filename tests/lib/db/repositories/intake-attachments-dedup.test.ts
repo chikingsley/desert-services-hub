@@ -14,7 +14,7 @@ import {
 const RUN_TAG = crypto.randomUUID().slice(0, 8).toLowerCase();
 const INTERNET_MSG_ID = `<test-dedup-${RUN_TAG}@example.test>`;
 const FILE_NAME = `_TEST_DEDUP_${RUN_TAG}.pdf`;
-const FILE_SIZE = 12345;
+const FILE_SIZE = 12_345;
 const CONTENT_HASH = `test_hash_${RUN_TAG}`;
 
 const createdDocIds: number[] = [];
@@ -29,7 +29,9 @@ async function createMailbox(): Promise<number> {
     [`test-dedup-${RUN_TAG}@example.test`, `Test Dedup ${RUN_TAG}`]
   )) as Array<{ id: number }>;
   const id = rows[0]?.id;
-  if (!id) throw new Error("Failed to create test mailbox");
+  if (!id) {
+    throw new Error("Failed to create test mailbox");
+  }
   createdMailboxIds.push(id);
   return id;
 }
@@ -37,7 +39,9 @@ async function createMailbox(): Promise<number> {
 let sharedMailboxId: number;
 
 async function ensureMailbox(): Promise<number> {
-  if (sharedMailboxId) return sharedMailboxId;
+  if (sharedMailboxId) {
+    return sharedMailboxId;
+  }
   sharedMailboxId = await createMailbox();
   return sharedMailboxId;
 }
@@ -57,7 +61,9 @@ async function createEmail(internetMessageId: string): Promise<number> {
     ]
   )) as Array<{ id: number }>;
   const id = rows[0]?.id;
-  if (!id) throw new Error("Failed to create test email");
+  if (!id) {
+    throw new Error("Failed to create test email");
+  }
   createdEmailIds.push(id);
   return id;
 }
@@ -82,7 +88,9 @@ async function createDocument(params: {
     ]
   )) as Array<{ id: number }>;
   const id = rows[0]?.id;
-  if (!id) throw new Error("Failed to create test document");
+  if (!id) {
+    throw new Error("Failed to create test document");
+  }
   createdDocIds.push(id);
   return id;
 }
@@ -113,7 +121,7 @@ describe("intake-attachments dedup queries", () => {
       });
 
       // A new doc checking for duplicates should find nothing
-      const newDocId = dedupedDocId + 999999; // non-existent ID, just for the exclude param
+      const newDocId = dedupedDocId + 999_999; // non-existent ID, just for the exclude param
       const result = await findInternetMessageAttachmentDuplicate(
         INTERNET_MSG_ID,
         FILE_NAME,
@@ -135,7 +143,7 @@ describe("intake-attachments dedup queries", () => {
         extractionStatus: "success",
       });
 
-      const newDocId = successDocId + 999999;
+      const newDocId = successDocId + 999_999;
       const result = await findInternetMessageAttachmentDuplicate(
         INTERNET_MSG_ID,
         FILE_NAME,
@@ -168,7 +176,7 @@ describe("intake-attachments dedup queries", () => {
         isolatedMsgId,
         FILE_NAME,
         FILE_SIZE,
-        failedId + 999999,
+        failedId + 999_999
       );
 
       expect(result).toBeNull();
@@ -189,7 +197,7 @@ describe("intake-attachments dedup queries", () => {
 
       const result = await findContentHashAttachmentDuplicate(
         CONTENT_HASH,
-        999999999
+        999_999_999
       );
 
       expect(result).toBeNull();
@@ -208,7 +216,7 @@ describe("intake-attachments dedup queries", () => {
 
       const result = await findContentHashAttachmentDuplicate(
         CONTENT_HASH,
-        999999999
+        999_999_999
       );
 
       expect(result).toBe(successDocId);

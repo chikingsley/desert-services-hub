@@ -27,7 +27,7 @@ async function getToken(): Promise<string> {
 
   if (!(tenantId && clientId && clientSecret)) {
     throw new Error(
-      "Missing Azure credentials (AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET)",
+      "Missing Azure credentials (AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET)"
     );
   }
 
@@ -63,9 +63,7 @@ async function getToken(): Promise<string> {
 
 async function graphGet<T>(path: string): Promise<T> {
   const token = await getToken();
-  const url = path.startsWith("https://")
-    ? path
-    : `${GRAPH_API_BASE}/${path}`;
+  const url = path.startsWith("https://") ? path : `${GRAPH_API_BASE}/${path}`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -78,9 +76,7 @@ async function graphGet<T>(path: string): Promise<T> {
 
 async function graphGetBinary(path: string): Promise<Buffer> {
   const token = await getToken();
-  const url = path.startsWith("https://")
-    ? path
-    : `${GRAPH_API_BASE}/${path}`;
+  const url = path.startsWith("https://") ? path : `${GRAPH_API_BASE}/${path}`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -93,12 +89,10 @@ async function graphGetBinary(path: string): Promise<Buffer> {
 
 async function graphPost<T>(
   path: string,
-  body: Record<string, unknown>,
+  body: Record<string, unknown>
 ): Promise<T> {
   const token = await getToken();
-  const url = path.startsWith("https://")
-    ? path
-    : `${GRAPH_API_BASE}/${path}`;
+  const url = path.startsWith("https://") ? path : `${GRAPH_API_BASE}/${path}`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -124,7 +118,7 @@ export interface GraphEmailClient {
   downloadAttachment(
     messageId: string,
     attachmentId: string,
-    mailboxEmail: string,
+    mailboxEmail: string
   ): Promise<Buffer>;
 }
 
@@ -133,13 +127,13 @@ export function createGraphClient(): GraphEmailClient {
     async downloadAttachment(
       messageId: string,
       attachmentId: string,
-      mailboxEmail: string,
+      mailboxEmail: string
     ): Promise<Buffer> {
       const user = encodeURIComponent(mailboxEmail);
       const msg = encodeURIComponent(messageId);
       const att = encodeURIComponent(attachmentId);
       return graphGetBinary(
-        `users/${user}/messages/${msg}/attachments/${att}/$value`,
+        `users/${user}/messages/${msg}/attachments/${att}/$value`
       );
     },
   };
@@ -191,7 +185,7 @@ export interface GraphComposeClient {
 }
 
 function toGraphRecipients(
-  recipients: Recipient[],
+  recipients: Recipient[]
 ): Array<{ emailAddress: { address: string; name: string } }> {
   return recipients.map((r) => ({
     emailAddress: { address: r.email, name: r.name ?? r.email },
@@ -204,7 +198,10 @@ export function createComposeClient(): GraphComposeClient {
       const user = encodeURIComponent(params.userId);
       return graphPost<GraphDraftMessage>(`users/${user}/messages`, {
         subject: params.subject,
-        body: { contentType: params.bodyType === "html" ? "HTML" : "Text", content: params.body },
+        body: {
+          contentType: params.bodyType === "html" ? "HTML" : "Text",
+          content: params.body,
+        },
         toRecipients: toGraphRecipients(params.to),
         ccRecipients: params.cc ? toGraphRecipients(params.cc) : [],
         isDraft: true,
@@ -212,7 +209,7 @@ export function createComposeClient(): GraphComposeClient {
     },
 
     async createReplyDraft(
-      params: CreateReplyDraftParams,
+      params: CreateReplyDraftParams
     ): Promise<GraphDraftMessage> {
       const user = encodeURIComponent(params.userId);
       const msg = encodeURIComponent(params.messageId);
@@ -221,7 +218,7 @@ export function createComposeClient(): GraphComposeClient {
         `users/${user}/messages/${msg}/${endpoint}`,
         {
           comment: params.body,
-        },
+        }
       );
     },
 
@@ -240,26 +237,26 @@ interface GroupThread {
 }
 
 interface GroupPostAttachment {
-  id: string;
   contentBytes?: string;
   contentType?: string;
+  id: string;
   name?: string;
 }
 
 interface GroupPost {
-  id: string;
   attachments?: GroupPostAttachment[];
+  id: string;
 }
 
 export interface GraphGroupsClient {
   getConversationThreads(
     groupId: string,
-    conversationId: string,
+    conversationId: string
   ): Promise<GroupThread[]>;
   getThreadPosts(
     groupId: string,
     threadId: string,
-    includeAttachments?: boolean,
+    includeAttachments?: boolean
   ): Promise<GroupPost[]>;
 }
 
@@ -267,12 +264,12 @@ export function createGroupsClient(): GraphGroupsClient {
   return {
     async getConversationThreads(
       groupId: string,
-      conversationId: string,
+      conversationId: string
     ): Promise<GroupThread[]> {
       const g = encodeURIComponent(groupId);
       const c = encodeURIComponent(conversationId);
       const data = await graphGet<{ value: GroupThread[] }>(
-        `groups/${g}/conversations/${c}/threads`,
+        `groups/${g}/conversations/${c}/threads`
       );
       return data.value;
     },
@@ -280,13 +277,13 @@ export function createGroupsClient(): GraphGroupsClient {
     async getThreadPosts(
       groupId: string,
       threadId: string,
-      includeAttachments = false,
+      includeAttachments = false
     ): Promise<GroupPost[]> {
       const g = encodeURIComponent(groupId);
       const t = encodeURIComponent(threadId);
       const expand = includeAttachments ? "?$expand=attachments" : "";
       const data = await graphGet<{ value: GroupPost[] }>(
-        `groups/${g}/threads/${t}/posts${expand}`,
+        `groups/${g}/threads/${t}/posts${expand}`
       );
       return data.value;
     },

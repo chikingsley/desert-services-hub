@@ -1,34 +1,34 @@
+import { MinusCircleIcon, PlusCircleIcon } from "lucide-react";
 import type React from "react";
 import type { HTMLInputTypeAttribute } from "react";
 import type { FieldError } from "react-hook-form";
-import { MinusCircleIcon, PlusCircleIcon } from "lucide-react";
 import TextareaAutosize from "react-textarea-autosize";
-import { cn } from "@/utils";
 import { TooltipExplanation } from "@/components/TooltipExplanation";
+import { cn } from "@/utils";
 
 export interface InputProps {
-  name: string;
-  label?: string;
-  labelComponent?: React.ReactNode;
-  type: HTMLInputTypeAttribute;
-  placeholder?: string;
-  registerProps?: any; // TODO
-  explainText?: string;
-  tooltipText?: string;
   as?: React.ElementType;
   autosizeTextarea?: boolean;
-  rows?: number;
-  maxRows?: number;
-  min?: number;
-  step?: number;
-  max?: number;
+  className?: string;
   disabled?: boolean;
   error?: FieldError;
+  explainText?: string;
+  label?: string;
+  labelComponent?: React.ReactNode;
   leftText?: string;
-  rightText?: string;
-  className?: string;
+  max?: number;
+  maxRows?: number;
+  min?: number;
+  name: string;
   onClickAdd?: () => void;
   onClickRemove?: () => void;
+  placeholder?: string;
+  registerProps?: any; // TODO
+  rightText?: string;
+  rows?: number;
+  step?: number;
+  tooltipText?: string;
+  type: HTMLInputTypeAttribute;
 }
 
 export const Input = (props: InputProps) => {
@@ -64,8 +64,8 @@ export const Input = (props: InputProps) => {
         props.labelComponent
       ) : props.label ? (
         <Label
-          name={props.name}
           label={props.label}
+          name={props.name}
           tooltipText={props.tooltipText}
         />
       ) : null}
@@ -75,23 +75,23 @@ export const Input = (props: InputProps) => {
           {props.leftText ? (
             <div className="flex-1">
               <InputWithLeftFixedText
+                className={props.className}
                 inputProps={inputProps}
                 leftText={props.leftText}
-                className={props.className}
               />
             </div>
           ) : props.rightText ? (
             <InputWithRightFixedText
+              className={props.className}
               inputProps={inputProps}
               rightText={props.rightText}
-              className={props.className}
             />
           ) : (
             <Component
               {...inputProps}
               className={cn(
-                "block w-full flex-1 rounded-md border-slate-300 bg-background shadow-sm focus:border-black focus:ring-black disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-muted-foreground disabled:ring-slate-200 dark:border-slate-700 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-400 dark:disabled:ring-slate-700 sm:text-sm",
-                props.className,
+                "block w-full flex-1 rounded-md border-slate-300 bg-background shadow-sm focus:border-black focus:ring-black disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-muted-foreground disabled:ring-slate-200 sm:text-sm dark:border-slate-700 dark:text-slate-100 dark:disabled:bg-slate-800 dark:disabled:text-slate-400 dark:disabled:ring-slate-700 dark:focus:border-slate-400 dark:focus:ring-slate-400",
+                props.className
               )}
             />
           )}
@@ -116,8 +116,8 @@ type LabelProps = Pick<InputProps, "name" | "label" | "tooltipText">;
 export const Label = (props: LabelProps) => {
   return (
     <label
+      className="block font-medium text-slate-700 text-sm dark:text-slate-200"
       htmlFor={props.name}
-      className="block text-sm font-medium text-slate-700 dark:text-slate-200"
     >
       {props.tooltipText ? (
         <span className="flex items-center space-x-1">
@@ -133,14 +133,14 @@ export const Label = (props: LabelProps) => {
 
 export const ExplainText = (props: { children: React.ReactNode }) => {
   return (
-    <div className="mt-1 text-sm leading-snug text-muted-foreground dark:text-slate-400">
+    <div className="mt-1 text-muted-foreground text-sm leading-snug dark:text-slate-400">
       {props.children}
     </div>
   );
 };
 
 export const ErrorMessage = (props: { message: string }) => {
-  return <div className="mt-0.5 text-sm text-red-400">{props.message}</div>;
+  return <div className="mt-0.5 text-red-400 text-sm">{props.message}</div>;
 };
 
 const InputWithLeftFixedText = (props: {
@@ -150,14 +150,14 @@ const InputWithLeftFixedText = (props: {
 }) => {
   return (
     <div className="flex rounded-md shadow-sm">
-      <span className="inline-flex max-w-[150px] flex-shrink items-center rounded-l-md border border-r-0 border-slate-300 bg-slate-50 px-3 text-muted-foreground dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 sm:max-w-full sm:text-sm">
+      <span className="inline-flex max-w-[150px] flex-shrink items-center rounded-l-md border border-slate-300 border-r-0 bg-slate-50 px-3 text-muted-foreground sm:max-w-full sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
         {props.leftText}
       </span>
       <input
         {...props.inputProps}
         className={cn(
-          "block w-[120px] flex-1 rounded-none rounded-r-md border-slate-300 bg-background focus:border-black focus:ring-black disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-muted-foreground disabled:ring-slate-200 dark:border-slate-700 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-400 dark:disabled:ring-slate-700 sm:w-full sm:min-w-[150px] sm:max-w-full sm:text-sm",
-          props.className,
+          "block w-[120px] flex-1 rounded-none rounded-r-md border-slate-300 bg-background focus:border-black focus:ring-black disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-muted-foreground disabled:ring-slate-200 sm:w-full sm:min-w-[150px] sm:max-w-full sm:text-sm dark:border-slate-700 dark:text-slate-100 dark:disabled:bg-slate-800 dark:disabled:text-slate-400 dark:disabled:ring-slate-700 dark:focus:border-slate-400 dark:focus:ring-slate-400",
+          props.className
         )}
       />
     </div>
@@ -174,11 +174,11 @@ const InputWithRightFixedText = (props: {
       <input
         {...props.inputProps}
         className={cn(
-          "block w-full min-w-0 flex-1 rounded-none rounded-l-md border-slate-300 bg-background focus:border-black focus:ring-black disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-muted-foreground disabled:ring-slate-200 dark:border-slate-700 dark:text-slate-100 dark:focus:border-slate-400 dark:focus:ring-slate-400 dark:disabled:bg-slate-800 dark:disabled:text-slate-400 dark:disabled:ring-slate-700 sm:text-sm",
-          props.className,
+          "block w-full min-w-0 flex-1 rounded-none rounded-l-md border-slate-300 bg-background focus:border-black focus:ring-black disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-muted-foreground disabled:ring-slate-200 sm:text-sm dark:border-slate-700 dark:text-slate-100 dark:disabled:bg-slate-800 dark:disabled:text-slate-400 dark:disabled:ring-slate-700 dark:focus:border-slate-400 dark:focus:ring-slate-400",
+          props.className
         )}
       />
-      <span className="inline-flex items-center rounded-r-md border border-l-0 border-slate-300 bg-slate-50 px-3 text-muted-foreground dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 sm:text-sm">
+      <span className="inline-flex items-center rounded-r-md border border-slate-300 border-l-0 bg-slate-50 px-3 text-muted-foreground sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
         {props.rightText}
       </span>
     </div>
@@ -189,24 +189,26 @@ export const AddRemoveButtons = (props: {
   onClickAdd?: () => void;
   onClickRemove?: () => void;
 }) => {
-  if (!props.onClickAdd && !props.onClickRemove) return null;
+  if (!(props.onClickAdd || props.onClickRemove)) {
+    return null;
+  }
 
   return (
     <div className="ml-2 flex space-x-2">
       {props.onClickAdd && (
         <button
-          type="button"
           className="text-slate-700 transition-transform hover:scale-110 hover:text-primary dark:text-slate-300 dark:hover:text-slate-100"
           onClick={props.onClickAdd}
+          type="button"
         >
           <PlusCircleIcon className="h-6 w-6" />
         </button>
       )}
       {props.onClickRemove && (
         <button
-          type="button"
           className="text-slate-700 transition-transform hover:scale-110 hover:text-primary dark:text-slate-300 dark:hover:text-slate-100"
           onClick={props.onClickRemove}
+          type="button"
         >
           <MinusCircleIcon className="h-6 w-6" />
         </button>
@@ -216,15 +218,15 @@ export const AddRemoveButtons = (props: {
 };
 
 export function LabelWithRightButton(
-  props: LabelProps & { rightButton: { text: string; onClick: () => void } },
+  props: LabelProps & { rightButton: { text: string; onClick: () => void } }
 ) {
   return (
     <div className="flex justify-between">
       <Label {...props} />
       <button
-        type="button"
         className="cursor-pointer bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-sm text-transparent hover:from-sky-600 hover:to-blue-700"
         onClick={props.rightButton.onClick}
+        type="button"
       >
         {props.rightButton.text}
       </button>
@@ -234,11 +236,17 @@ export function LabelWithRightButton(
 
 function getErrorMessage(
   errorType?: FieldError["type"],
-  errorMessage?: FieldError["message"],
+  errorMessage?: FieldError["message"]
 ) {
-  if (errorType === "required") return "This field is required";
-  if (errorType === "minLength") return "This field is too short";
-  if (errorType === "maxLength") return "This field is too long";
+  if (errorType === "required") {
+    return "This field is required";
+  }
+  if (errorType === "minLength") {
+    return "This field is too short";
+  }
+  if (errorType === "maxLength") {
+    return "This field is too long";
+  }
 
   return errorMessage;
 }

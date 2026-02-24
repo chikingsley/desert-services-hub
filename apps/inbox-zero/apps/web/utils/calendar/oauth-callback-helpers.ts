@@ -1,18 +1,17 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import prisma from "@/utils/prisma";
+import { env } from "@/env";
 import { CALENDAR_STATE_COOKIE_NAME } from "@/utils/calendar/constants";
+import type { Logger } from "@/utils/logger";
+import { RedirectError } from "@/utils/oauth/redirect";
 import { parseOAuthState } from "@/utils/oauth/state";
 import { prefixPath } from "@/utils/path";
-import { env } from "@/env";
-import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import type {
-  OAuthCallbackValidation,
   CalendarOAuthState,
+  OAuthCallbackValidation,
 } from "./oauth-types";
-
-import { RedirectError } from "@/utils/oauth/redirect";
 
 const calendarOAuthStateSchema = z.object({
   emailAccountId: z.string().min(1).max(64),
@@ -25,7 +24,7 @@ const calendarOAuthStateSchema = z.object({
  */
 export async function validateOAuthCallback(
   request: NextRequest,
-  logger: Logger,
+  logger: Logger
 ): Promise<OAuthCallbackValidation> {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get("code");
@@ -40,7 +39,7 @@ export async function validateOAuthCallback(
 
   response.cookies.delete(CALENDAR_STATE_COOKIE_NAME);
 
-  if (!storedState || !receivedState || storedState !== receivedState) {
+  if (!(storedState && receivedState) || storedState !== receivedState) {
     logger.warn("Invalid state during calendar callback", {
       receivedState,
       hasStoredState: !!storedState,
@@ -53,7 +52,7 @@ export async function validateOAuthCallback(
     receivedState,
     logger,
     baseRedirectUrl,
-    response.headers,
+    response.headers
   );
 
   const redirectUrl = buildCalendarRedirectUrl(calendarState.emailAccountId);
@@ -96,7 +95,7 @@ export function parseAndValidateCalendarState(
   storedState: string,
   logger: Logger,
   redirectUrl: URL,
-  responseHeaders: Headers,
+  responseHeaders: Headers
 ): CalendarOAuthState {
   let rawState: unknown;
   try {
@@ -125,7 +124,7 @@ export function parseAndValidateCalendarState(
 export function buildCalendarRedirectUrl(emailAccountId: string): URL {
   return new URL(
     prefixPath(emailAccountId, "/calendars"),
-    env.NEXT_PUBLIC_BASE_URL,
+    env.NEXT_PUBLIC_BASE_URL
   );
 }
 
@@ -135,7 +134,7 @@ export function buildCalendarRedirectUrl(emailAccountId: string): URL {
 export async function checkExistingConnection(
   emailAccountId: string,
   provider: "google" | "microsoft",
-  email: string,
+  email: string
 ) {
   return await prisma.calendarConnection.findFirst({
     where: {
@@ -171,9 +170,11 @@ export async function createCalendarConnection(params: {
 }
 
 export function extractAadstsCode(
-  errorDescription: string | null,
+  errorDescription: string | null
 ): string | null {
-  if (!errorDescription) return null;
+  if (!errorDescription) {
+    return null;
+  }
   const match = errorDescription.match(/AADSTS\d+/);
   return match ? match[0] : null;
 }
@@ -206,9 +207,11 @@ export function mapCalendarOAuthError(params: {
 }
 
 export function getSafeOAuthErrorDescription(
-  errorDescription: string | null,
+  errorDescription: string | null
 ): string | null {
   const aadstsCode = extractAadstsCode(errorDescription);
-  if (!aadstsCode) return null;
+  if (!aadstsCode) {
+    return null;
+  }
   return `Microsoft error ${aadstsCode}.`;
 }

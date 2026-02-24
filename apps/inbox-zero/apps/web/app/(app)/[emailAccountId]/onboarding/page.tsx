@@ -1,7 +1,7 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { OnboardingContent } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingContent";
 import { registerUtmTracking } from "@/app/(landing)/welcome/utms";
 import { auth } from "@/utils/auth";

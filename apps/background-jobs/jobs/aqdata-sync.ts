@@ -25,8 +25,8 @@ interface AQDataDetailScrapeStats {
 }
 
 interface AQDataBaseResponse {
-  success: boolean;
   error?: string;
+  success: boolean;
   timestamp?: string;
 }
 

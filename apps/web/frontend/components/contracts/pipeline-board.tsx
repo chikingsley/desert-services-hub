@@ -19,8 +19,8 @@ function emptyLabel(isDone: boolean): string {
 
 interface PipelineBoardProps {
   contracts: PipelineContract[];
-  onSelectContract: (contract: PipelineContract) => void;
   onAdvanceContract: (contract: PipelineContract) => void;
+  onSelectContract: (contract: PipelineContract) => void;
 }
 
 function StageColumn({

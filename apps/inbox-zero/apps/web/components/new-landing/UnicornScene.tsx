@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/utils";
 import { useEffect } from "react";
+import { cn } from "@/utils";
 
 type UnicornStudioInitFlag = {
   isInitialized: boolean;
@@ -48,8 +48,8 @@ export function UnicornScene({ className }: UnicornSceneProps) {
 
   return (
     <div
+      className={cn("absolute top-0 left-0 -z-10 h-full w-full", className)}
       data-us-project="7EOg9x6JDnLX6WDUJiAj"
-      className={cn("w-full h-full absolute top-0 left-0 -z-10", className)}
     />
   );
 }

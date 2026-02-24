@@ -1,11 +1,11 @@
 import type { gmail_v1 } from "@googleapis/gmail";
+import { handleLabelRemovedEvent } from "@/app/api/google/webhook/process-label-removed-event";
 import type { ProcessHistoryOptions } from "@/app/api/google/webhook/types";
 import { HistoryEventType } from "@/app/api/google/webhook/types";
 import { createEmailProvider } from "@/utils/email/provider";
-import { handleLabelRemovedEvent } from "@/app/api/google/webhook/process-label-removed-event";
-import { processHistoryItem as processHistoryItemShared } from "@/utils/webhook/process-history-item";
-import { markMessageAsProcessing } from "@/utils/redis/message-processing";
 import type { Logger } from "@/utils/logger";
+import { markMessageAsProcessing } from "@/utils/redis/message-processing";
+import { processHistoryItem as processHistoryItemShared } from "@/utils/webhook/process-history-item";
 
 export async function processHistoryItem(
   historyItem: {
@@ -16,7 +16,7 @@ export async function processHistoryItem(
       | gmail_v1.Schema$HistoryLabelRemoved;
   },
   options: ProcessHistoryOptions,
-  logger: Logger,
+  logger: Logger
 ) {
   const { emailAccount, hasAutomationRules, hasAiAccess, rules } = options;
   const { type, item } = historyItem;
@@ -24,7 +24,9 @@ export async function processHistoryItem(
   const threadId = item.message?.threadId;
   const emailAccountId = emailAccount.id;
 
-  if (!messageId || !threadId) return;
+  if (!(messageId && threadId)) {
+    return;
+  }
 
   logger.info("Gmail history item received", {
     eventType: type,
@@ -46,9 +48,10 @@ export async function processHistoryItem(
         emailAccount,
         provider,
       },
-      logger,
+      logger
     );
-  } else if (type === HistoryEventType.LABEL_ADDED) {
+  }
+  if (type === HistoryEventType.LABEL_ADDED) {
     logger.info("Processing label added event for learning");
     return;
   }
@@ -74,6 +77,6 @@ export async function processHistoryItem(
       hasAiAccess,
       rules,
       logger,
-    },
+    }
   );
 }

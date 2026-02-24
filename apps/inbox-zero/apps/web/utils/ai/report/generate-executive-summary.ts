@@ -1,10 +1,10 @@
-import { z } from "zod";
-import { createGenerateObject } from "@/utils/llms";
 import type { gmail_v1 } from "@googleapis/gmail";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { z } from "zod";
 import type { EmailSummary } from "@/utils/ai/report/summarize-emails";
-import { createScopedLogger } from "@/utils/logger";
+import { createGenerateObject } from "@/utils/llms";
 import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("email-report-executive-summary");
 
@@ -13,7 +13,7 @@ const executiveSummarySchema = z.object({
     persona: z
       .string()
       .describe(
-        "1-5 word persona identification (e.g., 'Tech Startup Founder')",
+        "1-5 word persona identification (e.g., 'Tech Startup Founder')"
       ),
     confidence: z
       .number()
@@ -29,7 +29,7 @@ const executiveSummarySchema = z.object({
           .enum(["high", "medium", "low"])
           .describe("Priority level of this insight"),
         icon: z.string().describe("Single emoji representing this insight"),
-      }),
+      })
     )
     .describe("3-5 most important findings from the analysis"),
   quickActions: z
@@ -44,7 +44,7 @@ const executiveSummarySchema = z.object({
         impact: z
           .enum(["high", "medium", "low"])
           .describe("Expected impact of this action"),
-      }),
+      })
     )
     .describe("4-6 immediate actions the user can take"),
 });
@@ -53,7 +53,7 @@ export async function aiGenerateExecutiveSummary(
   emailSummaries: EmailSummary[],
   sentEmailSummaries: EmailSummary[],
   gmailLabels: gmail_v1.Schema$Label[],
-  emailAccount: EmailAccountWithAI,
+  emailAccount: EmailAccountWithAI
 ): Promise<z.infer<typeof executiveSummarySchema>> {
   const system = `You are a professional persona identification expert. Your primary task is to accurately identify the user's professional role based on their email patterns.
 
@@ -88,7 +88,7 @@ ${emailSummaries
   .slice(0, 30)
   .map(
     (email, i) =>
-      `${i + 1}. From: ${email.sender} | Subject: ${email.subject} | Category: ${email.category} | Summary: ${email.summary}`,
+      `${i + 1}. From: ${email.sender} | Subject: ${email.subject} | Category: ${email.category} | Summary: ${email.summary}`
   )
   .join("\n")}
 
@@ -97,7 +97,7 @@ ${sentEmailSummaries
   .slice(0, 15)
   .map(
     (email, i) =>
-      `${i + 1}. To: ${email.sender} | Subject: ${email.subject} | Category: ${email.category} | Summary: ${email.summary}`,
+      `${i + 1}. To: ${email.sender} | Subject: ${email.subject} | Category: ${email.category} | Summary: ${email.summary}`
   )
   .join("\n")}
 

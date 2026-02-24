@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  shouldShowTimezonePrompt,
   addDismissedPrompt,
   DISMISSAL_EXPIRY_DAYS,
   type DismissedPrompt,
+  shouldShowTimezonePrompt,
 } from "./TimezoneDetector";
 
 vi.mock("server-only", () => ({}));
@@ -21,7 +21,7 @@ describe("shouldShowTimezonePrompt", () => {
     const result = shouldShowTimezonePrompt(
       "America/New_York",
       "America/New_York",
-      [],
+      []
     );
     expect(result).toBe(false);
   });
@@ -30,7 +30,7 @@ describe("shouldShowTimezonePrompt", () => {
     const result = shouldShowTimezonePrompt(
       "America/New_York",
       "Europe/London",
-      [],
+      []
     );
     expect(result).toBe(true);
   });
@@ -50,7 +50,7 @@ describe("shouldShowTimezonePrompt", () => {
     const result = shouldShowTimezonePrompt(
       "America/New_York",
       "Europe/London",
-      dismissedPrompts,
+      dismissedPrompts
     );
     expect(result).toBe(false);
   });
@@ -70,7 +70,7 @@ describe("shouldShowTimezonePrompt", () => {
     const result = shouldShowTimezonePrompt(
       "America/New_York",
       "Europe/London",
-      dismissedPrompts,
+      dismissedPrompts
     );
     expect(result).toBe(true);
   });
@@ -90,7 +90,7 @@ describe("shouldShowTimezonePrompt", () => {
     const result = shouldShowTimezonePrompt(
       "America/New_York",
       "Asia/Tokyo",
-      dismissedPrompts,
+      dismissedPrompts
     );
     expect(result).toBe(true);
   });
@@ -117,8 +117,8 @@ describe("shouldShowTimezonePrompt", () => {
       shouldShowTimezonePrompt(
         "America/New_York",
         "Europe/London",
-        dismissedPrompts,
-      ),
+        dismissedPrompts
+      )
     ).toBe(false);
 
     // Should not show for Tokyo (dismissed)
@@ -126,8 +126,8 @@ describe("shouldShowTimezonePrompt", () => {
       shouldShowTimezonePrompt(
         "America/New_York",
         "Asia/Tokyo",
-        dismissedPrompts,
-      ),
+        dismissedPrompts
+      )
     ).toBe(false);
 
     // Should show for Paris (not dismissed)
@@ -135,8 +135,8 @@ describe("shouldShowTimezonePrompt", () => {
       shouldShowTimezonePrompt(
         "America/New_York",
         "Europe/Paris",
-        dismissedPrompts,
-      ),
+        dismissedPrompts
+      )
     ).toBe(true);
   });
 
@@ -155,7 +155,7 @@ describe("shouldShowTimezonePrompt", () => {
     const result = shouldShowTimezonePrompt(
       "America/New_York",
       "Europe/London",
-      dismissedPrompts,
+      dismissedPrompts
     );
     expect(result).toBe(true);
   });
@@ -199,7 +199,7 @@ describe("addDismissedPrompt", () => {
     const result = addDismissedPrompt(
       existing,
       "America/New_York",
-      "Europe/London",
+      "Europe/London"
     );
 
     expect(result).toHaveLength(2);
@@ -233,19 +233,19 @@ describe("addDismissedPrompt", () => {
     const result = addDismissedPrompt(
       existing,
       "America/New_York",
-      "Europe/London",
+      "Europe/London"
     );
 
     expect(result).toHaveLength(2);
     // Should still have Tokyo dismissal
     expect(
       result.some(
-        (p) => p.saved === "America/New_York" && p.detected === "Asia/Tokyo",
-      ),
+        (p) => p.saved === "America/New_York" && p.detected === "Asia/Tokyo"
+      )
     ).toBe(true);
     // Should have new London dismissal with updated timestamp
     const londonDismissal = result.find(
-      (p) => p.saved === "America/New_York" && p.detected === "Europe/London",
+      (p) => p.saved === "America/New_York" && p.detected === "Europe/London"
     );
     expect(londonDismissal?.dismissedAt).toBe(newTime);
   });
@@ -275,7 +275,7 @@ describe("addDismissedPrompt", () => {
     const result = addDismissedPrompt(
       existing,
       "America/New_York",
-      "Asia/Tokyo",
+      "Asia/Tokyo"
     );
 
     expect(result).toHaveLength(3);

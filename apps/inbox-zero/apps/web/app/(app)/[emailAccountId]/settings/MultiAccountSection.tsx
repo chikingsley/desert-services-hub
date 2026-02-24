@@ -1,39 +1,39 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { capitalCase } from "capital-case";
+import { CrownIcon } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
+import { usePostHog } from "posthog-js/react";
 import { useCallback } from "react";
 import { type SubmitHandler, useFieldArray, useForm } from "react-hook-form";
-import { useSession } from "@/utils/auth-client";
-import { zodResolver } from "@hookform/resolvers/zod";
 import useSWR from "swr";
-import { usePostHog } from "posthog-js/react";
-import { CrownIcon } from "lucide-react";
-import { capitalCase } from "capital-case";
-import { Button } from "@/components/ui/button";
+import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
+import type { MultiAccountEmailsResponse } from "@/app/api/user/settings/multi-account/route";
+import {
+  type SaveMultiAccountPremiumBody,
+  saveMultiAccountPremiumBody,
+} from "@/app/api/user/settings/multi-account/validation";
+import { AlertBasic, AlertWithButton } from "@/components/Alert";
 import { Input } from "@/components/Input";
 import { LoadingContent } from "@/components/LoadingContent";
+import { usePremium } from "@/components/PremiumAlert";
 import { SettingsSection } from "@/components/SettingsSection";
-import {
-  saveMultiAccountPremiumBody,
-  type SaveMultiAccountPremiumBody,
-} from "@/app/api/user/settings/multi-account/validation";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
+import type { PremiumTier } from "@/generated/prisma/enums";
 import {
   claimPremiumAdminAction,
   updateMultiAccountPremiumAction,
 } from "@/utils/actions/premium";
-import type { MultiAccountEmailsResponse } from "@/app/api/user/settings/multi-account/route";
-import { AlertBasic, AlertWithButton } from "@/components/Alert";
-import { usePremium } from "@/components/PremiumAlert";
-import type { PremiumTier } from "@/generated/prisma/enums";
-import { getUserTier, isAdminForPremium } from "@/utils/premium";
-import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
-import { useAction } from "next-safe-action/hooks";
-import { toastError, toastSuccess } from "@/components/Toast";
+import { useSession } from "@/utils/auth-client";
 import { getActionErrorMessage } from "@/utils/error";
+import { getUserTier, isAdminForPremium } from "@/utils/premium";
 
 export function MultiAccountSection() {
   const { data: session } = useSession();
   const { data, isLoading, error, mutate } = useSWR<MultiAccountEmailsResponse>(
-    "/api/user/settings/multi-account",
+    "/api/user/settings/multi-account"
   );
   const {
     isPremium,
@@ -69,14 +69,14 @@ export function MultiAccountSection() {
 
   return (
     <SettingsSection
+      className="space-y-4"
+      description="Grant premium access to additional email accounts. Additional members are billed to your subscription. Each account maintains separate email privacy."
       id="manage-users"
       title="Manage Team Access"
-      description="Grant premium access to additional email accounts. Additional members are billed to your subscription. Each account maintains separate email privacy."
-      className="space-y-4"
     >
-      <LoadingContent loading={isLoadingPremium} error={errorPremium}>
+      <LoadingContent error={errorPremium} loading={isLoadingPremium}>
         {isPremium ? (
-          <LoadingContent loading={isLoading} error={error}>
+          <LoadingContent error={error} loading={isLoading}>
             {data && (
               <div>
                 {!data.admins.length && (
@@ -89,19 +89,19 @@ export function MultiAccountSection() {
 
                 {premiumTier && (
                   <ExtraSeatsAlert
-                    premiumTier={premiumTier}
                     emailAccountsAccess={premium?.emailAccountsAccess || 0}
+                    premiumTier={premiumTier}
                     seatsUsed={data.emailAccounts.length}
                   />
                 )}
 
                 <div className="mt-4">
                   <MultiAccountForm
+                    emailAccountsAccess={premium?.emailAccountsAccess || 0}
                     emailAddresses={data.emailAccounts}
                     isLifetime={premium?.tier === "LIFETIME"}
-                    emailAccountsAccess={premium?.emailAccountsAccess || 0}
-                    pendingInvites={premium?.pendingInvites || []}
                     onUpdate={mutate}
+                    pendingInvites={premium?.pendingInvites || []}
                   />
                 </div>
               </div>
@@ -109,10 +109,10 @@ export function MultiAccountSection() {
           </LoadingContent>
         ) : (
           <AlertWithButton
-            title="Upgrade"
+            button={<Button onClick={openModal}>Upgrade</Button>}
             description="Upgrade to premium to share premium with other email addresses."
             icon={<CrownIcon className="h-4 w-4" />}
-            button={<Button onClick={openModal}>Upgrade</Button>}
+            title="Upgrade"
           />
         )}
       </LoadingContent>
@@ -147,7 +147,7 @@ function MultiAccountForm({
       emailAddresses: (() => {
         const existingEmails = new Set(teamAccounts.map((e) => e.email));
         const uniquePendingInvites = pendingInvites.filter(
-          (email) => !existingEmails.has(email),
+          (email) => !existingEmails.has(email)
         );
         const initialEmails = [
           ...teamAccounts.map((e) => ({ email: e.email })),
@@ -181,31 +181,31 @@ function MultiAccountForm({
           }),
         });
       },
-    },
+    }
   );
 
   const onSubmit: SubmitHandler<SaveMultiAccountPremiumBody> = useCallback(
     async (data) => {
-      if (!data.emailAddresses || needsToPurchaseMoreSeats) return;
+      if (!data.emailAddresses || needsToPurchaseMoreSeats) {
+        return;
+      }
 
       const emails = data.emailAddresses
         .map((e) => e.email.trim())
         .filter((email) => email.length > 0);
       updateMultiAccountPremium({ emails });
     },
-    [needsToPurchaseMoreSeats, updateMultiAccountPremium],
+    [needsToPurchaseMoreSeats, updateMultiAccountPremium]
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-2">
         {fields.map((field, i) => (
           <Input
-            key={field.id}
-            type="text"
-            name={`emailAddresses.${i}.email`}
-            registerProps={register(`emailAddresses.${i}.email`)}
             error={errors.emailAddresses?.[i]?.email}
+            key={field.id}
+            name={`emailAddresses.${i}.email`}
             onClickAdd={() => {
               append({ email: "" });
               posthog.capture("Clicked Add User");
@@ -217,11 +217,13 @@ function MultiAccountForm({
                 append({ email: "" });
               }
             }}
+            registerProps={register(`emailAddresses.${i}.email`)}
+            type="text"
           />
         ))}
       </div>
 
-      <Button type="submit" loading={isExecuting}>
+      <Button loading={isExecuting} type="submit">
         Save
       </Button>
     </form>
@@ -240,20 +242,20 @@ function ExtraSeatsAlert({
   if (emailAccountsAccess > seatsUsed) {
     return (
       <AlertBasic
-        title="Seats"
         description={`You have access to ${emailAccountsAccess} seats.`}
         icon={<CrownIcon className="h-4 w-4" />}
+        title="Seats"
       />
     );
   }
 
   return (
     <AlertBasic
-      title="Additional team member pricing"
       description={`You are on the ${capitalCase(
-        premiumTier,
+        premiumTier
       )} plan. You will be billed for each additional team member you add to your account.`}
       icon={<CrownIcon className="h-4 w-4" />}
+      title="Additional team member pricing"
     />
   );
 }

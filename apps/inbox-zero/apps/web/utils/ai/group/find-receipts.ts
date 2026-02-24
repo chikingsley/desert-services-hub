@@ -1,8 +1,8 @@
 import type { gmail_v1 } from "@googleapis/gmail";
 import uniq from "lodash/uniq";
 import uniqBy from "lodash/uniqBy";
-import { queryBatchMessagesPages } from "@/utils/gmail/message";
 import { GroupItemType } from "@/generated/prisma/enums";
+import { queryBatchMessagesPages } from "@/utils/gmail/message";
 import { findMatchingGroupItem } from "@/utils/group/find-matching-group";
 import { generalizeSubject } from "@/utils/string";
 import type { ParsedMessage } from "@/utils/types";
@@ -45,14 +45,16 @@ export async function findReceipts(gmail: gmail_v1.Gmail, userEmail: string) {
   // filter out senders that would match the default list
   const filteredSenders = senders.filter(
     (sender) =>
-      !findMatchingGroupItem(
-        { from: sender, subject: "" },
-        defaultReceiptSenders.map((sender) => ({
-          type: GroupItemType.FROM,
-          value: sender,
-          exclude: false,
-        })),
-      ) && !sender?.includes(userEmail),
+      !(
+        findMatchingGroupItem(
+          { from: sender, subject: "" },
+          defaultReceiptSenders.map((sender) => ({
+            type: GroupItemType.FROM,
+            value: sender,
+            exclude: false,
+          }))
+        ) || sender?.includes(userEmail)
+      )
   );
 
   const sendersList = uniq([...filteredSenders, ...defaultReceiptSenders]);
@@ -60,22 +62,24 @@ export async function findReceipts(gmail: gmail_v1.Gmail, userEmail: string) {
   // filter out subjects that would match the default list
   const filteredSubjects = subjects.filter(
     (email) =>
-      !findMatchingGroupItem(
-        email,
-        defaultReceiptSubjects.map((subject) => ({
-          type: GroupItemType.SUBJECT,
-          value: subject,
-          exclude: false,
-        })),
-      ) &&
-      !findMatchingGroupItem(
-        email,
-        sendersList.map((sender) => ({
-          type: GroupItemType.FROM,
-          value: sender,
-          exclude: false,
-        })),
-      ),
+      !(
+        findMatchingGroupItem(
+          email,
+          defaultReceiptSubjects.map((subject) => ({
+            type: GroupItemType.SUBJECT,
+            value: subject,
+            exclude: false,
+          }))
+        ) ||
+        findMatchingGroupItem(
+          email,
+          sendersList.map((sender) => ({
+            type: GroupItemType.FROM,
+            value: sender,
+            exclude: false,
+          }))
+        )
+      )
   );
 
   const subjectsList = uniq([
@@ -129,7 +133,7 @@ async function findReceiptSubjects(gmail: gmail_v1.Gmail) {
       from: message.headers.from,
       subject: generalizeSubject(message.headers.subject),
     })),
-    (message) => message.from,
+    (message) => message.from
   );
 }
 
@@ -140,7 +144,7 @@ export function isReceiptSender(sender: string) {
 export function isReceiptSubject(subject: string) {
   const lowerSubject = subject?.toLowerCase();
   return defaultReceiptSubjects.some((receipt) =>
-    lowerSubject?.includes(receipt?.toLowerCase()),
+    lowerSubject?.includes(receipt?.toLowerCase())
   );
 }
 
@@ -154,6 +158,6 @@ export function isReceipt(message: ParsedMessage) {
 export function isMaybeReceipt(message: ParsedMessage) {
   const lowerSubject = message.headers.subject?.toLowerCase();
   return receiptSubjects.some((subject) =>
-    lowerSubject?.includes(subject?.toLowerCase()),
+    lowerSubject?.includes(subject?.toLowerCase())
   );
 }

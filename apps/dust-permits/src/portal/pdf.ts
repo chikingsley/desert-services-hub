@@ -25,9 +25,9 @@ import {
 } from "./utils/helpers";
 
 export interface PdfGenerationResult {
-  success: boolean;
-  path?: string;
   error?: string;
+  path?: string;
+  success: boolean;
 }
 
 /**

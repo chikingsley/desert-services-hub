@@ -1,13 +1,14 @@
 /** biome-ignore-all lint/style/noMagicNumbers: we're defining constants */
+
+import { publishAiCall } from "@inboxzero/tinybird-ai-analytics";
 import type { LanguageModelUsage } from "ai";
-import { saveUsage } from "@/utils/redis/usage";
 import { OPENROUTER_MODEL_PRICING } from "@/utils/llms/pricing.generated";
 import {
-  STATIC_MODEL_PRICING,
   type ModelPricing,
+  STATIC_MODEL_PRICING,
 } from "@/utils/llms/supported-model-pricing";
-import { publishAiCall } from "@inboxzero/tinybird-ai-analytics";
 import { createScopedLogger } from "@/utils/logger";
+import { saveUsage } from "@/utils/redis/usage";
 
 const logger = createScopedLogger("usage");
 
@@ -55,13 +56,15 @@ export function calculateUsageCost(options: {
 }): number {
   const { provider, model, usage } = options;
   const pricing = getModelPricing({ provider, model });
-  if (!pricing) return 0;
+  if (!pricing) {
+    return 0;
+  }
 
   const rawCachedInputTokens = usage.cachedInputTokens ?? 0;
   const normalizedCachedInputTokens = Math.max(0, rawCachedInputTokens);
   const inputTokens = Math.max(
     0,
-    usage.inputTokens ?? normalizedCachedInputTokens,
+    usage.inputTokens ?? normalizedCachedInputTokens
   );
   const cachedInputTokens = Math.min(inputTokens, normalizedCachedInputTokens);
   const uncachedInputTokens = Math.max(0, inputTokens - cachedInputTokens);
@@ -84,15 +87,21 @@ function getModelPricing(options: {
   for (const candidate of buildModelLookupCandidates(model)) {
     if (provider === "openrouter") {
       const openRouterPricing = OPENROUTER_MODEL_PRICING[candidate];
-      if (openRouterPricing) return openRouterPricing;
+      if (openRouterPricing) {
+        return openRouterPricing;
+      }
     }
 
     const fallbackPricing = STATIC_MODEL_PRICING[candidate];
-    if (fallbackPricing) return fallbackPricing;
+    if (fallbackPricing) {
+      return fallbackPricing;
+    }
 
     if (provider !== "openrouter") {
       const openRouterPricing = OPENROUTER_MODEL_PRICING[candidate];
-      if (openRouterPricing) return openRouterPricing;
+      if (openRouterPricing) {
+        return openRouterPricing;
+      }
     }
   }
 
@@ -109,7 +118,9 @@ function buildModelLookupCandidates(model: string): string[] {
     ? noOnlineSuffix.split("/").at(-1)
     : null;
 
-  if (unprefixed) candidates.push(unprefixed);
+  if (unprefixed) {
+    candidates.push(unprefixed);
+  }
 
   return [...new Set(candidates)];
 }

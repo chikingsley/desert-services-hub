@@ -14,11 +14,11 @@ import {
 import { cn } from "@/lib/utils";
 
 interface CatalogItemRowProps {
-  item: CatalogItemData;
-  onUpdate: (updates: Partial<CatalogItemData>) => void;
-  onEdit: () => void;
-  onDelete: () => void;
   indented?: boolean;
+  item: CatalogItemData;
+  onDelete: () => void;
+  onEdit: () => void;
+  onUpdate: (updates: Partial<CatalogItemData>) => void;
   readOnly?: boolean;
 }
 

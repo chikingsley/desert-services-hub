@@ -1,5 +1,5 @@
-import type { SystemType } from "@/generated/prisma/enums";
 import type { Group, GroupItem } from "@/generated/prisma/client";
+import type { SystemType } from "@/generated/prisma/enums";
 import type { ConditionType } from "@/utils/config";
 import type { RuleWithActions } from "@/utils/types";
 
@@ -60,9 +60,11 @@ type SerializedMatchReason =
  * Serializes match reasons to a JSON-safe format for database storage
  */
 export function serializeMatchReasons(
-  matchReasons?: MatchReason[],
+  matchReasons?: MatchReason[]
 ): SerializedMatchReason[] | undefined {
-  if (!matchReasons || matchReasons.length === 0) return undefined;
+  if (!matchReasons || matchReasons.length === 0) {
+    return undefined;
+  }
 
   return matchReasons.map((reason): SerializedMatchReason => {
     switch (reason.type) {

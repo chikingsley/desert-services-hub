@@ -1,18 +1,36 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { ExternalLinkIcon, FolderIcon, PlusIcon } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
+import type {
+  FolderItem,
+  SavedFolder,
+} from "@/app/api/user/drive/folders/route";
+import type { AttachmentPreviewItem } from "@/app/api/user/drive/preview/attachments/route";
+import { FilingStatusCell } from "@/components/drive/FilingStatusCell";
+import { YesNoIndicator } from "@/components/drive/YesNoIndicator";
+import { Input } from "@/components/Input";
+import { TreeProvider, TreeView } from "@/components/kibo-ui/tree";
+import { LoadingContent } from "@/components/LoadingContent";
+import { toastError, toastSuccess } from "@/components/Toast";
 import {
-  TypographyH3,
-  SectionDescription,
-  TypographyP,
-  TypographyH4,
   MutedText,
+  SectionDescription,
+  TypographyH3,
+  TypographyH4,
+  TypographyP,
 } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -21,50 +39,32 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/Input";
-import { toastSuccess, toastError } from "@/components/Toast";
-import { FilingStatusCell } from "@/components/drive/FilingStatusCell";
-import { YesNoIndicator } from "@/components/drive/YesNoIndicator";
-import { TreeProvider, TreeView } from "@/components/kibo-ui/tree";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { useEmailAccountFull } from "@/hooks/useEmailAccountFull";
 import { useDriveConnections } from "@/hooks/useDriveConnections";
 import { useDriveFolders } from "@/hooks/useDriveFolders";
+import { useEmailAccountFull } from "@/hooks/useEmailAccountFull";
 import { useFilingPreviewAttachments } from "@/hooks/useFilingPreviewAttachments";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import {
   addFilingFolderAction,
-  removeFilingFolderAction,
-  updateFilingPromptAction,
-  updateFilingEnabledAction,
-  moveFilingAction,
-  fileAttachmentAction,
-  submitPreviewFeedbackAction,
   type FileAttachmentFiled,
+  fileAttachmentAction,
+  moveFilingAction,
+  removeFilingFolderAction,
+  submitPreviewFeedbackAction,
+  updateFilingEnabledAction,
+  updateFilingPromptAction,
 } from "@/utils/actions/drive";
 import {
-  updateFilingPromptBody,
   type UpdateFilingPromptBody,
+  updateFilingPromptBody,
 } from "@/utils/actions/drive.validation";
+import { getEmailUrlForMessage } from "@/utils/url";
 import {
   CreateFolderDialog,
   FolderNode,
   NoFoldersFound,
 } from "./AllowedFolders";
-import type {
-  FolderItem,
-  SavedFolder,
-} from "@/app/api/user/drive/folders/route";
 import { DriveConnectionCard, getProviderInfo } from "./DriveConnectionCard";
-import type { AttachmentPreviewItem } from "@/app/api/user/drive/preview/attachments/route";
-import { LoadingContent } from "@/components/LoadingContent";
-import { getEmailUrlForMessage } from "@/utils/url";
 
 type SetupPhase = "setup" | "loading-attachments" | "preview" | "starting";
 
@@ -94,7 +94,7 @@ export function DriveSetup() {
     "setup" | "previewing" | "starting"
   >("setup");
   const [filingStates, setFilingStates] = useState<Record<string, FilingState>>(
-    {},
+    {}
   );
 
   const shouldFetchAttachments =
@@ -165,10 +165,18 @@ export function DriveSetup() {
     });
 
   const displayPhase = useMemo((): SetupPhase => {
-    if (userPhase === "setup") return "setup";
-    if (userPhase === "starting") return "starting";
-    if (attachmentsLoading) return "loading-attachments";
-    if (attachmentsData) return "preview";
+    if (userPhase === "setup") {
+      return "setup";
+    }
+    if (userPhase === "starting") {
+      return "starting";
+    }
+    if (attachmentsLoading) {
+      return "loading-attachments";
+    }
+    if (attachmentsData) {
+      return "preview";
+    }
     return "loading-attachments";
   }, [userPhase, attachmentsLoading, attachmentsData]);
 
@@ -219,33 +227,33 @@ export function DriveSetup() {
 
       <div className="mt-10 space-y-8">
         <SetupFolderSelection
-          emailAccountId={emailAccountId}
           availableFolders={foldersData?.availableFolders || []}
-          savedFolders={foldersData?.savedFolders || []}
           connections={connections}
-          mutateFolders={mutateFolders}
+          emailAccountId={emailAccountId}
           isLoading={foldersLoading}
+          mutateFolders={mutateFolders}
+          savedFolders={foldersData?.savedFolders || []}
         />
 
         <SetupRulesForm
           emailAccountId={emailAccountId}
+          hasFolders={foldersData ? foldersData.savedFolders.length > 0 : false}
           initialPrompt={emailAccount?.filingPrompt || ""}
           mutateEmail={mutateEmail}
-          hasFolders={foldersData ? foldersData.savedFolders.length > 0 : false}
-          phase={displayPhase}
           onPreviewClick={handlePreviewClick}
+          phase={displayPhase}
         />
 
         {(displayPhase === "preview" || displayPhase === "starting") &&
           attachmentsData && (
             <PreviewContent
-              emailAccountId={emailAccountId}
               attachments={attachmentsData.attachments}
-              noAttachmentsFound={attachmentsData.noAttachmentsFound}
-              savedFolders={foldersData?.savedFolders || []}
+              emailAccountId={emailAccountId}
               filingStates={filingStates}
-              onStartFiling={handleStartFiling}
               isStarting={displayPhase === "starting"}
+              noAttachmentsFound={attachmentsData.noAttachmentsFound}
+              onStartFiling={handleStartFiling}
+              savedFolders={foldersData?.savedFolders || []}
             />
           )}
       </div>
@@ -272,18 +280,18 @@ function PreviewContent({
 }) {
   if (noAttachmentsFound) {
     return (
-      <NoAttachmentsMessage onSkip={onStartFiling} isStarting={isStarting} />
+      <NoAttachmentsMessage isStarting={isStarting} onSkip={onStartFiling} />
     );
   }
 
   return (
     <PreviewResults
-      emailAccountId={emailAccountId}
       attachments={attachments}
-      savedFolders={savedFolders}
+      emailAccountId={emailAccountId}
       filingStates={filingStates}
-      onStartFiling={onStartFiling}
       isStarting={isStarting}
+      onStartFiling={onStartFiling}
+      savedFolders={savedFolders}
     />
   );
 }
@@ -300,7 +308,7 @@ function NoAttachmentsMessage({
       <MutedText className="mb-4">
         We couldn't find recent emails with attachments to preview.
       </MutedText>
-      <Button onClick={onSkip} loading={isStarting}>
+      <Button loading={isStarting} onClick={onSkip}>
         Start auto-filing anyway
       </Button>
     </div>
@@ -370,13 +378,13 @@ function PreviewResults({
               const key = `${attachment.messageId}-${attachment.filename}`;
               return (
                 <FilingRow
-                  key={key}
-                  emailAccountId={emailAccountId}
                   attachment={attachment}
+                  emailAccountId={emailAccountId}
                   filingState={filingStates[key] || { status: "filing" }}
+                  key={key}
+                  provider={provider}
                   savedFolders={savedFolders}
                   userEmail={userEmail}
-                  provider={provider}
                 />
               );
             })}
@@ -384,19 +392,19 @@ function PreviewResults({
         </Table>
       </div>
 
-      <p className="mt-3 text-center text-xs text-muted-foreground">
+      <p className="mt-3 text-center text-muted-foreground text-xs">
         Your feedback helps us learn
       </p>
 
       <div className="mt-6 flex flex-col items-center gap-2">
         <Button
-          onClick={onStartFiling}
-          loading={isStarting}
           disabled={anyFiling}
+          loading={isStarting}
+          onClick={onStartFiling}
         >
           {anyFiling ? "Processing..." : "Looks good, start auto-filing"}
         </Button>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           You'll get an email each time we file something. Reply to correct us.
         </p>
       </div>
@@ -430,7 +438,9 @@ function FilingRow({
   const handleMoveToFolder = useCallback(
     async (folder: SavedFolder) => {
       const filingId = filingState.result?.filingId;
-      if (!filingId) return;
+      if (!filingId) {
+        return;
+      }
 
       setIsMoving(true);
 
@@ -449,12 +459,14 @@ function FilingRow({
         setIsMoving(false);
       }
     },
-    [emailAccountId, filingState.result?.filingId],
+    [emailAccountId, filingState.result?.filingId]
   );
 
   const handleCorrectClick = useCallback(async () => {
     const filingId = filingState.result?.filingId || filingState.filingId;
-    if (!filingId) return;
+    if (!filingId) {
+      return;
+    }
 
     setVote(true);
     const result = await submitPreviewFeedbackAction(emailAccountId, {
@@ -470,7 +482,9 @@ function FilingRow({
 
   const handleWrongClick = useCallback(async () => {
     const filingId = filingState.result?.filingId;
-    if (!filingId) return;
+    if (!filingId) {
+      return;
+    }
 
     setVote(false);
     const result = await submitPreviewFeedbackAction(emailAccountId, {
@@ -486,7 +500,9 @@ function FilingRow({
 
   const handleSkippedWrongClick = useCallback(async () => {
     const filingId = filingState.filingId;
-    if (!filingId) return;
+    if (!filingId) {
+      return;
+    }
 
     setVote(false);
     const result = await submitPreviewFeedbackAction(emailAccountId, {
@@ -509,33 +525,33 @@ function FilingRow({
     attachment.messageId,
     attachment.threadId,
     userEmail,
-    provider,
+    provider
   );
 
   return (
     <TableRow>
       <TableCell>
         <div className="flex items-center gap-1.5">
-          <span className="font-medium truncate max-w-[200px]">
+          <span className="max-w-[200px] truncate font-medium">
             {attachment.filename}
           </span>
           <Link
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground"
             href={emailUrl}
-            target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground flex-shrink-0"
+            target="_blank"
             title="Open email"
           >
             <ExternalLinkIcon className="size-3.5" />
           </Link>
         </div>
       </TableCell>
-      <TableCell className="break-words max-w-[200px]">
+      <TableCell className="max-w-[200px] break-words">
         <FilingStatusCell
-          status={filingState.status}
-          skipReason={filingState.skipReason}
           error={filingState.error}
           folderPath={folderPath}
+          skipReason={filingState.skipReason}
+          status={filingState.status}
         />
       </TableCell>
       <TableCell>
@@ -553,11 +569,13 @@ function FilingRow({
               <DropdownMenuTrigger asChild>
                 <div>
                   <YesNoIndicator
-                    value={vote}
-                    onClick={(value) => {
-                      if (value) handleCorrectClick();
-                    }}
                     dropdownTrigger="wrong"
+                    onClick={(value) => {
+                      if (value) {
+                        handleCorrectClick();
+                      }
+                    }}
+                    value={vote}
                     wrongActive={dropdownOpen}
                   />
                 </div>
@@ -568,8 +586,8 @@ function FilingRow({
                 </DropdownMenuLabel>
                 {otherFolders.map((folder) => (
                   <DropdownMenuItem
-                    key={folder.folderId}
                     disabled={isMoving}
+                    key={folder.folderId}
                     onClick={() => handleMoveToFolder(folder)}
                   >
                     <FolderIcon className="size-4" />
@@ -587,17 +605,19 @@ function FilingRow({
         ) : isFiled ? (
           <div className="flex items-center justify-end">
             <YesNoIndicator
-              value={vote}
               onClick={(value) => {
-                if (value) handleCorrectClick();
-                else handleWrongClick();
+                if (value) {
+                  handleCorrectClick();
+                } else {
+                  handleWrongClick();
+                }
               }}
+              value={vote}
             />
           </div>
         ) : isSkipped && filingState.filingId ? (
           <div className="flex items-center justify-end">
             <YesNoIndicator
-              value={vote}
               onClick={(value) => {
                 if (value) {
                   handleCorrectClick();
@@ -605,6 +625,7 @@ function FilingRow({
                   handleSkippedWrongClick();
                 }
               }}
+              value={vote}
             />
           </div>
         ) : (
@@ -632,7 +653,7 @@ function SetupFolderSelection({
 }) {
   // Optimistic state for folder selection
   const [optimisticFolderIds, setOptimisticFolderIds] = useState<Set<string>>(
-    () => new Set(savedFolders.map((f) => f.folderId)),
+    () => new Set(savedFolders.map((f) => f.folderId))
   );
   // TODO: This assumes a single drive connection; swap to a selected connection ID when multi-connection UX exists.
   const driveConnectionId = connections[0]?.id ?? null;
@@ -703,7 +724,7 @@ function SetupFolderSelection({
         }
       }
     },
-    [emailAccountId, mutateFolders],
+    [emailAccountId, mutateFolders]
   );
 
   const rootFolders = useMemo(() => {
@@ -715,7 +736,7 @@ function SetupFolderSelection({
     }
 
     for (const folder of availableFolders) {
-      if (!folder.parentId || !folderMap.has(folder.parentId)) {
+      if (!(folder.parentId && folderMap.has(folder.parentId))) {
         roots.push(folder);
       }
     }
@@ -727,7 +748,9 @@ function SetupFolderSelection({
     const map = new Map<string, FolderItem[]>();
     for (const folder of availableFolders) {
       if (folder.parentId) {
-        if (!map.has(folder.parentId)) map.set(folder.parentId, []);
+        if (!map.has(folder.parentId)) {
+          map.set(folder.parentId, []);
+        }
         map.get(folder.parentId)!.push(folder);
       }
     }
@@ -744,29 +767,29 @@ function SetupFolderSelection({
         </span>
       </MutedText>
 
-      <LoadingContent loading={isLoading} error={undefined}>
+      <LoadingContent error={undefined} loading={isLoading}>
         {rootFolders.length > 0 ? (
           <>
             <div className="mt-4">
               <TreeProvider
-                showLines
-                showIcons
-                selectable={false}
                 animateExpand
                 indent={16}
+                selectable={false}
+                showIcons
+                showLines
               >
                 <TreeView className="p-0">
                   {rootFolders.map((folder, index) => (
                     <FolderNode
-                      key={folder.id}
                       folder={folder}
-                      isLast={index === rootFolders.length - 1}
-                      selectedFolderIds={optimisticFolderIds}
-                      onToggle={handleFolderToggle}
                       isDisabled={false}
-                      level={0}
-                      parentPath=""
+                      isLast={index === rootFolders.length - 1}
+                      key={folder.id}
                       knownChildren={folderChildrenMap.get(folder.id)}
+                      level={0}
+                      onToggle={handleFolderToggle}
+                      parentPath=""
+                      selectedFolderIds={optimisticFolderIds}
                     />
                   ))}
                 </TreeView>
@@ -774,21 +797,21 @@ function SetupFolderSelection({
             </div>
             <div className="mt-2">
               <CreateFolderDialog
-                emailAccountId={emailAccountId}
                 driveConnectionId={driveConnectionId}
+                emailAccountId={emailAccountId}
                 onFolderCreated={mutateFolders}
-                triggerLabel="Add folder"
-                triggerVariant="ghost"
-                triggerSize="xs-2"
-                triggerIcon={PlusIcon}
                 triggerClassName="text-muted-foreground hover:text-foreground"
+                triggerIcon={PlusIcon}
+                triggerLabel="Add folder"
+                triggerSize="xs-2"
+                triggerVariant="ghost"
               />
             </div>
           </>
         ) : (
           <NoFoldersFound
-            emailAccountId={emailAccountId}
             driveConnectionId={driveConnectionId}
+            emailAccountId={emailAccountId}
             onFolderCreated={mutateFolders}
           />
         )}
@@ -854,33 +877,33 @@ function SetupRulesForm({
         onPreviewClick();
       }
     },
-    [canPreview, emailAccountId, mutateEmail, onPreviewClick],
+    [canPreview, emailAccountId, mutateEmail, onPreviewClick]
   );
 
   return (
     <div>
-      <h3 className="text-lg font-semibold">2. Describe how you organize</h3>
+      <h3 className="font-semibold text-lg">2. Describe how you organize</h3>
       <MutedText className="mt-1">Tell us in plain English</MutedText>
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-3">
+      <form className="mt-4 space-y-3" onSubmit={handleSubmit(onSubmit)}>
         <Input
-          type="textarea"
+          autosizeTextarea
+          error={errors.filingPrompt}
           name="filingPrompt"
           placeholder={`Contracts go to Transactions by property address.
 Receipts go to Receipts by month.`}
           registerProps={register("filingPrompt")}
-          error={errors.filingPrompt}
-          autosizeTextarea
           rows={3}
+          type="textarea"
         />
         {errors.filingPrompt && (
-          <p className="text-sm text-red-500">{errors.filingPrompt.message}</p>
+          <p className="text-red-500 text-sm">{errors.filingPrompt.message}</p>
         )}
         {showPreviewButton && (
           <div className="mt-10 text-center">
             <Button
-              type="submit"
               disabled={!canPreview || isLoading}
               loading={isLoading}
+              type="submit"
             >
               {isLoading
                 ? "Finding recent attachments..."

@@ -1,8 +1,8 @@
+import { TZDate } from "@date-fns/tz";
 import { format } from "date-fns/format";
 import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
-import { TZDate } from "@date-fns/tz";
-import { createScopedLogger } from "@/utils/logger";
 import { captureException } from "@/utils/error";
+import { createScopedLogger } from "@/utils/logger";
 
 export const ONE_MINUTE_MS = 1000 * 60;
 export const ONE_HOUR_MS = ONE_MINUTE_MS * 60;
@@ -30,7 +30,7 @@ export function formatShortDate(
   } = {
     includeYear: false,
     lowercase: false,
-  },
+  }
 ) {
   // if date is today, return the time. e.g. 12:30pm
   // if date is before today then return the date. eg JUL 5th or AUG 13th
@@ -60,15 +60,21 @@ export function dateToSeconds(date: Date) {
 }
 
 export function internalDateToDate(internalDate?: string | null): Date {
-  if (!internalDate) return new Date();
+  if (!internalDate) {
+    return new Date();
+  }
 
   // First try to parse as a regular date string (for ISO strings like "2025-06-19T21:46:31Z")
   let date = new Date(internalDate);
-  if (!Number.isNaN(date.getTime())) return date;
+  if (!Number.isNaN(date.getTime())) {
+    return date;
+  }
 
   // Fallback to the old behavior for numeric timestamps
   date = new Date(+internalDate);
-  if (Number.isNaN(date.getTime())) return new Date();
+  if (Number.isNaN(date.getTime())) {
+    return new Date();
+  }
 
   return date;
 }
@@ -99,7 +105,7 @@ export function formatDateSimple(date: Date) {
  * @param direction - 'asc' for oldest first (default, chronological), 'desc' for newest first
  */
 export function sortByInternalDate<T extends { internalDate?: string | null }>(
-  direction: "asc" | "desc" = "asc",
+  direction: "asc" | "desc" = "asc"
 ) {
   return (a: T, b: T): number => {
     const aTime = a.internalDate
@@ -126,7 +132,7 @@ const logger = createScopedLogger("date-utils");
 export function formatInUserTimezone(
   date: Date,
   timezone: string | null | undefined,
-  formatString: string,
+  formatString: string
 ): string {
   const tz = timezone || DEFAULT_TIMEZONE;
   try {
@@ -152,7 +158,7 @@ export function formatInUserTimezone(
  */
 export function formatTimeInUserTimezone(
   date: Date,
-  timezone: string | null | undefined,
+  timezone: string | null | undefined
 ): string {
   return formatInUserTimezone(date, timezone, "h:mm a");
 }
@@ -163,7 +169,7 @@ export function formatTimeInUserTimezone(
  */
 export function formatDateTimeInUserTimezone(
   date: Date,
-  timezone: string | null | undefined,
+  timezone: string | null | undefined
 ): string {
   return formatInUserTimezone(date, timezone, "MMM d, yyyy 'at' h:mm a");
 }

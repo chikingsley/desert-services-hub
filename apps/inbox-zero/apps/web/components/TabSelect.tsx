@@ -1,5 +1,10 @@
 "use client";
 
+import { cva, type VariantProps } from "class-variance-authority";
+import { ArrowUpRight } from "lucide-react";
+import { LayoutGroup, motion } from "motion/react";
+import Link from "next/link";
+import { type Dispatch, type SetStateAction, useId } from "react";
 /*
  * Adapted from: https://github.com/dubinc/dub
  *
@@ -9,11 +14,6 @@
  * This file may have been modified from the original.
  */
 import { cn } from "@/utils";
-import { cva, type VariantProps } from "class-variance-authority";
-import { LayoutGroup, motion } from "motion/react";
-import Link from "next/link";
-import { type Dispatch, type SetStateAction, useId } from "react";
-import { ArrowUpRight } from "lucide-react";
 
 const tabSelectButtonVariants = cva("p-4 transition-colors duration-75", {
   variants: {
@@ -21,7 +21,7 @@ const tabSelectButtonVariants = cva("p-4 transition-colors duration-75", {
       default:
         "text-content-subtle data-[selected=true]:text-content-emphasis data-[selected=false]:hover:text-content-default",
       accent:
-        "text-content-subtle transition-[color,font-weight] data-[selected=true]:text-blue-600 data-[selected=false]:hover:text-content-default data-[selected=true]:font-medium",
+        "text-content-subtle transition-[color,font-weight] data-[selected=true]:font-medium data-[selected=true]:text-blue-600 data-[selected=false]:hover:text-content-default",
     },
   },
   defaultVariants: {
@@ -63,9 +63,9 @@ export function TabSelect<T extends string>({
           const As = href ? Link : "div";
           return (
             <As
-              key={id}
               className="relative"
               href={href ?? "#"}
+              key={id}
               target={target ?? undefined}
             >
               <button
@@ -76,7 +76,7 @@ export function TabSelect<T extends string>({
                   target === "_blank" && "group flex items-center gap-1.5",
                   isSelected
                     ? ""
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:dark:text-gray-300",
+                    : "text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:dark:text-gray-300"
                 )}
                 data-selected={isSelected}
               >
@@ -85,11 +85,11 @@ export function TabSelect<T extends string>({
               </button>
               {isSelected && (
                 <motion.div
+                  className={tabSelectIndicatorVariants({ variant })}
                   layoutId="indicator"
                   transition={{
                     duration: 0.1,
                   }}
-                  className={tabSelectIndicatorVariants({ variant })}
                 >
                   <div className="h-0.5 rounded-t-full bg-current" />
                 </motion.div>

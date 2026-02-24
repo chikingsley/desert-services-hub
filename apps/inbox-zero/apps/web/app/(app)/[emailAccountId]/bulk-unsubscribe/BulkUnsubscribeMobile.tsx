@@ -1,9 +1,5 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
-import Link from "next/link";
-import { usePostHog } from "posthog-js/react";
 import {
   ArchiveIcon,
   EyeIcon,
@@ -11,11 +7,20 @@ import {
   MailXIcon,
   ThumbsUpIcon,
 } from "lucide-react";
+import Link from "next/link";
+import { usePostHog } from "posthog-js/react";
+import type React from "react";
+import { useState } from "react";
 import {
-  useUnsubscribe,
   useApproveButton,
   useBulkArchive,
+  useUnsubscribe,
 } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/hooks";
+import { ResubscribeDialog } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/ResubscribeDialog";
+import type { RowProps } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/types";
+import { ButtonLoader } from "@/components/Loading";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -23,13 +28,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ResubscribeDialog } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/ResubscribeDialog";
-import { extractEmailAddress, extractNameFromEmail } from "@/utils/email";
-import type { RowProps } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/types";
-import { Button } from "@/components/ui/button";
-import { ButtonLoader } from "@/components/Loading";
 import { NewsletterStatus } from "@/generated/prisma/enums";
-import { Badge } from "@/components/ui/badge";
+import { extractEmailAddress, extractNameFromEmail } from "@/utils/email";
 
 export function BulkUnsubscribeMobile({
   tableRows,
@@ -72,7 +72,7 @@ export function BulkUnsubscribeRowMobile({
       refetchPremium,
       posthog,
       emailAccountId,
-    },
+    }
   );
   const { onBulkArchive, isBulkArchiving } = useBulkArchive({
     mutate,
@@ -90,31 +90,31 @@ export function BulkUnsubscribeRowMobile({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="grid grid-cols-3 gap-2 text-nowrap">
-          <Badge variant="outline" className="justify-center">
+          <Badge className="justify-center" variant="outline">
             {item.value} emails
           </Badge>
-          <Badge variant="outline" className="justify-center">
+          <Badge className="justify-center" variant="outline">
             {readPercentage.toFixed(0)}% read
           </Badge>
-          <Badge variant="outline" className="justify-center">
+          <Badge className="justify-center" variant="outline">
             {archivedPercentage.toFixed(0)}% archived
           </Badge>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           {isUnsubscribed ? (
-            <Badge variant="red" className="justify-center gap-1">
+            <Badge className="justify-center gap-1" variant="red">
               <MailXIcon className="size-3" />
               Unsubscribed
             </Badge>
           ) : (
             <Button
+              disabled={!hasUnsubscribeAccess}
+              onClick={onApprove}
               size="sm"
               variant={
                 item.status === NewsletterStatus.APPROVED ? "green" : "ghost"
               }
-              onClick={onApprove}
-              disabled={!hasUnsubscribeAccess}
             >
               {approveLoading ? (
                 <ButtonLoader />
@@ -126,9 +126,9 @@ export function BulkUnsubscribeRowMobile({
 
           {isUnsubscribed || resubscribeDialogOpen ? (
             <Button
+              onClick={() => setResubscribeDialogOpen(true)}
               size="sm"
               variant="outline"
-              onClick={() => setResubscribeDialogOpen(true)}
             >
               <span className="flex items-center gap-1.5">
                 {unsubscribeLoading ? (
@@ -140,12 +140,12 @@ export function BulkUnsubscribeRowMobile({
               </span>
             </Button>
           ) : (
-            <Button size="sm" variant="outline" asChild>
+            <Button asChild size="sm" variant="outline">
               <Link
                 href={unsubscribeLink}
-                target={hasUnsubscribeLink ? "_blank" : undefined}
                 onClick={onUnsubscribe}
                 rel="noreferrer"
+                target={hasUnsubscribeLink ? "_blank" : undefined}
               >
                 <span className="flex items-center gap-1.5">
                   {unsubscribeLoading ? (
@@ -160,9 +160,9 @@ export function BulkUnsubscribeRowMobile({
           )}
 
           <Button
+            onClick={() => onBulkArchive([item])}
             size="sm"
             variant="secondary"
-            onClick={() => onBulkArchive([item])}
           >
             {isBulkArchiving ? (
               <ButtonLoader />
@@ -173,9 +173,9 @@ export function BulkUnsubscribeRowMobile({
           </Button>
 
           <Button
+            onClick={() => onOpenNewsletter(item)}
             size="sm"
             variant="secondary"
-            onClick={() => onOpenNewsletter(item)}
           >
             <EyeIcon className="mr-2 size-4" />
             View
@@ -184,12 +184,12 @@ export function BulkUnsubscribeRowMobile({
       </CardContent>
 
       <ResubscribeDialog
-        open={resubscribeDialogOpen}
-        onOpenChange={setResubscribeDialogOpen}
-        senderName={name}
-        newsletterEmail={item.name}
         emailAccountId={emailAccountId}
         mutate={mutate}
+        newsletterEmail={item.name}
+        onOpenChange={setResubscribeDialogOpen}
+        open={resubscribeDialogOpen}
+        senderName={name}
       />
     </Card>
   );

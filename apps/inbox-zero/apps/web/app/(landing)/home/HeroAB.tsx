@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { Hero } from "@/app/(landing)/home/Hero";
 import {
+  type HeroVariant,
   useHeroVariant,
   useHeroVariantEnabled,
-  type HeroVariant,
 } from "@/hooks/useFeatureFlags";
 
 const copy: {
@@ -45,19 +45,12 @@ export function HeroAB() {
     setIsHydrated(true);
   }, [variant]);
 
-  if (isFlagEnabled === false) return <Hero />;
+  if (isFlagEnabled === false) {
+    return <Hero />;
+  }
 
   return (
     <Hero
-      title={
-        <span
-          className={`transition-opacity duration-300 ease-out ${
-            isHydrated && isFlagEnabled ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          {title}
-        </span>
-      }
       subtitle={
         <span
           className={`transition-opacity duration-300 ease-out ${
@@ -65,6 +58,15 @@ export function HeroAB() {
           }`}
         >
           {subtitle}
+        </span>
+      }
+      title={
+        <span
+          className={`transition-opacity duration-300 ease-out ${
+            isHydrated && isFlagEnabled ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          {title}
         </span>
       }
     />

@@ -1,15 +1,15 @@
 import { deleteContact as deleteLoopsContact } from "@inboxzero/loops";
 import { deleteContact as deleteResendContact } from "@inboxzero/resend";
-import prisma from "@/utils/prisma";
 import { deleteTinybirdAiCalls } from "@inboxzero/tinybird-ai-analytics";
-import { deletePosthogUser, trackUserDeleted } from "@/utils/posthog";
-import { captureException } from "@/utils/error";
-import { unwatchEmails } from "@/utils/email/watch-manager";
 import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
+import { unwatchEmails } from "@/utils/email/watch-manager";
+import { captureException } from "@/utils/error";
 import type { Logger } from "@/utils/logger";
-import { sleep } from "@/utils/sleep";
+import { deletePosthogUser, trackUserDeleted } from "@/utils/posthog";
+import prisma from "@/utils/prisma";
 import { clearCachedResearchForUser } from "@/utils/redis/research-cache";
+import { sleep } from "@/utils/sleep";
 
 export async function deleteUser({
   userId,
@@ -36,7 +36,9 @@ export async function deleteUser({
   });
 
   const resourcesPromise = accounts.map(async (account) => {
-    if (!account.emailAccount) return Promise.resolve();
+    if (!account.emailAccount) {
+      return Promise.resolve();
+    }
 
     // Create email provider for unwatching
     const emailProvider = account.access_token

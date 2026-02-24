@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { withError, type RequestWithLogger } from "@/utils/middleware";
+import { CleanAction } from "@/generated/prisma/enums";
+import { SafeError } from "@/utils/error";
 import { getGmailClientWithRefresh } from "@/utils/gmail/client";
 import { GmailLabel, labelThread } from "@/utils/gmail/label";
-import { SafeError } from "@/utils/error";
-import prisma from "@/utils/prisma";
-import { isDefined } from "@/utils/types";
 import type { Logger } from "@/utils/logger";
-import { CleanAction } from "@/generated/prisma/enums";
-import { updateThread } from "@/utils/redis/clean";
+import { type RequestWithLogger, withError } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 import { withQstashOrInternal } from "@/utils/qstash";
+import { updateThread } from "@/utils/redis/clean";
+import { isDefined } from "@/utils/types";
 
 const cleanGmailSchema = z.object({
   emailAccountId: z.string(),
@@ -47,9 +47,12 @@ async function performGmailAction({
     },
   });
 
-  if (!account) throw new SafeError("User not found", 404);
-  if (!account.account?.access_token || !account.account?.refresh_token)
+  if (!account) {
+    throw new SafeError("User not found", 404);
+  }
+  if (!(account.account?.access_token && account.account?.refresh_token)) {
     throw new SafeError("No Gmail account found", 404);
+  }
 
   const gmail = await getGmailClientWithRefresh({
     accessToken: account.account.access_token,
@@ -149,5 +152,5 @@ export const POST = withError(
     });
 
     return NextResponse.json({ success: true });
-  }),
+  })
 );

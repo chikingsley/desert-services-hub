@@ -1,11 +1,11 @@
-import prisma from "@/utils/prisma";
-import { withPrismaRetry } from "@/utils/prisma-retry";
 import type { EmailProvider } from "@/utils/email/types";
 import { FOLLOW_UP_LABEL } from "@/utils/label";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import { withPrismaRetry } from "@/utils/prisma-retry";
 
 export async function getOrCreateFollowUpLabel(
-  provider: EmailProvider,
+  provider: EmailProvider
 ): Promise<{ id: string; name: string }> {
   const existingLabel = await provider.getLabelByName(FOLLOW_UP_LABEL);
   if (existingLabel) {
@@ -88,12 +88,16 @@ export async function hasFollowUpLabel({
   logger: Logger;
 }): Promise<boolean> {
   const label = await provider.getLabelByName(FOLLOW_UP_LABEL);
-  if (!label) return false;
+  if (!label) {
+    return false;
+  }
 
   try {
     const thread = await provider.getThread(threadId);
     const messages = thread.messages;
-    if (!messages?.length) return false;
+    if (!messages?.length) {
+      return false;
+    }
 
     return messages.some((message) => message.labelIds?.includes(label.id));
   } catch (error) {
@@ -113,7 +117,9 @@ export async function clearFollowUpLabel({
   provider: EmailProvider;
   logger: Logger;
 }): Promise<void> {
-  if (!threadId) return;
+  if (!threadId) {
+    return;
+  }
 
   try {
     const { count } = await withPrismaRetry(
@@ -129,7 +135,7 @@ export async function clearFollowUpLabel({
             followUpAppliedAt: null,
           },
         }),
-      { logger },
+      { logger }
     );
 
     if (count === 0) {

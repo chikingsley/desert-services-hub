@@ -1,14 +1,14 @@
 import { setUser } from "@sentry/nextjs";
-import { trackError } from "@/utils/posthog";
 import { auth } from "@/utils/auth";
 import type { Logger } from "@/utils/logger";
+import { trackError } from "@/utils/posthog";
 
 export async function logErrorToPosthog(
   type: "api" | "action",
   url: string,
   errorType: string,
   emailAccountId: string,
-  logger: Logger,
+  logger: Logger
 ) {
   try {
     const session = await auth();

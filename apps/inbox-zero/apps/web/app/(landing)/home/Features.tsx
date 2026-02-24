@@ -1,17 +1,17 @@
 import clsx from "clsx";
 import {
   BarChart2Icon,
+  BellIcon,
   EyeIcon,
   LineChart,
   type LucideIcon,
   MousePointer2Icon,
   Orbit,
+  ReplyIcon,
   ShieldHalfIcon,
   Sparkles,
   SparklesIcon,
   TagIcon,
-  BellIcon,
-  ReplyIcon,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -55,29 +55,27 @@ export function FeaturesWithImage({
           <div
             className={clsx(
               "lg:pt-4",
-              imageSide === "left"
-                ? "lg:ml-auto lg:pl-4"
-                : "lg:mr-auto lg:pr-4",
+              imageSide === "left" ? "lg:ml-auto lg:pl-4" : "lg:mr-auto lg:pr-4"
             )}
           >
             <div className="lg:max-w-lg">
-              <h2 className="font-title text-base leading-7 text-blue-600">
+              <h2 className="font-title text-base text-blue-600 leading-7">
                 {title}
               </h2>
               <p className="mt-2 font-title text-3xl text-gray-900 sm:text-4xl">
                 {subtitle}
               </p>
-              <p className="mt-6 text-lg leading-8 text-gray-600">
+              <p className="mt-6 text-gray-600 text-lg leading-8">
                 {description}
               </p>
               {!!features.length && (
-                <dl className="mt-10 max-w-xl space-y-8 text-base leading-7 text-gray-600 lg:max-w-none">
+                <dl className="mt-10 max-w-xl space-y-8 text-base text-gray-600 leading-7 lg:max-w-none">
                   {features.map((feature) => (
-                    <div key={feature.name} className="relative pl-9">
+                    <div className="relative pl-9" key={feature.name}>
                       <dt className="inline font-semibold text-gray-900">
                         <feature.icon
-                          className="absolute left-1 top-1 h-5 w-5 text-blue-600"
                           aria-hidden="true"
+                          className="absolute top-1 left-1 h-5 w-5 text-blue-600"
                         />
                         {feature.name}
                       </dt>{" "}
@@ -93,16 +91,16 @@ export function FeaturesWithImage({
               "flex items-start",
               imageSide === "left"
                 ? "justify-end lg:order-first"
-                : "justify-start lg:order-last",
+                : "justify-start lg:order-last"
             )}
           >
-            <div className="rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:rounded-2xl lg:p-4">
+            <div className="rounded-xl bg-gray-900/5 p-2 ring-1 ring-gray-900/10 ring-inset lg:rounded-2xl lg:p-4">
               <Image
-                src={image}
                 alt="Product screenshot"
                 className="w-[48rem] max-w-none rounded-xl shadow-2xl ring-1 ring-gray-400/10 sm:w-[57rem]"
-                width={2400}
                 height={1800}
+                src={image}
+                width={2400}
               />
             </div>
           </div>
@@ -135,12 +133,12 @@ export function FeaturesAiAssistant({ imageSide }: { imageSide?: Side }) {
 
   return (
     <FeaturesWithImage
-      imageSide={imageSide}
-      title={title}
-      subtitle={subtitle}
       description={description}
       features={[]}
       image="/images/home/ai-email-assistant.png"
+      imageSide={imageSide}
+      subtitle={subtitle}
+      title={title}
     />
   );
 }
@@ -173,12 +171,12 @@ export function FeaturesColdEmailBlocker({ imageSide }: { imageSide?: Side }) {
 
   return (
     <FeaturesWithImage
-      imageSide={imageSide}
-      title="Cold Email Blocker"
-      subtitle={subtitle}
       description={description}
-      image="/images/home/cold-email-blocker.png"
       features={featuresColdEmailBlocker}
+      image="/images/home/cold-email-blocker.png"
+      imageSide={imageSide}
+      subtitle={subtitle}
+      title="Cold Email Blocker"
     />
   );
 }
@@ -207,12 +205,12 @@ const featuresStats = [
 export function FeaturesStats({ imageSide }: { imageSide?: Side }) {
   return (
     <FeaturesWithImage
-      imageSide={imageSide}
-      title="Email Analytics"
-      subtitle="What gets measured, gets managed"
       description="Understanding your inbox is the first step to dealing with it. Understand what is filling up your inbox. Then figure out an action plan to deal with it."
-      image="/images/home/email-analytics.png"
       features={featuresStats}
+      image="/images/home/email-analytics.png"
+      imageSide={imageSide}
+      subtitle="What gets measured, gets managed"
+      title="Email Analytics"
     />
   );
 }
@@ -241,12 +239,12 @@ const featuresUnsubscribe = [
 export function FeaturesUnsubscribe({ imageSide }: { imageSide?: Side }) {
   return (
     <FeaturesWithImage
-      imageSide={imageSide}
-      title="Bulk Unsubscriber"
-      subtitle="Bulk unsubscribe from emails you never read"
       description="Unsubscribe from newsletters and marketing emails in one click. We show you which emails you never read to make it easy."
-      image="/images/home/bulk-unsubscriber.png"
       features={featuresUnsubscribe}
+      image="/images/home/bulk-unsubscriber.png"
+      imageSide={imageSide}
+      subtitle="Bulk unsubscribe from emails you never read"
+      title="Bulk Unsubscriber"
     />
   );
 }
@@ -281,12 +279,12 @@ const featuresReplyZero = [
 export function FeaturesReplyZero({ imageSide }: { imageSide?: Side }) {
   return (
     <FeaturesWithImage
-      imageSide={imageSide}
-      title="Reply Zero"
-      subtitle="Pre-written drafts waiting in your inbox"
       description="Focus only on emails needing your attention. Reply Zero identifies them and prepares draft replies, letting you skip the noise and respond faster."
-      image="/images/home/reply-zero.png"
       features={featuresReplyZero}
+      image="/images/home/reply-zero.png"
+      imageSide={imageSide}
+      subtitle="Pre-written drafts waiting in your inbox"
+      title="Reply Zero"
     />
   );
 }

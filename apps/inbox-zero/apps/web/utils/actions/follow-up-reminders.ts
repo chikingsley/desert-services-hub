@@ -1,15 +1,15 @@
 "use server";
 
 import { z } from "zod";
-import { actionClient } from "@/utils/actions/safe-action";
-import {
-  toggleFollowUpRemindersBody,
-  saveFollowUpSettingsBody,
-  DEFAULT_FOLLOW_UP_DAYS,
-} from "@/utils/actions/follow-up-reminders.validation";
-import prisma from "@/utils/prisma";
 import { processAccountFollowUps } from "@/app/api/follow-up-reminders/process";
+import {
+  DEFAULT_FOLLOW_UP_DAYS,
+  saveFollowUpSettingsBody,
+  toggleFollowUpRemindersBody,
+} from "@/utils/actions/follow-up-reminders.validation";
+import { actionClient } from "@/utils/actions/safe-action";
 import { SafeError } from "@/utils/error";
+import prisma from "@/utils/prisma";
 
 export const toggleFollowUpRemindersAction = actionClient
   .metadata({ name: "toggleFollowUpReminders" })
@@ -44,7 +44,7 @@ export const updateFollowUpSettingsAction = actionClient
           followUpAutoDraftEnabled,
         },
       });
-    },
+    }
   );
 
 export const scanFollowUpRemindersAction = actionClient
@@ -75,7 +75,9 @@ export const scanFollowUpRemindersAction = actionClient
       },
     });
 
-    if (!emailAccount) throw new SafeError("Email account not found");
+    if (!emailAccount) {
+      throw new SafeError("Email account not found");
+    }
 
     await processAccountFollowUps({ emailAccount, logger });
   });

@@ -1,16 +1,16 @@
-import { CheckCircleIcon } from "lucide-react";
 import { capitalCase } from "capital-case";
+import { CheckCircleIcon } from "lucide-react";
 import { Badge, type Color } from "@/components/Badge";
 import { HoverCard } from "@/components/HoverCard";
-import { ActionType, ExecutedRuleStatus } from "@/generated/prisma/enums";
 import type {
-  ExecutedRule,
   ExecutedAction,
+  ExecutedRule,
   Rule,
 } from "@/generated/prisma/client";
+import { ActionType, ExecutedRuleStatus } from "@/generated/prisma/enums";
+import { sortActionsByPriority } from "@/utils/action-sort";
 import { truncate } from "@/utils/string";
 import { getEmailTerminology } from "@/utils/terminology";
-import { sortActionsByPriority } from "@/utils/action-sort";
 
 type Plan = Pick<ExecutedRule, "reason" | "status"> & {
   rule: Rule | null;
@@ -21,7 +21,9 @@ export function PlanBadge(props: { plan?: Plan; provider: string }) {
   const { plan, provider } = props;
 
   // if (!plan) return <Badge color="gray">Not planned</Badge>;
-  if (!plan) return null;
+  if (!plan) {
+    return null;
+  }
 
   if (!plan.rule) {
     const component = <Badge color="yellow">No plan</Badge>;
@@ -58,8 +60,8 @@ export function PlanBadge(props: { plan?: Plan; provider: string }) {
               return (
                 <div key={i}>
                   <Badge
-                    color={getActionColor(action.type)}
                     className="whitespace-pre-wrap"
+                    color={getActionColor(action.type)}
                   >
                     {getActionMessage(action, provider)}
                   </Badge>
@@ -103,7 +105,7 @@ export function ActionBadgeExpanded({
 }) {
   switch (action.type) {
     case ActionType.ARCHIVE:
-      return <ActionBadge type={ActionType.ARCHIVE} provider={provider} />;
+      return <ActionBadge provider={provider} type={ActionType.ARCHIVE} />;
     case ActionType.LABEL:
       return (
         <Badge color="blue">
@@ -139,13 +141,13 @@ export function ActionBadgeExpanded({
         </div>
       );
     case ActionType.MARK_SPAM:
-      return <ActionBadge type={ActionType.MARK_SPAM} provider={provider} />;
+      return <ActionBadge provider={provider} type={ActionType.MARK_SPAM} />;
     case ActionType.CALL_WEBHOOK:
-      return <ActionBadge type={ActionType.CALL_WEBHOOK} provider={provider} />;
+      return <ActionBadge provider={provider} type={ActionType.CALL_WEBHOOK} />;
     case ActionType.MARK_READ:
-      return <ActionBadge type={ActionType.MARK_READ} provider={provider} />;
+      return <ActionBadge provider={provider} type={ActionType.MARK_READ} />;
     default:
-      return <ActionBadge type={action.type} provider={provider} />;
+      return <ActionBadge provider={provider} type={action.type} />;
   }
 }
 
@@ -192,16 +194,18 @@ function getActionMessage(action: ExecutedAction, provider: string): string {
   switch (action.type) {
     // biome-ignore lint/suspicious/noFallthroughSwitchClause: ignore
     case ActionType.LABEL:
-      if (action.label)
+      if (action.label) {
         return `${terminology.label.singularCapitalized}: "${action.label}"`;
+      }
     case ActionType.REPLY:
     case ActionType.SEND_EMAIL:
     // biome-ignore lint/suspicious/noFallthroughSwitchClause: ignore
     case ActionType.FORWARD:
-      if (action.to)
+      if (action.to) {
         return `${getActionLabel(action.type, provider)} to ${action.to}${
           action.content ? `:\n${action.content}` : ""
         }`;
+      }
     default:
       return getActionLabel(action.type, provider);
   }
@@ -236,7 +240,9 @@ export function getActionColor(actionType: ActionType): Color {
 }
 
 function getPlanColor(plan: Plan | null, executed: boolean): Color {
-  if (executed) return "green";
+  if (executed) {
+    return "green";
+  }
 
   const firstAction = plan?.actionItems?.[0];
 

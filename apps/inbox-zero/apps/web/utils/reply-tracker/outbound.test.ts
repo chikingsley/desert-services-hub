@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { handleOutboundReply } from "./outbound";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getEmailAccount, getMockMessage } from "@/__tests__/helpers";
+import { SystemType } from "@/generated/prisma/enums";
 import prisma from "@/utils/__mocks__/prisma";
 import { aiDetermineThreadStatus } from "@/utils/ai/reply/determine-thread-status";
-import { applyThreadStatusLabel } from "./label-helpers";
-import { updateThreadTrackers } from "@/utils/reply-tracker/handle-conversation-status";
-import { getEmailAccount, getMockMessage } from "@/__tests__/helpers";
 import { createScopedLogger } from "@/utils/logger";
-import { SystemType } from "@/generated/prisma/enums";
+import { updateThreadTrackers } from "@/utils/reply-tracker/handle-conversation-status";
+import { applyThreadStatusLabel } from "./label-helpers";
+import { handleOutboundReply } from "./outbound";
 
 vi.mock("@/utils/prisma");
 vi.mock("@/utils/ai/reply/determine-thread-status");
@@ -57,7 +57,7 @@ describe("handleOutboundReply", () => {
     expect(applyThreadStatusLabel).toHaveBeenCalledWith(
       expect.objectContaining({
         systemType: SystemType.AWAITING_REPLY,
-      }),
+      })
     );
     expect(updateThreadTrackers).toHaveBeenCalled();
   });

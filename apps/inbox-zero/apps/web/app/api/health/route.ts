@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
+import { env } from "@/env";
 import { ExecutedRuleStatus } from "@/generated/prisma/enums";
 import { withError } from "@/utils/middleware";
-import { env } from "@/env";
+import prisma from "@/utils/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,7 @@ export const GET = withError("health", async (request) => {
   try {
     // Check for any executed rules in the last 5 minutes
     const cutoffTime = new Date(
-      Date.now() - HEALTH_CHECK_WINDOW_MINUTES * 60 * 1000,
+      Date.now() - HEALTH_CHECK_WINDOW_MINUTES * 60 * 1000
     );
 
     const recentActivity = await prisma.executedRule.findFirst({
@@ -51,7 +51,7 @@ export const GET = withError("health", async (request) => {
         timestamp: new Date().toISOString(),
         foundActivityAt: recentActivity?.createdAt?.toISOString() || null,
       },
-      { status },
+      { status }
     );
   } catch (error) {
     // If we can't query the database, the system is definitely unhealthy
@@ -64,7 +64,7 @@ export const GET = withError("health", async (request) => {
         timestamp: new Date().toISOString(),
         error: "Database connection failed",
       },
-      { status: 503 },
+      { status: 503 }
     );
   }
 });

@@ -59,4 +59,8 @@ const server = serve({
 
 console.log(`Webhook receiver running at ${server.url}`);
 
-startWorker().catch((err) => console.error("[worker] Failed to start:", err));
+try {
+  startWorker();
+} catch (err) {
+  console.error("[worker] Failed to start:", err);
+}

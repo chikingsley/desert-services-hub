@@ -9,36 +9,6 @@
 // ============================================================================
 
 export interface PDLPersonData {
-  id?: string;
-  full_name?: string;
-  first_name?: string;
-  last_name?: string;
-  job_title?: string;
-  job_company_name?: string;
-  job_company_website?: string;
-  linkedin_url?: string;
-  facebook_url?: string;
-  twitter_url?: string;
-  github_url?: string;
-  phone_numbers?: string[];
-  mobile_phone?: string;
-  work_email?: string;
-  personal_emails?: string[];
-  emails?: { address: string; type: string }[];
-  location_name?: string;
-  location_locality?: string;
-  location_region?: string;
-  location_country?: string;
-  location_postal_code?: string;
-  skills?: string[];
-  interests?: string[];
-  experience?: {
-    title?: { name?: string };
-    company?: { name?: string; website?: string };
-    start_date?: string;
-    end_date?: string;
-    is_primary?: boolean;
-  }[];
   education?: {
     school?: { name?: string };
     degrees?: string[];
@@ -46,10 +16,40 @@ export interface PDLPersonData {
     start_date?: string;
     end_date?: string;
   }[];
+  emails?: { address: string; type: string }[];
+  experience?: {
+    title?: { name?: string };
+    company?: { name?: string; website?: string };
+    start_date?: string;
+    end_date?: string;
+    is_primary?: boolean;
+  }[];
+  facebook_url?: string;
+  first_name?: string;
+  full_name?: string;
+  github_url?: string;
+  id?: string;
+  interests?: string[];
+  job_company_name?: string;
+  job_company_website?: string;
+  job_title?: string;
+  last_name?: string;
+  linkedin_url?: string;
+  location_country?: string;
+  location_locality?: string;
+  location_name?: string;
+  location_postal_code?: string;
+  location_region?: string;
+  mobile_phone?: string;
+  personal_emails?: string[];
+  phone_numbers?: string[];
+  skills?: string[];
+  twitter_url?: string;
+  work_email?: string;
 }
 
 export interface PersonEnrichmentResult {
-  success: boolean;
+  error?: string;
   likelihood?: number;
   person?: {
     id: string | null;
@@ -66,13 +66,12 @@ export interface PersonEnrichmentResult {
     skills: string[];
   };
   raw?: PDLPersonData;
+  success: boolean;
   timeMs: number;
-  error?: string;
 }
 
 export interface PersonSearchResult {
-  success: boolean;
-  total: number;
+  error?: string;
   people: {
     id: string | null;
     name: string | null;
@@ -83,12 +82,13 @@ export interface PersonSearchResult {
     location: string | null;
   }[];
   raw?: PDLPersonData[];
+  success: boolean;
   timeMs: number;
-  error?: string;
+  total: number;
 }
 
 export interface PersonIdentifyResult {
-  success: boolean;
+  error?: string;
   matches: {
     id: string | null;
     name: string | null;
@@ -97,8 +97,8 @@ export interface PersonIdentifyResult {
     linkedIn: string | null;
     confidence: number;
   }[];
+  success: boolean;
   timeMs: number;
-  error?: string;
 }
 
 // ============================================================================
@@ -106,20 +106,14 @@ export interface PersonIdentifyResult {
 // ============================================================================
 
 export interface PDLCompanyData {
-  id?: string;
-  name?: string;
   display_name?: string;
-  website?: string;
-  linkedin_url?: string;
-  facebook_url?: string;
-  twitter_url?: string;
-  founded?: number;
   employee_count?: number;
-  size?: string;
-  industry?: string;
+  facebook_url?: string;
+  founded?: number;
   headline?: string;
-  summary?: string;
-  tags?: string[];
+  id?: string;
+  industry?: string;
+  linkedin_url?: string;
   location?: {
     name?: string;
     street_address?: string;
@@ -129,11 +123,15 @@ export interface PDLCompanyData {
     country?: string;
   };
   naics?: { naics_code: string; naics_description: string }[];
+  name?: string;
+  size?: string;
+  summary?: string;
+  tags?: string[];
+  twitter_url?: string;
+  website?: string;
 }
 
 export interface CompanyEnrichmentResult {
-  success: boolean;
-  likelihood?: number;
   company?: {
     id: string | null;
     name: string;
@@ -149,14 +147,14 @@ export interface CompanyEnrichmentResult {
     linkedIn: string | null;
     tags: string[];
   };
-  raw?: PDLCompanyData;
-  timeMs: number;
   error?: string;
+  likelihood?: number;
+  raw?: PDLCompanyData;
+  success: boolean;
+  timeMs: number;
 }
 
 export interface CompanySearchResult {
-  success: boolean;
-  total: number;
   companies: {
     id: string | null;
     name: string;
@@ -165,13 +163,14 @@ export interface CompanySearchResult {
     employeeCount: number | null;
     location: string | null;
   }[];
-  raw?: PDLCompanyData[];
-  timeMs: number;
   error?: string;
+  raw?: PDLCompanyData[];
+  success: boolean;
+  timeMs: number;
+  total: number;
 }
 
 export interface CompanyCleanResult {
-  success: boolean;
   company?: {
     name: string;
     website: string | null;
@@ -181,9 +180,10 @@ export interface CompanyCleanResult {
     founded: number | null;
     location: string | null;
   };
-  fuzzyMatch: boolean;
-  timeMs: number;
   error?: string;
+  fuzzyMatch: boolean;
+  success: boolean;
+  timeMs: number;
 }
 
 // ============================================================================
@@ -191,29 +191,29 @@ export interface CompanyCleanResult {
 // ============================================================================
 
 export interface JobTitleEnrichResult {
-  success: boolean;
+  error?: string;
   matches: {
     title: string;
     relevance: number;
   }[];
   skills: string[];
+  success: boolean;
   timeMs: number;
-  error?: string;
 }
 
 export interface IPEnrichResult {
-  success: boolean;
+  error?: string;
   ip?: {
     address: string;
     company: string | null;
     location: string | null;
   };
+  success: boolean;
   timeMs: number;
-  error?: string;
 }
 
 export interface LocationCleanResult {
-  success: boolean;
+  error?: string;
   location?: {
     name: string | null;
     locality: string | null;
@@ -224,12 +224,12 @@ export interface LocationCleanResult {
     type: string | null;
     geo: { lat: number; lng: number } | null;
   };
+  success: boolean;
   timeMs: number;
-  error?: string;
 }
 
 export interface SchoolCleanResult {
-  success: boolean;
+  error?: string;
   school?: {
     name: string;
     type: string | null;
@@ -237,11 +237,12 @@ export interface SchoolCleanResult {
     linkedIn: string | null;
     location: string | null;
   };
+  success: boolean;
   timeMs: number;
-  error?: string;
 }
 
 export interface AutocompleteResult {
+  error?: string;
   success: boolean;
   suggestions: {
     name: string;
@@ -249,5 +250,4 @@ export interface AutocompleteResult {
     meta?: Record<string, unknown>;
   }[];
   timeMs: number;
-  error?: string;
 }

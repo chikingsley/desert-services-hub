@@ -1,12 +1,12 @@
-import { useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { useCallback } from "react";
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
-  PaginationPrevious,
   PaginationLink,
   PaginationNext,
+  PaginationPrevious,
 } from "@/components/ui/pagination";
 
 export function TablePagination({ totalPages }: { totalPages: number }) {
@@ -19,10 +19,12 @@ export function TablePagination({ totalPages }: { totalPages: number }) {
       const asString = params.toString();
       return asString ? `?${asString}` : "";
     },
-    [searchParams],
+    [searchParams]
   );
 
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1) {
+    return null;
+  }
 
   return (
     <div className="m-4">

@@ -8,7 +8,6 @@
  * disabled. These handlers now only do parsing + DB updates.
  */
 
-import { db } from "@lib/db/client";
 import { getPermitById, upsertPermit } from "@lib/db/repositories/dust-permit";
 import type { IssuedJobPayload, PaymentJobPayload } from "./job-schemas";
 import {
@@ -32,24 +31,24 @@ const POINT_AND_PAY_CONFIRMATION_RE = /Confirmation ID:\s*(\d+)/i;
 // ── Payment handler ────────────────────────────────────────────
 
 export async function processDustPermitPaymentJob(
-  payload: PaymentJobPayload,
+  payload: PaymentJobPayload
 ): Promise<void> {
   const invoiceNumber = extractPointAndPayInvoiceNumber(payload.bodyText);
 
   if (!invoiceNumber) {
     console.log(
-      "[permit-email] PointAndPay email has no invoice number, skipping",
+      "[permit-email] PointAndPay email has no invoice number, skipping"
     );
     return;
   }
 
   const amountMatch = payload.bodyText.match(POINT_AND_PAY_AMOUNT_RE);
   const confirmationMatch = payload.bodyText.match(
-    POINT_AND_PAY_CONFIRMATION_RE,
+    POINT_AND_PAY_CONFIRMATION_RE
   );
 
   console.log(
-    `[permit-email] PointAndPay payment: invoice=${invoiceNumber} amount=${amountMatch?.[1] ?? "?"} confirmation=${confirmationMatch?.[1] ?? "?"}`,
+    `[permit-email] PointAndPay payment: invoice=${invoiceNumber} amount=${amountMatch?.[1] ?? "?"} confirmation=${confirmationMatch?.[1] ?? "?"}`
   );
 
   // Ensure permits are synced so we can match invoice → permit
@@ -62,20 +61,20 @@ export async function processDustPermitPaymentJob(
     }
     const msg = error instanceof Error ? error.message : String(error);
     console.warn(
-      `[permit-email] Permit sync failed (non-fatal; mapping already present): ${msg}`,
+      `[permit-email] Permit sync failed (non-fatal; mapping already present): ${msg}`
     );
   }
 
   const postSyncPermit = await permitIdByInvoice.get(invoiceNumber);
   if (!postSyncPermit) {
     console.warn(
-      `[permit-email] No permit found for invoice ${invoiceNumber} after sync`,
+      `[permit-email] No permit found for invoice ${invoiceNumber} after sync`
     );
     return;
   }
 
   console.log(
-    `[permit-email] Matched invoice ${invoiceNumber} → permit ${postSyncPermit.id}`,
+    `[permit-email] Matched invoice ${invoiceNumber} → permit ${postSyncPermit.id}`
   );
 
   // Post-payment re-sync to pick up status changes
@@ -90,13 +89,13 @@ export async function processDustPermitPaymentJob(
 // ── Issued handler ─────────────────────────────────────────────
 
 export async function processDustPermitIssuedEmailJob(
-  payload: IssuedJobPayload,
+  payload: IssuedJobPayload
 ): Promise<void> {
   const permitMatch = payload.bodyText.match(MARICOPA_PERMIT_NUMBER_RE);
   const facilityIdMatch = payload.bodyText.match(MARICOPA_FACILITY_ID_RE);
   const facilityNameMatch = payload.bodyText.match(MARICOPA_FACILITY_NAME_RE);
   const facilityAddressMatch = payload.bodyText.match(
-    MARICOPA_FACILITY_ADDRESS_RE,
+    MARICOPA_FACILITY_ADDRESS_RE
   );
 
   const permitNumber = permitMatch?.[1] ?? null;
@@ -106,13 +105,13 @@ export async function processDustPermitIssuedEmailJob(
 
   if (!permitNumber) {
     console.log(
-      "[permit-email] Maricopa issued email has no permit number, skipping",
+      "[permit-email] Maricopa issued email has no permit number, skipping"
     );
     return;
   }
 
   console.log(
-    `[permit-email] Maricopa issued: permit=${permitNumber} facility=${facilityName ?? "?"}`,
+    `[permit-email] Maricopa issued: permit=${permitNumber} facility=${facilityName ?? "?"}`
   );
 
   // Update permit with facility ID if present
@@ -122,14 +121,14 @@ export async function processDustPermitIssuedEmailJob(
       facilityId,
     });
     console.log(
-      `[permit-email] Updated permit ${permitNumber} with facilityId=${facilityId}`,
+      `[permit-email] Updated permit ${permitNumber} with facilityId=${facilityId}`
     );
   }
 
   const permit = await getPermitById(permitNumber);
   if (permit) {
     console.log(
-      `[permit-email] Permit ${permitNumber}: project=${permit.projectName ?? "?"} company=${permit.companyName ?? "?"} address=${facilityAddress ?? permit.address ?? "?"}`,
+      `[permit-email] Permit ${permitNumber}: project=${permit.projectName ?? "?"} company=${permit.companyName ?? "?"} address=${facilityAddress ?? permit.address ?? "?"}`
     );
   }
 }

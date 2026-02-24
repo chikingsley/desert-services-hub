@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { cleanThread } from "./route";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getMockMessage } from "@/__tests__/helpers";
+import { CleanAction } from "@/generated/prisma/enums";
 import { GmailLabel } from "@/utils/gmail/label";
 import type { ParsedMessage } from "@/utils/types";
-import { CleanAction } from "@/generated/prisma/enums";
-import { getMockMessage } from "@/__tests__/helpers";
+import { cleanThread } from "./route";
 
 vi.mock("server-only", () => ({}));
 
@@ -135,7 +135,7 @@ describe("cleanThread", () => {
       expect(mockPublishToQstash).toHaveBeenCalledWith(
         "/api/clean/gmail",
         expect.objectContaining({ markDone: false }),
-        expect.any(Object),
+        expect.any(Object)
       );
       expect(mockAiClean).not.toHaveBeenCalled();
     });
@@ -165,7 +165,7 @@ describe("cleanThread", () => {
       expect(mockPublishToQstash).toHaveBeenCalledWith(
         "/api/clean/gmail",
         expect.objectContaining({ markDone: false }),
-        expect.any(Object),
+        expect.any(Object)
       );
       expect(mockAiClean).not.toHaveBeenCalled();
     });
@@ -209,7 +209,7 @@ describe("cleanThread", () => {
       expect(mockPublishToQstash).toHaveBeenCalledWith(
         "/api/clean/gmail",
         expect.objectContaining({ markDone: false }),
-        expect.any(Object),
+        expect.any(Object)
       );
       expect(mockAiClean).not.toHaveBeenCalled();
     });

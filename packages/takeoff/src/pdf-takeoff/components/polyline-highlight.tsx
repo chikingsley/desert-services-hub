@@ -16,11 +16,6 @@ export interface ViewportPoint {
  */
 export interface PolylineHighlightProps {
   /**
-   * Points of the polyline in viewport coordinates.
-   */
-  points: ViewportPoint[];
-
-  /**
    * Bounding rect for positioning.
    */
   boundingRect: LTWHP;
@@ -31,15 +26,9 @@ export interface PolylineHighlightProps {
   color: string;
 
   /**
-   * Stroke width of the polyline.
-   * @default 3
+   * Has the polyline been auto-scrolled into view?
    */
-  strokeWidth?: number;
-
-  /**
-   * Label text to display.
-   */
-  label?: string;
+  isScrolledTo?: boolean;
 
   /**
    * Whether this polyline is currently selected.
@@ -47,9 +36,9 @@ export interface PolylineHighlightProps {
   isSelected?: boolean;
 
   /**
-   * Has the polyline been auto-scrolled into view?
+   * Label text to display.
    */
-  isScrolledTo?: boolean;
+  label?: string;
 
   /**
    * Calculated length to display.
@@ -65,6 +54,16 @@ export interface PolylineHighlightProps {
    * Callback triggered on context menu.
    */
   onContextMenu?(event: MouseEvent<HTMLDivElement>): void;
+  /**
+   * Points of the polyline in viewport coordinates.
+   */
+  points: ViewportPoint[];
+
+  /**
+   * Stroke width of the polyline.
+   * @default 3
+   */
+  strokeWidth?: number;
 
   /**
    * Custom styling for the container.

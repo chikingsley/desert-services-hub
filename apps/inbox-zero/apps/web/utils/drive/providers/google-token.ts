@@ -1,25 +1,25 @@
-import type { DriveConnection } from "@/generated/prisma/client";
 import { env } from "@/env";
-import type { Logger } from "@/utils/logger";
-import { SafeError } from "@/utils/error";
+import type { DriveConnection } from "@/generated/prisma/client";
 import {
-  saveDriveTokens,
   markDriveConnectionAsDisconnected,
+  saveDriveTokens,
 } from "@/utils/drive/providers/token-helpers";
+import { SafeError } from "@/utils/error";
+import type { Logger } from "@/utils/logger";
 
 export async function refreshGoogleDriveToken(
   connection: Pick<DriveConnection, "id" | "refreshToken">,
-  logger: Logger,
+  logger: Logger
 ): Promise<string> {
   const { id: connectionId, refreshToken } = connection;
 
   if (!refreshToken) {
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+  if (!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)) {
     throw new Error("Google login not enabled - missing credentials");
   }
 
@@ -46,7 +46,7 @@ export async function refreshGoogleDriveToken(
     });
     await markDriveConnectionAsDisconnected(connectionId);
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 

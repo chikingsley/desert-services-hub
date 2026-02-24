@@ -4,7 +4,7 @@ import type { OrgStatsParams } from "@/app/api/organizations/[organizationId]/st
 
 export function useOrgStatsRulesBuckets(
   organizationId: string,
-  options?: OrgStatsParams,
+  options?: OrgStatsParams
 ) {
   const params = new URLSearchParams();
   if (options?.fromDate) {
@@ -16,6 +16,6 @@ export function useOrgStatsRulesBuckets(
   const queryString = params.toString();
 
   return useSWR<OrgRulesBucketsResponse>(
-    `/api/organizations/${organizationId}/stats/rules-buckets${queryString ? `?${queryString}` : ""}`,
+    `/api/organizations/${organizationId}/stats/rules-buckets${queryString ? `?${queryString}` : ""}`
   );
 }

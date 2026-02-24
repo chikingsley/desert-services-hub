@@ -1,8 +1,13 @@
 "use client";
 
-import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useState } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
+import { Input } from "@/components/Input";
+import { TagInput } from "@/components/TagInput";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { TooltipExplanation } from "@/components/TooltipExplanation";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -13,8 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/Input";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -22,20 +26,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TooltipExplanation } from "@/components/TooltipExplanation";
-import { toastSuccess, toastError } from "@/components/Toast";
-import { TagInput } from "@/components/TagInput";
-import { Label } from "@/components/ui/label";
-import {
-  inviteMemberAction,
-  createOrganizationAndInviteAction,
-} from "@/utils/actions/organization";
-import {
-  inviteMemberBody,
-  type InviteMemberBody,
-} from "@/utils/actions/organization.validation";
 import { useDialogState } from "@/hooks/useDialogState";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import {
+  createOrganizationAndInviteAction,
+  inviteMemberAction,
+} from "@/utils/actions/organization";
+import {
+  type InviteMemberBody,
+  inviteMemberBody,
+} from "@/utils/actions/organization.validation";
 import { isValidEmail } from "@/utils/email";
 
 export function InviteMemberModal({
@@ -63,7 +63,7 @@ export function InviteMemberModal({
     : internalState.onClose;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={isOpen}>
       {trigger !== null &&
         (trigger ?? (
           <DialogTrigger asChild>
@@ -85,9 +85,9 @@ export function InviteMemberModal({
 
         {organizationId ? (
           <InviteForm
-            organizationId={organizationId}
             onClose={onClose}
             onSuccess={onSuccess}
+            organizationId={organizationId}
           />
         ) : (
           <CreateOrgAndInviteForm onClose={onClose} onSuccess={onSuccess} />
@@ -141,18 +141,18 @@ function InviteForm({
         onSuccess?.();
       }
     },
-    [reset, onClose, onSuccess],
+    [reset, onClose, onSuccess]
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
       <Input
-        type="email"
-        name="email"
+        error={errors.email}
         label="Email Address"
+        name="email"
         placeholder="john.doe@example.com"
         registerProps={register("email")}
-        error={errors.email}
+        type="email"
       />
 
       <div className="space-y-2">
@@ -164,10 +164,10 @@ function InviteForm({
           />
         </div>
         <Select
-          value={selectedRole}
           onValueChange={(value) =>
             setValue("role", value as "admin" | "member")
           }
+          value={selectedRole}
         >
           <SelectTrigger id="role">
             <SelectValue placeholder="Select a role" />
@@ -183,7 +183,7 @@ function InviteForm({
         <DialogClose asChild>
           <Button variant="outline">Cancel</Button>
         </DialogClose>
-        <Button type="submit" loading={isSubmitting}>
+        <Button loading={isSubmitting} type="submit">
           Send Invitation
         </Button>
       </DialogFooter>
@@ -248,14 +248,14 @@ function CreateOrgAndInviteForm({
   return (
     <div className="space-y-4">
       <TagInput
-        value={emails}
+        id="email-input"
+        label="Email addresses"
         onChange={handleEmailsChange}
+        placeholder="Enter email addresses separated by commas"
         validate={(email) =>
           isValidEmail(email) ? null : "Please enter a valid email address"
         }
-        label="Email addresses"
-        id="email-input"
-        placeholder="Enter email addresses separated by commas"
+        value={emails}
       />
 
       <DialogFooter>
@@ -263,10 +263,10 @@ function CreateOrgAndInviteForm({
           <Button variant="outline">Cancel</Button>
         </DialogClose>
         <Button
-          type="button"
-          onClick={handleSubmit}
-          loading={isSubmitting}
           disabled={emails.length === 0}
+          loading={isSubmitting}
+          onClick={handleSubmit}
+          type="button"
         >
           Send Invitation{emails.length > 1 ? "s" : ""}
         </Button>

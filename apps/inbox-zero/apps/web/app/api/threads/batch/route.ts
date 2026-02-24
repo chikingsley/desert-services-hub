@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { withEmailProvider } from "@/utils/middleware";
 import type { ThreadsResponse } from "@/app/api/threads/route";
+import { withEmailProvider } from "@/utils/middleware";
 
 export type ThreadsBatchResponse = {
   threads: ThreadsResponse["threads"];
@@ -20,7 +20,7 @@ export const GET = withEmailProvider("threads/batch", async (request) => {
   if (!threadIdsParam) {
     return NextResponse.json(
       { error: "threadIds parameter is required" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -40,11 +40,11 @@ export const GET = withEmailProvider("threads/batch", async (request) => {
           request.logger.error("Error fetching thread", { error, threadId });
           return null;
         }
-      }),
+      })
     );
 
     const validThreads = threads.filter(
-      (thread): thread is ThreadsResponse["threads"][number] => thread !== null,
+      (thread): thread is ThreadsResponse["threads"][number] => thread !== null
     );
 
     return NextResponse.json({ threads: validThreads });
@@ -55,7 +55,7 @@ export const GET = withEmailProvider("threads/batch", async (request) => {
     });
     return NextResponse.json(
       { error: "Failed to fetch threads" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 });

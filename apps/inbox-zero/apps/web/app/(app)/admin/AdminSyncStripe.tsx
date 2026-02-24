@@ -1,12 +1,12 @@
 "use client";
 
 import { useAction } from "next-safe-action/hooks";
-import {
-  adminSyncStripeForAllUsersAction,
-  adminSyncAllStripeCustomersToDbAction,
-} from "@/utils/actions/admin";
-import { Button } from "@/components/ui/button";
 import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
+import {
+  adminSyncAllStripeCustomersToDbAction,
+  adminSyncStripeForAllUsersAction,
+} from "@/utils/actions/admin";
 import { getActionErrorMessage } from "@/utils/error";
 
 export const AdminSyncStripe = () => {
@@ -26,7 +26,7 @@ export const AdminSyncStripe = () => {
   });
 
   return (
-    <Button onClick={() => execute()} loading={isExecuting} variant="outline">
+    <Button loading={isExecuting} onClick={() => execute()} variant="outline">
       Sync Stripe
     </Button>
   );
@@ -49,11 +49,11 @@ export const AdminSyncStripeCustomers = () => {
           description: getActionErrorMessage(error.error),
         });
       },
-    },
+    }
   );
 
   return (
-    <Button onClick={() => execute()} loading={isExecuting} variant="outline">
+    <Button loading={isExecuting} onClick={() => execute()} variant="outline">
       Sync All Stripe Customers to DB
     </Button>
   );

@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { validateWebhookAccount } from "./validate-webhook-account";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PremiumTier } from "@/generated/prisma/enums";
 import { createScopedLogger } from "@/utils/logger";
+import { validateWebhookAccount } from "./validate-webhook-account";
 
 const logger = createScopedLogger("test");
 
@@ -12,9 +12,9 @@ vi.mock("@/utils/email/watch-manager");
 vi.mock("@/utils/prisma");
 vi.mock("server-only", () => ({}));
 
-import { isPremium, hasAiAccess } from "@/utils/premium";
-import { unwatchEmails } from "@/utils/email/watch-manager";
 import { createEmailProvider } from "@/utils/email/provider";
+import { unwatchEmails } from "@/utils/email/watch-manager";
+import { hasAiAccess, isPremium } from "@/utils/premium";
 
 describe("validateWebhookAccount", () => {
   const mockEmailProvider = { type: "google" as const };
@@ -140,7 +140,7 @@ describe("validateWebhookAccount", () => {
           emailAccountId: "account-id",
           provider: mockEmailProvider,
           subscriptionId: "subscription-id",
-        }),
+        })
       );
       if (!result.success) {
         expect(await result.response.json()).toEqual({ ok: true });
@@ -163,7 +163,7 @@ describe("validateWebhookAccount", () => {
           emailAccountId: "account-id",
           provider: mockEmailProvider,
           subscriptionId: "subscription-id",
-        }),
+        })
       );
       if (!result.success) {
         expect(await result.response.json()).toEqual({ ok: true });

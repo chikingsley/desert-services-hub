@@ -11,16 +11,16 @@ import { rerank } from "@/packages/enrichment/jina/client";
 import type { RetrievalStrategy } from "./types";
 
 interface FTSRow {
-  project_id: number;
   email_count: number;
   max_rank: number;
+  project_id: number;
 }
 
 interface ProjectInfo {
-  id: number;
-  name: string;
   address: string | null;
   contractor: string | null;
+  id: number;
+  name: string;
 }
 
 const strategy: RetrievalStrategy = {
@@ -40,11 +40,13 @@ const strategy: RetrievalStrategy = {
            AND e.project_id IS NOT NULL
          GROUP BY e.project_id
          ORDER BY max_rank DESC, email_count DESC
-         LIMIT 20`,
+         LIMIT 20`
       )
       .all(subject);
 
-    if (ftsResults.length === 0) return [];
+    if (ftsResults.length === 0) {
+      return [];
+    }
 
     const projectIds = ftsResults.map((r) => r.project_id);
 
@@ -52,7 +54,7 @@ const strategy: RetrievalStrategy = {
     const placeholders = projectIds.map((_, i) => `$${i + 1}`).join(", ");
     const projects = await db
       .query<ProjectInfo>(
-        `SELECT id, name, address, contractor FROM projects WHERE id IN (${placeholders})`,
+        `SELECT id, name, address, contractor FROM projects WHERE id IN (${placeholders})`
       )
       .all(...projectIds);
 
@@ -64,10 +66,12 @@ const strategy: RetrievalStrategy = {
       .map((id) => projectMap.get(id))
       .filter((p): p is ProjectInfo => p !== undefined);
 
-    if (orderedProjects.length === 0) return [];
+    if (orderedProjects.length === 0) {
+      return [];
+    }
 
     const documents = orderedProjects.map((p) =>
-      [p.name, p.address, p.contractor].filter(Boolean).join(" | "),
+      [p.name, p.address, p.contractor].filter(Boolean).join(" | ")
     );
 
     try {

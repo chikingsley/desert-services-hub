@@ -1,5 +1,5 @@
-import { Tooltip } from "@/components/Tooltip";
 import { EmailDate } from "@/components/email-list/EmailDate";
+import { Tooltip } from "@/components/Tooltip";
 
 export function DateCell({ createdAt }: { createdAt: Date }) {
   return (

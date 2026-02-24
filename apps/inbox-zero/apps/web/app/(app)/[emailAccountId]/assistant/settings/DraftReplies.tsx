@@ -1,15 +1,15 @@
 "use client";
 
 import { useCallback } from "react";
-import { Toggle } from "@/components/Toggle";
-import { enableDraftRepliesAction } from "@/utils/actions/rule";
-import { toastError } from "@/components/Toast";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { useRules } from "@/hooks/useRules";
-import { ActionType, SystemType } from "@/generated/prisma/enums";
 import { LoadingContent } from "@/components/LoadingContent";
-import { Skeleton } from "@/components/ui/skeleton";
 import { SettingCard } from "@/components/SettingCard";
+import { toastError } from "@/components/Toast";
+import { Toggle } from "@/components/Toggle";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ActionType, SystemType } from "@/generated/prisma/enums";
+import { useRules } from "@/hooks/useRules";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { enableDraftRepliesAction } from "@/utils/actions/rule";
 
 export function DraftReplies() {
   const { enabled, toggleDraftReplies, loading, error } = useDraftReplies();
@@ -24,26 +24,26 @@ export function DraftReplies() {
         });
       }
     },
-    [toggleDraftReplies],
+    [toggleDraftReplies]
   );
 
   return (
     <SettingCard
-      title="Auto draft replies"
       description="Automatically draft replies written in your tone to emails needing a reply."
       right={
         <LoadingContent
-          loading={loading}
           error={error}
+          loading={loading}
           loadingComponent={<Skeleton className="h-8 w-32" />}
         >
           <Toggle
-            name="draft-replies"
             enabled={enabled}
+            name="draft-replies"
             onChange={handleToggle}
           />
         </LoadingContent>
       }
+      title="Auto draft replies"
     />
   );
 }
@@ -53,15 +53,17 @@ export function useDraftReplies() {
   const { emailAccountId } = useAccount();
 
   const toReplyRule = data?.find(
-    (rule) => rule.systemType === SystemType.TO_REPLY,
+    (rule) => rule.systemType === SystemType.TO_REPLY
   );
   const isEnabled = toReplyRule?.actions.some(
-    (action) => action.type === ActionType.DRAFT_EMAIL,
+    (action) => action.type === ActionType.DRAFT_EMAIL
   );
 
   const toggleDraftReplies = useCallback(
     async (enable: boolean) => {
-      if (!data) return;
+      if (!data) {
+        return;
+      }
 
       const optimisticData = data.map((rule) => {
         if (rule.systemType === SystemType.TO_REPLY) {
@@ -69,7 +71,7 @@ export function useDraftReplies() {
             ...rule,
             actions: enable
               ? rule.actions.some(
-                  (action) => action.type === ActionType.DRAFT_EMAIL,
+                  (action) => action.type === ActionType.DRAFT_EMAIL
                 )
                 ? rule.actions
                 : [
@@ -95,7 +97,7 @@ export function useDraftReplies() {
                   ]
               : // Remove DRAFT_EMAIL action if disabling
                 rule.actions.filter(
-                  (action) => action.type !== ActionType.DRAFT_EMAIL,
+                  (action) => action.type !== ActionType.DRAFT_EMAIL
                 ),
           };
         }
@@ -120,7 +122,7 @@ export function useDraftReplies() {
         throw error;
       }
     },
-    [data, mutate, emailAccountId],
+    [data, mutate, emailAccountId]
   );
 
   return {

@@ -9,6 +9,6 @@ export function useExecutedRules({
   ruleId: string;
 }) {
   return useSWR<GetExecutedRulesResponse>(
-    `/api/user/executed-rules/history?page=${page}&ruleId=${ruleId}`,
+    `/api/user/executed-rules/history?page=${page}&ruleId=${ruleId}`
   );
 }

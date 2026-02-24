@@ -21,63 +21,63 @@ export type EmbeddingTask =
 
 // Search types
 export interface JinaSearchOptions {
-  noContent?: boolean;
-  engine?: "browser" | "direct";
-  site?: string;
   country?: string;
+  engine?: "browser" | "direct";
+  format?: "markdown" | "html" | "text" | "screenshot" | "pageshot";
   language?: string;
+  noCache?: boolean;
+  noContent?: boolean;
   num?: number;
   page?: number;
-  format?: "markdown" | "html" | "text" | "screenshot" | "pageshot";
-  withFavicon?: boolean;
-  noCache?: boolean;
+  site?: string;
   timeout?: number;
+  withFavicon?: boolean;
 }
 
 export interface JinaSearchResult {
+  content?: string;
+  description?: string;
   title: string;
   url: string;
-  description?: string;
-  content?: string;
 }
 
 // Reader types
 export interface JinaReadOptions {
-  format?: "markdown" | "html" | "text" | "screenshot" | "pageshot";
   engine?: "browser" | "direct" | "cf-browser-rendering";
-  targetSelector?: string;
-  waitForSelector?: string;
-  removeSelector?: string;
-  withLinks?: boolean | "all";
-  withImages?: boolean | "all";
-  withGeneratedAlt?: boolean;
-  withIframe?: boolean;
+  format?: "markdown" | "html" | "text" | "screenshot" | "pageshot";
   noCache?: boolean;
+  proxyCountry?: string;
+  proxyUrl?: string;
+  removeImages?: boolean;
+  removeSelector?: string;
+  targetSelector?: string;
   timeout?: number;
   tokenBudget?: number;
-  removeImages?: boolean;
   useReaderLM?: boolean;
-  proxyUrl?: string;
-  proxyCountry?: string;
+  waitForSelector?: string;
+  withGeneratedAlt?: boolean;
+  withIframe?: boolean;
+  withImages?: boolean | "all";
+  withLinks?: boolean | "all";
 }
 
 export interface JinaReadResponse {
-  title: string;
   content: string;
-  url: string;
-  links?: Record<string, string>;
   images?: Record<string, string>;
+  links?: Record<string, string>;
+  title: string;
+  url: string;
 }
 
 // Embeddings types
 export interface JinaEmbeddingsOptions {
-  model?: EmbeddingModel;
-  embeddingType?: EmbeddingType;
-  task?: EmbeddingTask;
   dimensions?: number;
-  truncate?: boolean;
+  embeddingType?: EmbeddingType;
   lateChunking?: boolean;
+  model?: EmbeddingModel;
   returnMultivector?: boolean;
+  task?: EmbeddingTask;
+  truncate?: boolean;
 }
 
 export interface JinaEmbeddingsResponse {
@@ -102,26 +102,26 @@ export type RerankerModel =
   | "jina-reranker-v1-tiny-en";
 
 export interface JinaRerankOptions {
+  maxDocLength?: number;
   model?: RerankerModel;
-  topN?: number;
   returnDocuments?: boolean;
   returnEmbeddings?: boolean;
+  topN?: number;
   truncation?: boolean;
-  maxDocLength?: number;
 }
 
 export interface JinaRerankResult {
-  index: number;
-  relevance_score: number;
   document?: string | { text: string } | null;
   embedding?: number[];
+  index: number;
+  relevance_score: number;
 }
 
 export interface JinaRerankResponse {
   model: string;
   object: "list";
-  usage: { total_tokens: number };
   results: JinaRerankResult[];
+  usage: { total_tokens: number };
 }
 
 // Classifier types
@@ -137,8 +137,8 @@ export interface JinaClassifyOptions {
 export interface JinaClassifyResult {
   index: number;
   prediction: string;
-  score: number;
   predictions: { label: string; score: number }[];
+  score: number;
 }
 
 export interface JinaClassifyResponse {
@@ -155,18 +155,18 @@ export type Tokenizer =
   | "gpt2";
 
 export interface JinaSegmentOptions {
-  tokenizer?: Tokenizer;
-  returnTokens?: boolean;
-  returnChunks?: boolean;
-  maxChunkLength?: number;
   head?: number;
+  maxChunkLength?: number;
+  returnChunks?: boolean;
+  returnTokens?: boolean;
   tail?: number;
+  tokenizer?: Tokenizer;
 }
 
 export interface JinaSegmentResponse {
+  chunks?: string[];
+  num_chunks?: number;
   num_tokens: number;
   tokenizer: string;
-  num_chunks?: number;
   tokens?: number[];
-  chunks?: string[];
 }

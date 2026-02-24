@@ -8,10 +8,10 @@
  * 1. Set TEST_OUTLOOK_EMAIL env var to your Outlook email
  */
 
-import { describe, test, expect, beforeAll, vi } from "vitest";
-import prisma from "@/utils/prisma";
+import { beforeAll, describe, expect, test, vi } from "vitest";
 import { createMicrosoftAvailabilityProvider } from "@/utils/calendar/providers/microsoft-availability";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 // ============================================
 // TEST DATA - SET VIA ENVIRONMENT VARIABLES
@@ -38,7 +38,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Calendar Integration Tests", () => {
     if (!testEmail) {
       console.warn("\n⚠️  Set TEST_OUTLOOK_EMAIL env var to run these tests");
       console.warn(
-        "   Example: TEST_OUTLOOK_EMAIL=your@email.com pnpm test-e2e outlook-calendar\n",
+        "   Example: TEST_OUTLOOK_EMAIL=your@email.com pnpm test-e2e outlook-calendar\n"
       );
       return;
     }
@@ -77,18 +77,18 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Calendar Integration Tests", () => {
 
     if (!connection) {
       console.warn(
-        "\n⚠️  No Microsoft calendar connection found for this account",
+        "\n⚠️  No Microsoft calendar connection found for this account"
       );
       console.warn(
-        "   Please connect your Microsoft calendar in the app first\n",
+        "   Please connect your Microsoft calendar in the app first\n"
       );
       return;
     }
 
     // Ensure we have valid tokens
-    if (!connection.accessToken || !connection.refreshToken) {
+    if (!(connection.accessToken && connection.refreshToken)) {
       console.warn(
-        "\n⚠️  Calendar connection has no access token or refresh token",
+        "\n⚠️  Calendar connection has no access token or refresh token"
       );
       return;
     }
@@ -112,7 +112,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Calendar Integration Tests", () => {
     test("should fetch calendar busy periods from Microsoft API", async () => {
       if (!calendarConnection || enabledCalendars.length === 0) {
         console.log(
-          "   ⚠️  Skipping test - no calendar connection or enabled calendars",
+          "   ⚠️  Skipping test - no calendar connection or enabled calendars"
         );
         return;
       }
@@ -129,11 +129,11 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Calendar Integration Tests", () => {
       const timeMax = tomorrowEnd.toISOString();
 
       console.log(
-        `   📅 Checking availability for: ${tomorrow.toDateString()}`,
+        `   📅 Checking availability for: ${tomorrow.toDateString()}`
       );
       console.log(`   ⏰ Time range: ${timeMin} to ${timeMax}`);
       console.log(
-        `   📋 Calendar IDs (${enabledCalendars.length}): ${enabledCalendars.map((c) => `${c.calendarId.substring(0, 20)}...`).join(", ")}`,
+        `   📋 Calendar IDs (${enabledCalendars.length}): ${enabledCalendars.map((c) => `${c.calendarId.substring(0, 20)}...`).join(", ")}`
       );
 
       // Use the Microsoft availability provider
@@ -165,7 +165,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Outlook Calendar Integration Tests", () => {
       } else {
         console.log("\n   ⚠️  No busy periods found!");
         console.log(
-          "      This likely means either your calendar is empty, or events are marked as 'Free'",
+          "      This likely means either your calendar is empty, or events are marked as 'Free'"
         );
       }
 

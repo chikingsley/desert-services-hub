@@ -8,7 +8,7 @@ import { isGoogleProvider } from "@/utils/email/provider-types";
  * @throws Error if the request fails
  */
 export async function getAccountLinkingUrl(
-  provider: "google" | "microsoft",
+  provider: "google" | "microsoft"
 ): Promise<string> {
   const apiProvider = provider === "microsoft" ? "outlook" : "google";
 
@@ -19,7 +19,7 @@ export async function getAccountLinkingUrl(
 
   if (!response.ok) {
     throw new Error(
-      `Failed to initiate ${isGoogleProvider(provider) ? "Google" : "Microsoft"} account linking`,
+      `Failed to initiate ${isGoogleProvider(provider) ? "Google" : "Microsoft"} account linking`
     );
   }
 

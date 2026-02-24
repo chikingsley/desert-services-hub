@@ -3,8 +3,8 @@ import type { Content, TableCell } from "pdfmake/interfaces";
 import { borderedLayout } from "../shared/layouts";
 
 interface GroupedItems {
-  section: EditorSection | null;
   items: EditorLineItem[];
+  section: EditorSection | null;
 }
 
 export interface EstimateLineItemTableOptions {

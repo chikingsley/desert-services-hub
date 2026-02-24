@@ -1,6 +1,6 @@
-import prisma from "@/utils/prisma";
 import { Prisma, type ThreadTracker } from "@/generated/prisma/client";
 import type { ThreadTrackerType } from "@/generated/prisma/enums";
+import prisma from "@/utils/prisma";
 import { getDateFilter, type TimeRange } from "./date-filter";
 
 const PAGE_SIZE = 20;

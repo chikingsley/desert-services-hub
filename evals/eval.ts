@@ -37,7 +37,6 @@ function loadQrels(): Map<string, number> {
 
 interface Query {
   _id: string;
-  text: string;
   metadata: {
     source: string;
     subject?: string;
@@ -45,6 +44,7 @@ interface Query {
     from_email?: string;
     email_id?: number;
   };
+  text: string;
 }
 
 function loadQueries(): Query[] {
@@ -88,7 +88,7 @@ async function loadStrategy(name: string): Promise<RetrievalStrategy> {
     }
     default:
       throw new Error(
-        `Unknown strategy: ${name}. Available: token-overlap, fts, fts-rerank, fts-multi, fts-websearch, fts-multi-rerank, fts-multi-estimate-fts`,
+        `Unknown strategy: ${name}. Available: token-overlap, fts, fts-rerank, fts-multi, fts-websearch, fts-multi-rerank, fts-multi-estimate-fts`
       );
   }
 }
@@ -96,12 +96,11 @@ async function loadStrategy(name: string): Promise<RetrievalStrategy> {
 // --- Main ---
 
 async function main() {
-  const strategyName =
-    process.argv.includes("--strategy")
-      ? process.argv[process.argv.indexOf("--strategy") + 1]
-      : "token-overlap";
+  const strategyName = process.argv.includes("--strategy")
+    ? process.argv[process.argv.indexOf("--strategy") + 1]
+    : "token-overlap";
 
-  console.log(`Loading eval dataset...`);
+  console.log("Loading eval dataset...");
   const qrels = loadQrels();
   const queries = loadQueries();
   console.log(`  ${queries.length} queries, ${qrels.size} ground truth pairs`);
@@ -110,7 +109,7 @@ async function main() {
   const strategy = await loadStrategy(strategyName);
   await strategy.init?.();
 
-  console.log(`Running retrieval...`);
+  console.log("Running retrieval...");
   const results: { queryId: string; rankedIds: number[] }[] = [];
   let done = 0;
   const startTime = Date.now();
@@ -150,7 +149,7 @@ async function main() {
   for (const f of failures.slice(0, 10)) {
     const query = queries.find((q) => q._id === f.queryId);
     console.log(
-      `  ${f.queryId}: expected proj_${f.expected}, got rank=${f.rank ?? "MISS"}, top5=${JSON.stringify(f.top5)}`,
+      `  ${f.queryId}: expected proj_${f.expected}, got rank=${f.rank ?? "MISS"}, top5=${JSON.stringify(f.top5)}`
     );
     if (query?.metadata?.subject) {
       console.log(`    subject: "${query.metadata.subject}"`);

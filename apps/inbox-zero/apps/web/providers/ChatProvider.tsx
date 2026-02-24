@@ -11,14 +11,14 @@ import {
   useState,
 } from "react";
 import { useSWRConfig } from "swr";
-import { toastError } from "@/components/Toast";
-import { captureException } from "@/utils/error";
+import type { MessageContext } from "@/app/api/chat/validation";
 import { convertToUIMessages } from "@/components/assistant-chat/helpers";
 import type { ChatMessage } from "@/components/assistant-chat/types";
+import { toastError } from "@/components/Toast";
 import { useChatMessages } from "@/hooks/useChatMessages";
 import { useAccount } from "@/providers/EmailAccountProvider";
 import { EMAIL_ACCOUNT_HEADER } from "@/utils/config";
-import type { MessageContext } from "@/app/api/chat/validation";
+import { captureException } from "@/utils/error";
 
 export type Chat = ReturnType<typeof useAiChat<ChatMessage>>;
 

@@ -13,10 +13,10 @@ import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { shouldSkipAttachment } from "@documents-intake/attachment-policy";
 import { processFilesIntake } from "@documents-intake/files-intake";
-import { createGraphClient, type GraphEmailClient } from "@lib/graph/client";
 import { db } from "@lib/db/client";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
 import { propagateMissingDocumentProjectIds } from "@lib/db/repositories/intake-document";
+import { createGraphClient, type GraphEmailClient } from "@lib/graph/client";
 import type {
   ContractAttachmentContext,
   ContractAttachmentRow,

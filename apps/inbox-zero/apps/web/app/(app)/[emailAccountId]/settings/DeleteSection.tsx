@@ -1,17 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Item,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
-  ItemActions,
-} from "@/components/ui/item";
+import { usePremium } from "@/components/PremiumAlert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,10 +16,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/components/ui/item";
+import { useStatLoader } from "@/providers/StatLoaderProvider";
 import { deleteAccountAction } from "@/utils/actions/user";
 import { logOut } from "@/utils/user";
-import { useStatLoader } from "@/providers/StatLoaderProvider";
-import { usePremium } from "@/components/PremiumAlert";
 
 export function DeleteSection() {
   const { onCancelLoadBatch } = useStatLoader();
@@ -40,7 +40,7 @@ export function DeleteSection() {
     useState(false);
 
   const { executeAsync: executeDeleteAccount } = useAction(
-    deleteAccountAction.bind(null),
+    deleteAccountAction.bind(null)
   );
 
   const handleDeleteAccount = async () => {
@@ -51,13 +51,15 @@ export function DeleteSection() {
       async () => {
         const result = await executeDeleteAccount();
         await logOut("/");
-        if (result?.serverError) throw new Error(result.serverError);
+        if (result?.serverError) {
+          throw new Error(result.serverError);
+        }
       },
       {
         loading: "Deleting account...",
         success: "Account deleted!",
         error: (err) => `Error deleting account: ${err.message}`,
-      },
+      }
     );
   };
 
@@ -76,9 +78,9 @@ export function DeleteSection() {
         </ItemDescription>
       </ItemContent>
       <ItemActions>
-        <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <AlertDialog onOpenChange={setIsDialogOpen} open={isDialogOpen}>
           <AlertDialogTrigger asChild>
-            <Button variant="destructiveSoft" size="sm">
+            <Button size="sm" variant="destructiveSoft">
               Delete
             </Button>
           </AlertDialogTrigger>
@@ -101,15 +103,15 @@ export function DeleteSection() {
                         You can manage your subscription by clicking "Manage
                         Subscription" above or going to the{" "}
                         <Link
-                          href="/settings"
                           className="text-blue-600 underline hover:text-blue-800"
+                          href="/settings"
                           onClick={() => setIsDialogOpen(false)}
                         >
                           settings page
                         </Link>{" "}
                         and clicking "Manage subscription".
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-gray-600 text-sm">
                         Already cancelled your subscription? Click the button
                         below to proceed.
                       </p>

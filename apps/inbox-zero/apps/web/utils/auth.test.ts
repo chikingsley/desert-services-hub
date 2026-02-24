@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { handleReferralOnSignUp, saveTokens } from "@/utils/auth";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import prisma from "@/utils/__mocks__/prisma";
+import { handleReferralOnSignUp, saveTokens } from "@/utils/auth";
 import { clearSpecificErrorMessages } from "@/utils/error-messages";
 
 vi.mock("server-only", () => ({}));
@@ -31,7 +31,7 @@ describe("handleReferralOnSignUp", () => {
 
   it("is a no-op in the internal fork", async () => {
     await expect(
-      handleReferralOnSignUp({ userId: "user123", email: "user@example.com" }),
+      handleReferralOnSignUp({ userId: "user123", email: "user@example.com" })
     ).resolves.toBeUndefined();
   });
 });
@@ -65,13 +65,13 @@ describe("saveTokens", () => {
             }),
           },
         }),
-      }),
+      })
     );
     expect(clearSpecificErrorMessages).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: "user_1",
         errorTypes: ["Account disconnected"],
-      }),
+      })
     );
   });
 
@@ -100,13 +100,13 @@ describe("saveTokens", () => {
         data: expect.objectContaining({
           disconnectedAt: null,
         }),
-      }),
+      })
     );
     expect(clearSpecificErrorMessages).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: "user_1",
         errorTypes: ["Account disconnected"],
-      }),
+      })
     );
   });
 });

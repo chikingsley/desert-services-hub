@@ -1,20 +1,20 @@
-import { redirect } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircleIcon, ClockIcon, MailIcon } from "lucide-react";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { TabsToolbar } from "@/components/TabsToolbar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GmailProvider } from "@/providers/GmailProvider";
+import { REPLY_ZERO_ONBOARDING_COOKIE } from "@/utils/cookies";
+import { checkUserOwnsEmailAccount } from "@/utils/email-account";
+import { prefixPath } from "@/utils/path";
+import prisma from "@/utils/prisma";
+import { isAnalyzingReplyTracker } from "@/utils/redis/reply-tracker-analyzing";
+import { CONVERSATION_STATUS_TYPES } from "@/utils/reply-tracker/conversation-status-config";
+import { AwaitingReply } from "./AwaitingReply";
+import type { TimeRange } from "./date-filter";
 import { NeedsReply } from "./NeedsReply";
 import { Resolved } from "./Resolved";
-import { AwaitingReply } from "./AwaitingReply";
-import prisma from "@/utils/prisma";
 import { TimeRangeFilter } from "./TimeRangeFilter";
-import type { TimeRange } from "./date-filter";
-import { isAnalyzingReplyTracker } from "@/utils/redis/reply-tracker-analyzing";
-import { TabsToolbar } from "@/components/TabsToolbar";
-import { GmailProvider } from "@/providers/GmailProvider";
-import { cookies } from "next/headers";
-import { REPLY_ZERO_ONBOARDING_COOKIE } from "@/utils/cookies";
-import { prefixPath } from "@/utils/path";
-import { checkUserOwnsEmailAccount } from "@/utils/email-account";
-import { CONVERSATION_STATUS_TYPES } from "@/utils/reply-tracker/conversation-status-config";
 
 export const maxDuration = 300;
 
@@ -35,8 +35,9 @@ export default async function ReplyTrackerPage(props: {
   const viewedOnboarding =
     cookieStore.get(REPLY_ZERO_ONBOARDING_COOKIE)?.value === "true";
 
-  if (!viewedOnboarding)
+  if (!viewedOnboarding) {
     redirect(prefixPath(emailAccountId, "/reply-zero/onboarding"));
+  }
 
   const emailAccount = await prisma.emailAccount.findUnique({
     where: { id: emailAccountId },
@@ -56,8 +57,9 @@ export default async function ReplyTrackerPage(props: {
 
   const trackerRule = emailAccount?.rules[0];
 
-  if (!trackerRule)
+  if (!trackerRule) {
     redirect(prefixPath(emailAccountId, "/reply-zero/onboarding"));
+  }
 
   const isAnalyzing = await isAnalyzingReplyTracker({ emailAccountId });
 
@@ -66,21 +68,21 @@ export default async function ReplyTrackerPage(props: {
 
   return (
     <GmailProvider>
-      <Tabs defaultValue="needsReply" className="flex h-full flex-col">
+      <Tabs className="flex h-full flex-col" defaultValue="needsReply">
         <TabsToolbar>
           <div className="w-full overflow-x-auto">
             <div className="flex items-center justify-between gap-2">
               <TabsList>
                 <TabsTrigger
-                  value="needsReply"
                   className="flex items-center gap-2"
+                  value="needsReply"
                 >
                   <MailIcon className="h-4 w-4" />
                   To Reply
                 </TabsTrigger>
                 <TabsTrigger
-                  value="awaitingReply"
                   className="flex items-center gap-2"
+                  value="awaitingReply"
                 >
                   <ClockIcon className="h-4 w-4" />
                   Waiting
@@ -94,8 +96,8 @@ export default async function ReplyTrackerPage(props: {
               </TabsTrigger> */}
 
                 <TabsTrigger
-                  value="resolved"
                   className="flex items-center gap-2"
+                  value="resolved"
                 >
                   <CheckCircleIcon className="size-4" />
                   Done
@@ -109,23 +111,23 @@ export default async function ReplyTrackerPage(props: {
           </div>
         </TabsToolbar>
 
-        <TabsContent value="needsReply" className="mt-0 flex-1">
+        <TabsContent className="mt-0 flex-1" value="needsReply">
           <NeedsReply
             emailAccountId={emailAccountId}
-            userEmail={emailAccount.email}
+            isAnalyzing={isAnalyzing}
             page={page}
             timeRange={timeRange}
-            isAnalyzing={isAnalyzing}
+            userEmail={emailAccount.email}
           />
         </TabsContent>
 
-        <TabsContent value="awaitingReply" className="mt-0 flex-1">
+        <TabsContent className="mt-0 flex-1" value="awaitingReply">
           <AwaitingReply
             emailAccountId={emailAccountId}
-            userEmail={emailAccount.email}
+            isAnalyzing={isAnalyzing}
             page={page}
             timeRange={timeRange}
-            isAnalyzing={isAnalyzing}
+            userEmail={emailAccount.email}
           />
         </TabsContent>
 
@@ -133,12 +135,12 @@ export default async function ReplyTrackerPage(props: {
         <NeedsAction userId={userId} userEmail={userEmail} page={page} />
       </TabsContent> */}
 
-        <TabsContent value="resolved" className="mt-0 flex-1">
+        <TabsContent className="mt-0 flex-1" value="resolved">
           <Resolved
             emailAccountId={emailAccountId}
-            userEmail={emailAccount.email}
             page={page}
             timeRange={timeRange}
+            userEmail={emailAccount.email}
           />
         </TabsContent>
       </Tabs>

@@ -5,8 +5,9 @@ export function isDuplicateError(error: unknown, key?: string) {
     error instanceof Prisma.PrismaClientKnownRequestError &&
     error.code === "P2002";
 
-  if (key)
+  if (key) {
     return duplicateError && (error.meta?.target as string[])?.includes?.(key);
+  }
 
   return duplicateError;
 }

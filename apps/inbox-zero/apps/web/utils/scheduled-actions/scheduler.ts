@@ -1,13 +1,13 @@
-import { ScheduledActionStatus } from "@/generated/prisma/enums";
-import prisma from "@/utils/prisma";
-import type { ActionItem } from "@/utils/ai/types";
-import { createScopedLogger } from "@/utils/logger";
-import { canActionBeDelayed } from "@/utils/delayed-actions";
-import { env } from "@/env";
-import { getCronSecretHeader } from "@/utils/cron";
-import { getInternalApiUrl } from "@/utils/internal-api";
 import { Client } from "@upstash/qstash";
 import { addMinutes, getUnixTime } from "date-fns";
+import { env } from "@/env";
+import { ScheduledActionStatus } from "@/generated/prisma/enums";
+import type { ActionItem } from "@/utils/ai/types";
+import { getCronSecretHeader } from "@/utils/cron";
+import { canActionBeDelayed } from "@/utils/delayed-actions";
+import { getInternalApiUrl } from "@/utils/internal-api";
+import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("qstash-scheduled-actions");
 
@@ -16,7 +16,9 @@ interface ScheduledActionPayload {
 }
 
 function getQstashClient() {
-  if (!env.QSTASH_TOKEN) return null;
+  if (!env.QSTASH_TOKEN) {
+    return null;
+  }
   return new Client({ token: env.QSTASH_TOKEN });
 }
 
@@ -37,13 +39,13 @@ export async function createScheduledAction({
 }) {
   if (!canActionBeDelayed(actionItem.type)) {
     throw new Error(
-      `Action type ${actionItem.type} is not supported for delayed execution`,
+      `Action type ${actionItem.type} is not supported for delayed execution`
     );
   }
 
   if (actionItem.delayInMinutes == null || actionItem.delayInMinutes <= 0) {
     throw new Error(
-      `Invalid delayInMinutes: ${actionItem.delayInMinutes}. Must be a positive number.`,
+      `Invalid delayInMinutes: ${actionItem.delayInMinutes}. Must be a positive number.`
     );
   }
 
@@ -131,7 +133,7 @@ export async function scheduleDelayedActions({
     (item) =>
       item.delayInMinutes != null &&
       item.delayInMinutes > 0 &&
-      canActionBeDelayed(item.type),
+      canActionBeDelayed(item.type)
   );
 
   if (!delayedActions?.length) {
@@ -293,12 +295,11 @@ async function scheduleMessage({
       });
 
       return messageId;
-    } else {
-      logger.info("QStash client not available, using cron fallback", {
-        scheduledActionId: payload.scheduledActionId,
-      });
-      return null;
     }
+    logger.info("QStash client not available, using cron fallback", {
+      scheduledActionId: payload.scheduledActionId,
+    });
+    return null;
   } catch (error) {
     logger.error("Failed to schedule with QStash", {
       error,
@@ -319,7 +320,7 @@ async function scheduleMessage({
 
 async function cancelMessage(
   client: InstanceType<typeof Client>,
-  messageId: string,
+  messageId: string
 ) {
   try {
     await client.http.request({

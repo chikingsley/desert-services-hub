@@ -51,8 +51,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 interface StatusBadgeProps {
-  status: string | null | undefined;
   className?: string;
+  status: string | null | undefined;
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {

@@ -7,24 +7,24 @@ import type {
 } from "./types";
 
 export interface PermitDocumentContext {
-  permitId: string;
-  projectId: number | null;
-  projectName: string | null;
   address: string | null;
   city: string | null;
   parcel: string | null;
+  permitId: string;
+  projectId: number | null;
+  projectName: string | null;
 }
 
 export interface DocumentClueOptions {
   container?: string;
-  maxDocs?: number;
-  maxCharsPerDoc?: number;
-  state?: string;
   county?: string;
+  maxCharsPerDoc?: number;
+  maxDocs?: number;
+  state?: string;
 }
 
 export interface DocumentClueResult {
-  hints: ExtractedPlanHints;
+  debug: string[];
   docsUsed: number;
   extracted: {
     roads: number;
@@ -32,21 +32,21 @@ export interface DocumentClueResult {
     hasCoordinates: boolean;
     hasEstimatedSize: boolean;
   };
-  debug: string[];
+  hints: ExtractedPlanHints;
 }
 
 export interface ProjectDocumentRow {
-  id?: number;
   documentType?: string | null;
   fileName?: string | null;
-  summary?: string | null;
+  id?: number;
   rawExtraction?: unknown;
+  summary?: string | null;
 }
 
 interface RankedDoc {
+  reason: string[];
   row: ProjectDocumentRow;
   score: number;
-  reason: string[];
 }
 
 const DEFAULT_CONTAINER = "supabase_db_desert-services-hub";

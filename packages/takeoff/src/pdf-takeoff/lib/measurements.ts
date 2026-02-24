@@ -136,13 +136,13 @@ export function getAnnotationMeasurement(
  * Summarize measurements by item type.
  */
 export interface MeasurementSummary {
-  itemId: string;
-  label: string;
   color: string;
   count: number;
+  formatted: string;
+  itemId: string;
+  label: string;
   totalValue: number;
   unit: string;
-  formatted: string;
 }
 
 /** Accumulate total measurement value for annotations of a given config type. */

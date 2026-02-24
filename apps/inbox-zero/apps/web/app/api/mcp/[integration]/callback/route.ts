@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
-import { withError } from "@/utils/middleware";
+import { env } from "@/env";
 import { SafeError } from "@/utils/error";
+import { getIntegration } from "@/utils/mcp/integrations";
+import { handleOAuthCallback } from "@/utils/mcp/oauth";
+import { syncMcpTools } from "@/utils/mcp/sync-tools";
+import { withError } from "@/utils/middleware";
 import {
+  getMcpOAuthStateType,
   getMcpPkceCookieName,
   getMcpStateCookieName,
   parseOAuthState,
-  getMcpOAuthStateType,
 } from "@/utils/oauth/state";
 import { prefixPath } from "@/utils/path";
 import prisma from "@/utils/prisma";
-import { getIntegration } from "@/utils/mcp/integrations";
-import { syncMcpTools } from "@/utils/mcp/sync-tools";
-import { handleOAuthCallback } from "@/utils/mcp/oauth";
-import { env } from "@/env";
 
 export const GET = withError("mcp/callback", async (request, { params }) => {
   const logger = request.logger;
@@ -58,7 +58,7 @@ export const GET = withError("mcp/callback", async (request, { params }) => {
     });
     redirectUrl.searchParams.set(
       "error",
-      error === "access_denied" ? "cancelled" : "oauth_error",
+      error === "access_denied" ? "cancelled" : "oauth_error"
     );
     return buildRedirectResponse(redirectUrl);
   }
@@ -69,7 +69,7 @@ export const GET = withError("mcp/callback", async (request, { params }) => {
     return buildRedirectResponse(redirectUrl);
   }
 
-  if (!storedState || !receivedState || storedState !== receivedState) {
+  if (!(storedState && receivedState) || storedState !== receivedState) {
     logger.warn("Invalid state during MCP callback", {
       integration,
       receivedState,
@@ -115,13 +115,13 @@ export const GET = withError("mcp/callback", async (request, { params }) => {
   // Update redirect URL to include emailAccountId
   redirectUrl = new URL(
     prefixPath(emailAccountId, "/integrations"),
-    env.NEXT_PUBLIC_BASE_URL,
+    env.NEXT_PUBLIC_BASE_URL
   );
 
   const emailAccount = await prisma.emailAccount.findFirst({
     where: {
       id: emailAccountId,
-      userId: userId,
+      userId,
     },
     select: { id: true },
   });
@@ -158,7 +158,7 @@ export const GET = withError("mcp/callback", async (request, { params }) => {
       const syncResult = await syncMcpTools(
         integration,
         emailAccountId,
-        logger,
+        logger
       );
       logger.info("Auto-synced tools after connection", {
         integration,

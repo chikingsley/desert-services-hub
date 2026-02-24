@@ -1,19 +1,19 @@
 "use server";
 
 import { z } from "zod";
-import { handleGmailPermissionsCheck } from "@/utils/gmail/permissions";
-import { actionClient, adminActionClient } from "@/utils/actions/safe-action";
 import {
   getGmailAndAccessTokenForEmail,
   getOutlookClientForEmail,
 } from "@/utils/account";
-import prisma from "@/utils/prisma";
-import { SafeError } from "@/utils/error";
+import { actionClient, adminActionClient } from "@/utils/actions/safe-action";
 import {
   isGoogleProvider,
   isMicrosoftProvider,
 } from "@/utils/email/provider-types";
+import { SafeError } from "@/utils/error";
+import { handleGmailPermissionsCheck } from "@/utils/gmail/permissions";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 export const checkPermissionsAction = actionClient
   .metadata({ name: "checkPermissions" })
@@ -32,8 +32,9 @@ export const checkPermissionsAction = actionClient
         logger,
       });
 
-      if (!tokens.refreshToken || !accessToken)
+      if (!(tokens.refreshToken && accessToken)) {
         return { hasRefreshToken: true, hasAllPermissions: false };
+      }
 
       const { hasAllPermissions, error } = await handleGmailPermissionsCheck({
         accessToken,
@@ -41,13 +42,17 @@ export const checkPermissionsAction = actionClient
         emailAccountId,
       });
 
-      if (error) throw new SafeError(error);
+      if (error) {
+        throw new SafeError(error);
+      }
 
-      if (!hasAllPermissions)
+      if (!hasAllPermissions) {
         return { hasRefreshToken: true, hasAllPermissions: false };
+      }
 
-      if (!tokens.refreshToken)
+      if (!tokens.refreshToken) {
         return { hasRefreshToken: false, hasAllPermissions };
+      }
 
       return { hasRefreshToken: true, hasAllPermissions };
     } catch (error) {
@@ -65,7 +70,9 @@ export const adminCheckPermissionsAction = adminActionClient
         where: { email },
         select: { id: true, account: { select: { provider: true } } },
       });
-      if (!emailAccount) throw new SafeError("Email account not found");
+      if (!emailAccount) {
+        throw new SafeError("Email account not found");
+      }
       const emailAccountId = emailAccount.id;
 
       if (isMicrosoftProvider(emailAccount.account.provider)) {
@@ -80,14 +87,18 @@ export const adminCheckPermissionsAction = adminActionClient
         emailAccountId,
         logger,
       });
-      if (!accessToken) throw new SafeError("No Gmail access token");
+      if (!accessToken) {
+        throw new SafeError("No Gmail access token");
+      }
 
       const { hasAllPermissions, error } = await handleGmailPermissionsCheck({
         accessToken,
         refreshToken: tokens.refreshToken,
         emailAccountId,
       });
-      if (error) throw new SafeError(error);
+      if (error) {
+        throw new SafeError(error);
+      }
       return { hasAllPermissions };
     } catch (error) {
       logger.error("Admin failed to check permissions", { error });

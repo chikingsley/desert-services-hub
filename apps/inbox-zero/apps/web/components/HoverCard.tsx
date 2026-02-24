@@ -1,7 +1,7 @@
 import {
-  HoverCard as HoverCardUi,
   HoverCardContent,
   HoverCardTrigger,
+  HoverCard as HoverCardUi,
 } from "@/components/ui/hover-card";
 import { cn } from "@/utils";
 
@@ -11,11 +11,11 @@ export function HoverCard(props: {
   className?: string;
 }) {
   return (
-    <HoverCardUi openDelay={100} closeDelay={100}>
+    <HoverCardUi closeDelay={100} openDelay={100}>
       <HoverCardTrigger asChild>{props.children}</HoverCardTrigger>
       <HoverCardContent
-        className={cn("overflow-hidden", props.className)}
         align="start"
+        className={cn("overflow-hidden", props.className)}
         side="right"
       >
         {props.content}

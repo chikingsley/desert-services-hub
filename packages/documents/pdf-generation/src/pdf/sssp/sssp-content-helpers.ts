@@ -8,12 +8,12 @@ const MULTILINE_SPLIT_RE = /\r?\n/;
 export interface SsspBodyContext {
   doc: SsspDocument;
   gcName: string;
+  includesPortableSanitation: boolean;
+  includesStreetSweeping: boolean;
+  includesWaterTruck: boolean;
+  listIndent: number;
   partnerName: string;
   scopeItems: SsspScopeItem[];
-  includesWaterTruck: boolean;
-  includesStreetSweeping: boolean;
-  includesPortableSanitation: boolean;
-  listIndent: number;
 }
 
 export function pageTitle(text: string): Content {

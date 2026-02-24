@@ -1,20 +1,20 @@
 "use client";
 
 import { MoreVertical, Trash2, XCircle } from "lucide-react";
+import Image from "next/image";
 import { useAction } from "next-safe-action/hooks";
 import type { GetDriveConnectionsResponse } from "@/app/api/user/drive/connections/route";
-import { disconnectDriveAction } from "@/utils/actions/drive";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { useDriveConnections } from "@/hooks/useDriveConnections";
 import { toastError } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import { useDriveConnections } from "@/hooks/useDriveConnections";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { disconnectDriveAction } from "@/utils/actions/drive";
 
 type DriveConnection = GetDriveConnectionsResponse["connections"][0];
 
@@ -63,13 +63,13 @@ export function DriveConnectionCard({
   };
 
   return (
-    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+    <div className="flex items-center gap-2 text-muted-foreground text-sm">
       <Image
-        src={providerInfo.icon}
         alt={providerInfo.alt}
-        width={16}
         height={16}
+        src={providerInfo.icon}
         unoptimized
+        width={16}
       />
       <span className="font-medium text-foreground">{providerInfo.name}</span>
       <span>·</span>
@@ -83,19 +83,19 @@ export function DriveConnectionCard({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0"
             aria-label="Connection options"
+            className="h-6 w-6 p-0"
+            size="sm"
+            variant="ghost"
           >
             <MoreVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            onClick={handleDisconnect}
-            disabled={isDisconnecting}
             className="text-red-600 focus:text-red-600"
+            disabled={isDisconnecting}
+            onClick={handleDisconnect}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Disconnect

@@ -8,26 +8,26 @@ interface UseUndoRedoOptions {
 type SetStateAction<T> = T | ((prevState: T) => T);
 
 interface UseUndoRedoReturn<T> {
-  /** Current state */
-  state: T;
-  /** Set state and add to history (supports function updater like useState) */
-  setState: (value: SetStateAction<T>) => void;
-  /** Undo to previous state */
-  undo: () => void;
-  /** Redo to next state */
-  redo: () => void;
-  /** Can undo? */
-  canUndo: boolean;
   /** Can redo? */
   canRedo: boolean;
+  /** Can undo? */
+  canUndo: boolean;
+  /** Redo to next state */
+  redo: () => void;
   /** Clear history and set initial state */
   reset: (value: T) => void;
+  /** Set state and add to history (supports function updater like useState) */
+  setState: (value: SetStateAction<T>) => void;
+  /** Current state */
+  state: T;
+  /** Undo to previous state */
+  undo: () => void;
 }
 
 interface HistoryState<T> {
+  future: T[];
   past: T[];
   present: T;
-  future: T[];
 }
 
 type HistoryAction<T> =

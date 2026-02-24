@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import prisma from "@/utils/__mocks__/prisma";
-import { copyRulesFromAccountAction } from "@/utils/actions/rule";
 import {
   getAction,
   getMockEmailAccountWithAccount,
   getRule,
 } from "@/__tests__/helpers";
 import { ActionType } from "@/generated/prisma/enums";
+import prisma from "@/utils/__mocks__/prisma";
+import { copyRulesFromAccountAction } from "@/utils/actions/rule";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/utils/prisma");
@@ -30,7 +30,7 @@ describe("copyRulesFromAccountAction", () => {
     });
 
     expect(result?.serverError).toBe(
-      "Source and target accounts must be different",
+      "Source and target accounts must be different"
     );
   });
 
@@ -40,7 +40,7 @@ describe("copyRulesFromAccountAction", () => {
       getMockEmailAccountWithAccount({
         id: targetAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
 
     const result = await copyRulesFromAccountAction({
@@ -50,7 +50,7 @@ describe("copyRulesFromAccountAction", () => {
     });
 
     expect(result?.serverError).toBe(
-      "Source account not found or unauthorized",
+      "Source account not found or unauthorized"
     );
   });
 
@@ -59,13 +59,13 @@ describe("copyRulesFromAccountAction", () => {
       getMockEmailAccountWithAccount({
         id: sourceAccountId,
         userId: "other-user",
-      }) as any,
+      }) as any
     );
     prisma.emailAccount.findUnique.mockResolvedValueOnce(
       getMockEmailAccountWithAccount({
         id: targetAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
 
     const result = await copyRulesFromAccountAction({
@@ -75,7 +75,7 @@ describe("copyRulesFromAccountAction", () => {
     });
 
     expect(result?.serverError).toBe(
-      "Source account not found or unauthorized",
+      "Source account not found or unauthorized"
     );
   });
 
@@ -84,7 +84,7 @@ describe("copyRulesFromAccountAction", () => {
       getMockEmailAccountWithAccount({
         id: sourceAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
     prisma.emailAccount.findUnique.mockResolvedValueOnce(null);
 
@@ -95,7 +95,7 @@ describe("copyRulesFromAccountAction", () => {
     });
 
     expect(result?.serverError).toBe(
-      "Target account not found or unauthorized",
+      "Target account not found or unauthorized"
     );
   });
 
@@ -104,13 +104,13 @@ describe("copyRulesFromAccountAction", () => {
       getMockEmailAccountWithAccount({
         id: sourceAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
     prisma.emailAccount.findUnique.mockResolvedValueOnce(
       getMockEmailAccountWithAccount({
         id: targetAccountId,
         userId: "other-user",
-      }) as any,
+      }) as any
     );
 
     const result = await copyRulesFromAccountAction({
@@ -120,7 +120,7 @@ describe("copyRulesFromAccountAction", () => {
     });
 
     expect(result?.serverError).toBe(
-      "Target account not found or unauthorized",
+      "Target account not found or unauthorized"
     );
   });
 
@@ -129,13 +129,13 @@ describe("copyRulesFromAccountAction", () => {
       getMockEmailAccountWithAccount({
         id: sourceAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
     prisma.emailAccount.findUnique.mockResolvedValueOnce(
       getMockEmailAccountWithAccount({
         id: targetAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
     prisma.rule.findMany.mockResolvedValueOnce([]);
 
@@ -155,13 +155,13 @@ describe("copyRulesFromAccountAction", () => {
       getMockEmailAccountWithAccount({
         id: sourceAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
     prisma.emailAccount.findUnique.mockResolvedValueOnce(
       getMockEmailAccountWithAccount({
         id: targetAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
 
     const sourceRule = {
@@ -214,13 +214,13 @@ describe("copyRulesFromAccountAction", () => {
       getMockEmailAccountWithAccount({
         id: sourceAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
     prisma.emailAccount.findUnique.mockResolvedValueOnce(
       getMockEmailAccountWithAccount({
         id: targetAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
 
     const sourceRule = {
@@ -262,13 +262,13 @@ describe("copyRulesFromAccountAction", () => {
       getMockEmailAccountWithAccount({
         id: sourceAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
     prisma.emailAccount.findUnique.mockResolvedValueOnce(
       getMockEmailAccountWithAccount({
         id: targetAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
 
     const sourceRule = {
@@ -308,13 +308,13 @@ describe("copyRulesFromAccountAction", () => {
       getMockEmailAccountWithAccount({
         id: sourceAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
     prisma.emailAccount.findUnique.mockResolvedValueOnce(
       getMockEmailAccountWithAccount({
         id: targetAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
 
     const sourceRule = {
@@ -371,13 +371,13 @@ describe("copyRulesFromAccountAction", () => {
       getMockEmailAccountWithAccount({
         id: sourceAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
     prisma.emailAccount.findUnique.mockResolvedValueOnce(
       getMockEmailAccountWithAccount({
         id: targetAccountId,
         userId: "user1",
-      }) as any,
+      }) as any
     );
 
     const sourceRules = [

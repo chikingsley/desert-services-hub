@@ -1,16 +1,16 @@
-import { cn } from "@/utils";
 import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
+import { cn } from "@/utils";
 
 export type ButtonVariant = "primary" | "secondary" | "secondary-two";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  asChild?: boolean;
+  auto?: boolean;
   children: React.ReactNode;
-  variant?: ButtonVariant;
   className?: string;
   size?: "md" | "lg" | "xl";
-  auto?: boolean;
-  asChild?: boolean;
+  variant?: ButtonVariant;
 }
 
 export function Button({
@@ -35,25 +35,25 @@ export function Button({
       variants: {
         variant: {
           primary: [
-            "bg-gradient-to-b from-[#2965EC] to-[#5C89F8] text-white button-gradient-border shadow-[0px_2px_10.1px_0px_#4B83FD33] hover:shadow-[0px_2px_10.1px_0px_#4B83FD44]",
-            "relative overflow-hidden z-10",
-            "before:absolute before:inset-0 before:bg-gradient-to-b before:from-[#285EE5] before:to-[#5380F2] before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-200 before:z-0",
+            "button-gradient-border bg-gradient-to-b from-[#2965EC] to-[#5C89F8] text-white shadow-[0px_2px_10.1px_0px_#4B83FD33] hover:shadow-[0px_2px_10.1px_0px_#4B83FD44]",
+            "relative z-10 overflow-hidden",
+            "before:absolute before:inset-0 before:z-0 before:bg-gradient-to-b before:from-[#285EE5] before:to-[#5380F2] before:opacity-0 before:transition-opacity before:duration-200 hover:before:opacity-100",
           ],
           secondary:
-            "bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 text-gray-800",
+            "border border-gray-100 bg-white text-gray-800 hover:border-gray-200 hover:bg-gray-50",
           "secondary-two":
-            "bg-white hover:bg-gray-50 border border-gray-100 hover:border-gray-200 text-gray-500 shadow-[0px_2px_16px_0px_#00000008] hover:shadow-[0px_2px_16px_0px_#00000015] [&>svg]:text-[#AEAAA8]",
+            "border border-gray-100 bg-white text-gray-500 shadow-[0px_2px_16px_0px_#00000008] hover:border-gray-200 hover:bg-gray-50 hover:shadow-[0px_2px_16px_0px_#00000015] [&>svg]:text-[#AEAAA8]",
         },
         size: {
-          md: "text-sm py-2 px-4",
-          lg: "text-sm py-[10.5px] px-[18px]",
-          xl: "text-[16px] py-[11.7px] px-[22px]",
+          md: "px-4 py-2 text-sm",
+          lg: "px-[18px] py-[10.5px] text-sm",
+          xl: "px-[22px] py-[11.7px] text-[16px]",
         },
         auto: {
           true: "w-full",
         },
       },
-    },
+    }
   );
 
   // For primary variant with gradient border wrapper
@@ -61,20 +61,20 @@ export function Button({
     return (
       <div
         className={cn(
-          "hover:scale-[1.04] transition-all duration-200 will-change-transform",
-          "rounded-[14px] p-[1px] bg-gradient-to-b",
+          "transition-all duration-200 will-change-transform hover:scale-[1.04]",
+          "rounded-[14px] bg-gradient-to-b p-[1px]",
           "from-[#5989F0] to-[#578AFA] hover:from-[#4875d0] hover:to-[#396ecc]",
-          auto ? "w-full" : "w-fit",
+          auto ? "w-full" : "w-fit"
         )}
       >
         <Comp
-          type={type}
           className={buttonVariants({
             variant,
             size,
             className,
             auto,
           })}
+          type={type}
           {...props}
         >
           {asChild ? (
@@ -90,8 +90,8 @@ export function Button({
   // For secondary variants - simpler, no wrapper
   return (
     <Comp
-      type={type}
       className={buttonVariants({ variant, size, className, auto })}
+      type={type}
       {...props}
     >
       {children}

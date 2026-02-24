@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { isTransientNetworkError, withNetworkRetry } from "./retry";
 
 vi.mock("server-only", () => ({}));
@@ -122,7 +122,7 @@ describe("withNetworkRetry", () => {
     const fn = vi.fn().mockRejectedValue(networkError);
 
     await expect(withNetworkRetry(fn, { label: "test" })).rejects.toEqual(
-      networkError,
+      networkError
     );
 
     // Initial attempt + MAX_RETRIES (2) = 3 total attempts
@@ -137,7 +137,7 @@ describe("withNetworkRetry", () => {
     const fn = vi.fn().mockRejectedValue(nonRetryableError);
 
     await expect(withNetworkRetry(fn, { label: "test" })).rejects.toEqual(
-      nonRetryableError,
+      nonRetryableError
     );
 
     expect(fn).toHaveBeenCalledTimes(1);
@@ -189,7 +189,7 @@ describe("withNetworkRetry", () => {
     const fn = vi.fn().mockRejectedValue(networkError);
 
     await expect(withNetworkRetry(fn, { label: "test" })).rejects.toEqual(
-      networkError,
+      networkError
     );
 
     // Should have slept twice (after first and second attempts, before giving up on third)

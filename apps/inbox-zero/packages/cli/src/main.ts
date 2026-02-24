@@ -1,25 +1,25 @@
 #!/usr/bin/env node
 
+import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, resolve } from "node:path";
-import { spawn, spawnSync } from "node:child_process";
-import { program } from "commander";
 import * as p from "@clack/prompts";
+import { program } from "commander";
+import packageJson from "../package.json" with { type: "json" };
+import { runAwsSetup } from "./setup-aws";
+import { runGoogleSetup } from "./setup-google";
+import { runTerraformSetup } from "./setup-terraform";
 import {
-  generateSecret,
+  type EnvConfig,
   generateEnvFile,
+  generateSecret,
   isSensitiveKey,
   parseEnvFile,
   parsePortConflict,
-  updateEnvValue,
   redactValue,
-  type EnvConfig,
+  updateEnvValue,
 } from "./utils";
-import { runGoogleSetup } from "./setup-google";
-import { runAwsSetup } from "./setup-aws";
-import { runTerraformSetup } from "./setup-terraform";
-import packageJson from "../package.json" with { type: "json" };
 
 // Detect if we're running from within the repo
 function findRepoRoot(): string | null {
@@ -45,7 +45,7 @@ const STANDALONE_CONFIG_DIR = resolve(homedir(), ".inbox-zero");
 const STANDALONE_ENV_FILE = resolve(STANDALONE_CONFIG_DIR, ".env");
 const STANDALONE_COMPOSE_FILE = resolve(
   STANDALONE_CONFIG_DIR,
-  "docker-compose.yml",
+  "docker-compose.yml"
 );
 
 // Ensure config directory exists
@@ -67,7 +67,9 @@ function checkDockerCompose(): boolean {
   const pluginResult = spawnSync("docker", ["compose", "version"], {
     stdio: "pipe",
   });
-  if (pluginResult.status === 0) return true;
+  if (pluginResult.status === 0) {
+    return true;
+  }
 
   // Fallback to standalone docker-compose binary
   const standaloneResult = spawnSync("docker-compose", ["version"], {
@@ -99,7 +101,7 @@ function requireDocker() {
     p.log.error(
       "Docker Compose is not available.\n" +
         "Please update Docker Desktop or install Docker Compose:\n" +
-        "https://docs.docker.com/compose/install/",
+        "https://docs.docker.com/compose/install/"
     );
     process.exit(1);
   }
@@ -119,11 +121,15 @@ function findEnvFile(name?: string): string | null {
 
   if (REPO_ROOT) {
     const repoEnv = resolve(REPO_ROOT, "apps/web", envFileName);
-    if (existsSync(repoEnv)) return repoEnv;
+    if (existsSync(repoEnv)) {
+      return repoEnv;
+    }
   }
 
   const standaloneEnv = resolve(STANDALONE_CONFIG_DIR, envFileName);
-  if (existsSync(standaloneEnv)) return standaloneEnv;
+  if (existsSync(standaloneEnv)) {
+    return standaloneEnv;
+  }
 
   return null;
 }
@@ -139,7 +145,7 @@ async function main() {
         "  inbox-zero setup      Configure OAuth providers, AI provider, and Docker\n" +
         "  inbox-zero start      Start Inbox Zero\n" +
         "  inbox-zero config     View and update settings\n\n" +
-        "Docs: https://docs.getinboxzero.com/self-hosting",
+        "Docs: https://docs.getinboxzero.com/self-hosting"
     )
     .version(packageJson.version, "-v, --version");
 
@@ -203,7 +209,7 @@ async function main() {
   program
     .command("setup-google")
     .description(
-      "Set up Google Cloud APIs, OAuth, and Pub/Sub using gcloud CLI",
+      "Set up Google Cloud APIs, OAuth, and Pub/Sub using gcloud CLI"
     )
     .option("--project-id <id>", "Google Cloud project ID")
     .option("--domain <domain>", "Your app domain (e.g., app.example.com)")
@@ -228,7 +234,7 @@ async function main() {
     .option("--region <region>", "AWS region")
     .option(
       "--base-url <url>",
-      "Public base URL (e.g., https://app.example.com)",
+      "Public base URL (e.g., https://app.example.com)"
     )
     .option("--domain-name <domain>", "Domain name for DNS/HTTPS")
     .option("--acm-certificate-arn <arn>", "ACM certificate ARN for HTTPS")
@@ -255,7 +261,7 @@ async function main() {
     .option("--microsoft-client-id <id>", "Microsoft OAuth client ID")
     .option(
       "--microsoft-client-secret <secret>",
-      "Microsoft OAuth client secret",
+      "Microsoft OAuth client secret"
     )
     .option("-y, --yes", "Non-interactive mode with defaults")
     .action(runTerraformSetup);
@@ -270,7 +276,9 @@ async function main() {
 
 function stripSetupAwsDoubleDash(argv: string[]) {
   const commandIndex = argv.indexOf("setup-aws");
-  if (commandIndex === -1) return;
+  if (commandIndex === -1) {
+    return;
+  }
   const dashIndex = argv.indexOf("--", commandIndex + 1);
   if (dashIndex !== -1) {
     argv.splice(dashIndex, 1);
@@ -323,7 +331,7 @@ async function runSetupQuick(options: { name?: string }) {
   p.note(
     "Choose the email provider(s) you want to enable now.\n" +
       "You can add or change providers later with: inbox-zero config",
-    "Step 1: OAuth Providers",
+    "Step 1: OAuth Providers"
   );
 
   const oauthProviders = await p.multiselect({
@@ -373,7 +381,7 @@ async function runSetupQuick(options: { name?: string }) {
         "If External: you'll see a \"This app isn't verified\" warning when\n" +
         'signing in. Click "Advanced" then "Go to [app name]" to proceed.\n\n' +
         "Full guide: https://docs.getinboxzero.com/hosting/setup-guides",
-      "Google OAuth",
+      "Google OAuth"
     );
 
     const googleClientIdResult = await p.text({
@@ -423,7 +431,7 @@ async function runSetupQuick(options: { name?: string }) {
         "Use a specific tenant ID only if your organization requires\n" +
         "single-tenant sign-in.\n\n" +
         "Full guide: https://docs.getinboxzero.com/hosting/setup-guides#microsoft-oauth-setup",
-      "Microsoft OAuth",
+      "Microsoft OAuth"
     );
 
     const microsoftOAuth = await p.group(
@@ -451,7 +459,7 @@ async function runSetupQuick(options: { name?: string }) {
           p.cancel("Setup cancelled.");
           process.exit(0);
         },
-      },
+      }
     );
 
     microsoftClientId = microsoftOAuth.clientId || "";
@@ -467,7 +475,9 @@ async function runSetupQuick(options: { name?: string }) {
     message: "AI Provider",
     options: LLM_PROVIDER_OPTIONS,
   });
-  if (p.isCancel(llmProvider)) cancelSetup();
+  if (p.isCancel(llmProvider)) {
+    cancelSetup();
+  }
 
   // Gather LLM credentials before generating config
   const llmEnv: EnvConfig = { DEFAULT_LLM_PROVIDER: llmProvider };
@@ -489,15 +499,17 @@ async function runSetupQuick(options: { name?: string }) {
         `   https://yourdomain.com/api/google/webhook?token=${pubsubVerificationToken}\n` +
         "5. Paste the topic name below (or press Enter to skip for now)\n\n" +
         "Full guide: https://docs.getinboxzero.com/hosting/setup-guides#google-pubsub-setup",
-      "Google Pub/Sub (optional)",
+      "Google Pub/Sub (optional)"
     );
 
     const pubsubTopicResult = await p.text({
       message: "Google Pub/Sub Topic Name",
       placeholder: "projects/your-project-id/topics/inbox-zero-emails",
       validate: (v) => {
-        if (!v) return undefined;
-        if (!v.startsWith("projects/") || !v.includes("/topics/")) {
+        if (!v) {
+          return undefined;
+        }
+        if (!(v.startsWith("projects/") && v.includes("/topics/"))) {
           return "Topic name must be in format: projects/PROJECT_ID/topics/TOPIC_NAME";
         }
         return undefined;
@@ -602,7 +614,7 @@ async function runSetupQuick(options: { name?: string }) {
       spinner.stop("Failed to download Docker setup");
       p.log.error(
         "Could not fetch docker-compose.yml from GitHub.\n" +
-          "Please check your internet connection and try again.",
+          "Please check your internet connection and try again."
       );
       process.exit(1);
     }
@@ -632,7 +644,7 @@ async function runSetupQuick(options: { name?: string }) {
 
   p.note(
     `Environment file: ${envFile}\nDocker Compose: ${composeFile}`,
-    "Files created",
+    "Files created"
   );
 
   const shouldStart = await p.confirm({
@@ -644,7 +656,7 @@ async function runSetupQuick(options: { name?: string }) {
     p.note(
       "Start later with:\n  inbox-zero start\n\n" +
         "Update settings with:\n  inbox-zero config",
-      "Next steps",
+      "Next steps"
     );
     p.outro("Setup complete!");
     return;
@@ -661,7 +673,7 @@ async function runSetupQuick(options: { name?: string }) {
     if (p.isCancel(restart) || !restart) {
       p.note(
         "Inbox Zero is still running at http://localhost:3000",
-        "Already running",
+        "Already running"
       );
       p.outro("Setup complete!");
       return;
@@ -705,7 +717,7 @@ async function runSetupQuick(options: { name?: string }) {
       p.log.error(portError);
       p.log.info(
         "Stop the conflicting process or update the port mapping\n" +
-          "in your .env file and docker-compose.yml, then retry.",
+          "in your .env file and docker-compose.yml, then retry."
       );
     } else {
       p.log.error(upResult.stderr || "Unknown error");
@@ -723,7 +735,7 @@ async function runSetupQuick(options: { name?: string }) {
       "  inbox-zero logs -f   — view live logs\n" +
       "  inbox-zero stop      — stop the app\n" +
       "  inbox-zero update    — update to latest version",
-    "You're all set!",
+    "You're all set!"
   );
 
   p.outro("Inbox Zero is ready!");
@@ -765,7 +777,7 @@ async function runSetupAdvanced(options: { name?: string }) {
   p.note(
     "Recommended for first-time self-hosting: use Docker Compose for Postgres/Redis.\n" +
       "Then run everything in Docker unless you plan to run the web app from this repo with Bun.",
-    "Infrastructure Recommendation",
+    "Infrastructure Recommendation"
   );
 
   const infraChoice = await p.select({
@@ -794,14 +806,7 @@ async function runSetupAdvanced(options: { name?: string }) {
   // Ask if running full stack in Docker (only relevant for Docker infra)
   let runWebInDocker = false;
   if (useDockerInfra) {
-    if (!REPO_ROOT) {
-      runWebInDocker = true;
-      p.note(
-        "You're running setup outside the source repo, so the web app will run in Docker.\n" +
-          "If you want to run Next.js with Bun, clone the repo and run setup there.",
-        "Web Runtime",
-      );
-    } else {
+    if (REPO_ROOT) {
       const fullStackDocker = await p.select({
         message: "Do you want to run the full stack in Docker?",
         options: [
@@ -824,6 +829,13 @@ async function runSetupAdvanced(options: { name?: string }) {
       }
 
       runWebInDocker = fullStackDocker === "yes";
+    } else {
+      runWebInDocker = true;
+      p.note(
+        "You're running setup outside the source repo, so the web app will run in Docker.\n" +
+          "If you want to run Next.js with Bun, clone the repo and run setup there.",
+        "Web Runtime"
+      );
     }
   }
 
@@ -869,7 +881,7 @@ async function runSetupAdvanced(options: { name?: string }) {
 
   p.note(
     "Choose which email providers to support.\nPress Enter to skip any field and add it later.",
-    "OAuth Configuration",
+    "OAuth Configuration"
   );
 
   const oauthProviders = await p.multiselect({
@@ -900,7 +912,7 @@ async function runSetupAdvanced(options: { name?: string }) {
 4. Copy Client ID and Client Secret
 
 Full guide: https://docs.getinboxzero.com/self-hosting/google-oauth`,
-      "Google OAuth Setup",
+      "Google OAuth Setup"
     );
 
     const googleOAuth = await p.group(
@@ -921,7 +933,7 @@ Full guide: https://docs.getinboxzero.com/self-hosting/google-oauth`,
           p.cancel("Setup cancelled.");
           process.exit(0);
         },
-      },
+      }
     );
 
     env.GOOGLE_CLIENT_ID = googleOAuth.clientId || "your-google-client-id";
@@ -943,15 +955,17 @@ Full guide: https://docs.getinboxzero.com/self-hosting/google-oauth`,
 5. Copy the full topic name (e.g., projects/my-project-123/topics/inbox-zero-emails)
 
 Full guide: https://docs.getinboxzero.com/self-hosting/google-pubsub`,
-      "Google Pub/Sub Setup (Required for Gmail)",
+      "Google Pub/Sub Setup (Required for Gmail)"
     );
 
     const pubsubTopic = await p.text({
       message: "Google Pub/Sub Topic Name",
       placeholder: "projects/your-project-id/topics/inbox-zero-emails",
       validate: (v) => {
-        if (!v) return undefined; // Allow empty to skip
-        if (!v.startsWith("projects/") || !v.includes("/topics/")) {
+        if (!v) {
+          return undefined; // Allow empty to skip
+        }
+        if (!(v.startsWith("projects/") && v.includes("/topics/"))) {
           return "Topic name must be in format: projects/PROJECT_ID/topics/TOPIC_NAME";
         }
         return undefined;
@@ -984,7 +998,7 @@ Full guide: https://docs.getinboxzero.com/self-hosting/google-pubsub`,
 6. Copy Application (client) ID and the secret Value
 
 Full guide: https://docs.getinboxzero.com/self-hosting/microsoft-oauth`,
-      "Microsoft OAuth Setup",
+      "Microsoft OAuth Setup"
     );
 
     const microsoftOAuth = await p.group(
@@ -1011,7 +1025,7 @@ Full guide: https://docs.getinboxzero.com/self-hosting/microsoft-oauth`,
           p.cancel("Setup cancelled.");
           process.exit(0);
         },
-      },
+      }
     );
 
     env.MICROSOFT_CLIENT_ID =
@@ -1028,14 +1042,16 @@ Full guide: https://docs.getinboxzero.com/self-hosting/microsoft-oauth`,
 
   p.note(
     "Choose your AI provider. You can change this later in settings.",
-    "LLM Configuration",
+    "LLM Configuration"
   );
 
   const llmProvider = await p.select({
     message: "LLM Provider",
     options: LLM_PROVIDER_OPTIONS,
   });
-  if (p.isCancel(llmProvider)) cancelSetup();
+  if (p.isCancel(llmProvider)) {
+    cancelSetup();
+  }
 
   env.DEFAULT_LLM_PROVIDER = llmProvider;
   await promptLlmCredentials(llmProvider, env);
@@ -1119,7 +1135,7 @@ Full guide: https://docs.getinboxzero.com/self-hosting/microsoft-oauth`,
       spinner.stop("Failed to fetch docker-compose.yml");
       p.log.error(
         "Could not fetch docker-compose.yml from GitHub.\n" +
-          "Please check your internet connection and try again.",
+          "Please check your internet connection and try again."
       );
       process.exit(1);
     }
@@ -1137,7 +1153,7 @@ Full guide: https://docs.getinboxzero.com/self-hosting/microsoft-oauth`,
     spinner.stop("Failed to fetch .env template");
     p.log.error(
       "Could not fetch .env.example template.\n" +
-        "Please check your internet connection and try again.",
+        "Please check your internet connection and try again."
     );
     process.exit(1);
   }
@@ -1180,7 +1196,7 @@ Full guide: https://docs.getinboxzero.com/self-hosting/microsoft-oauth`,
   if (!useDockerInfra) {
     p.log.warn(
       "You selected external infrastructure.\n" +
-        "Please update DATABASE_URL and UPSTASH_REDIS_URL in your .env file.",
+        "Please update DATABASE_URL and UPSTASH_REDIS_URL in your .env file."
     );
   }
 
@@ -1239,7 +1255,7 @@ async function runStart(options: { detach: boolean }) {
   if (!existsSync(STANDALONE_COMPOSE_FILE)) {
     p.log.error(
       "Inbox Zero is not configured for production mode.\n" +
-        "Run 'inbox-zero setup' and choose Production (Docker) first.",
+        "Run 'inbox-zero setup' and choose Production (Docker) first."
     );
     process.exit(1);
   }
@@ -1296,7 +1312,7 @@ async function runStart(options: { detach: boolean }) {
           "Stop the conflicting process or change the port:\n" +
             "  inbox-zero config set WEB_PORT <port>\n" +
             "  inbox-zero config set POSTGRES_PORT <port>\n" +
-            "  inbox-zero config set REDIS_PORT <port>",
+            "  inbox-zero config set REDIS_PORT <port>"
         );
       } else {
         p.log.error(upResult.stderr || "Unknown error");
@@ -1319,7 +1335,7 @@ async function runStart(options: { detach: boolean }) {
 
     p.note(
       `Inbox Zero is running at:\nhttp://localhost:${webPort}\n\nView logs: inbox-zero logs\nStop: inbox-zero stop`,
-      "Running",
+      "Running"
     );
 
     p.outro("Inbox Zero started! 🎉");
@@ -1492,7 +1508,7 @@ async function runUpdate() {
           "Stop the conflicting process or change the port:\n" +
             "  inbox-zero config set WEB_PORT <port>\n" +
             "  inbox-zero config set POSTGRES_PORT <port>\n" +
-            "  inbox-zero config set REDIS_PORT <port>",
+            "  inbox-zero config set REDIS_PORT <port>"
         );
       } else {
         p.log.error(upResult.stderr || "Unknown error");
@@ -1567,7 +1583,7 @@ function requireEnvFile(name?: string): { envFile: string; content: string } {
   if (!envFile) {
     const suffix = name ? ` (${name})` : "";
     p.log.error(
-      `No .env file found${suffix}.\nRun 'inbox-zero setup' first to create one.`,
+      `No .env file found${suffix}.\nRun 'inbox-zero setup' first to create one.`
     );
     process.exit(1);
   }
@@ -1587,7 +1603,7 @@ async function runConfigInteractive(name?: string) {
         value: name,
         label: name,
         hint: description,
-      }),
+      })
     ),
   });
 
@@ -1645,20 +1661,20 @@ async function runConfigInteractive(name?: string) {
   p.log.success(`Updated ${keyToUpdate}`);
   p.note(
     "If containers are running, restart for changes to take effect:\n  inbox-zero stop && inbox-zero start",
-    "Next step",
+    "Next step"
   );
   p.outro("Done!");
 }
 
 const VALID_CONFIG_KEYS = new Set(
-  Object.values(CONFIG_CATEGORIES).flatMap((c) => c.keys),
+  Object.values(CONFIG_CATEGORIES).flatMap((c) => c.keys)
 );
 
 async function runConfigSet(key: string, value: string, name?: string) {
   if (!VALID_CONFIG_KEYS.has(key)) {
     p.log.error(`Unknown key: ${key}`);
     p.log.info(
-      `Valid keys:\n${[...VALID_CONFIG_KEYS].map((k) => `  ${k}`).join("\n")}`,
+      `Valid keys:\n${[...VALID_CONFIG_KEYS].map((k) => `  ${k}`).join("\n")}`
     );
     process.exit(1);
   }
@@ -1791,10 +1807,10 @@ async function promptOllamaCreds(): Promise<{
         p.text({
           message: "Ollama Model",
           placeholder: "llama3.1",
-          validate: (v) => (!v ? "Model name is required" : undefined),
+          validate: (v) => (v ? undefined : "Model name is required"),
         }),
     },
-    { onCancel: cancelSetup },
+    { onCancel: cancelSetup }
   );
   return {
     baseUrl: creds.baseUrl || "http://localhost:11434",
@@ -1808,7 +1824,7 @@ async function promptBedrockCreds(): Promise<{
   region: string;
 }> {
   p.log.info(
-    "Get your AWS credentials from the AWS Console:\nhttps://console.aws.amazon.com/iam/",
+    "Get your AWS credentials from the AWS Console:\nhttps://console.aws.amazon.com/iam/"
   );
   const creds = await p.group(
     {
@@ -1816,13 +1832,13 @@ async function promptBedrockCreds(): Promise<{
         p.text({
           message: "Bedrock Access Key",
           placeholder: "AKIA...",
-          validate: (v) => (!v ? "Access key is required" : undefined),
+          validate: (v) => (v ? undefined : "Access key is required"),
         }),
       secretKey: () =>
         p.text({
           message: "Bedrock Secret Key",
           placeholder: "your-secret-key",
-          validate: (v) => (!v ? "Secret key is required" : undefined),
+          validate: (v) => (v ? undefined : "Secret key is required"),
         }),
       region: () =>
         p.text({
@@ -1831,7 +1847,7 @@ async function promptBedrockCreds(): Promise<{
           initialValue: "us-west-2",
         }),
     },
-    { onCancel: cancelSetup },
+    { onCancel: cancelSetup }
   );
   return {
     accessKey: creds.accessKey,
@@ -1845,15 +1861,17 @@ async function promptApiKey(provider: string): Promise<string> {
   const apiKey = await p.text({
     message: `${provider.charAt(0).toUpperCase() + provider.slice(1)} API Key`,
     placeholder: "paste your API key here",
-    validate: (v) => (!v ? "API key is required" : undefined),
+    validate: (v) => (v ? undefined : "API key is required"),
   });
-  if (p.isCancel(apiKey)) cancelSetup();
+  if (p.isCancel(apiKey)) {
+    cancelSetup();
+  }
   return apiKey;
 }
 
 async function promptLlmCredentials(
   provider: string,
-  env: EnvConfig,
+  env: EnvConfig
 ): Promise<void> {
   if (provider === "ollama") {
     const ollama = await promptOllamaCreds();
@@ -1889,7 +1907,7 @@ async function fetchDockerCompose(): Promise<string> {
   const response = await fetch(COMPOSE_URL);
   if (!response.ok) {
     throw new Error(
-      `Failed to fetch docker-compose.yml: ${response.statusText}`,
+      `Failed to fetch docker-compose.yml: ${response.statusText}`
     );
   }
   return response.text();
@@ -1900,7 +1918,7 @@ async function fetchDockerCompose(): Promise<string> {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function runDockerCommand(
-  args: string[],
+  args: string[]
 ): Promise<{ status: number; stdout: string; stderr: string }> {
   return new Promise((resolve, _reject) => {
     const child = spawn("docker", args, { stdio: "pipe" });
@@ -1925,7 +1943,9 @@ function runDockerCommand(
 }
 
 function readExistingDbPassword(envFile: string): string | undefined {
-  if (!existsSync(envFile)) return undefined;
+  if (!existsSync(envFile)) {
+    return undefined;
+  }
   const existing = parseEnvFile(readFileSync(envFile, "utf-8"));
   return existing.POSTGRES_PASSWORD || undefined;
 }
@@ -1934,7 +1954,9 @@ function checkContainersRunning(composeArgs: string[]): boolean {
   const result = spawnSync("docker", [...composeArgs, "ps", "-q"], {
     stdio: "pipe",
   });
-  if (result.status !== 0) return false;
+  if (result.status !== 0) {
+    return false;
+  }
   return (result.stdout?.toString().trim() ?? "") !== "";
 }
 

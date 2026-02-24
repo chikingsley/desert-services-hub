@@ -1,10 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import useSWR from "swr";
-import { useAction } from "next-safe-action/hooks";
 import { useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import useSWR from "swr";
+import type { RulesResponse } from "@/app/api/user/rules/route";
+import { LoadingContent } from "@/components/LoadingContent";
+import { toastError } from "@/components/Toast";
+import { MutedText } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -13,8 +19,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -30,14 +34,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LoadingContent } from "@/components/LoadingContent";
-import { toastError } from "@/components/Toast";
 import { copyRulesFromAccountAction } from "@/utils/actions/rule";
-import type { RulesResponse } from "@/app/api/user/rules/route";
 import { EMAIL_ACCOUNT_HEADER } from "@/utils/config";
-import { prefixPath } from "@/utils/path";
-import { MutedText } from "@/components/Typography";
 import { getActionErrorMessage } from "@/utils/error";
+import { prefixPath } from "@/utils/path";
 
 type SourceAccount = {
   id: string;
@@ -46,11 +46,11 @@ type SourceAccount = {
 };
 
 interface CopyRulesDialogProps {
-  open: boolean;
   onOpenChange: (open: boolean) => void;
-  targetAccountId: string;
-  targetAccountEmail: string;
+  open: boolean;
   sourceAccounts: SourceAccount[];
+  targetAccountEmail: string;
+  targetAccountId: string;
 }
 
 export function CopyRulesDialog({
@@ -63,7 +63,7 @@ export function CopyRulesDialog({
   const router = useRouter();
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
   const [selectedRuleIds, setSelectedRuleIds] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
 
   // Fetch rules from the selected source account
@@ -76,7 +76,7 @@ export function CopyRulesDialog({
     (url: string) =>
       fetch(url, {
         headers: { [EMAIL_ACCOUNT_HEADER]: selectedSourceId },
-      }).then((res) => res.json()),
+      }).then((res) => res.json())
   );
 
   const { execute, isExecuting } = useAction(copyRulesFromAccountAction, {
@@ -105,12 +105,16 @@ export function CopyRulesDialog({
   const selectedSource = sourceAccounts.find((a) => a.id === selectedSourceId);
 
   const allSelected = useMemo(() => {
-    if (!rules || rules.length === 0) return false;
+    if (!rules || rules.length === 0) {
+      return false;
+    }
     return rules.every((rule) => selectedRuleIds.has(rule.id));
   }, [rules, selectedRuleIds]);
 
   const someSelected = useMemo(() => {
-    if (!rules || rules.length === 0) return false;
+    if (!rules || rules.length === 0) {
+      return false;
+    }
     return (
       rules.some((rule) => selectedRuleIds.has(rule.id)) &&
       !rules.every((rule) => selectedRuleIds.has(rule.id))
@@ -118,7 +122,9 @@ export function CopyRulesDialog({
   }, [rules, selectedRuleIds]);
 
   const handleSelectAll = (checked: boolean) => {
-    if (!rules) return;
+    if (!rules) {
+      return;
+    }
     if (checked) {
       setSelectedRuleIds(new Set(rules.map((r) => r.id)));
     } else {
@@ -139,7 +145,9 @@ export function CopyRulesDialog({
   };
 
   const handleCopy = () => {
-    if (selectedRuleIds.size === 0) return;
+    if (selectedRuleIds.size === 0) {
+      return;
+    }
     execute({
       sourceEmailAccountId: selectedSourceId,
       targetEmailAccountId: targetAccountId,
@@ -160,7 +168,7 @@ export function CopyRulesDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogContent className="max-w-md">
         <DialogHeader className="pr-6">
           <DialogTitle className="break-words">
@@ -174,13 +182,13 @@ export function CopyRulesDialog({
 
         <div className="space-y-4">
           <div>
-            <span className="text-sm font-medium">Transfer from</span>
+            <span className="font-medium text-sm">Transfer from</span>
             <Select
-              value={selectedSourceId}
               onValueChange={(value) => {
                 setSelectedSourceId(value);
                 setSelectedRuleIds(new Set());
               }}
+              value={selectedSourceId}
             >
               <SelectTrigger className="mt-1.5">
                 <SelectValue placeholder="Select source account" />
@@ -201,20 +209,20 @@ export function CopyRulesDialog({
           </div>
 
           {selectedSourceId && (
-            <LoadingContent loading={isLoading} error={error}>
+            <LoadingContent error={error} loading={isLoading}>
               {rules && rules.length > 0 ? (
                 <div className="overflow-hidden rounded-md border">
                   <Table>
-                    <TableHeader className="bg-muted sticky top-0">
+                    <TableHeader className="sticky top-0 bg-muted">
                       <TableRow>
                         <TableHead className="w-10">
                           <div className="flex items-center justify-center">
                             <Checkbox
+                              aria-label="Select all"
                               checked={
                                 allSelected || (someSelected && "indeterminate")
                               }
                               onCheckedChange={handleSelectAll}
-                              aria-label="Select all"
                             />
                           </div>
                         </TableHead>
@@ -227,11 +235,11 @@ export function CopyRulesDialog({
                           <TableCell>
                             <div className="flex items-center justify-center">
                               <Checkbox
+                                aria-label={`Select ${rule.name}`}
                                 checked={selectedRuleIds.has(rule.id)}
                                 onCheckedChange={(checked) =>
                                   handleToggleRule(rule.id, !!checked)
                                 }
-                                aria-label={`Select ${rule.name}`}
                               />
                             </div>
                           </TableCell>
@@ -242,7 +250,7 @@ export function CopyRulesDialog({
                       ))}
                     </TableBody>
                   </Table>
-                  <div className="border-t bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                  <div className="border-t bg-muted/50 px-3 py-2 text-muted-foreground text-xs">
                     {selectedRuleIds.size} of {rules.length} selected
                   </div>
                 </div>
@@ -256,13 +264,13 @@ export function CopyRulesDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+          <Button onClick={() => handleOpenChange(false)} variant="outline">
             Cancel
           </Button>
           <Button
-            onClick={handleCopy}
             disabled={selectedRuleIds.size === 0}
             loading={isExecuting}
+            onClick={handleCopy}
           >
             Transfer{" "}
             {selectedRuleIds.size > 0 ? `${selectedRuleIds.size} ` : ""}

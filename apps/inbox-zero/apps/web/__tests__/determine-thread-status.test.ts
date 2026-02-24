@@ -1,11 +1,11 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import { aiDetermineThreadStatus } from "@/utils/ai/reply/determine-thread-status";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
-  getEmailAccount,
-  getEmail,
   generateSequentialDates,
+  getEmail,
+  getEmailAccount,
 } from "@/__tests__/helpers";
 import { SystemType } from "@/generated/prisma/enums";
+import { aiDetermineThreadStatus } from "@/utils/ai/reply/determine-thread-status";
 
 // Run with: pnpm test-ai determine-thread-status
 
@@ -65,7 +65,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
     ];
     const dates = generateSequentialDates(emailData.length, 2); // 2 hours apart
     return emailData.map((email, index) =>
-      getEmail({ ...email, date: dates[index] }),
+      getEmail({ ...email, date: dates[index] })
     );
   };
 
@@ -89,7 +89,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.TO_REPLY);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -112,7 +112,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.FYI);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -135,7 +135,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.AWAITING_REPLY);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -166,7 +166,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.AWAITING_REPLY);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -203,7 +203,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.ACTIONED);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -234,7 +234,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.TO_REPLY);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -263,11 +263,11 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
 
       console.debug("Result:", result);
       expect([SystemType.ACTIONED, SystemType.AWAITING_REPLY]).toContain(
-        result.status,
+        result.status
       );
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -305,7 +305,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.TO_REPLY);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -337,7 +337,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.TO_REPLY);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -369,7 +369,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.TO_REPLY);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -392,7 +392,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect([SystemType.FYI, SystemType.ACTIONED]).toContain(result.status);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -410,7 +410,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.TO_REPLY);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -428,7 +428,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.AWAITING_REPLY);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -446,13 +446,13 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.TO_REPLY);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   // Helper for lunch scheduling thread tests (chronological order with dates)
   const getLunchSchedulingThread = (
     person1Email: string,
-    person2Email: string,
+    person2Email: string
   ) => {
     const emailData = [
       {
@@ -502,7 +502,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
     ];
     const dates = generateSequentialDates(emailData.length, 3); // 3 hours apart
     return emailData.map((email, index) =>
-      getEmail({ ...email, date: dates[index] }),
+      getEmail({ ...email, date: dates[index] })
     );
   };
 
@@ -515,7 +515,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
         emailAccount: alice,
         threadMessages: getLunchSchedulingThread(
           "oliver@example.com",
-          alice.email,
+          alice.email
         ),
       });
 
@@ -524,7 +524,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.AWAITING_REPLY);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -536,7 +536,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
         emailAccount: oliver,
         threadMessages: getLunchSchedulingThread(
           oliver.email,
-          "alice@gmail.com",
+          "alice@gmail.com"
         ),
       });
 
@@ -545,7 +545,7 @@ describe.runIf(isAiTest)("aiDetermineThreadStatus", () => {
       expect(result.status).toBe(SystemType.TO_REPLY);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -610,7 +610,7 @@ Platform Support`,
       expect([SystemType.FYI, SystemType.TO_REPLY]).toContain(result.status);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -639,7 +639,7 @@ In your specific case I'd recommend adding custom rules to get the most out of i
       expect(result.status).toBe(SystemType.ACTIONED);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -672,6 +672,6 @@ In your specific case I'd recommend adding custom rules to get the most out of i
       expect(result.status).toBe(SystemType.ACTIONED);
       expect(result.rationale).toBeDefined();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 });

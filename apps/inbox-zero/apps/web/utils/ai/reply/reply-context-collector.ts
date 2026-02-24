@@ -1,16 +1,19 @@
 import { tool } from "ai";
 import { subMonths } from "date-fns/subMonths";
 import { z } from "zod";
-import { createScopedLogger } from "@/utils/logger";
-import { createGenerateText } from "@/utils/llms";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailForLLM } from "@/utils/types";
-import { getTodayForLLM } from "@/utils/ai/helpers";
-import { getModel } from "@/utils/llms/model";
+import {
+  getEmailListPrompt,
+  getTodayForLLM,
+  getUserInfoPrompt,
+} from "@/utils/ai/helpers";
 import type { EmailProvider } from "@/utils/email/types";
-import { getEmailForLLM } from "@/utils/get-email-from-message";
 import { captureException } from "@/utils/error";
-import { getEmailListPrompt, getUserInfoPrompt } from "@/utils/ai/helpers";
+import { getEmailForLLM } from "@/utils/get-email-from-message";
+import { createGenerateText } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { createScopedLogger } from "@/utils/logger";
+import type { EmailForLLM } from "@/utils/types";
 
 const logger = createScopedLogger("reply-context-collector");
 
@@ -22,7 +25,7 @@ const resultSchema = z.object({
   relevantEmails: z
     .array(z.string())
     .describe(
-      "Past email conversations from search results that could help draft the response. Leave empty if no relevant past emails found.",
+      "Past email conversations from search results that could help draft the response. Leave empty if no relevant past emails found."
     ),
 });
 export type ReplyContextCollectorResult = z.infer<typeof resultSchema>;
@@ -105,7 +108,7 @@ ${getTodayForLLM()}`;
       prompt,
       stopWhen: (result) =>
         result.steps.some((step) =>
-          step.toolCalls?.some((call) => call.toolName === "finalizeResults"),
+          step.toolCalls?.some((call) => call.toolName === "finalizeResults")
         ) || result.steps.length > 25,
       tools: {
         searchEmails: tool({

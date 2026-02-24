@@ -1,24 +1,24 @@
-import { z } from "zod";
 import { type NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { env } from "@/env";
 import type { Logger } from "@/utils/logger";
-import type { DriveTokens } from "./types";
 import {
   RedirectError,
-  redirectWithMessage,
   redirectWithError,
+  redirectWithMessage,
 } from "@/utils/oauth/redirect";
+import { parseOAuthState } from "@/utils/oauth/state";
 import { verifyEmailAccountAccess } from "@/utils/oauth/verify";
+import { prefixPath } from "@/utils/path";
+import prisma from "@/utils/prisma";
 import {
   acquireOAuthCodeLock,
+  clearOAuthCode,
   getOAuthCodeResult,
   setOAuthCodeResult,
-  clearOAuthCode,
 } from "@/utils/redis/oauth-code";
 import { DRIVE_STATE_COOKIE_NAME } from "./constants";
-import prisma from "@/utils/prisma";
-import { parseOAuthState } from "@/utils/oauth/state";
-import { prefixPath } from "@/utils/path";
+import type { DriveTokens } from "./types";
 
 const driveOAuthStateSchema = z.object({
   emailAccountId: z.string().min(1).max(64),
@@ -35,7 +35,7 @@ export async function handleDriveCallback(
     name: "google" | "microsoft";
     exchangeCodeForTokens(code: string): Promise<DriveTokens>;
   },
-  logger: Logger,
+  logger: Logger
 ): Promise<NextResponse> {
   let redirectHeaders = new Headers();
 
@@ -43,7 +43,7 @@ export async function handleDriveCallback(
     // Step 1: Validate OAuth callback parameters
     const { code, redirectUrl, response } = await validateOAuthCallback(
       request,
-      logger,
+      logger
     );
     redirectHeaders = response.headers;
 
@@ -59,7 +59,7 @@ export async function handleDriveCallback(
       return redirectWithMessage(
         cachedRedirectUrl,
         cachedResult.params.message || "drive_connected",
-        redirectHeaders,
+        redirectHeaders
       );
     }
 
@@ -71,7 +71,7 @@ export async function handleDriveCallback(
       return redirectWithMessage(
         lockRedirectUrl,
         "processing",
-        redirectHeaders,
+        redirectHeaders
       );
     }
 
@@ -86,7 +86,7 @@ export async function handleDriveCallback(
       receivedState,
       logger,
       redirectUrl,
-      response.headers,
+      response.headers
     );
 
     const { emailAccountId } = decodedState;
@@ -99,7 +99,7 @@ export async function handleDriveCallback(
       emailAccountId,
       logger,
       finalRedirectUrl,
-      response.headers,
+      response.headers
     );
 
     // Step 5: Exchange code for tokens and get email
@@ -135,7 +135,7 @@ export async function handleDriveCallback(
     return redirectWithMessage(
       finalRedirectUrl,
       "drive_connected",
-      redirectHeaders,
+      redirectHeaders
     );
   } catch (error) {
     // Clear the OAuth code lock on error (best-effort, don't mask original error)
@@ -154,7 +154,7 @@ export async function handleDriveCallback(
       return redirectWithError(
         error.redirectUrl,
         "connection_failed",
-        error.responseHeaders,
+        error.responseHeaders
       );
     }
 
@@ -166,7 +166,7 @@ export async function handleDriveCallback(
     return redirectWithError(
       errorRedirectUrl,
       "connection_failed",
-      redirectHeaders,
+      redirectHeaders
     );
   }
 }
@@ -176,7 +176,7 @@ export async function handleDriveCallback(
  */
 async function validateOAuthCallback(
   request: NextRequest,
-  logger: Logger,
+  logger: Logger
 ): Promise<{
   code: string;
   redirectUrl: URL;
@@ -198,7 +198,7 @@ async function validateOAuthCallback(
     throw new RedirectError(redirectUrl, response.headers);
   }
 
-  if (!storedState || !receivedState || storedState !== receivedState) {
+  if (!(storedState && receivedState) || storedState !== receivedState) {
     logger.warn("Invalid state during drive callback", {
       receivedState,
       hasStoredState: !!storedState,
@@ -214,7 +214,7 @@ function parseAndValidateDriveState(
   storedState: string,
   logger: Logger,
   redirectUrl: URL,
-  responseHeaders: Headers,
+  responseHeaders: Headers
 ): {
   emailAccountId: string;
   type: "drive";
@@ -247,7 +247,7 @@ function parseAndValidateDriveState(
 function buildDriveRedirectUrl(emailAccountId: string): URL {
   return new URL(
     prefixPath(emailAccountId, "/drive"),
-    env.NEXT_PUBLIC_BASE_URL,
+    env.NEXT_PUBLIC_BASE_URL
   );
 }
 

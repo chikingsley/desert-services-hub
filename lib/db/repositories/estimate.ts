@@ -226,9 +226,9 @@ export async function searchEstimates(
 
 export interface EstimateExtractionTriageResult {
   candidateRows: number;
+  markedNonPdf: number;
   processedRows: number;
   resetToPending: number;
-  markedNonPdf: number;
   skippedNoAsset: number;
 }
 

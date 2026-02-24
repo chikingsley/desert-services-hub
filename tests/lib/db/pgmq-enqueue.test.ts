@@ -23,7 +23,7 @@ async function enqueueJob(
 ): Promise<string | number | null> {
   const row = await db
     .query<{ enqueue_background_job: string | number | null }>(
-      `SELECT public.enqueue_background_job($1, $2::jsonb, NULL, 3, $3) AS enqueue_background_job`
+      "SELECT public.enqueue_background_job($1, $2::jsonb, NULL, 3, $3) AS enqueue_background_job"
     )
     .get(jobType, JSON.stringify(payload), dedupe);
   const msgId = row?.enqueue_background_job ?? null;

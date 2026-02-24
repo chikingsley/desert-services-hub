@@ -1,8 +1,8 @@
-import prisma from "@/utils/prisma";
-import type { Logger } from "@/utils/logger";
 import { sendReconnectionEmail } from "@inboxzero/resend";
 import { env } from "@/env";
 import { addUserErrorMessage, ErrorType } from "@/utils/error-messages";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import { createUnsubscribeToken } from "@/utils/unsubscribe";
 
 /**
@@ -60,7 +60,7 @@ export async function cleanupInvalidTokens({
 
   if (updated.count === 0) {
     logger.info(
-      "Account already marked as disconnected (via concurrent update)",
+      "Account already marked as disconnected (via concurrent update)"
     );
     return;
   }
@@ -94,7 +94,7 @@ export async function cleanupInvalidTokens({
       }
     } else {
       logger.info(
-        "Skipping reconnection email - account not currently watched",
+        "Skipping reconnection email - account not currently watched"
       );
     }
 
@@ -102,7 +102,7 @@ export async function cleanupInvalidTokens({
       emailAccount.userId,
       ErrorType.ACCOUNT_DISCONNECTED,
       `The connection for ${emailAccount.email} was disconnected. Please reconnect your account to resume automation.`,
-      logger,
+      logger
     );
   }
 

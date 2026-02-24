@@ -1,31 +1,31 @@
 import type { Message } from "@microsoft/microsoft-graph-types";
-import type { OutlookClient } from "@/utils/outlook/client";
 import type { Attachment } from "nodemailer/lib/mailer";
-import type { SendEmailBody } from "@/utils/gmail/mail";
-import type { ParsedMessage } from "@/utils/types";
 import type { EmailForAction } from "@/utils/ai/types";
-import { createOutlookReplyContent } from "@/utils/outlook/reply";
-import { escapeHtml } from "@/utils/string";
-import { forwardEmailHtml, forwardEmailSubject } from "@/utils/gmail/forward";
+import { extractEmailAddress, extractNameFromEmail } from "@/utils/email";
 import {
   buildReplyAllRecipients,
   mergeAndDedupeRecipients,
 } from "@/utils/email/reply-all";
-import { withOutlookRetry } from "@/utils/outlook/retry";
-import { extractEmailAddress, extractNameFromEmail } from "@/utils/email";
-import { ensureEmailSendingEnabled } from "@/utils/mail";
+import { forwardEmailHtml, forwardEmailSubject } from "@/utils/gmail/forward";
+import type { SendEmailBody } from "@/utils/gmail/mail";
 import type { Logger } from "@/utils/logger";
+import { ensureEmailSendingEnabled } from "@/utils/mail";
+import type { OutlookClient } from "@/utils/outlook/client";
+import { createOutlookReplyContent } from "@/utils/outlook/reply";
+import { withOutlookRetry } from "@/utils/outlook/retry";
+import { escapeHtml } from "@/utils/string";
+import type { ParsedMessage } from "@/utils/types";
 
 interface OutlookMessageRequest {
-  subject: string;
+  bccRecipients?: { emailAddress: { address: string } }[];
   body: {
     contentType: string;
     content: string;
   };
-  toRecipients: { emailAddress: { address: string } }[];
   ccRecipients?: { emailAddress: { address: string } }[];
-  bccRecipients?: { emailAddress: { address: string } }[];
   replyTo?: { emailAddress: { address: string } }[];
+  subject: string;
+  toRecipients: { emailAddress: { address: string } }[];
 }
 
 type SentEmailResult = Pick<Message, "id" | "conversationId">;
@@ -33,7 +33,7 @@ type SentEmailResult = Pick<Message, "id" | "conversationId">;
 export async function sendEmailWithHtml(
   client: OutlookClient,
   body: SendEmailBody,
-  logger: Logger,
+  logger: Logger
 ): Promise<SentEmailResult> {
   ensureEmailSendingEnabled();
 
@@ -67,12 +67,12 @@ export async function sendEmailWithHtml(
             ? { replyTo: [{ emailAddress: { address: body.replyTo } }] }
             : {}),
         }),
-    logger,
+    logger
   );
 
   await withOutlookRetry(
     () => client.getClient().api(`/me/messages/${draft.id}/send`).post({}),
-    logger,
+    logger
   );
 
   // Draft id is no longer valid after sending; Graph doesn't return sent message id
@@ -85,7 +85,7 @@ export async function sendEmailWithHtml(
 export async function sendEmailWithPlainText(
   client: OutlookClient,
   body: Omit<SendEmailBody, "messageHtml"> & { messageText: string },
-  logger: Logger,
+  logger: Logger
 ) {
   const messageHtml = convertTextToHtmlParagraphs(body.messageText);
   return sendEmailWithHtml(client, { ...body, messageHtml }, logger);
@@ -96,7 +96,7 @@ export async function replyToEmail(
   message: EmailForAction,
   reply: string,
   logger: Logger,
-  options?: { replyTo?: string; from?: string },
+  options?: { replyTo?: string; from?: string }
 ) {
   ensureEmailSendingEnabled();
 
@@ -111,7 +111,7 @@ export async function replyToEmail(
   const replyDraft: Message = await withOutlookRetry(
     () =>
       client.getClient().api(`/me/messages/${message.id}/createReply`).post({}),
-    logger,
+    logger
   );
 
   // Build the from field if a display name is provided
@@ -147,13 +147,13 @@ export async function replyToEmail(
               }
             : {}),
         }),
-    logger,
+    logger
   );
 
   // Send the draft
   await withOutlookRetry(
     () => client.getClient().api(`/me/messages/${replyDraft.id}/send`).post({}),
-    logger,
+    logger
   );
 
   // Draft ID is no longer valid after /send; Graph doesn't return sent message ID
@@ -172,16 +172,18 @@ export async function forwardEmail(
     bcc?: string;
     content?: string;
   },
-  logger: Logger,
+  logger: Logger
 ) {
   ensureEmailSendingEnabled();
 
-  if (!options.to.trim()) throw new Error("Recipient address is required");
+  if (!options.to.trim()) {
+    throw new Error("Recipient address is required");
+  }
 
   // Get the original message
   const originalMessage: Message = await withOutlookRetry(
     () => client.getClient().api(`/me/messages/${options.messageId}`).get(),
-    logger,
+    logger
   );
 
   const message: ParsedMessage = {
@@ -225,7 +227,7 @@ export async function forwardEmail(
         .getClient()
         .api(`/me/messages/${options.messageId}/forward`)
         .post({ message: forwardMessage }),
-    logger,
+    logger
   );
 
   return result;
@@ -243,7 +245,7 @@ export async function draftEmail(
     attachments?: Attachment[];
   },
   userEmail: string,
-  logger: Logger,
+  logger: Logger
 ) {
   const { html } = createOutlookReplyContent({
     textContent: args.content,
@@ -253,7 +255,7 @@ export async function draftEmail(
   const recipients = buildReplyAllRecipients(
     originalEmail.headers,
     args.to,
-    userEmail,
+    userEmail
   );
 
   // Use raw recipients if available (Outlook), otherwise parse from string (Gmail)
@@ -293,7 +295,7 @@ export async function draftEmail(
         .api(`/me/messages/${originalEmail.id}`)
         .select("isRead")
         .get(),
-    logger,
+    logger
   );
   const wasUnread = originalMessage.isRead === false;
 
@@ -305,7 +307,7 @@ export async function draftEmail(
         .getClient()
         .api(`/me/messages/${originalEmail.id}/createReplyAll`)
         .post({}),
-    logger,
+    logger
   );
 
   // Update the draft with our content
@@ -329,7 +331,7 @@ export async function draftEmail(
         ...(ccRecipients.length > 0 ? { ccRecipients } : {}),
         ...(bccRecipients.length > 0 ? { bccRecipients } : {}),
       }),
-    logger,
+    logger
   );
 
   // Restore the original message's unread status if it was unread before
@@ -341,7 +343,7 @@ export async function draftEmail(
           .getClient()
           .api(`/me/messages/${originalEmail.id}`)
           .patch({ isRead: false }),
-      logger,
+      logger
     );
   }
 
@@ -351,7 +353,9 @@ export async function draftEmail(
 }
 
 function convertTextToHtmlParagraphs(text?: string | null): string {
-  if (!text) return "";
+  if (!text) {
+    return "";
+  }
 
   // Split the text into paragraphs based on newline characters
   const paragraphs = text
@@ -370,7 +374,7 @@ function convertTextToHtmlParagraphs(text?: string | null): string {
 async function sendReplyUsingCreateReply(
   client: OutlookClient,
   body: SendEmailBody,
-  logger: Logger,
+  logger: Logger
 ): Promise<SentEmailResult> {
   const originalMessageId = body.replyToEmail!.messageId!;
 
@@ -383,7 +387,7 @@ async function sendReplyUsingCreateReply(
         .getClient()
         .api(`/me/messages/${originalMessageId}/createReply`)
         .post({}),
-    logger,
+    logger
   );
 
   // Update the draft with our content and recipients
@@ -409,13 +413,13 @@ async function sendReplyUsingCreateReply(
             ? { bccRecipients: [{ emailAddress: { address: body.bcc } }] }
             : {}),
         }),
-    logger,
+    logger
   );
 
   // Send the draft
   await withOutlookRetry(
     () => client.getClient().api(`/me/messages/${replyDraft.id}/send`).post({}),
-    logger,
+    logger
   );
 
   // Draft ID is no longer valid after /send; Graph doesn't return sent message ID

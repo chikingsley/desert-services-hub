@@ -52,8 +52,8 @@ const SKIP_DIR_NAMES = new Set([
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx"]);
 
 interface Violation {
-  dir: string;
   count: number;
+  dir: string;
 }
 
 function tryStat(path: string): ReturnType<typeof statSync> | null {

@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
 import { CalendarCheckIcon, FileTextIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { ConnectCalendar } from "@/app/(app)/[emailAccountId]/calendars/ConnectCalendar";
 import { LoadingContent } from "@/components/LoadingContent";
+import { toastError } from "@/components/Toast";
+import { TypographyP } from "@/components/Typography";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCalendars } from "@/hooks/useCalendars";
 import { CalendarConnectionCard } from "./CalendarConnectionCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ConnectCalendar } from "@/app/(app)/[emailAccountId]/calendars/ConnectCalendar";
-import { TypographyP } from "@/components/Typography";
-import { toastError } from "@/components/Toast";
 
 export function CalendarConnections() {
   useCalendarNotifications();
@@ -17,7 +17,7 @@ export function CalendarConnections() {
   const connections = data?.connections || [];
 
   return (
-    <LoadingContent loading={isLoading} error={error}>
+    <LoadingContent error={error} loading={isLoading}>
       <div className="space-y-6">
         {connections.length === 0 ? (
           <Card>
@@ -31,14 +31,14 @@ export function CalendarConnections() {
                   Connect your calendar to unlock:
                 </TypographyP>
 
-                <TypographyP className="text-sm flex items-center gap-2">
+                <TypographyP className="flex items-center gap-2 text-sm">
                   <CalendarCheckIcon className="size-4 text-blue-600" />
                   <span className="min-w-0">
                     AI replies based on your real availability
                   </span>
                 </TypographyP>
 
-                <TypographyP className="text-sm flex items-center gap-2">
+                <TypographyP className="flex items-center gap-2 text-sm">
                   <FileTextIcon className="size-4 text-blue-600" />
                   <span className="min-w-0">
                     Meeting briefs before every call
@@ -57,8 +57,8 @@ export function CalendarConnections() {
 
             {connections.map((connection) => (
               <CalendarConnectionCard
-                key={connection.id}
                 connection={connection}
+                key={connection.id}
               />
             ))}
           </div>
@@ -75,7 +75,9 @@ function useCalendarNotifications() {
 
   useEffect(() => {
     const errorParam = searchParams.get("error");
-    if (!errorParam) return;
+    if (!errorParam) {
+      return;
+    }
 
     const errorDescription = searchParams.get("error_description");
     const errorMessages: Record<

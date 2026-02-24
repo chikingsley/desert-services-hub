@@ -6,22 +6,22 @@ import { COLORS, FONT_TITLE } from "./brand";
 import { noPaddingLayout } from "./layouts";
 
 export interface HeaderOptions {
-  /** Document title (e.g., "Services Estimate", "MyDEQ NOI Simple Guide") */
-  title: string;
+  /** Optional date line below subtitle (renders small, gray) */
+  date?: string;
   /** Logo as base64 data URI */
   logoBase64: string;
   /** Logo fit dimensions [width, height]. Default: [220, 54] */
   logoFit?: [number, number];
-  /** Optional subtitle below title (renders italic, gray) */
-  subtitle?: string;
-  /** Optional date line below subtitle (renders small, gray) */
-  date?: string;
-  /** Title font size. Default: 18 */
-  titleFontSize?: number;
-  /** Title color. Default: COLORS.foreground */
-  titleColor?: string;
   /** Bottom margin below header block. Default: 18 */
   marginBottom?: number;
+  /** Optional subtitle below title (renders italic, gray) */
+  subtitle?: string;
+  /** Document title (e.g., "Services Estimate", "MyDEQ NOI Simple Guide") */
+  title: string;
+  /** Title color. Default: COLORS.foreground */
+  titleColor?: string;
+  /** Title font size. Default: 18 */
+  titleFontSize?: number;
 }
 
 /**

@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { FilterIcon } from "lucide-react";
+import { useState } from "react";
 import { DetailedStatsFilter } from "@/app/(app)/[emailAccountId]/stats/DetailedStatsFilter";
 
 export function useEmailsToIncludeFilter() {
@@ -33,9 +33,6 @@ export function EmailsToIncludeFilter(props: {
 
   return (
     <DetailedStatsFilter
-      label="Emails to include"
-      icon={<FilterIcon className="mr-2 h-4 w-4" />}
-      keepOpenOnSelect
       columns={[
         {
           label: "Read",
@@ -59,6 +56,9 @@ export function EmailsToIncludeFilter(props: {
           setChecked: () => setTypes({ ...types, archived: !types.archived }),
         },
       ]}
+      icon={<FilterIcon className="mr-2 h-4 w-4" />}
+      keepOpenOnSelect
+      label="Emails to include"
     />
   );
 }

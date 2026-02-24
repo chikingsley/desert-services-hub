@@ -8,7 +8,7 @@ import {
 export function ensureDatabaseUrlParameters(
   appName: string,
   envName: string,
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ): { success: boolean; error?: string } {
   const dbInstanceId = `${appName}-${envName}-db`;
   const secretId = `${appName}-${envName}-db-credentials`;
@@ -41,7 +41,7 @@ export function ensureDatabaseUrlParameters(
   if (!endpoint) {
     return { success: false, error: "Database endpoint not available" };
   }
-  if (!endpoint.Address || !endpoint.Port) {
+  if (!(endpoint.Address && endpoint.Port)) {
     return { success: false, error: "Database endpoint not available" };
   }
 
@@ -95,7 +95,7 @@ export function ensureDatabaseUrlParameters(
 export function ensureRedisUrlParameter(
   appName: string,
   envName: string,
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ): { success: boolean; error?: string } {
   const replicationGroupId = `${appName}-${envName}-redis`;
   const endpointResult = runAwsCommand(env, [
@@ -124,7 +124,7 @@ export function ensureRedisUrlParameter(
   const secretResult = readSecretJson<{ password?: string }>(
     env,
     secretId,
-    "Failed to read Redis auth token",
+    "Failed to read Redis auth token"
   );
   if (!secretResult.success) {
     return { success: false, error: secretResult.error };

@@ -180,7 +180,9 @@ mock.module("@lib/db/repositories/project-matching", () => ({
   },
 }));
 
-const { gatherTriageContext } = await import("@/packages/archive/email/sync/triage/context");
+const { gatherTriageContext } = await import(
+  "@/packages/archive/email/sync/triage/context"
+);
 
 describe("gatherTriageContext candidate assembly", () => {
   beforeEach(() => {

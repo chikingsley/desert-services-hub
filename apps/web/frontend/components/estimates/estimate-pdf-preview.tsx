@@ -12,10 +12,10 @@ import { cn, formatCurrency, formatDate } from "@/lib/utils";
 
 interface EstimatePDFPreviewProps {
   estimate: QuotingEstimate;
-  version: EstimateVersion;
-  sections: EstimateSection[];
   lineItems: EstimateLineItem[];
+  sections: EstimateSection[];
   total: number;
+  version: EstimateVersion;
 }
 
 export function EstimatePDFPreview({

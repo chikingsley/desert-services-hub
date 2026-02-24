@@ -1,14 +1,14 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { getAuthToken } from "@/utils/mcp/oauth";
-import { getIntegration, type IntegrationKey } from "@/utils/mcp/integrations";
-import { createMcpTransport } from "@/utils/mcp/transport";
 import { createScopedLogger } from "@/utils/logger";
+import { getIntegration, type IntegrationKey } from "@/utils/mcp/integrations";
+import { getAuthToken } from "@/utils/mcp/oauth";
+import { createMcpTransport } from "@/utils/mcp/transport";
 
 const logger = createScopedLogger("mcp-list-tools");
 
 export async function listMcpTools(
   integration: IntegrationKey,
-  emailAccountId: string,
+  emailAccountId: string
 ): Promise<
   Array<{ name: string; description?: string; inputSchema?: unknown }>
 > {
@@ -44,7 +44,7 @@ export async function listMcpTools(
   } catch (error) {
     logger.error("Failed to list MCP tools", { error, integration });
     throw new Error(
-      `Failed to list tools: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to list tools: ${error instanceof Error ? error.message : "Unknown error"}`
     );
   } finally {
     await client.close();

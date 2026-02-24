@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  isExtractableMimeType,
   canUseNativePdfSupport,
-  getDocumentPreview,
   cleanExtractedText,
+  getDocumentPreview,
+  isExtractableMimeType,
 } from "./document-extraction";
 
 describe("isExtractableMimeType", () => {
@@ -14,8 +14,8 @@ describe("isExtractableMimeType", () => {
   it("should return true for DOCX", () => {
     expect(
       isExtractableMimeType(
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ),
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      )
     ).toBe(true);
   });
 
@@ -106,7 +106,7 @@ describe("cleanExtractedText", () => {
 
   it("should collapse horizontal whitespace", () => {
     expect(cleanExtractedText("word1    word2\t\tword3")).toBe(
-      "word1 word2 word3",
+      "word1 word2 word3"
     );
   });
 

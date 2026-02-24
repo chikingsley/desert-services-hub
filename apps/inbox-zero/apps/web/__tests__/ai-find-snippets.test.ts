@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
-import { aiFindSnippets } from "@/utils/ai/snippets/find-snippets";
 import { getEmail, getEmailAccount } from "@/__tests__/helpers";
+import { aiFindSnippets } from "@/utils/ai/snippets/find-snippets";
+
 // pnpm test-ai ai-find-snippets
 
 const isAiTest = process.env.RUN_AI_TESTS === "true";

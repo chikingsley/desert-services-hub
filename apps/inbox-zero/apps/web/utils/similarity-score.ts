@@ -1,6 +1,6 @@
 import * as stringSimilarity from "string-similarity";
-import { convertEmailHtmlToText, parseReply } from "@/utils/mail";
 import { stripQuotedContent } from "@/utils/ai/choose-rule/draft-management";
+import { convertEmailHtmlToText, parseReply } from "@/utils/mail";
 import type { ParsedMessage } from "@/utils/types";
 
 /**
@@ -58,9 +58,9 @@ function normalizeForGmail(content: string): string {
  */
 export function calculateSimilarity(
   storedContent?: string | null,
-  providerMessage?: string | ParsedMessage | null,
+  providerMessage?: string | ParsedMessage | null
 ): number {
-  if (!storedContent || !providerMessage) {
+  if (!(storedContent && providerMessage)) {
     return 0.0;
   }
 
@@ -87,7 +87,7 @@ export function calculateSimilarity(
     }
   }
 
-  if (!normalized1 || !normalized2) {
+  if (!(normalized1 && normalized2)) {
     return normalized1 === normalized2 ? 1.0 : 0.0;
   }
 

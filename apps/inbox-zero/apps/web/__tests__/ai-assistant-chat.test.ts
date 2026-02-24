@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ModelMessage } from "ai";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getEmailAccount, getMockMessage } from "@/__tests__/helpers";
 import { createScopedLogger } from "@/utils/logger";
 
@@ -78,7 +78,7 @@ async function loadAssistantChatModule({ emailSend }: { emailSend: boolean }) {
 
 async function captureToolSet(
   emailSend = true,
-  provider: "google" | "microsoft" = "google",
+  provider: "google" | "microsoft" = "google"
 ) {
   const { aiProcessAssistantChat } = await loadAssistantChatModule({
     emailSend,
@@ -127,12 +127,12 @@ describe("aiProcessAssistantChat", () => {
     expect(args.messages[0].role).toBe("system");
     expect(args.messages[0].content).toContain("Core responsibilities:");
     expect(args.messages[0].content).toContain(
-      "Tool usage strategy (progressive disclosure):",
+      "Tool usage strategy (progressive disclosure):"
     );
     expect(args.messages[0].content).toContain("Provider context:");
     expect(args.messages[0].content).toContain("Inbox triage guidance:");
     expect(args.messages[0].content).toContain(
-      "Conversation status behavior should be customized by updating conversation rules directly",
+      "Conversation status behavior should be customized by updating conversation rules directly"
     );
 
     expect(args.tools.getAccountOverview).toBeDefined();
@@ -237,12 +237,12 @@ describe("aiProcessAssistantChat", () => {
     expect(args.messages[0].role).toBe("system");
     expect(args.messages[1].role).toBe("system");
     expect(args.messages[1].content).toContain(
-      "Memories from previous conversations:",
+      "Memories from previous conversations:"
     );
 
     // Then conversation history in order
     const nonSystemMessages = args.messages.filter(
-      (m: { role: string }) => m.role !== "system",
+      (m: { role: string }) => m.role !== "system"
     );
     expect(nonSystemMessages[0]).toMatchObject({
       role: "user",
@@ -336,11 +336,11 @@ describe("aiProcessAssistantChat", () => {
     const hiddenContext = args.messages.find(
       (message: { role: string; content: string }) =>
         message.role === "system" &&
-        message.content.includes("Hidden context for the user's request"),
+        message.content.includes("Hidden context for the user's request")
     );
 
     expect(hiddenContext?.content).toContain(
-      "This fix is about conversation status classification",
+      "This fix is about conversation status classification"
     );
   });
 
@@ -394,11 +394,11 @@ describe("aiProcessAssistantChat", () => {
     const hiddenContext = args.messages.find(
       (message: { role: string; content: string }) =>
         message.role === "system" &&
-        message.content.includes("Hidden context for the user's request"),
+        message.content.includes("Hidden context for the user's request")
     );
 
     expect(hiddenContext?.content).toContain(
-      "This fix is about conversation status classification",
+      "This fix is about conversation status classification"
     );
     expect(mockPrisma.rule.findUnique).not.toHaveBeenCalled();
   });
@@ -451,11 +451,11 @@ describe("aiProcessAssistantChat", () => {
     const hiddenContext = args.messages.find(
       (message: { role: string; content: string }) =>
         message.role === "system" &&
-        message.content.includes("Hidden context for the user's request"),
+        message.content.includes("Hidden context for the user's request")
     );
 
     expect(hiddenContext?.content).not.toContain(
-      "This fix is about conversation status classification",
+      "This fix is about conversation status classification"
     );
   });
 
@@ -513,11 +513,11 @@ describe("aiProcessAssistantChat", () => {
     const hiddenContext = args.messages.find(
       (message: { role: string; content: string }) =>
         message.role === "system" &&
-        message.content.includes("Hidden context for the user's request"),
+        message.content.includes("Hidden context for the user's request")
     );
 
     expect(hiddenContext?.content).toContain(
-      "This fix is about conversation status classification",
+      "This fix is about conversation status classification"
     );
     expect(mockPrisma.rule.findUnique).toHaveBeenCalledWith({
       where: { id: "rule-to-reply" },
@@ -576,11 +576,11 @@ describe("aiProcessAssistantChat", () => {
     const hiddenContext = args.messages.find(
       (message: { role: string; content: string }) =>
         message.role === "system" &&
-        message.content.includes("Hidden context for the user's request"),
+        message.content.includes("Hidden context for the user's request")
     );
 
     expect(hiddenContext?.content).not.toContain(
-      "This fix is about conversation status classification",
+      "This fix is about conversation status classification"
     );
   });
 
@@ -636,11 +636,11 @@ describe("aiProcessAssistantChat", () => {
     const hiddenContext = args.messages.find(
       (message: { role: string; content: string }) =>
         message.role === "system" &&
-        message.content.includes("Hidden context for the user's request"),
+        message.content.includes("Hidden context for the user's request")
     );
 
     expect(hiddenContext?.content).toContain(
-      "This fix is about conversation status classification",
+      "This fix is about conversation status classification"
     );
     expect(mockPrisma.rule.findUnique).toHaveBeenCalledWith({
       where: {
@@ -707,11 +707,11 @@ describe("aiProcessAssistantChat", () => {
     const hiddenContext = args.messages.find(
       (message: { role: string; content: string }) =>
         message.role === "system" &&
-        message.content.includes("Hidden context for the user's request"),
+        message.content.includes("Hidden context for the user's request")
     );
 
     expect(hiddenContext?.content).not.toContain(
-      "This fix is about conversation status classification",
+      "This fix is about conversation status classification"
     );
   });
 
@@ -795,7 +795,7 @@ describe("aiProcessAssistantChat", () => {
         data: expect.objectContaining({
           filingPrompt: null,
         }),
-      }),
+      })
     );
     expect(result).toEqual(
       expect.objectContaining({
@@ -803,7 +803,7 @@ describe("aiProcessAssistantChat", () => {
         updated: expect.objectContaining({
           filingPrompt: null,
         }),
-      }),
+      })
     );
   });
 
@@ -1111,15 +1111,15 @@ describe("aiProcessAssistantChat", () => {
     const memoriesMessage = args.messages.find(
       (m: { role: string; content: string }) =>
         m.role === "system" &&
-        m.content.includes("Memories from previous conversations"),
+        m.content.includes("Memories from previous conversations")
     );
 
     expect(memoriesMessage).toBeDefined();
     expect(memoriesMessage.content).toContain(
-      "[2026-02-10] User likes dark mode",
+      "[2026-02-10] User likes dark mode"
     );
     expect(memoriesMessage.content).toContain(
-      "[2026-02-12] Prefers batch archive",
+      "[2026-02-12] Prefers batch archive"
     );
   });
 
@@ -1144,7 +1144,7 @@ describe("aiProcessAssistantChat", () => {
     const memoriesMessage = args.messages.find(
       (m: { role: string; content: string }) =>
         m.role === "system" &&
-        m.content.includes("Memories from previous conversations"),
+        m.content.includes("Memories from previous conversations")
     );
 
     expect(memoriesMessage).toBeUndefined();
@@ -1168,7 +1168,7 @@ describe("aiProcessAssistantChat", () => {
     expect(mockPrisma.emailAccount.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: { about: "New instructions" },
-      }),
+      })
     );
   });
 
@@ -1187,13 +1187,13 @@ describe("aiProcessAssistantChat", () => {
 
     expect(result.success).toBe(true);
     expect(result.updatedAbout).toBe(
-      "Existing instructions\nAdditional preference",
+      "Existing instructions\nAdditional preference"
     );
     expect(result.previousAbout).toBe("Existing instructions");
     expect(mockPrisma.emailAccount.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: { about: "Existing instructions\nAdditional preference" },
-      }),
+      })
     );
   });
 
@@ -1266,7 +1266,9 @@ describe("aiProcessAssistantChat", () => {
     const archiveThreadWithLabel = vi
       .fn()
       .mockImplementation(async (threadId: string) => {
-        if (threadId === "thread-2") throw new Error("archive failed");
+        if (threadId === "thread-2") {
+          throw new Error("archive failed");
+        }
       });
 
     const getMessagesWithPagination = vi.fn().mockResolvedValue({
@@ -1334,14 +1336,14 @@ describe("aiProcessAssistantChat", () => {
         query: "today",
         inboxOnly: true,
         unreadOnly: false,
-      }),
+      })
     );
     expect(searchResult.totalReturned).toBe(2);
     expect(searchResult.messages).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ messageId: "message-1" }),
         expect.objectContaining({ category: "to_reply" }),
-      ]),
+      ])
     );
 
     const manageResult = await tools.manageInbox.execute({
@@ -1358,7 +1360,7 @@ describe("aiProcessAssistantChat", () => {
         successCount: 1,
         failedCount: 1,
         failedThreadIds: ["thread-2"],
-      }),
+      })
     );
   });
 });

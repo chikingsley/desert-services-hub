@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { containsCtaKeyword } from "./cta";
 
 describe("containsCtaKeyword", () => {
@@ -85,8 +85,8 @@ describe("containsCtaKeyword", () => {
     it("returns false for long sentences with keywords", () => {
       expect(
         containsCtaKeyword(
-          "You can view it on GitHub by clicking the link below",
-        ),
+          "You can view it on GitHub by clicking the link below"
+        )
       ).toBe(false);
     });
   });

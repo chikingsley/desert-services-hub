@@ -1,24 +1,24 @@
 "use client";
 
+import { XIcon } from "lucide-react";
 import {
-  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
   useCallback,
   useRef,
-  type KeyboardEvent,
-  type ChangeEvent,
+  useState,
 } from "react";
-import { XIcon } from "lucide-react";
 import { cn } from "@/utils";
 
 interface TagInputProps {
-  value: string[];
+  className?: string;
+  error?: string | null;
+  id?: string;
+  label?: string;
   onChange: (value: string[]) => void;
   placeholder?: string;
   validate?: (value: string) => string | null;
-  className?: string;
-  id?: string;
-  label?: string;
-  error?: string | null;
+  value: string[];
 }
 
 export function TagInput({
@@ -38,7 +38,9 @@ export function TagInput({
   const addTag = useCallback(
     (tag: string) => {
       const trimmedTag = tag.trim();
-      if (!trimmedTag) return;
+      if (!trimmedTag) {
+        return;
+      }
 
       if (validate) {
         const validationError = validate(trimmedTag);
@@ -57,14 +59,14 @@ export function TagInput({
       setInputValue("");
       setInputError(null);
     },
-    [value, onChange, validate],
+    [value, onChange, validate]
   );
 
   const removeTag = useCallback(
     (tagToRemove: string) => {
       onChange(value.filter((tag) => tag !== tagToRemove));
     },
-    [value, onChange],
+    [value, onChange]
   );
 
   const handleKeyDown = useCallback(
@@ -77,7 +79,7 @@ export function TagInput({
         removeTag(value[value.length - 1]);
       }
     },
-    [inputValue, addTag, value, removeTag],
+    [inputValue, addTag, value, removeTag]
   );
 
   const handleInputChange = useCallback(
@@ -93,7 +95,7 @@ export function TagInput({
         setInputError(null);
       }
     },
-    [addTag],
+    [addTag]
   );
 
   const handleBlur = useCallback(() => {
@@ -111,51 +113,51 @@ export function TagInput({
   return (
     <div className={className}>
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium mb-1.5">
+        <label className="mb-1.5 block font-medium text-sm" htmlFor={id}>
           {label}
         </label>
       )}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: clicking focuses the input which handles keyboard events */}
       <div
-        onClick={handleContainerClick}
         className={cn(
-          "flex flex-wrap gap-1.5 p-2 min-h-[42px] w-full rounded-md border border-input bg-background text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 cursor-text",
-          displayError && "border-destructive",
+          "flex min-h-[42px] w-full cursor-text flex-wrap gap-1.5 rounded-md border border-input bg-background p-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+          displayError && "border-destructive"
         )}
+        onClick={handleContainerClick}
       >
         {value.map((tag) => (
           <span
+            className="inline-flex items-center gap-1 rounded-full bg-secondary py-1 pr-1.5 pl-2.5 text-secondary-foreground text-sm"
             key={tag}
-            className="inline-flex items-center gap-1 rounded-full bg-secondary py-1 pl-2.5 pr-1.5 text-sm text-secondary-foreground"
           >
             {tag}
             <button
-              type="button"
+              aria-label={`Remove ${tag}`}
+              className="rounded-full p-0.5 text-muted-foreground hover:bg-secondary-foreground/10"
               onClick={(e) => {
                 e.stopPropagation();
                 removeTag(tag);
               }}
-              className="rounded-full p-0.5 text-muted-foreground hover:bg-secondary-foreground/10"
-              aria-label={`Remove ${tag}`}
+              type="button"
             >
               <XIcon className="size-3" />
             </button>
           </span>
         ))}
         <input
-          ref={inputRef}
+          className="min-w-[120px] flex-1 border-0 bg-transparent p-0 outline-none placeholder:text-muted-foreground focus:ring-0"
           id={id}
-          type="text"
-          value={inputValue}
+          onBlur={handleBlur}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          onBlur={handleBlur}
           placeholder={value.length === 0 ? placeholder : ""}
-          className="flex-1 min-w-[120px] border-0 bg-transparent p-0 outline-none focus:ring-0 placeholder:text-muted-foreground"
+          ref={inputRef}
+          type="text"
+          value={inputValue}
         />
       </div>
       {displayError && (
-        <p className="mt-1.5 text-sm text-destructive">{displayError}</p>
+        <p className="mt-1.5 text-destructive text-sm">{displayError}</p>
       )}
     </div>
   );

@@ -1,30 +1,31 @@
 import { NextResponse } from "next/server";
 import { env } from "@/env";
-import prisma from "@/utils/prisma";
-import { OUTLOOK_LINKING_STATE_COOKIE_NAME } from "@/utils/outlook/constants";
-import { withError } from "@/utils/middleware";
 import { captureException, SafeError } from "@/utils/error";
-import { validateOAuthCallback } from "@/utils/oauth/callback-validation";
+import { withError } from "@/utils/middleware";
 import { handleAccountLinking } from "@/utils/oauth/account-linking";
-import { mergeAccount } from "@/utils/user/merge-account";
+import { validateOAuthCallback } from "@/utils/oauth/callback-validation";
 import { handleOAuthCallbackError } from "@/utils/oauth/error-handler";
+import { OUTLOOK_LINKING_STATE_COOKIE_NAME } from "@/utils/outlook/constants";
+import prisma from "@/utils/prisma";
+import { isDuplicateError } from "@/utils/prisma-helpers";
 import {
   acquireOAuthCodeLock,
+  clearOAuthCode,
   getOAuthCodeResult,
   setOAuthCodeResult,
-  clearOAuthCode,
 } from "@/utils/redis/oauth-code";
-import { isDuplicateError } from "@/utils/prisma-helpers";
+import { mergeAccount } from "@/utils/user/merge-account";
 
 export const GET = withError("outlook/linking/callback", async (request) => {
   const logger = request.logger;
 
-  if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET)
+  if (!(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET)) {
     throw new SafeError("Microsoft login not enabled");
+  }
 
   const searchParams = request.nextUrl.searchParams;
   const storedState = request.cookies.get(
-    OUTLOOK_LINKING_STATE_COOKIE_NAME,
+    OUTLOOK_LINKING_STATE_COOKIE_NAME
   )?.value;
 
   const validation = validateOAuthCallback({
@@ -82,7 +83,7 @@ export const GET = withError("outlook/linking/callback", async (request) => {
           grant_type: "authorization_code",
           redirect_uri: `${env.NEXT_PUBLIC_BASE_URL}/api/outlook/linking/callback`,
         }),
-      },
+      }
     );
 
     const tokens = await tokenResponse.json();
@@ -93,11 +94,11 @@ export const GET = withError("outlook/linking/callback", async (request) => {
       });
       captureException(
         new Error(
-          tokens.error_description || "Failed to exchange code for tokens",
-        ),
+          tokens.error_description || "Failed to exchange code for tokens"
+        )
       );
       throw new SafeError(
-        tokens.error_description || "Failed to exchange code for tokens",
+        tokens.error_description || "Failed to exchange code for tokens"
       );
     }
 
@@ -116,7 +117,7 @@ export const GET = withError("outlook/linking/callback", async (request) => {
     const providerAccountId = profile.id;
     const providerEmail = profile.mail || profile.userPrincipalName;
 
-    if (!providerAccountId || !providerEmail) {
+    if (!(providerAccountId && providerEmail)) {
       throw new SafeError("Profile missing required id or email");
     }
 
@@ -156,7 +157,7 @@ export const GET = withError("outlook/linking/callback", async (request) => {
         {
           email: providerEmail,
           targetUserId,
-        },
+        }
       );
 
       let expiresAt: Date | null = null;
@@ -178,7 +179,7 @@ export const GET = withError("outlook/linking/callback", async (request) => {
             headers: {
               Authorization: `Bearer ${tokens.access_token}`,
             },
-          },
+          }
         );
 
         if (photoResponse.ok) {
@@ -241,7 +242,7 @@ export const GET = withError("outlook/linking/callback", async (request) => {
                 targetUserId,
                 providerAccountId,
                 accountId: accountNow.id,
-              },
+              }
             );
 
             await updateMicrosoftAccountTokens(accountNow.id, tokens);
@@ -272,7 +273,7 @@ export const GET = withError("outlook/linking/callback", async (request) => {
 
       await updateMicrosoftAccountTokens(
         linkingResult.existingAccountId,
-        tokens,
+        tokens
       );
 
       logger.info("Successfully updated tokens for Microsoft account", {
@@ -340,9 +341,9 @@ export const GET = withError("outlook/linking/callback", async (request) => {
 
 interface MicrosoftTokens {
   access_token: string;
-  refresh_token?: string | null;
   expires_at?: number;
   expires_in?: string | number;
+  refresh_token?: string | null;
   scope?: string | null;
   token_type?: string | null;
 }
@@ -363,7 +364,7 @@ function parseMicrosoftExpiresAt(tokens: MicrosoftTokens): Date | null {
 
 async function updateMicrosoftAccountTokens(
   accountId: string,
-  tokens: MicrosoftTokens,
+  tokens: MicrosoftTokens
 ) {
   await prisma.account.update({
     where: { id: accountId },

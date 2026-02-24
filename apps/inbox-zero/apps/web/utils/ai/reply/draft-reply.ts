@@ -1,16 +1,16 @@
 import { z } from "zod";
-import { createScopedLogger } from "@/utils/logger";
-import { createGenerateObject } from "@/utils/llms/index";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailForLLM } from "@/utils/types";
-import { getEmailListPrompt, getTodayForLLM } from "@/utils/ai/helpers";
-import { getModel } from "@/utils/llms/model";
-import type { ReplyContextCollectorResult } from "@/utils/ai/reply/reply-context-collector";
 import type { CalendarAvailabilityContext } from "@/utils/ai/calendar/availability";
+import { getEmailListPrompt, getTodayForLLM } from "@/utils/ai/helpers";
+import type { ReplyContextCollectorResult } from "@/utils/ai/reply/reply-context-collector";
 import {
   PLAIN_TEXT_OUTPUT_INSTRUCTION,
   PROMPT_SECURITY_INSTRUCTIONS,
 } from "@/utils/ai/security";
+import { createGenerateObject } from "@/utils/llms/index";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { createScopedLogger } from "@/utils/logger";
+import type { EmailForLLM } from "@/utils/types";
 
 const logger = createScopedLogger("DraftReply");
 
@@ -97,7 +97,7 @@ ${emailHistoryContext.relevantEmails
   .map(
     (item) => `<item>
 ${item}
-</item>`,
+</item>`
   )
   .join("\n")}
 </email_history>
@@ -182,7 +182,7 @@ const draftSchema = z.object({
   reply: z
     .string()
     .describe(
-      "The complete email reply draft incorporating knowledge base information",
+      "The complete email reply draft incorporating knowledge base information"
     ),
 });
 
@@ -266,7 +266,7 @@ function normalizeDraftReplyFormatting(reply: string): string {
   const withNormalizedLineEndings = reply.replace(/\r\n?|\u2028|\u2029/g, "\n");
 
   const withDecodedEscapedNewlines = /\\r\\n|\\n|\\r/.test(
-    withNormalizedLineEndings,
+    withNormalizedLineEndings
   )
     ? withNormalizedLineEndings
         .replace(/\\r\\n/g, "\n")
@@ -294,9 +294,13 @@ function normalizeDraftReplyFormatting(reply: string): string {
 }
 
 function shouldConvertSingleLineBreaksToParagraphs(lines: string[]): boolean {
-  if (lines.length < 2) return false;
+  if (lines.length < 2) {
+    return false;
+  }
 
-  if (lines.some((line) => isLikelyListItem(line))) return false;
+  if (lines.some((line) => isLikelyListItem(line))) {
+    return false;
+  }
 
   const punctuatedLines = lines.filter((line) => /[.!?]$/.test(line)).length;
   const punctuationRatio = punctuatedLines / lines.length;

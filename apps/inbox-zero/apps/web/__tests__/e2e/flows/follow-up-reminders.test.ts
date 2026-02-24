@@ -15,33 +15,32 @@
  * RUN_E2E_FLOW_TESTS=true pnpm test-e2e follow-up-reminders
  */
 
-import { describe, test, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { subMinutes } from "date-fns/subMinutes";
+import { afterAll, afterEach, beforeAll, describe, expect, test } from "vitest";
+import { processAccountFollowUps } from "@/app/api/follow-up-reminders/process";
+import { SystemType, ThreadTrackerType } from "@/generated/prisma/enums";
+import type { EmailProvider } from "@/utils/email/types";
+import { getOrCreateFollowUpLabel } from "@/utils/follow-up/labels";
+import { createScopedLogger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
+import { getRuleLabel } from "@/utils/rule/consts";
 import { sleep } from "@/utils/sleep";
 import { shouldRunFlowTests, TIMEOUTS } from "./config";
-import { initializeFlowTests, setupFlowTest } from "./setup";
-import { generateTestSummary } from "./teardown";
-import { sendTestEmail, sendTestReply } from "./helpers/email";
+import type { TestAccount } from "./helpers/accounts";
 import {
-  waitForMessageInInbox,
-  waitForFollowUpLabel,
-  waitForThreadTracker,
-} from "./helpers/polling";
-import { logStep, clearLogs } from "./helpers/logging";
-import {
-  ensureConversationRules,
   disableNonConversationRules,
   enableAllRules,
+  ensureConversationRules,
 } from "./helpers/accounts";
-import type { TestAccount } from "./helpers/accounts";
-import { processAccountFollowUps } from "@/app/api/follow-up-reminders/process";
-import { ThreadTrackerType } from "@/generated/prisma/enums";
-import { createScopedLogger } from "@/utils/logger";
-import { getOrCreateFollowUpLabel } from "@/utils/follow-up/labels";
-import type { EmailProvider } from "@/utils/email/types";
-import { getRuleLabel } from "@/utils/rule/consts";
-import { SystemType } from "@/generated/prisma/enums";
+import { sendTestEmail, sendTestReply } from "./helpers/email";
+import { clearLogs, logStep } from "./helpers/logging";
+import {
+  waitForFollowUpLabel,
+  waitForMessageInInbox,
+  waitForThreadTracker,
+} from "./helpers/polling";
+import { initializeFlowTests, setupFlowTest } from "./setup";
+import { generateTestSummary } from "./teardown";
 
 const testLogger = createScopedLogger("e2e-follow-up-test");
 
@@ -50,7 +49,7 @@ const testLogger = createScopedLogger("e2e-follow-up-test");
 async function ensureAwaitingReplyLabel(
   provider: EmailProvider,
   _threadId: string,
-  messageId: string,
+  messageId: string
 ): Promise<string> {
   const labels = await provider.getLabels();
   const labelName = getRuleLabel(SystemType.AWAITING_REPLY);
@@ -123,7 +122,7 @@ async function configureFollowUpSettings(
     followUpAwaitingReplyDays?: number | null;
     followUpNeedsReplyDays?: number | null;
     followUpAutoDraftEnabled?: boolean;
-  },
+  }
 ) {
   await prisma.emailAccount.update({
     where: { id: emailAccountId },
@@ -164,8 +163,12 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
 
   afterAll(async () => {
     // Re-enable rules for other test suites
-    if (gmail?.id) await enableAllRules(gmail.id);
-    if (outlook?.id) await enableAllRules(outlook.id);
+    if (gmail?.id) {
+      await enableAllRules(gmail.id);
+    }
+    if (outlook?.id) {
+      await enableAllRules(outlook.id);
+    }
   });
 
   afterEach(async () => {
@@ -270,7 +273,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         // Step 6: Assert label was applied
         // ========================================
         logStep(
-          "Step 6: Verifying Follow-up label on last message (Gmail's reply)",
+          "Step 6: Verifying Follow-up label on last message (Gmail's reply)"
         );
 
         // The label is applied to the LAST message in the thread (Gmail's reply)
@@ -289,7 +292,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
 
         const drafts = await gmail.emailProvider.getDrafts({ maxResults: 50 });
         const threadDrafts = drafts.filter(
-          (d) => d.threadId === receivedMessage.threadId,
+          (d) => d.threadId === receivedMessage.threadId
         );
 
         expect(threadDrafts.length).toBeGreaterThan(0);
@@ -314,7 +317,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
           await gmail.emailProvider.deleteDraft(threadDrafts[0].id);
         }
       },
-      TIMEOUTS.FULL_CYCLE,
+      TIMEOUTS.FULL_CYCLE
     );
 
     test(
@@ -411,7 +414,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
 
         const drafts = await gmail.emailProvider.getDrafts({ maxResults: 50 });
         const threadDrafts = drafts.filter(
-          (d) => d.threadId === receivedMessage.threadId,
+          (d) => d.threadId === receivedMessage.threadId
         );
 
         expect(threadDrafts.length).toBe(0);
@@ -426,7 +429,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         // Cleanup
         await cleanupThreadTrackers(gmail.id, receivedMessage.threadId);
       },
-      TIMEOUTS.FULL_CYCLE,
+      TIMEOUTS.FULL_CYCLE
     );
 
     test(
@@ -517,12 +520,12 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         // Step 6: Verify NO draft created (NEEDS_REPLY never gets draft)
         // ========================================
         logStep(
-          "Step 6: Verifying NO draft created (NEEDS_REPLY never gets draft)",
+          "Step 6: Verifying NO draft created (NEEDS_REPLY never gets draft)"
         );
 
         const drafts = await gmail.emailProvider.getDrafts({ maxResults: 50 });
         const threadDrafts = drafts.filter(
-          (d) => d.threadId === receivedMessage.threadId,
+          (d) => d.threadId === receivedMessage.threadId
         );
 
         expect(threadDrafts.length).toBe(0);
@@ -537,7 +540,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         // Cleanup
         await cleanupThreadTrackers(gmail.id, receivedMessage.threadId);
       },
-      TIMEOUTS.FULL_CYCLE,
+      TIMEOUTS.FULL_CYCLE
     );
   });
 
@@ -651,7 +654,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
           maxResults: 50,
         });
         const threadDrafts = drafts.filter(
-          (d) => d.threadId === receivedMessage.threadId,
+          (d) => d.threadId === receivedMessage.threadId
         );
 
         expect(threadDrafts.length).toBeGreaterThan(0);
@@ -673,7 +676,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
           await outlook.emailProvider.deleteDraft(threadDrafts[0].id);
         }
       },
-      TIMEOUTS.FULL_CYCLE,
+      TIMEOUTS.FULL_CYCLE
     );
 
     test(
@@ -772,7 +775,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
           maxResults: 50,
         });
         const threadDrafts = drafts.filter(
-          (d) => d.threadId === receivedMessage.threadId,
+          (d) => d.threadId === receivedMessage.threadId
         );
 
         expect(threadDrafts.length).toBe(0);
@@ -786,7 +789,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         // Cleanup
         await cleanupThreadTrackers(outlook.id, receivedMessage.threadId);
       },
-      TIMEOUTS.FULL_CYCLE,
+      TIMEOUTS.FULL_CYCLE
     );
 
     test(
@@ -881,7 +884,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
           maxResults: 50,
         });
         const threadDrafts = drafts.filter(
-          (d) => d.threadId === receivedMessage.threadId,
+          (d) => d.threadId === receivedMessage.threadId
         );
 
         expect(threadDrafts.length).toBe(0);
@@ -895,7 +898,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         // Cleanup
         await cleanupThreadTrackers(outlook.id, receivedMessage.threadId);
       },
-      TIMEOUTS.FULL_CYCLE,
+      TIMEOUTS.FULL_CYCLE
     );
   });
 
@@ -958,15 +961,15 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         await sleep(1000);
 
         logStep(
-          "Step 5: Verifying NO Follow-up label (resolved tracker skipped)",
+          "Step 5: Verifying NO Follow-up label (resolved tracker skipped)"
         );
 
         // Get the actual Follow-up label ID to check against
         const followUpLabel = await getOrCreateFollowUpLabel(
-          gmail.emailProvider,
+          gmail.emailProvider
         );
         const message = await gmail.emailProvider.getMessage(
-          receivedMessage.messageId,
+          receivedMessage.messageId
         );
         const hasFollowUpLabel = message.labelIds?.includes(followUpLabel.id);
 
@@ -976,7 +979,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         // Cleanup
         await cleanupThreadTrackers(gmail.id, receivedMessage.threadId);
       },
-      TIMEOUTS.FULL_CYCLE,
+      TIMEOUTS.FULL_CYCLE
     );
 
     test(
@@ -1007,7 +1010,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         await ensureAwaitingReplyLabel(
           gmail.emailProvider,
           receivedMessage.threadId,
-          receivedMessage.messageId,
+          receivedMessage.messageId
         );
 
         logStep("Step 3: Creating ThreadTracker with followUpAppliedAt set");
@@ -1046,7 +1049,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         // (Label might have been applied before during the previous followUpAppliedAt)
         const drafts = await gmail.emailProvider.getDrafts({ maxResults: 50 });
         const threadDrafts = drafts.filter(
-          (d) => d.threadId === receivedMessage.threadId,
+          (d) => d.threadId === receivedMessage.threadId
         );
 
         expect(threadDrafts.length).toBe(0);
@@ -1055,7 +1058,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         // Cleanup
         await cleanupThreadTrackers(gmail.id, receivedMessage.threadId);
       },
-      TIMEOUTS.FULL_CYCLE,
+      TIMEOUTS.FULL_CYCLE
     );
 
     test(
@@ -1087,7 +1090,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         await ensureAwaitingReplyLabel(
           gmail.emailProvider,
           receivedMessage.threadId,
-          receivedMessage.messageId,
+          receivedMessage.messageId
         );
 
         logStep("Step 3: Creating ThreadTracker");
@@ -1121,15 +1124,15 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         await sleep(1000);
 
         logStep(
-          "Step 6: Verifying NO Follow-up label (message not past threshold)",
+          "Step 6: Verifying NO Follow-up label (message not past threshold)"
         );
 
         // Get the actual Follow-up label ID to check against
         const followUpLabel = await getOrCreateFollowUpLabel(
-          gmail.emailProvider,
+          gmail.emailProvider
         );
         const message = await gmail.emailProvider.getMessage(
-          receivedMessage.messageId,
+          receivedMessage.messageId
         );
         const hasFollowUpLabel = message.labelIds?.includes(followUpLabel.id);
 
@@ -1145,7 +1148,7 @@ describe.skipIf(!shouldRunFlowTests())("Follow-up Reminders", () => {
         // Cleanup
         await cleanupThreadTrackers(gmail.id, receivedMessage.threadId);
       },
-      TIMEOUTS.FULL_CYCLE,
+      TIMEOUTS.FULL_CYCLE
     );
   });
 });

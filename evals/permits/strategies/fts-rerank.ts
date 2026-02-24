@@ -8,11 +8,11 @@ import { rerank } from "@/packages/enrichment/jina/client";
 import type { PermitRetrievalStrategy } from "./types";
 
 interface PermitRow {
-  id: string;
-  company_name: string | null;
-  project_name: string | null;
   address: string | null;
   city: string | null;
+  company_name: string | null;
+  id: string;
+  project_name: string | null;
   status: string | null;
 }
 
@@ -33,12 +33,16 @@ const strategy: PermitRetrievalStrategy = {
          ORDER BY ts_rank_cd(search_vector, plainto_tsquery('english', $1)) DESC,
                   (status = 'Active')::int DESC,
                   expiration_date DESC NULLS LAST
-         LIMIT 20`,
+         LIMIT 20`
       )
       .all(query);
 
-    if (candidates.length === 0) return [];
-    if (candidates.length === 1) return [candidates[0].id];
+    if (candidates.length === 0) {
+      return [];
+    }
+    if (candidates.length === 1) {
+      return [candidates[0].id];
+    }
 
     // Step 2: Rerank
     const documents = candidates.map(toDocument);

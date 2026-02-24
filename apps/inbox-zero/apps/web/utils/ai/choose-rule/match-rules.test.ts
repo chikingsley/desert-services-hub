@@ -1,33 +1,33 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { filterMultipleSystemRules } from "./match-rules";
-import {
-  findMatchingRules,
-  matchesStaticRule,
-  filterConversationStatusRules,
-  evaluateRuleConditions,
-} from "./match-rules";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getEmailAccount } from "@/__tests__/helpers";
+import type { GroupItem, Prisma } from "@/generated/prisma/client";
 import {
   GroupItemType,
   LogicalOperator,
   SystemType,
 } from "@/generated/prisma/enums";
-import type { GroupItem, Prisma } from "@/generated/prisma/client";
-import type {
-  RuleWithActions,
-  ParsedMessage,
-  ParsedMessageHeaders,
-} from "@/utils/types";
-import type { EmailProvider } from "@/utils/email/types";
 import prisma from "@/utils/__mocks__/prisma";
 import { aiChooseRule } from "@/utils/ai/choose-rule/ai-choose-rule";
-import { getEmailAccount } from "@/__tests__/helpers";
-import { ConditionType } from "@/utils/config";
 import {
   getColdEmailRule,
   isColdEmailRuleEnabled,
 } from "@/utils/cold-email/cold-email-rule";
 import { isColdEmail } from "@/utils/cold-email/is-cold-email";
+import { ConditionType } from "@/utils/config";
+import type { EmailProvider } from "@/utils/email/types";
 import { createScopedLogger } from "@/utils/logger";
+import type {
+  ParsedMessage,
+  ParsedMessageHeaders,
+  RuleWithActions,
+} from "@/utils/types";
+import {
+  evaluateRuleConditions,
+  filterConversationStatusRules,
+  filterMultipleSystemRules,
+  findMatchingRules,
+  matchesStaticRule,
+} from "./match-rules";
 
 // Run with:
 // pnpm test match-rules.test.ts
@@ -549,8 +549,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ to: "support@company.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
 
     expect(
@@ -559,8 +559,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ to: "help@company.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
 
     expect(
@@ -569,8 +569,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ to: "contact@company.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
   });
 
@@ -616,8 +616,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ from: "user@company1.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
 
     expect(
@@ -626,8 +626,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ from: "user@company2.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
 
     expect(
@@ -636,8 +636,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ from: "user@company3.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
 
     expect(
@@ -646,8 +646,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ from: "user@company4.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
   });
 
@@ -663,8 +663,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ from: "user@company1.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
 
     expect(
@@ -673,8 +673,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ from: "user@company2.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
   });
 
@@ -690,8 +690,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ from: "weekly@newsletter.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
 
     expect(
@@ -700,8 +700,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ from: "campaign@marketing.org" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
 
     expect(
@@ -710,8 +710,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ from: "notifications@example.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
   });
 
@@ -727,8 +727,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ from: "user@company1.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
 
     expect(
@@ -737,8 +737,8 @@ describe("matchesStaticRule", () => {
         getMessage({
           headers: getHeaders({ from: "user@company2.com" }),
         }),
-        logger,
-      ),
+        logger
+      )
     ).toBe(true);
   });
 
@@ -880,7 +880,7 @@ describe("findMatchingRule", () => {
 
     expect(result.matches[0]?.rule.id).toBe(rule.id);
     expect(result.reasoning).toBe(
-      `Matched learned pattern: "FROM: test@example.com"`,
+      `Matched learned pattern: "FROM: test@example.com"`
     );
   });
 
@@ -1355,7 +1355,7 @@ describe("findMatchingRule", () => {
     // Should match despite the display name format, due to the group rule
     expect(result.matches[0]?.rule.id).toBe(rule.id);
     expect(result.reasoning).toBe(
-      `Matched learned pattern: "FROM: central@example.com"`,
+      `Matched learned pattern: "FROM: central@example.com"`
     );
     expect(aiChooseRule).not.toHaveBeenCalled();
   });
@@ -1386,7 +1386,7 @@ describe("filterToReplyPreset", () => {
       potentialMatches,
       message,
       provider,
-      logger,
+      logger
     );
 
     expect(result).toHaveLength(1);
@@ -1417,7 +1417,7 @@ describe("filterToReplyPreset", () => {
       potentialMatches,
       message,
       provider,
-      logger,
+      logger
     );
 
     // Should return all rules when no TO_REPLY rule exists
@@ -1435,7 +1435,7 @@ describe("filterToReplyPreset", () => {
       {
         hasReplied: false,
         receivedCount: 15, // Above threshold of 10
-      },
+      }
     );
 
     const toReplyRule = {
@@ -1462,7 +1462,7 @@ describe("filterToReplyPreset", () => {
       potentialMatches,
       message,
       provider,
-      logger,
+      logger
     );
 
     // Should filter out TO_REPLY rule
@@ -1472,7 +1472,7 @@ describe("filterToReplyPreset", () => {
     expect(checkSenderReplyHistory).toHaveBeenCalledWith(
       provider,
       "sender@example.com",
-      10,
+      10
     );
   });
 
@@ -1485,7 +1485,7 @@ describe("filterToReplyPreset", () => {
       {
         hasReplied: true,
         receivedCount: 20, // High count but has replies
-      },
+      }
     );
 
     const toReplyRule = {
@@ -1511,7 +1511,7 @@ describe("filterToReplyPreset", () => {
       potentialMatches,
       message,
       provider,
-      logger,
+      logger
     );
 
     // Should keep TO_REPLY rule because sender has replied before
@@ -1529,7 +1529,7 @@ describe("filterToReplyPreset", () => {
       {
         hasReplied: false,
         receivedCount: 5, // Below threshold of 10
-      },
+      }
     );
 
     const toReplyRule = {
@@ -1549,7 +1549,7 @@ describe("filterToReplyPreset", () => {
       potentialMatches,
       message,
       provider,
-      logger,
+      logger
     );
 
     // Should keep TO_REPLY rule because received count is low
@@ -1583,7 +1583,7 @@ describe("filterToReplyPreset", () => {
         [toReplyRule],
         message,
         provider,
-        logger,
+        logger
       );
 
       // All no-reply variations should return the rule (not filtered)
@@ -1597,7 +1597,7 @@ describe("filterToReplyPreset", () => {
     );
 
     (checkSenderReplyHistory as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
-      new Error("API error"),
+      new Error("API error")
     );
 
     const toReplyRule = {
@@ -1617,7 +1617,7 @@ describe("filterToReplyPreset", () => {
       potentialMatches,
       message,
       provider,
-      logger,
+      logger
     );
 
     // Should return all rules when error occurs
@@ -1643,7 +1643,7 @@ describe("filterToReplyPreset", () => {
       potentialMatches,
       message,
       provider,
-      logger,
+      logger
     );
 
     // Should return all rules when no sender email
@@ -1699,7 +1699,7 @@ function getRule(overrides: Partial<RuleWithActions> = {}): RuleWithActions {
 }
 
 function getHeaders(
-  overrides: Partial<ParsedMessageHeaders> = {},
+  overrides: Partial<ParsedMessageHeaders> = {}
 ): ParsedMessageHeaders {
   const {
     subject = "Subject",
@@ -1773,7 +1773,7 @@ function getMessage(overrides: Partial<ParsedMessage> = {}): ParsedMessage {
 function getGroup(
   overrides: Partial<
     Prisma.GroupGetPayload<{ include: { items: true; rule: true } }>
-  > = {},
+  > = {}
 ): Prisma.GroupGetPayload<{ include: { items: true; rule: true } }> {
   const {
     id = "group1",
@@ -2032,7 +2032,7 @@ describe("findMatchingRules - Integration Tests", () => {
             instructions: "Archive promotional emails",
           }),
         ]),
-      }),
+      })
     );
 
     expect(result.matches[0]?.rule.id).toBe("ai-rule");
@@ -2081,7 +2081,7 @@ describe("findMatchingRules - Integration Tests", () => {
     // Should match via learned pattern
     expect(result.matches[0]?.rule.id).toBe("learned-rule");
     expect(result.matches[0]?.matchReasons?.[0]?.type).toBe(
-      ConditionType.LEARNED_PATTERN,
+      ConditionType.LEARNED_PATTERN
     );
 
     // AI should NOT be called because learned pattern matched
@@ -2296,7 +2296,7 @@ describe("findMatchingRules - Integration Tests", () => {
       expect(result.matches).toHaveLength(1);
       expect(result.matches[0]?.rule.id).toBe("notif-rule");
       expect(result.matches[0]?.matchReasons?.[0]?.type).toBe(
-        ConditionType.LEARNED_PATTERN,
+        ConditionType.LEARNED_PATTERN
       );
     });
 
@@ -2686,7 +2686,7 @@ describe("findMatchingRules - Integration Tests", () => {
     // Reasoning should combine existing matchReasons text + AI reason
     // existing part comes from getMatchReason => "Matched static conditions"
     expect(result.reasoning).toBe(
-      "Matched static conditions; AI reasoning here",
+      "Matched static conditions; AI reasoning here"
     );
   });
 
@@ -2936,7 +2936,7 @@ describe("evaluateRuleConditions", () => {
 });
 
 function getStaticRule(
-  rule: Partial<Pick<RuleWithActions, "from" | "to" | "subject" | "body">>,
+  rule: Partial<Pick<RuleWithActions, "from" | "to" | "subject" | "body">>
 ) {
   return {
     from: null,

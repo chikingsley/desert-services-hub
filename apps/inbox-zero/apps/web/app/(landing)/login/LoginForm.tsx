@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/Button";
-import { Button as UIButton } from "@/components/ui/button";
+import { toastError } from "@/components/Toast";
 import { SectionDescription } from "@/components/Typography";
+import { Button as UIButton } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +17,6 @@ import {
 } from "@/components/ui/dialog";
 import { signIn } from "@/utils/auth-client";
 import { WELCOME_PATH } from "@/utils/config";
-import { toastError } from "@/components/Toast";
 import { isInternalPath } from "@/utils/path";
 
 export function LoginForm() {
@@ -73,11 +73,11 @@ export function LoginForm() {
           <Button size="2xl">
             <span className="flex items-center justify-center">
               <Image
-                src="/images/google.svg"
                 alt=""
-                width={24}
                 height={24}
+                src="/images/google.svg"
                 unoptimized
+                width={24}
               />
               <span className="ml-2">Sign in with Google</span>
             </span>
@@ -91,8 +91,8 @@ export function LoginForm() {
             Inbox Zero{"'"}s use and transfer of information received from
             Google APIs to any other app will adhere to{" "}
             <a
-              href="https://developers.google.com/terms/api-services-user-data-policy"
               className="underline underline-offset-4 hover:text-gray-900"
+              href="https://developers.google.com/terms/api-services-user-data-policy"
             >
               Google API Services User Data
             </a>{" "}
@@ -107,27 +107,27 @@ export function LoginForm() {
       </Dialog>
 
       <Button
-        size="2xl"
         loading={loadingMicrosoft}
         onClick={handleMicrosoftSignIn}
+        size="2xl"
       >
         <span className="flex items-center justify-center">
           <Image
-            src="/images/microsoft.svg"
             alt=""
-            width={24}
             height={24}
+            src="/images/microsoft.svg"
             unoptimized
+            width={24}
           />
           <span className="ml-2">Sign in with Microsoft</span>
         </span>
       </Button>
 
       <UIButton
-        variant="ghost"
-        size="lg"
-        className="w-full hover:scale-105 transition-transform"
         asChild
+        className="w-full transition-transform hover:scale-105"
+        size="lg"
+        variant="ghost"
       >
         <Link href="/login/sso">Sign in with SSO</Link>
       </UIButton>

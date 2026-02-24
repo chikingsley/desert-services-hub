@@ -12,20 +12,20 @@ export function ButtonCheckbox({
 }) {
   return (
     <button
-      type="button"
-      role="checkbox"
       aria-checked={indeterminate ? "mixed" : checked}
+      className={cn(
+        "flex h-5 w-5 items-center justify-center rounded-md border-2 transition-all",
+        checked || indeterminate
+          ? "border-blue-500 bg-blue-500 text-white"
+          : "border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500"
+      )}
       onClick={(e) => {
         e.stopPropagation();
         onChange(e.shiftKey);
       }}
       onDoubleClick={(e) => e.stopPropagation()}
-      className={cn(
-        "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
-        checked || indeterminate
-          ? "bg-blue-500 border-blue-500 text-white"
-          : "border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500",
-      )}
+      role="checkbox"
+      type="button"
     >
       {checked && <Check className="size-3.5" strokeWidth={3} />}
       {indeterminate && !checked && (

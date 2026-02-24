@@ -22,6 +22,18 @@ export interface PolylineCanvasProps {
   isActive: boolean;
 
   /**
+   * Callback when polyline creation is cancelled.
+   */
+  onCancel: () => void;
+
+  /**
+   * Callback when polyline is complete.
+   *
+   * @param points - Array of scaled points forming the polyline.
+   */
+  onComplete: (points: Scaled[]) => void;
+
+  /**
    * Stroke color for the polyline.
    * @default "#ef4444"
    */
@@ -37,24 +49,12 @@ export interface PolylineCanvasProps {
    * The PDF viewer instance.
    */
   viewer: InstanceType<typeof TPDFViewer>;
-
-  /**
-   * Callback when polyline is complete.
-   *
-   * @param points - Array of scaled points forming the polyline.
-   */
-  onComplete: (points: Scaled[]) => void;
-
-  /**
-   * Callback when polyline creation is cancelled.
-   */
-  onCancel: () => void;
 }
 
 interface Point {
+  pageNumber: number;
   x: number;
   y: number;
-  pageNumber: number;
 }
 
 /**

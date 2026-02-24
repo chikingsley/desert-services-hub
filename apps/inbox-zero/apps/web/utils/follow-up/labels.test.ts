@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  getOrCreateFollowUpLabel,
-  applyFollowUpLabel,
-  removeFollowUpLabel,
-  hasFollowUpLabel,
-  clearFollowUpLabel,
-} from "./labels";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getMockMessage } from "@/__tests__/helpers";
-import { createScopedLogger } from "@/utils/logger";
 import { createMockEmailProvider } from "@/__tests__/mocks/email-provider.mock";
 import prisma from "@/utils/__mocks__/prisma";
+import { createScopedLogger } from "@/utils/logger";
+import {
+  applyFollowUpLabel,
+  clearFollowUpLabel,
+  getOrCreateFollowUpLabel,
+  hasFollowUpLabel,
+  removeFollowUpLabel,
+} from "./labels";
 
 vi.mock("@/utils/prisma");
 
@@ -123,7 +123,7 @@ describe("removeFollowUpLabel", () => {
 
     expect(mockProvider.removeThreadLabel).toHaveBeenCalledWith(
       "thread-1",
-      "label-123",
+      "label-123"
     );
   });
 
@@ -156,7 +156,7 @@ describe("removeFollowUpLabel", () => {
         provider: mockProvider,
         threadId: "thread-1",
         logger,
-      }),
+      })
     ).resolves.not.toThrow();
   });
 });
@@ -299,7 +299,7 @@ describe("clearFollowUpLabel", () => {
     });
     expect(mockProvider.removeThreadLabel).toHaveBeenCalledWith(
       "thread-1",
-      "label-123",
+      "label-123"
     );
   });
 

@@ -20,8 +20,8 @@ import {
 export type BulkActionType = "archive" | "markRead";
 
 interface BulkArchiveSettingsModalProps {
-  selectedAction: BulkActionType;
   onActionChange: (action: BulkActionType) => void;
+  selectedAction: BulkActionType;
 }
 
 export function BulkArchiveSettingsModal({
@@ -31,7 +31,7 @@ export function BulkArchiveSettingsModal({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button size="sm" variant="outline">
           <SettingsIcon className="mr-2 size-4" />
           Settings
         </Button>
@@ -44,14 +44,14 @@ export function BulkArchiveSettingsModal({
           <div className="flex items-center justify-between gap-8">
             <div className="space-y-2">
               <p className="font-medium">Action</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Choose what happens when you click the action buttons on each
                 category
               </p>
             </div>
             <Select
-              value={selectedAction}
               onValueChange={(value) => onActionChange(value as BulkActionType)}
+              value={selectedAction}
             >
               <SelectTrigger className="w-[180px] shrink-0">
                 <SelectValue />

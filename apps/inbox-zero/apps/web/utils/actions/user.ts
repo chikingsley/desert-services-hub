@@ -1,22 +1,22 @@
 "use server";
 
-import { z } from "zod";
-import { after } from "next/server";
-import prisma from "@/utils/prisma";
-import { deleteUser } from "@/utils/user/delete";
-import { actionClient, actionClientUser } from "@/utils/actions/safe-action";
-import { SafeError } from "@/utils/error";
-import { updateAccountSeats } from "@/utils/premium/server";
-import { betterAuthConfig } from "@/utils/auth";
 import { headers } from "next/headers";
+import { after } from "next/server";
+import { z } from "zod";
+import { actionClient, actionClientUser } from "@/utils/actions/safe-action";
 import {
   saveAboutBody,
   saveSignatureBody,
   saveWritingStyleBody,
 } from "@/utils/actions/user.validation";
-import { clearLastEmailAccountCookie } from "@/utils/cookies.server";
-import { aliasPosthogUser } from "@/utils/posthog";
 import { cleanupAIDraftsForAccount } from "@/utils/ai/draft-cleanup";
+import { betterAuthConfig } from "@/utils/auth";
+import { clearLastEmailAccountCookie } from "@/utils/cookies.server";
+import { SafeError } from "@/utils/error";
+import { aliasPosthogUser } from "@/utils/posthog";
+import { updateAccountSeats } from "@/utils/premium/server";
+import prisma from "@/utils/prisma";
+import { deleteUser } from "@/utils/user/delete";
 
 export const saveAboutAction = actionClient
   .metadata({ name: "saveAbout" })
@@ -47,7 +47,7 @@ export const saveWritingStyleAction = actionClient
         where: { id: emailAccountId },
         data: { writingStyle },
       });
-    },
+    }
   );
 
 export const resetAnalyticsAction = actionClient
@@ -77,11 +77,9 @@ export const deleteAccountAction = actionClientUser
 
 export const cleanupAIDraftsAction = actionClient
   .metadata({ name: "cleanupAIDrafts" })
-  .action(
-    async ({ ctx: { emailAccountId, provider, logger } }) => {
-      return cleanupAIDraftsForAccount({ emailAccountId, provider, logger });
-    },
-  );
+  .action(async ({ ctx: { emailAccountId, provider, logger } }) => {
+    return cleanupAIDraftsForAccount({ emailAccountId, provider, logger });
+  });
 
 export const deleteEmailAccountAction = actionClientUser
   .metadata({ name: "deleteEmailAccount" })
@@ -96,8 +94,12 @@ export const deleteEmailAccountAction = actionClientUser
       },
     });
 
-    if (!emailAccount) throw new SafeError("Email account not found");
-    if (!emailAccount.accountId) throw new SafeError("Account id not found");
+    if (!emailAccount) {
+      throw new SafeError("Email account not found");
+    }
+    if (!emailAccount.accountId) {
+      throw new SafeError("Account id not found");
+    }
 
     const isPrimaryAccount = emailAccount.email === emailAccount.user.email;
 
@@ -117,7 +119,7 @@ export const deleteEmailAccountAction = actionClientUser
 
       if (otherEmailAccounts.length === 0) {
         throw new SafeError(
-          "Cannot delete your only email account. Go to the Settings page to delete your entire account.",
+          "Cannot delete your only email account. Go to the Settings page to delete your entire account."
         );
       }
 

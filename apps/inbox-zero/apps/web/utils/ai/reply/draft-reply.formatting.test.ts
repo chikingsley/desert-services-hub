@@ -39,7 +39,7 @@ describe("aiDraftReply formatting", () => {
     const result = await aiDraftReply(getDraftParams());
 
     expect(result).toBe(
-      "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.",
+      "First paragraph.\n\nSecond paragraph.\n\nThird paragraph."
     );
   });
 
@@ -53,7 +53,7 @@ describe("aiDraftReply formatting", () => {
     const result = await aiDraftReply(getDraftParams());
 
     expect(result).toBe(
-      "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.",
+      "First paragraph.\n\nSecond paragraph.\n\nThird paragraph."
     );
   });
 
@@ -80,7 +80,7 @@ describe("aiDraftReply formatting", () => {
     const result = await aiDraftReply(getDraftParams());
 
     expect(result).toBe(
-      "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.\n\nFourth paragraph.",
+      "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.\n\nFourth paragraph."
     );
   });
 
@@ -94,7 +94,7 @@ describe("aiDraftReply formatting", () => {
     const result = await aiDraftReply(getDraftParams());
 
     expect(result).toBe(
-      "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.",
+      "First paragraph.\n\nSecond paragraph.\n\nThird paragraph."
     );
   });
 
@@ -109,7 +109,7 @@ describe("aiDraftReply formatting", () => {
     const result = await aiDraftReply(getDraftParams());
 
     expect(result).toBe(
-      "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.\n\nFourth paragraph.",
+      "First paragraph.\n\nSecond paragraph.\n\nThird paragraph.\n\nFourth paragraph."
     );
   });
 
@@ -117,7 +117,7 @@ describe("aiDraftReply formatting", () => {
     mockGenerateObject.mockResolvedValueOnce({
       object: {
         reply: Array.from({ length: 9 }, (_, i) => `Paragraph ${i + 1}.`).join(
-          "\n",
+          "\n"
         ),
       },
     });
@@ -125,7 +125,7 @@ describe("aiDraftReply formatting", () => {
     const result = await aiDraftReply(getDraftParams());
 
     expect(result).toBe(
-      Array.from({ length: 9 }, (_, i) => `Paragraph ${i + 1}.`).join("\n\n"),
+      Array.from({ length: 9 }, (_, i) => `Paragraph ${i + 1}.`).join("\n\n")
     );
   });
 
@@ -148,7 +148,7 @@ describe("aiDraftReply formatting", () => {
       .mockResolvedValueOnce({ object: { reply: repetitiveReply } });
 
     await expect(aiDraftReply(getDraftParams())).rejects.toThrow(
-      "Draft reply generation produced invalid output",
+      "Draft reply generation produced invalid output"
     );
     expect(mockGenerateObject).toHaveBeenCalledTimes(2);
   });

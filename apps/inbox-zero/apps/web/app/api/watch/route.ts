@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { ensureEmailAccountsWatched } from "@/utils/email/watch-manager";
 import { withAuth } from "@/utils/middleware";
 import prisma from "@/utils/prisma";
-import { ensureEmailAccountsWatched } from "@/utils/email/watch-manager";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export const GET = withAuth("watch", async (request) => {
   if (emailAccountCount === 0) {
     return NextResponse.json(
       { message: "No email accounts found for this user." },
-      { status: 404 },
+      { status: 404 }
     );
   }
 

@@ -9,9 +9,9 @@ export function cn(...inputs: ClassValue[]) {
  * Removes null and undefined properties from an object
  */
 export function filterNullProperties<T extends Record<string, any>>(
-  obj: T,
+  obj: T
 ): Partial<T> {
   return Object.fromEntries(
-    Object.entries(obj).filter(([_, value]) => value != null),
+    Object.entries(obj).filter(([_, value]) => value != null)
   ) as Partial<T>;
 }

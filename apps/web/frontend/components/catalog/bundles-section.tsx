@@ -56,27 +56,27 @@ import {
 import { cn } from "@/lib/utils";
 
 export interface BundleItem {
-  id: string;
-  itemId: string;
   code: string;
-  name: string;
-  unit: string;
-  price: number;
+  id: string;
   isRequired: boolean;
+  itemId: string;
+  name: string;
+  price: number;
   quantityMultiplier: number;
   sortOrder: number;
+  unit: string;
 }
 
 export interface Bundle {
-  id: string;
-  name: string;
-  description: string | null;
-  unit: string;
-  toolType: "count" | "linear" | "area";
   color: string;
+  description: string | null;
+  id: string;
   isActive: boolean;
-  sortOrder: number;
   items: BundleItem[];
+  name: string;
+  sortOrder: number;
+  toolType: "count" | "linear" | "area";
+  unit: string;
 }
 
 interface BundlesSectionProps {

@@ -8,9 +8,11 @@ export function hash(value: string): string;
 export function hash(value: null): null;
 export function hash(value: undefined): undefined;
 export function hash(
-  value: string | null | undefined,
+  value: string | null | undefined
 ): string | null | undefined {
-  if (value === null || value === undefined) return value;
+  if (value === null || value === undefined) {
+    return value;
+  }
 
   const normalized = value.trim().toLowerCase();
 

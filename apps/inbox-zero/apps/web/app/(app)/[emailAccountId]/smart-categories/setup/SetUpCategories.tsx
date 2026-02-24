@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import uniqBy from "lodash/uniqBy";
+import { PenIcon, PlusIcon, TagsIcon, TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import { PenIcon, PlusIcon, TagsIcon, TrashIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  CreateCategoryButton,
+  CreateCategoryDialog,
+} from "@/app/(app)/[emailAccountId]/smart-categories/CreateCategoryButton";
+import { TypographyH4 } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,20 +18,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TypographyH4 } from "@/components/Typography";
-import { Button } from "@/components/ui/button";
-import { defaultCategory } from "@/utils/categories";
-import {
-  upsertDefaultCategoriesAction,
-  deleteCategoryAction,
-} from "@/utils/actions/categorize";
-import { cn } from "@/utils";
-import {
-  CreateCategoryButton,
-  CreateCategoryDialog,
-} from "@/app/(app)/[emailAccountId]/smart-categories/CreateCategoryButton";
 import type { Category } from "@/generated/prisma/client";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { cn } from "@/utils";
+import {
+  deleteCategoryAction,
+  upsertDefaultCategoriesAction,
+} from "@/utils/actions/categorize";
+import { defaultCategory } from "@/utils/categories";
 import { prefixPath } from "@/utils/path";
 
 type CardCategory = Pick<Category, "name" | "description"> & {
@@ -75,13 +75,13 @@ export function SetUpCategories({
       }),
       ...existingCategories,
     ],
-    (c) => c.name,
+    (c) => c.name
   );
 
   const [categories, setCategories] = useState<Map<string, boolean>>(
     new Map(
-      combinedCategories.map((c) => [c.name, !c.isDefault || !!c.enabled]),
-    ),
+      combinedCategories.map((c) => [c.name, !c.isDefault || !!c.enabled])
+    )
   );
 
   // Update categories when existingCategories changes
@@ -128,14 +128,15 @@ export function SetUpCategories({
             {combinedCategories.map((category) => {
               return (
                 <CategoryCard
-                  key={category.name}
                   category={category}
                   isEnabled={categories.get(category.name) ?? false}
+                  key={category.name}
                   onAdd={() =>
                     setCategories(
-                      new Map(categories.entries()).set(category.name, true),
+                      new Map(categories.entries()).set(category.name, true)
                     )
                   }
+                  onEdit={() => setSelectedCategoryName(category.name)}
                   onRemove={async () => {
                     if (category.id) {
                       await deleteCategoryAction(emailAccountId, {
@@ -143,11 +144,10 @@ export function SetUpCategories({
                       });
                     } else {
                       setCategories(
-                        new Map(categories.entries()).set(category.name, false),
+                        new Map(categories.entries()).set(category.name, false)
                       );
                     }
                   }}
-                  onEdit={() => setSelectedCategoryName(category.name)}
                 />
               );
             })}
@@ -173,7 +173,7 @@ export function SetUpCategories({
                     id: combinedCategories.find((c) => c.name === name)?.id,
                     name,
                     enabled,
-                  }),
+                  })
                 );
 
                 await upsertDefaultCategoriesAction(emailAccountId, {
@@ -190,15 +190,15 @@ export function SetUpCategories({
         </CardContent>
       </Card>
       <CreateCategoryDialog
-        isOpen={selectedCategoryName !== null}
-        onOpenChange={(open) =>
-          setSelectedCategoryName(open ? selectedCategoryName : null)
-        }
-        closeModal={() => setSelectedCategoryName(null)}
         category={
           selectedCategoryName
             ? combinedCategories.find((c) => c.name === selectedCategoryName)
             : undefined
+        }
+        closeModal={() => setSelectedCategoryName(null)}
+        isOpen={selectedCategoryName !== null}
+        onOpenChange={(open) =>
+          setSelectedCategoryName(open ? selectedCategoryName : null)
         }
       />
     </>
@@ -222,7 +222,7 @@ function CategoryCard({
     <Card
       className={cn(
         "flex items-center justify-between gap-2 p-4",
-        !isEnabled && "bg-muted/50",
+        !isEnabled && "bg-muted/50"
       )}
     >
       <div>
@@ -233,17 +233,17 @@ function CategoryCard({
       </div>
       {isEnabled ? (
         <div className="flex gap-1">
-          <Button size="iconSm" variant="ghost" onClick={onEdit}>
+          <Button onClick={onEdit} size="iconSm" variant="ghost">
             <PenIcon className="size-4" />
             <span className="sr-only">Edit</span>
           </Button>
-          <Button size="iconSm" variant="ghost" onClick={onRemove}>
+          <Button onClick={onRemove} size="iconSm" variant="ghost">
             <TrashIcon className="size-4" />
             <span className="sr-only">Remove</span>
           </Button>
         </div>
       ) : (
-        <Button size="iconSm" variant="outline" onClick={onAdd}>
+        <Button onClick={onAdd} size="iconSm" variant="outline">
           <PlusIcon className="size-4" />
           <span className="sr-only">Add</span>
         </Button>

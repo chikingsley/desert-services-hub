@@ -4,26 +4,26 @@ import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 
 interface CliArgs {
-  limit: number;
-  outputPath: string;
   container: string;
-  requireProject: boolean;
-  requireAddress: boolean;
+  limit: number;
   minDocCount: number;
+  outputPath: string;
+  requireAddress: boolean;
+  requireProject: boolean;
   statuses: string[];
 }
 
 interface PermitDatasetRow {
-  permitId: string;
-  projectName: string | null;
+  accountId: number | null;
   address: string | null;
   city: string | null;
-  parcel: string | null;
-  status: string | null;
-  projectId: number | null;
-  accountId: number | null;
-  updatedAtEpoch: number | null;
   docCount: number;
+  parcel: string | null;
+  permitId: string;
+  projectId: number | null;
+  projectName: string | null;
+  status: string | null;
+  updatedAtEpoch: number | null;
 }
 
 function nowStamp(): string {

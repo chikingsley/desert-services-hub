@@ -1,10 +1,10 @@
 "use client";
 
-import { TabSelect } from "@/components/TabSelect";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { HorizontalBarChart } from "@/components/charts/HorizontalBarChart";
 import { useState } from "react";
+import { HorizontalBarChart } from "@/components/charts/HorizontalBarChart";
+import { TabSelect } from "@/components/TabSelect";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -15,55 +15,55 @@ import {
 import { cn } from "@/utils";
 
 interface BarListCardProps {
+  icon: React.ReactNode;
   tabs: {
     id: string;
     label: string;
     data: { name: string; value: number; href?: string; target?: string }[];
   }[];
-  icon: React.ReactNode;
   title: string;
 }
 
 export function BarListCard({ tabs, icon, title }: BarListCardProps) {
   const [selected, setSelected] = useState<string | null>(
-    tabs?.length > 0 ? tabs[0]?.id : null,
+    tabs?.length > 0 ? tabs[0]?.id : null
   );
 
   const selectedTabData = tabs.find((d) => d.id === selected)?.data || [];
 
   return (
-    <Card className="h-full bg-background relative overflow-x-hidden w-full max-w-full">
-      <CardHeader className="p-0 overflow-x-hidden">
-        <div className="px-3 sm:px-5 flex items-center justify-between border-b border-neutral-200 min-w-0 gap-2">
+    <Card className="relative h-full w-full max-w-full overflow-x-hidden bg-background">
+      <CardHeader className="overflow-x-hidden p-0">
+        <div className="flex min-w-0 items-center justify-between gap-2 border-neutral-200 border-b px-3 sm:px-5">
           <div className="min-w-0 flex-1">
             <TabSelect
-              options={tabs.map((d) => ({ id: d.id, label: d.label }))}
               onSelect={(id: string) => setSelected(id)}
+              options={tabs.map((d) => ({ id: d.id, label: d.label }))}
               selected={selected}
             />
           </div>
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2">
             {icon}
-            <p className="text-xs text-neutral-500 whitespace-nowrap">
+            <p className="whitespace-nowrap text-neutral-500 text-xs">
               {title.toUpperCase()}
             </p>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-5 pb-0 px-3 sm:px-5 overflow-hidden overflow-x-hidden h-[330px] max-w-full w-full">
+      <CardContent className="h-[330px] w-full max-w-full overflow-hidden overflow-x-hidden px-3 pt-5 pb-0 sm:px-5">
         <div
           className={cn(
-            "pointer-events-none absolute bottom-0 left-0 w-full h-1/2 z-20 rounded-[0.44rem]",
-            "bg-gradient-to-b from-transparent to-white dark:to-black",
+            "pointer-events-none absolute bottom-0 left-0 z-20 h-1/2 w-full rounded-[0.44rem]",
+            "bg-gradient-to-b from-transparent to-white dark:to-black"
           )}
         />
         {selectedTabData.length === 0 ? (
-          <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-            <div className="text-center space-y-2 px-4">
+          <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+            <div className="space-y-2 px-4 text-center">
               <div className="text-muted-foreground text-sm">
                 No data available
               </div>
-              <p className="text-xs text-muted-foreground/70">
+              <p className="text-muted-foreground/70 text-xs">
                 Select a different time period to view statistics
               </p>
             </div>
@@ -73,19 +73,19 @@ export function BarListCard({ tabs, icon, title }: BarListCardProps) {
             <div className="w-full min-w-0 max-w-full overflow-x-hidden">
               <HorizontalBarChart data={selectedTabData} />
             </div>
-            <div className="absolute w-full left-0 bottom-0 pb-6 z-30 px-3 sm:px-5">
-              <div className="flex justify-center max-w-full">
+            <div className="absolute bottom-0 left-0 z-30 w-full px-3 pb-6 sm:px-5">
+              <div className="flex max-w-full justify-center">
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="xs-2">
+                    <Button size="xs-2" variant="outline">
                       View more
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl p-0 gap-0">
-                    <DialogHeader className="px-6 py-4 border-b border-neutral-200">
+                  <DialogContent className="max-w-2xl gap-0 p-0">
+                    <DialogHeader className="border-neutral-200 border-b px-6 py-4">
                       <div className="flex items-center gap-2">
                         {icon}
-                        <DialogTitle className="text-base text-neutral-900 font-medium">
+                        <DialogTitle className="font-medium text-base text-neutral-900">
                           {title}
                         </DialogTitle>
                       </div>

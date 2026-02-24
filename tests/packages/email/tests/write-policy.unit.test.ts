@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from "bun:test";
-import { WRITABLE_MAILBOXES } from "@/packages/archive/email/client";
 import {
   assertSendEnabled,
   assertWritableMailbox,
 } from "@/packages/archive/email/cli/commands/config";
+import { WRITABLE_MAILBOXES } from "@/packages/archive/email/client";
 
 const ORIGINAL_ENABLE_SEND = process.env.EMAIL_CLI_ENABLE_SEND;
 const EMAIL_TESTS_ENABLED = process.env.ENABLE_EMAIL_TESTS === "1";

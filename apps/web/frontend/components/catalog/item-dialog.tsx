@@ -21,12 +21,7 @@ import { Textarea } from "@/apps/web/frontend/components/ui/textarea";
 const TAKEOFF_UNITS = ["Each", "EA", "LF", "SF"];
 
 interface ItemDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   categoryId: string;
-  subcategoryId?: string;
-  parentName: string;
-  supportsTakeoff?: boolean;
   item?: {
     id: string;
     code: string;
@@ -38,6 +33,7 @@ interface ItemDialogProps {
     defaultQty: number;
     isTakeoffItem?: boolean;
   };
+  onOpenChange: (open: boolean) => void;
   onSave: (data: {
     code: string;
     name: string;
@@ -48,6 +44,10 @@ interface ItemDialogProps {
     defaultQty: number;
     isTakeoffItem?: boolean;
   }) => Promise<void>;
+  open: boolean;
+  parentName: string;
+  subcategoryId?: string;
+  supportsTakeoff?: boolean;
 }
 
 export function ItemDialog({

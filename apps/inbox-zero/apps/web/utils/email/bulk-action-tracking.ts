@@ -24,8 +24,8 @@ export async function publishBulkActionToTinybird(options: {
           threadId,
           actionSource: "user",
           timestamp,
-        }),
-      ),
+        })
+      )
     ).then((results) => {
       const failures = results.filter((r) => r.status === "rejected");
       if (failures.length > 0) {

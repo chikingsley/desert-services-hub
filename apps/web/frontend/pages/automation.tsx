@@ -93,11 +93,6 @@ function formatTimestamp(value: string | null): string {
   return date.toLocaleString();
 }
 
-function getWsFallbackUrl(port: number): string {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//${window.location.hostname}:${port}`;
-}
-
 function getPortalFromPath(pathname: string): AutomationPortal {
   if (pathname === "/buildingconnected") {
     return "buildingconnected";
@@ -375,8 +370,11 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
   );
 
   // --- WS URLs ---
-  const maricopaWsUrl = data?.vncWsUrl || getWsFallbackUrl(6080);
-  const buildingConnectedWsUrl = bcStatus?.vncWsUrl || getWsFallbackUrl(6081);
+  // Don't use fallback URLs — VncScreen only connects once on mount (empty deps
+  // in useEffect), so if we render with a wrong URL first, it never reconnects
+  // when the real URL arrives from SWR.
+  const maricopaWsUrl = data?.vncWsUrl ?? "";
+  const buildingConnectedWsUrl = bcStatus?.vncWsUrl ?? "";
 
   // --- Action handler ---
   const runAction = useCallback(
@@ -448,7 +446,7 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
     activePortal === "maricopa" ? maricopaVncRef : buildingConnectedVncRef;
 
   const rootClassName = visible
-    ? "absolute inset-0"
+    ? "absolute inset-0 overflow-hidden"
     : "pointer-events-none fixed inset-0 -z-10 opacity-0";
 
   const activeError =
@@ -460,15 +458,23 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
 
   return (
     <div aria-hidden={!visible} className={rootClassName}>
-      {/* VNC fills entire surface */}
-      <VncPanel
-        aspectRatio="auto"
-        healthy={vncState.healthy}
-        onClipboard={writeToClipboard}
-        ref={activeVncRef}
-        statusLabel={vncState.statusLabel}
-        wsUrl={vncState.wsUrl}
-      />
+      {/* VNC fills entire surface — only render once we have a real WS URL.
+          key={wsUrl} forces React to remount if the URL ever changes. */}
+      {vncState.wsUrl ? (
+        <VncPanel
+          aspectRatio="auto"
+          healthy={vncState.healthy}
+          key={vncState.wsUrl}
+          onClipboard={writeToClipboard}
+          ref={activeVncRef}
+          statusLabel={vncState.statusLabel}
+          wsUrl={vncState.wsUrl}
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-black font-mono text-sm text-white/40">
+          Connecting to VNC...
+        </div>
+      )}
 
       {/* Floating toolbar */}
       <AutomationToolbar

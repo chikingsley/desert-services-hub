@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import { useAction } from "next-safe-action/hooks";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useCallback, useEffect, useState } from "react";
 import { LoadingContent } from "@/components/LoadingContent";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUser } from "@/hooks/useUser";
 import { dismissAnnouncementModalAction } from "@/utils/actions/announcements";
 import {
-  getActiveAnnouncements,
-  hasNewAnnouncements,
   type Announcement,
   type AnnouncementDetail,
+  getActiveAnnouncements,
+  hasNewAnnouncements,
 } from "@/utils/announcements";
 
 export function AnnouncementDialog() {
@@ -52,37 +52,37 @@ export function AnnouncementDialog() {
   }, [dismissModal, announcements]);
 
   return (
-    <LoadingContent loading={isLoading} error={error}>
+    <LoadingContent error={error} loading={isLoading}>
       {announcements.length === 0 || !showAnnouncements ? null : (
         <AnimatePresence>
           {isOpen && (
             <>
               {/* Backdrop */}
               <motion.div
+                animate={{ opacity: 1 }}
+                className="fixed inset-0 z-40 bg-black/40"
+                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }}
                 key="backdrop"
                 onClick={handleCloseModal}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-40 bg-black/40"
               />
 
               {/* Modal */}
               <motion.div
-                key="modal-container"
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ type: "spring", damping: 25, stiffness: 400 }}
                 className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4"
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                key="modal-container"
+                transition={{ type: "spring", damping: 25, stiffness: 400 }}
               >
                 <div className="pointer-events-auto relative">
                   {/* Close button - outside modal, diagonal top-right corner */}
                   <button
-                    type="button"
+                    className="absolute -top-9 -right-9 z-10 flex items-center justify-center rounded-full border border-white/20 bg-white/10 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
                     onClick={handleCloseModal}
-                    className="absolute -right-9 -top-9 z-10 flex items-center justify-center rounded-full border border-white/20 bg-white/10 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                    type="button"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -92,8 +92,8 @@ export function AnnouncementDialog() {
                       <div className="flex flex-col gap-4 p-4">
                         {announcements.map((announcement) => (
                           <AnnouncementCard
-                            key={announcement.id}
                             announcement={announcement}
+                            key={announcement.id}
                             onClose={handleCloseModal}
                           />
                         ))}
@@ -123,10 +123,10 @@ export function AnnouncementCard({
     <div className="overflow-hidden rounded-xl bg-white dark:bg-gray-800">
       <div className="p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+          <h3 className="font-bold text-gray-900 text-lg dark:text-gray-100">
             {announcement.title}
           </h3>
-          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 font-medium text-gray-600 text-xs dark:bg-gray-700 dark:text-gray-400">
             {new Date(announcement.publishedAt).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
@@ -150,7 +150,7 @@ export function AnnouncementCard({
         {announcement.details && announcement.details.length > 0 && (
           <div className="mb-4 space-y-3">
             {announcement.details.map((detail) => (
-              <DetailItem key={detail.title} detail={detail} />
+              <DetailItem detail={detail} key={detail.title} />
             ))}
           </div>
         )}
@@ -158,17 +158,17 @@ export function AnnouncementCard({
         <div className="flex gap-3">
           {announcement.link && (
             <Link
+              className="flex flex-1 items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-sm text-white transition-colors hover:bg-blue-700"
               href={announcement.link}
               onClick={onClose}
-              className="flex flex-1 items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
             >
               View
             </Link>
           )}
           {announcement.learnMoreLink && (
             <Link
+              className="flex flex-1 items-center justify-center rounded-lg bg-gray-100 px-4 py-2.5 font-medium text-gray-700 text-sm transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               href={announcement.learnMoreLink}
-              className="flex flex-1 items-center justify-center rounded-lg bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
               Learn more
             </Link>
@@ -186,10 +186,10 @@ function DetailItem({ detail }: { detail: AnnouncementDetail }) {
         {detail.icon}
       </div>
       <div className="min-w-0 pt-0.5">
-        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+        <div className="font-medium text-gray-900 text-sm dark:text-gray-100">
           {detail.title}
         </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="text-gray-500 text-sm dark:text-gray-400">
           {detail.description}
         </div>
       </div>

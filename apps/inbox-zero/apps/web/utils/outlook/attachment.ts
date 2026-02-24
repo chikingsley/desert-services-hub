@@ -1,10 +1,10 @@
-import type { OutlookClient } from "@/utils/outlook/client";
 import type { FileAttachment } from "@microsoft/microsoft-graph-types";
+import type { OutlookClient } from "@/utils/outlook/client";
 
 export async function getOutlookAttachment(
   client: OutlookClient,
   messageId: string,
-  attachmentId: string,
+  attachmentId: string
 ) {
   const attachment: FileAttachment = await client
     .getClient()

@@ -15,15 +15,15 @@ export interface CategoryI1State {
 }
 
 export interface CategoryI2State {
-  hasPave: boolean;
-  hasGravel: boolean;
-  hasWater: boolean;
   hasDustSuppressants: boolean;
-  hasSuppressantFrequency: boolean;
-  hasSuppressantAmount: boolean;
-  hasVegetation: boolean;
+  hasGravel: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
+  hasPave: boolean;
+  hasSuppressantAmount: boolean;
+  hasSuppressantFrequency: boolean;
+  hasVegetation: boolean;
+  hasWater: boolean;
 }
 
 export function getCategoryIState(

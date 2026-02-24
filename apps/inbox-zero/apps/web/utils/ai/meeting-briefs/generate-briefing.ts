@@ -1,26 +1,26 @@
-import { tool, type ToolSet } from "ai";
-import { z } from "zod";
-import { createPerplexity } from "@ai-sdk/perplexity";
-import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
+import { openai } from "@ai-sdk/openai";
+import { createPerplexity } from "@ai-sdk/perplexity";
+import { type ToolSet, tool } from "ai";
+import { z } from "zod";
 import { env } from "@/env";
-import { getModel } from "@/utils/llms/model";
-import { createGenerateText } from "@/utils/llms";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
 import { getUserInfoPrompt } from "@/utils/ai/helpers";
+import { createMcpToolsForAgent } from "@/utils/ai/mcp/mcp-tools";
 import type { CalendarEvent } from "@/utils/calendar/event-types";
-import type { MeetingBriefingData } from "@/utils/meeting-briefs/gather-context";
-import { stringifyEmailSimple } from "@/utils/stringify-email";
-import { getEmailForLLM } from "@/utils/get-email-from-message";
-import type { ParsedMessage } from "@/utils/types";
 import { formatDateTimeInUserTimezone } from "@/utils/date";
+import { getEmailForLLM } from "@/utils/get-email-from-message";
+import { createGenerateText } from "@/utils/llms";
+import { Provider } from "@/utils/llms/config";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import type { MeetingBriefingData } from "@/utils/meeting-briefs/gather-context";
 import {
   getCachedResearch,
   setCachedResearch,
 } from "@/utils/redis/research-cache";
-import type { Logger } from "@/utils/logger";
-import { Provider } from "@/utils/llms/config";
-import { createMcpToolsForAgent } from "@/utils/ai/mcp/mcp-tools";
+import { stringifyEmailSimple } from "@/utils/stringify-email";
+import type { ParsedMessage } from "@/utils/types";
 
 const MAX_AGENT_STEPS = 15;
 const MAX_EMAILS_PER_GUEST = 10;
@@ -95,7 +95,7 @@ export async function aiGenerateMeetingBriefing({
 
   if (Object.keys(searchTools).length === 0) {
     logger.info(
-      "No search tools configured - will use existing email/meeting context only",
+      "No search tools configured - will use existing email/meeting context only"
     );
   }
 
@@ -117,7 +117,7 @@ export async function aiGenerateMeetingBriefing({
       prompt,
       stopWhen: (stepResult) =>
         stepResult.steps.some((step) =>
-          step.toolCalls?.some((call) => call.toolName === "finalizeBriefing"),
+          step.toolCalls?.some((call) => call.toolName === "finalizeBriefing")
         ) || stepResult.steps.length > MAX_AGENT_STEPS,
       onStepFinish: async ({ toolCalls }) => {
         if (toolCalls.length > 0) {
@@ -148,7 +148,7 @@ export async function aiGenerateMeetingBriefing({
 
   if (!result) {
     logger.warn(
-      "Agent did not finalize briefing, generating fallback from guest list",
+      "Agent did not finalize briefing, generating fallback from guest list"
     );
     return generateFallbackBriefing(briefingData.externalGuests);
   }
@@ -157,7 +157,7 @@ export async function aiGenerateMeetingBriefing({
 }
 
 function generateFallbackBriefing(
-  guests: { email: string; name?: string }[],
+  guests: { email: string; name?: string }[]
 ): BriefingContent {
   return {
     guests: guests.map((guest) => ({
@@ -195,7 +195,7 @@ async function buildSearchTools({
           emailAccount.userId,
           "perplexity",
           email,
-          name,
+          name
         );
         if (cached) {
           logger.info("Using cached Perplexity result", { email });
@@ -231,7 +231,7 @@ async function buildSearchTools({
             "perplexity",
             email,
             name,
-            text,
+            text
           ).catch((error) => {
             logger.error("Failed to cache Perplexity result", { error });
           });
@@ -275,7 +275,9 @@ async function buildSearchTools({
   return {
     tools,
     cleanup: async () => {
-      if (mcpCleanup) await mcpCleanup();
+      if (mcpCleanup) {
+        await mcpCleanup();
+      }
     },
   };
 }
@@ -335,7 +337,7 @@ function createWebSearchTool({
         emailAccount.userId,
         "websearch",
         email,
-        name,
+        name
       );
       if (cached) {
         logger.info("Using cached web search result", { email });
@@ -346,7 +348,7 @@ function createWebSearchTool({
         const modelOptions = getModel(
           emailAccount.user,
           "economy",
-          useOnlineVariant,
+          useOnlineVariant
         );
 
         const webGenerateText = createGenerateText({
@@ -368,7 +370,7 @@ function createWebSearchTool({
           "websearch",
           email,
           name,
-          text,
+          text
         ).catch((error) => {
           logger.error("Failed to cache web search result", { error });
         });
@@ -385,7 +387,7 @@ function createWebSearchTool({
 // Exported for testing
 export function buildPrompt(
   briefingData: MeetingBriefingData,
-  emailAccount: EmailAccountWithAI,
+  emailAccount: EmailAccountWithAI
 ): string {
   const { event, externalGuests, emailThreads, pastMeetings } = briefingData;
 
@@ -398,12 +400,14 @@ export function buildPrompt(
       recentEmails: selectRecentEmailsForGuest(allMessages, guest.email),
       recentMeetings: selectRecentMeetingsForGuest(pastMeetings, guest.email),
       timezone: emailAccount.timezone,
-    }),
+    })
   );
 
   // List available search tools for the prompt
   const availableTools: string[] = [];
-  if (env.PERPLEXITY_API_KEY) availableTools.push("perplexitySearch");
+  if (env.PERPLEXITY_API_KEY) {
+    availableTools.push("perplexitySearch");
+  }
   if (
     env.DEFAULT_LLM_PROVIDER === Provider.OPEN_AI ||
     env.DEFAULT_LLM_PROVIDER === Provider.GOOGLE ||
@@ -453,7 +457,7 @@ function formatGuestContext(guest: GuestContextForPrompt): string {
 
   const guestHeader = `${guest.name ? `Name: ${guest.name}\n` : ""}Email: ${guest.email}`;
 
-  if (!hasEmails && !hasMeetings) {
+  if (!(hasEmails || hasMeetings)) {
     return `<guest>
 ${guestHeader}
 
@@ -469,7 +473,7 @@ ${guestHeader}
 ${guest.recentEmails
   .map(
     (email) =>
-      `<email>\n${stringifyEmailSimple(getEmailForLLM(email))}\n</email>`,
+      `<email>\n${stringifyEmailSimple(getEmailForLLM(email))}\n</email>`
   )
   .join("\n")}
 </recent_emails>`);
@@ -491,7 +495,7 @@ ${sections.join("\n")}
 
 function selectRecentMeetingsForGuest(
   pastMeetings: CalendarEvent[],
-  guestEmail: string,
+  guestEmail: string
 ): CalendarEvent[] {
   const email = guestEmail.toLowerCase();
 
@@ -503,7 +507,7 @@ function selectRecentMeetingsForGuest(
 
 function selectRecentEmailsForGuest(
   messages: ParsedMessage[],
-  guestEmail: string,
+  guestEmail: string
 ): ParsedMessage[] {
   const email = guestEmail.toLowerCase();
 
@@ -515,7 +519,7 @@ function selectRecentEmailsForGuest(
 
 function messageIncludesEmail(
   message: ParsedMessage,
-  emailLower: string,
+  emailLower: string
 ): boolean {
   const headers = message.headers;
   return (
@@ -540,7 +544,7 @@ function getMessageTimestampMs(message: ParsedMessage): number {
 // Exported for testing
 export function formatMeetingForContext(
   meeting: CalendarEvent,
-  timezone: string | null,
+  timezone: string | null
 ): string {
   const dateStr = formatDateTimeInUserTimezone(meeting.startTime, timezone);
   return `<meeting>

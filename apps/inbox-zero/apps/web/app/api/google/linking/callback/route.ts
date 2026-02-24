@@ -1,28 +1,28 @@
 import { NextResponse } from "next/server";
 import { env } from "@/env";
-import prisma from "@/utils/prisma";
+import { SafeError } from "@/utils/error";
 import { getLinkingOAuth2Client } from "@/utils/gmail/client";
 import { GOOGLE_LINKING_STATE_COOKIE_NAME } from "@/utils/gmail/constants";
 import { withError } from "@/utils/middleware";
-import { validateOAuthCallback } from "@/utils/oauth/callback-validation";
 import { handleAccountLinking } from "@/utils/oauth/account-linking";
-import { mergeAccount } from "@/utils/user/merge-account";
+import { validateOAuthCallback } from "@/utils/oauth/callback-validation";
 import { handleOAuthCallbackError } from "@/utils/oauth/error-handler";
+import prisma from "@/utils/prisma";
+import { isDuplicateError } from "@/utils/prisma-helpers";
 import {
   acquireOAuthCodeLock,
+  clearOAuthCode,
   getOAuthCodeResult,
   setOAuthCodeResult,
-  clearOAuthCode,
 } from "@/utils/redis/oauth-code";
-import { isDuplicateError } from "@/utils/prisma-helpers";
-import { SafeError } from "@/utils/error";
+import { mergeAccount } from "@/utils/user/merge-account";
 
 export const GET = withError("google/linking/callback", async (request) => {
   const logger = request.logger;
 
   const searchParams = request.nextUrl.searchParams;
   const storedState = request.cookies.get(
-    GOOGLE_LINKING_STATE_COOKIE_NAME,
+    GOOGLE_LINKING_STATE_COOKIE_NAME
   )?.value;
 
   const validation = validateOAuthCallback({
@@ -88,7 +88,7 @@ export const GET = withError("google/linking/callback", async (request) => {
       const verifiedPayload = ticket.getPayload();
       if (!verifiedPayload) {
         throw new SafeError(
-          "Could not get payload from verified ID token ticket.",
+          "Could not get payload from verified ID token ticket."
         );
       }
       payload = verifiedPayload;
@@ -103,9 +103,9 @@ export const GET = withError("google/linking/callback", async (request) => {
     const providerAccountId = payload.sub;
     const providerEmail = payload.email;
 
-    if (!providerAccountId || !providerEmail) {
+    if (!(providerAccountId && providerEmail)) {
       throw new SafeError(
-        "ID token missing required subject (sub) or email claim.",
+        "ID token missing required subject (sub) or email claim."
       );
     }
 
@@ -192,7 +192,7 @@ export const GET = withError("google/linking/callback", async (request) => {
                 targetUserId,
                 providerAccountId,
                 accountId: accountNow.id,
-              },
+              }
             );
 
             await updateGoogleAccountTokens(accountNow.id, tokens);
@@ -290,16 +290,16 @@ export const GET = withError("google/linking/callback", async (request) => {
 
 interface GoogleTokens {
   access_token?: string | null;
-  refresh_token?: string | null;
   expiry_date?: number | null;
+  id_token?: string | null;
+  refresh_token?: string | null;
   scope?: string | null;
   token_type?: string | null;
-  id_token?: string | null;
 }
 
 async function updateGoogleAccountTokens(
   accountId: string,
-  tokens: GoogleTokens,
+  tokens: GoogleTokens
 ) {
   await prisma.account.update({
     where: { id: accountId },

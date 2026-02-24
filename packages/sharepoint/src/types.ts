@@ -3,23 +3,23 @@
  */
 
 export interface SharePointConfig {
-  azureTenantId: string;
   azureClientId: string;
   azureClientSecret: string;
+  azureTenantId: string;
 }
 
 export interface SharePointSite {
+  description?: string;
+  displayName: string;
   id: string;
   name: string;
-  displayName: string;
   webUrl: string;
-  description?: string;
 }
 
 export interface SharePointDrive {
+  driveType: string;
   id: string;
   name: string;
-  driveType: string;
   webUrl: string;
 }
 
@@ -32,27 +32,27 @@ export interface SharePointFile {
 }
 
 export interface SharePointItem {
-  id: string;
-  name: string;
-  webUrl: string;
-  size?: number;
   createdDateTime: string;
-  lastModifiedDateTime: string;
-  folder?: SharePointFolder;
   file?: SharePointFile;
+  folder?: SharePointFolder;
+  id: string;
+  lastModifiedDateTime: string;
+  name: string;
+  size?: number;
+  webUrl: string;
 }
 
 export interface SharePointList {
+  description?: string;
+  displayName: string;
   id: string;
   name: string;
-  displayName: string;
   webUrl: string;
-  description?: string;
 }
 
 export interface SharePointListItem {
-  id: string;
-  fields: Record<string, unknown>;
   createdDateTime: string;
+  fields: Record<string, unknown>;
+  id: string;
   lastModifiedDateTime: string;
 }

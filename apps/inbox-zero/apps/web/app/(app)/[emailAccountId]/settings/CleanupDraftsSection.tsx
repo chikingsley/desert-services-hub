@@ -1,18 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
+import { toastError, toastSuccess } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import {
   Item,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
   ItemActions,
+  ItemContent,
+  ItemDescription,
   ItemSeparator,
+  ItemTitle,
 } from "@/components/ui/item";
 import { cleanupAIDraftsAction } from "@/utils/actions/user";
-import { toastError, toastSuccess } from "@/components/Toast";
 import { getActionErrorMessage } from "@/utils/error";
 
 export function CleanupDraftsSection({
@@ -50,7 +50,7 @@ export function CleanupDraftsSection({
           description: getActionErrorMessage(error.error),
         });
       },
-    },
+    }
   );
 
   return (
@@ -66,10 +66,10 @@ export function CleanupDraftsSection({
         </ItemContent>
         <ItemActions>
           <Button
-            size="sm"
-            variant="outline"
             loading={isExecuting}
             onClick={() => execute()}
+            size="sm"
+            variant="outline"
           >
             Delete drafts
           </Button>
@@ -77,7 +77,7 @@ export function CleanupDraftsSection({
       </Item>
       {result && result.deleted > 0 && result.skippedModified > 0 && (
         <div className="px-4 pb-2">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {result.skippedModified} draft
             {result.skippedModified === 1 ? " was" : "s were"} kept because you
             edited {result.skippedModified === 1 ? "it" : "them"}

@@ -24,9 +24,36 @@ export interface AreaHighlightStyle {
  */
 export interface AreaHighlightProps {
   /**
+   * react-rnd bounds on the highlight area. This is useful for preventing the user
+   * moving the highlight off the viewer/page.  See [react-rnd docs](https://github.com/bokuweb/react-rnd).
+   */
+  bounds?: string | Element;
+
+  /**
+   * Custom color presets for the style panel.
+   * Default: ["rgba(255, 226, 143, 1)", "#ffcdd2", "#c8e6c9", "#bbdefb", "#e1bee7"]
+   */
+  colorPresets?: string[];
+
+  /**
+   * Custom delete icon. Replaces the default trash icon.
+   */
+  deleteIcon?: ReactNode;
+  /**
    * The highlight to be rendered as an {@link AreaHighlight}.
    */
   highlight: ViewportHighlight;
+
+  /**
+   * Background color for the highlight.
+   * Default: "rgba(255, 226, 143, 1)" (yellow)
+   */
+  highlightColor?: string;
+
+  /**
+   * Has the highlight been auto-scrolled into view? By default, this will render the highlight red.
+   */
+  isScrolledTo?: boolean;
 
   /**
    * A callback triggered whenever the highlight area is either finished
@@ -37,17 +64,6 @@ export interface AreaHighlightProps {
   onChange?(rect: LTWHP): void;
 
   /**
-   * Has the highlight been auto-scrolled into view? By default, this will render the highlight red.
-   */
-  isScrolledTo?: boolean;
-
-  /**
-   * react-rnd bounds on the highlight area. This is useful for preventing the user
-   * moving the highlight off the viewer/page.  See [react-rnd docs](https://github.com/bokuweb/react-rnd).
-   */
-  bounds?: string | Element;
-
-  /**
    * A callback triggered whenever a context menu is opened on the highlight area.
    *
    * @param event - The mouse event associated with the context menu.
@@ -55,20 +71,14 @@ export interface AreaHighlightProps {
   onContextMenu?(event: MouseEvent<HTMLDivElement>): void;
 
   /**
+   * Callback triggered when the delete button is clicked.
+   */
+  onDelete?(): void;
+
+  /**
    * Event called whenever the user tries to move or resize an {@link AreaHighlight}.
    */
   onEditStart?(): void;
-
-  /**
-   * Custom styling to be applied to the {@link AreaHighlight} component.
-   */
-  style?: CSSProperties;
-
-  /**
-   * Background color for the highlight.
-   * Default: "rgba(255, 226, 143, 1)" (yellow)
-   */
-  highlightColor?: string;
 
   /**
    * Callback triggered when the style changes.
@@ -76,25 +86,14 @@ export interface AreaHighlightProps {
   onStyleChange?(style: AreaHighlightStyle): void;
 
   /**
-   * Callback triggered when the delete button is clicked.
+   * Custom styling to be applied to the {@link AreaHighlight} component.
    */
-  onDelete?(): void;
+  style?: CSSProperties;
 
   /**
    * Custom style icon. Replaces the default palette icon.
    */
   styleIcon?: ReactNode;
-
-  /**
-   * Custom delete icon. Replaces the default trash icon.
-   */
-  deleteIcon?: ReactNode;
-
-  /**
-   * Custom color presets for the style panel.
-   * Default: ["rgba(255, 226, 143, 1)", "#ffcdd2", "#c8e6c9", "#bbdefb", "#e1bee7"]
-   */
-  colorPresets?: string[];
 }
 
 // Default icons

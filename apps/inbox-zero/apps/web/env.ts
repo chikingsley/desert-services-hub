@@ -153,7 +153,7 @@ export const env = createEnv({
         value
           ?.split(",")
           .map((s) => s.trim())
-          .filter(Boolean),
+          .filter(Boolean)
       ),
     // Mobile auth trusted origin, e.g. inboxzero://
     MOBILE_AUTH_ORIGIN: z.string().trim().min(1).optional(),
@@ -218,7 +218,9 @@ export const env = createEnv({
       .string()
       .optional()
       .transform((value) => {
-        if (!value) return;
+        if (!value) {
+          return;
+        }
         return value.split(",");
       }),
     NEXT_PUBLIC_DUB_REFER_DOMAIN: z.string().optional(),

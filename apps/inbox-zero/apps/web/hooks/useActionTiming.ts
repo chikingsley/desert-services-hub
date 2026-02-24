@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 export function useActionTiming() {
   const startTimeRef = useRef<number | null>(null);
@@ -8,7 +8,9 @@ export function useActionTiming() {
   }, []);
 
   const getElapsedMs = useCallback(() => {
-    if (!startTimeRef.current) return 0;
+    if (!startTimeRef.current) {
+      return 0;
+    }
     return Date.now() - startTimeRef.current;
   }, []);
 

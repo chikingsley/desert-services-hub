@@ -1,7 +1,7 @@
-import { RedisSubscriber } from "@/utils/redis/subscriber";
-import { withAuth } from "@/utils/middleware";
 import { NextResponse } from "next/server";
+import { withAuth } from "@/utils/middleware";
 import { getEmailAccount } from "@/utils/redis/account-validation";
+import { RedisSubscriber } from "@/utils/redis/subscriber";
 
 export const maxDuration = 300;
 
@@ -16,18 +16,19 @@ export const GET = withAuth("email-stream", async (request) => {
 
   if (!emailAccountId) {
     request.logger.warn(
-      "Bad Request: Email Account ID missing from query parameters.",
+      "Bad Request: Email Account ID missing from query parameters."
     );
     return NextResponse.json(
       { error: "Email account ID is required" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
   const email = await getEmailAccount({ userId, emailAccountId });
 
-  if (!email)
+  if (!email) {
     return NextResponse.json({ error: "Invalid account ID" }, { status: 403 });
+  }
 
   request.logger.info("Processing GET request for email stream", {
     userId,
@@ -38,8 +39,9 @@ export const GET = withAuth("email-stream", async (request) => {
   const redisSubscriber = RedisSubscriber.getInstance();
 
   redisSubscriber.psubscribe(pattern, (err) => {
-    if (err)
+    if (err) {
       request.logger.error("Error subscribing to threads", { error: err });
+    }
   });
 
   // Set headers for SSE
@@ -62,7 +64,9 @@ export const GET = withAuth("email-stream", async (request) => {
       let isControllerClosed = false;
 
       const resetInactivityTimer = () => {
-        if (inactivityTimer) clearTimeout(inactivityTimer);
+        if (inactivityTimer) {
+          clearTimeout(inactivityTimer);
+        }
         inactivityTimer = setTimeout(() => {
           request.logger.info("Stream closed due to inactivity", {
             emailAccountId,
@@ -83,7 +87,7 @@ export const GET = withAuth("email-stream", async (request) => {
         if (!isControllerClosed) {
           try {
             controller.enqueue(
-              encoder.encode(`event: thread\ndata: ${message}\n\n`),
+              encoder.encode(`event: thread\ndata: ${message}\n\n`)
             );
             resetInactivityTimer(); // Reset timer on message
           } catch (error) {

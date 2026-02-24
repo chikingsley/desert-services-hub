@@ -1,10 +1,10 @@
 "use client";
 
+import { Calendar as CalendarIcon, Star } from "lucide-react";
+import type { GetCalendarsResponse } from "@/app/api/user/calendars/route";
 import { Toggle } from "@/components/Toggle";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar as CalendarIcon, Star } from "lucide-react";
-import type { GetCalendarsResponse } from "@/app/api/user/calendars/route";
 
 type Calendar = GetCalendarsResponse["connections"][0]["calendars"][0];
 
@@ -20,37 +20,37 @@ export function CalendarList({
   return (
     <div className="space-y-2">
       {calendars.map((calendar) => (
-        <Card key={calendar.id} className="p-3">
+        <Card className="p-3" key={calendar.id}>
           <CardContent className="p-0">
-            <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-start">
-              <CalendarIcon className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+            <div className="grid grid-cols-[auto_1fr_auto] items-start gap-3">
+              <CalendarIcon className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
               <div className="min-w-0">
-                <div className="flex items-center gap-2 min-w-0 mb-1">
-                  <p className="text-sm font-medium truncate flex-1 min-w-0">
+                <div className="mb-1 flex min-w-0 items-center gap-2">
+                  <p className="min-w-0 flex-1 truncate font-medium text-sm">
                     {calendar.name}
                   </p>
                   {calendar.primary && (
-                    <Badge variant="outline" className="text-xs flex-shrink-0">
-                      <Star className="h-3 w-3 mr-1" />
+                    <Badge className="flex-shrink-0 text-xs" variant="outline">
+                      <Star className="mr-1 h-3 w-3" />
                       Primary
                     </Badge>
                   )}
                 </div>
                 {calendar.description && (
-                  <p className="text-xs text-muted-foreground truncate block overflow-hidden text-ellipsis whitespace-nowrap">
+                  <p className="block overflow-hidden truncate text-ellipsis whitespace-nowrap text-muted-foreground text-xs">
                     {calendar.description}
                   </p>
                 )}
                 {calendar.timezone && (
-                  <p className="text-xs text-muted-foreground truncate block overflow-hidden text-ellipsis whitespace-nowrap">
+                  <p className="block overflow-hidden truncate text-ellipsis whitespace-nowrap text-muted-foreground text-xs">
                     {calendar.timezone}
                   </p>
                 )}
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex flex-shrink-0 items-center gap-2">
                 <Toggle
-                  name={`calendar-${calendar.id}`}
                   enabled={calendar.isEnabled}
+                  name={`calendar-${calendar.id}`}
                   onChange={(checked) => onToggleCalendar(calendar.id, checked)}
                 />
               </div>

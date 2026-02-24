@@ -12,13 +12,13 @@
  * - TEST_OUTLOOK_EMAIL=<your outlook email>
  */
 
-import { describe, test, expect, beforeAll, vi } from "vitest";
-import prisma from "@/utils/prisma";
+import { beforeAll, describe, expect, test, vi } from "vitest";
+import { extractDomainFromEmail, extractEmailAddress } from "@/utils/email";
 import { createEmailProvider } from "@/utils/email/provider";
-import { extractEmailAddress, extractDomainFromEmail } from "@/utils/email";
 import type { EmailProvider } from "@/utils/email/types";
-import type { ParsedMessage } from "@/utils/types";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import type { ParsedMessage } from "@/utils/types";
 
 const logger = createScopedLogger("test");
 const RUN_E2E_TESTS = process.env.RUN_E2E_TESTS;
@@ -37,7 +37,7 @@ const PUBLIC_DOMAINS = [
   "aol.com",
 ];
 
-describe.skipIf(!RUN_E2E_TESTS || !TEST_OUTLOOK_EMAIL)(
+describe.skipIf(!(RUN_E2E_TESTS && TEST_OUTLOOK_EMAIL))(
   "Cold Email Detection - Microsoft",
   { timeout: 60_000 },
   () => {
@@ -97,7 +97,9 @@ describe.skipIf(!RUN_E2E_TESTS || !TEST_OUTLOOK_EMAIL)(
       // Find a company domain sender (non-public domain) from received emails
       const companyMessage = realMessages.find((m) => {
         const from = extractEmailAddress(m.headers.from);
-        if (!from) return false;
+        if (!from) {
+          return false;
+        }
         const domain = extractDomainFromEmail(from);
         return domain && !PUBLIC_DOMAINS.includes(domain.toLowerCase());
       });
@@ -183,9 +185,9 @@ describe.skipIf(!RUN_E2E_TESTS || !TEST_OUTLOOK_EMAIL)(
         test("returns TRUE for exact sender at company domain we received from", async ({
           skip,
         }) => {
-          if (!companySenderEmail || !companyDomain) {
+          if (!(companySenderEmail && companyDomain)) {
             console.warn(
-              "SKIPPED: No company domain emails found. Ensure inbox has emails from non-public domains.",
+              "SKIPPED: No company domain emails found. Ensure inbox has emails from non-public domains."
             );
             skip();
             return;
@@ -206,7 +208,7 @@ describe.skipIf(!RUN_E2E_TESTS || !TEST_OUTLOOK_EMAIL)(
         }) => {
           if (!companyDomain) {
             console.warn(
-              "SKIPPED: No company domain found. Ensure inbox has emails from non-public domains.",
+              "SKIPPED: No company domain found. Ensure inbox has emails from non-public domains."
             );
             skip();
             return;
@@ -266,7 +268,7 @@ describe.skipIf(!RUN_E2E_TESTS || !TEST_OUTLOOK_EMAIL)(
         }) => {
           if (!sentToEmail) {
             console.warn(
-              "SKIPPED: No sent emails found. Ensure account has sent emails.",
+              "SKIPPED: No sent emails found. Ensure account has sent emails."
             );
             skip();
             return;
@@ -287,7 +289,7 @@ describe.skipIf(!RUN_E2E_TESTS || !TEST_OUTLOOK_EMAIL)(
         }) => {
           if (!sentToCompanyDomain) {
             console.warn(
-              "SKIPPED: No sent emails to company domains found. Ensure account has sent emails to non-public domains.",
+              "SKIPPED: No sent emails to company domains found. Ensure account has sent emails to non-public domains."
             );
             skip();
             return;
@@ -307,5 +309,5 @@ describe.skipIf(!RUN_E2E_TESTS || !TEST_OUTLOOK_EMAIL)(
         });
       });
     });
-  },
+  }
 );

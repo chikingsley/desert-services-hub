@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
 import { withAuth } from "@/utils/middleware";
 import { fetchAndCheckIsMember } from "@/utils/organizations/access";
+import prisma from "@/utils/prisma";
 
 export type OrganizationMembersResponse = Awaited<
   ReturnType<typeof getOrganizationMembers>
@@ -16,7 +16,7 @@ export const GET = withAuth(
     if (!organizationId) {
       return NextResponse.json(
         { error: "Organization ID is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -25,7 +25,7 @@ export const GET = withAuth(
     const result = await getOrganizationMembers({ organizationId });
 
     return NextResponse.json(result);
-  },
+  }
 );
 
 async function getOrganizationMembers({

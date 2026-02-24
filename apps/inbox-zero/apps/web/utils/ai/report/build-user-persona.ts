@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { createGenerateObject } from "@/utils/llms";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { EmailSummary } from "@/utils/ai/report/summarize-emails";
+import { createGenerateObject } from "@/utils/llms";
 import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
 
 const userPersonaSchema = z.object({
   professionalIdentity: z.object({
@@ -22,7 +22,7 @@ export async function aiBuildUserPersona(
   emailAccount: EmailAccountWithAI,
   sentEmailSummaries?: EmailSummary[],
   gmailSignature?: string,
-  gmailTemplates?: string[],
+  gmailTemplates?: string[]
 ): Promise<z.infer<typeof userPersonaSchema>> {
   const system = `You are a highly skilled AI analyst tasked with generating a focused professional persona of a user based on their email activity.
 

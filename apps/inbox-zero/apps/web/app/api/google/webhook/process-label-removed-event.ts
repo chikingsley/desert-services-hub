@@ -1,18 +1,18 @@
 import type { gmail_v1 } from "@googleapis/gmail";
-import { GroupItemSource, ActionType } from "@/generated/prisma/enums";
-import { saveLearnedPattern } from "@/utils/rule/learned-patterns";
+import { ActionType, GroupItemSource } from "@/generated/prisma/enums";
 import { extractEmailAddress } from "@/utils/email";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { EmailProvider } from "@/utils/email/types";
+import {
+  isGmailInsufficientPermissionsError,
+  isGmailQuotaExceededError,
+  isGmailRateLimitExceededError,
+} from "@/utils/error";
 import { GmailLabel } from "@/utils/gmail/label";
-import { shouldLearnFromLabelRemoval } from "@/utils/rule/consts";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { Logger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
-import {
-  isGmailRateLimitExceededError,
-  isGmailQuotaExceededError,
-  isGmailInsufficientPermissionsError,
-} from "@/utils/error";
+import { shouldLearnFromLabelRemoval } from "@/utils/rule/consts";
+import { saveLearnedPattern } from "@/utils/rule/learned-patterns";
 
 const SYSTEM_LABELS = [
   GmailLabel.INBOX,
@@ -34,14 +34,14 @@ export async function handleLabelRemovedEvent(
     emailAccount: EmailAccountWithAI;
     provider: EmailProvider;
   },
-  logger: Logger,
+  logger: Logger
 ) {
   const messageId = message.message?.id;
   const threadId = message.message?.threadId;
   const emailAccountId = emailAccount.id;
   const allRemovedLabelIds = message.labelIds || [];
 
-  if (!messageId || !threadId) {
+  if (!(messageId && threadId)) {
     logger.error("Skipping label removal - missing messageId or threadId", {
       hasMessage: !!message.message,
       hasLabelIds: allRemovedLabelIds.length > 0,
@@ -53,7 +53,7 @@ export async function handleLabelRemovedEvent(
   // Filter out system labels early - we don't learn from system label removals
   // (e.g., archiving removes INBOX, starring adds/removes STARRED, etc.)
   const removedLabelIds = allRemovedLabelIds.filter(
-    (labelId) => !SYSTEM_LABELS.includes(labelId),
+    (labelId) => !SYSTEM_LABELS.includes(labelId)
   );
 
   if (removedLabelIds.length === 0) {
@@ -166,7 +166,7 @@ async function learnFromRemovedLabel({
       systemType: { not: null },
       actions: {
         some: {
-          labelId: labelId,
+          labelId,
           type: ActionType.LABEL,
         },
       },
@@ -174,7 +174,7 @@ async function learnFromRemovedLabel({
     select: { id: true, systemType: true },
   });
 
-  if (!rule?.systemType || !shouldLearnFromLabelRemoval(rule.systemType)) {
+  if (!(rule?.systemType && shouldLearnFromLabelRemoval(rule.systemType))) {
     logger.info("Label removal does not match a learnable system rule", {
       systemType: rule?.systemType,
     });

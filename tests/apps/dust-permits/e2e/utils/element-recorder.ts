@@ -36,6 +36,35 @@ import { dirname, join } from "node:path";
 import type { Page } from "playwright";
 
 export interface ElementRecord {
+  /** Element attributes */
+  attributes: {
+    type?: string;
+    name?: string;
+    id?: string;
+    class?: string;
+    placeholder?: string;
+    title?: string;
+    "aria-label"?: string;
+    "aria-labelledby"?: string;
+  };
+  /** Parent element context */
+  context?: {
+    /** Parent element ID */
+    parentId?: string;
+    /** Parent element classes */
+    parentClasses?: string[];
+    /** Text content of parent (for context) */
+    parentText?: string;
+  };
+  /** Associated label text */
+  label?: string;
+  /** Element position (if visible) */
+  position?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
   /** Primary selector (ID if available, otherwise best available) */
   selector: string;
   /** Multiple selector types for resilience */
@@ -53,16 +82,6 @@ export interface ElementRecord {
     /** CSS selector (most specific available) */
     css?: string;
   };
-  /** Element type */
-  type:
-    | "input"
-    | "button"
-    | "checkbox"
-    | "radio"
-    | "select"
-    | "textarea"
-    | "link"
-    | "other";
   /** Current element state */
   state: {
     /** For checkboxes/radios */
@@ -76,35 +95,16 @@ export interface ElementRecord {
     /** Whether element is required */
     required?: boolean;
   };
-  /** Associated label text */
-  label?: string;
-  /** Element attributes */
-  attributes: {
-    type?: string;
-    name?: string;
-    id?: string;
-    class?: string;
-    placeholder?: string;
-    title?: string;
-    "aria-label"?: string;
-    "aria-labelledby"?: string;
-  };
-  /** Element position (if visible) */
-  position?: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  /** Parent element context */
-  context?: {
-    /** Parent element ID */
-    parentId?: string;
-    /** Parent element classes */
-    parentClasses?: string[];
-    /** Text content of parent (for context) */
-    parentText?: string;
-  };
+  /** Element type */
+  type:
+    | "input"
+    | "button"
+    | "checkbox"
+    | "radio"
+    | "select"
+    | "textarea"
+    | "link"
+    | "other";
 }
 
 export interface RecordPageElementsOptions {
@@ -112,27 +112,27 @@ export interface RecordPageElementsOptions {
   filterBySelector?: string;
   /** Include non-interactive elements (default: false) */
   includeNonInteractive?: boolean;
-  /** Output path for JSON file (relative to project root) */
-  outputPath?: string;
   /** Include screenshot in output directory */
   includeScreenshot?: boolean;
   /** Maximum number of elements to record (default: unlimited) */
   maxElements?: number;
   /** Additional metadata to include */
   metadata?: Record<string, unknown>;
+  /** Output path for JSON file (relative to project root) */
+  outputPath?: string;
 }
 
 export interface RecordPageElementsResult {
   /** Array of recorded elements */
   elements: ElementRecord[];
-  /** Total elements found */
-  totalFound: number;
-  /** Elements recorded (may be less than totalFound if maxElements is set) */
-  totalRecorded: number;
   /** Output file path (if outputPath was provided) */
   outputPath?: string;
   /** Screenshot path (if includeScreenshot was true) */
   screenshotPath?: string;
+  /** Total elements found */
+  totalFound: number;
+  /** Elements recorded (may be less than totalFound if maxElements is set) */
+  totalRecorded: number;
 }
 
 /**

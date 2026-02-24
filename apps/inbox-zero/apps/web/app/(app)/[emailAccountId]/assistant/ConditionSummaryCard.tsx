@@ -1,7 +1,7 @@
 import { BotIcon, FilterIcon } from "lucide-react";
+import { CardBasic } from "@/components/ui/card";
 import type { CreateRuleBody } from "@/utils/actions/rule.validation";
 import { ConditionType } from "@/utils/config";
-import { CardBasic } from "@/components/ui/card";
 
 export function ConditionSummaryCard({
   condition,
@@ -40,7 +40,7 @@ export function ConditionSummaryCard({
             <span>Static Condition</span>
             <div className="mt-2 space-y-1">
               {parts.map((part, index) => (
-                <div key={index} className="text-muted-foreground">
+                <div className="text-muted-foreground" key={index}>
                   {part}
                 </div>
               ))}

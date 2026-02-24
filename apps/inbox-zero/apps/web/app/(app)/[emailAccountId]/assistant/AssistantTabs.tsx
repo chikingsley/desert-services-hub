@@ -1,23 +1,23 @@
 "use client";
 
 import { XIcon } from "lucide-react";
-import { useCallback } from "react";
 import { useQueryState } from "nuqs";
+import { useCallback } from "react";
 import { History } from "@/app/(app)/[emailAccountId]/assistant/History";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Rules } from "@/app/(app)/[emailAccountId]/assistant/Rules";
 import { Process } from "@/app/(app)/[emailAccountId]/assistant/Process";
+import { Rules } from "@/app/(app)/[emailAccountId]/assistant/Rules";
 import { RulesPrompt } from "@/app/(app)/[emailAccountId]/assistant/RulesPrompt";
+import { RuleTab } from "@/app/(app)/[emailAccountId]/assistant/RuleTab";
 import { SettingsTab } from "@/app/(app)/[emailAccountId]/assistant/settings/SettingsTab";
 import { TabsToolbar } from "@/components/TabsToolbar";
 import { TypographyP } from "@/components/Typography";
-import { RuleTab } from "@/app/(app)/[emailAccountId]/assistant/RuleTab";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function AssistantTabs() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <Tabs defaultValue="empty" className="flex h-full flex-col">
+      <Tabs className="flex h-full flex-col" defaultValue="empty">
         <TabsToolbar className="shrink-0 border-none pb-0 shadow-none">
           <div className="w-full overflow-x-auto">
             <TabsList>
@@ -32,7 +32,7 @@ export function AssistantTabs() {
         </TabsToolbar>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <TabsContent value="empty" className="mt-0 h-full">
+          <TabsContent className="mt-0 h-full" value="empty">
             <div className="flex h-full items-center justify-center">
               <TypographyP className="max-w-sm px-4 text-center">
                 Select a tab or add rules via the assistant
@@ -40,23 +40,23 @@ export function AssistantTabs() {
             </div>
           </TabsContent>
 
-          <TabsContent value="prompt" className="mt-0 h-full">
+          <TabsContent className="mt-0 h-full" value="prompt">
             <RulesPrompt />
           </TabsContent>
-          <TabsContent value="rules" className="content-container pb-4">
+          <TabsContent className="pb-4 content-container" value="rules">
             <Rules />
           </TabsContent>
-          <TabsContent value="test" className="content-container pb-4">
+          <TabsContent className="pb-4 content-container" value="test">
             <Process />
           </TabsContent>
-          <TabsContent value="history" className="content-container pb-4">
+          <TabsContent className="pb-4 content-container" value="history">
             <History />
           </TabsContent>
-          <TabsContent value="settings" className="content-container pb-4">
+          <TabsContent className="pb-4 content-container" value="settings">
             <SettingsTab />
           </TabsContent>
           {/* Set via search params. Not a visible tab. */}
-          <TabsContent value="rule" className="content-container pb-4">
+          <TabsContent className="pb-4 content-container" value="rule">
             <RuleTab />
           </TabsContent>
         </div>
@@ -71,7 +71,7 @@ function CloseArtifactButton() {
   const onClose = useCallback(() => setTab(null), [setTab]);
 
   return (
-    <Button size="icon" variant="ghost" onClick={onClose}>
+    <Button onClick={onClose} size="icon" variant="ghost">
       <XIcon className="size-4" />
     </Button>
   );

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import useSWR from "swr";
-import { ProgressPanel } from "@/components/ProgressPanel";
-import type { CategorizeProgress } from "@/app/api/user/categorize/senders/progress/route";
 import { useCategorizeProgress } from "@/app/(app)/[emailAccountId]/smart-categories/CategorizeProgress";
+import type { CategorizeProgress } from "@/app/api/user/categorize/senders/progress/route";
+import { ProgressPanel } from "@/components/ProgressPanel";
 import { useInterval } from "@/hooks/useInterval";
 
 export function BulkArchiveProgress({
@@ -20,7 +20,7 @@ export function BulkArchiveProgress({
     "/api/user/categorize/senders/progress",
     {
       refreshInterval: 1000, // Always poll to detect ongoing categorization
-    },
+    }
   );
 
   // Categorization is active if explicitly set OR if server shows incomplete progress
@@ -38,20 +38,24 @@ export function BulkArchiveProgress({
   // Fake progress animation to make it feel responsive
   useInterval(
     () => {
-      if (!data?.totalItems) return;
+      if (!data?.totalItems) {
+        return;
+      }
 
       setFakeProgress((prev) => {
         const realCompleted = data.completedItems || 0;
-        if (realCompleted > prev) return realCompleted;
+        if (realCompleted > prev) {
+          return realCompleted;
+        }
 
         const maxProgress = Math.min(
           Math.floor(data.totalItems * 0.9),
-          realCompleted + 30,
+          realCompleted + 30
         );
         return prev < maxProgress ? prev + 1 : prev;
       });
     },
-    isCategorizationActive ? 1500 : null,
+    isCategorizationActive ? 1500 : null
   );
 
   // Handle completion
@@ -69,7 +73,9 @@ export function BulkArchiveProgress({
       }, 3000);
     }
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, [
     data?.completedItems,
@@ -78,7 +84,7 @@ export function BulkArchiveProgress({
     onComplete,
   ]);
 
-  if (!isCategorizationActive || !data?.totalItems) {
+  if (!(isCategorizationActive && data?.totalItems)) {
     return null;
   }
 
@@ -87,11 +93,11 @@ export function BulkArchiveProgress({
 
   return (
     <ProgressPanel
-      totalItems={totalItems}
-      remainingItems={totalItems - displayedProgress}
-      inProgressText="Categorizing senders..."
       completedText={`Categorization complete! ${displayedProgress} senders categorized!`}
+      inProgressText="Categorizing senders..."
       itemLabel="senders"
+      remainingItems={totalItems - displayedProgress}
+      totalItems={totalItems}
     />
   );
 }

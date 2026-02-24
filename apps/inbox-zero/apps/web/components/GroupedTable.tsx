@@ -1,30 +1,35 @@
 "use client";
 
-import Link from "next/link";
-import { Fragment, useMemo } from "react";
-import { useQueryState } from "nuqs";
-import groupBy from "lodash/groupBy";
 import {
-  useReactTable,
-  getCoreRowModel,
-  getExpandedRowModel,
   type ColumnDef,
   flexRender,
+  getCoreRowModel,
+  getExpandedRowModel,
+  useReactTable,
 } from "@tanstack/react-table";
+import groupBy from "lodash/groupBy";
 import {
   ArchiveIcon,
+  BookmarkXIcon,
   ChevronRight,
   MoreVerticalIcon,
   PencilIcon,
-  BookmarkXIcon,
 } from "lucide-react";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import Link from "next/link";
+import { useQueryState } from "nuqs";
+import { Fragment, useMemo } from "react";
+import { CreateCategoryDialog } from "@/app/(app)/[emailAccountId]/smart-categories/CreateCategoryButton";
+import { CategorySelect } from "@/components/CategorySelect";
 import { EmailCell } from "@/components/EmailCell";
-import { useThreads } from "@/hooks/useThreads";
-import { Skeleton } from "@/components/ui/skeleton";
-import { decodeSnippet } from "@/utils/gmail/decode";
-import { formatShortDate } from "@/utils/date";
-import { cn } from "@/utils";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { MessageText } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -32,29 +37,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  changeSenderCategoryAction,
-  removeAllFromCategoryAction,
-} from "@/utils/actions/categorize";
-import { toastError, toastSuccess } from "@/components/Toast";
-import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { ViewEmailButton } from "@/components/ViewEmailButton";
+import { useThreads } from "@/hooks/useThreads";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import {
   addToArchiveSenderQueue,
   useArchiveSenderStatus,
 } from "@/store/archive-sender-queue";
-import { getEmailUrl, getGmailSearchUrl } from "@/utils/url";
-import { MessageText } from "@/components/Typography";
-import { CreateCategoryDialog } from "@/app/(app)/[emailAccountId]/smart-categories/CreateCategoryButton";
+import { cn } from "@/utils";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  changeSenderCategoryAction,
+  removeAllFromCategoryAction,
+} from "@/utils/actions/categorize";
 import type { CategoryWithRules } from "@/utils/category.server";
-import { ViewEmailButton } from "@/components/ViewEmailButton";
-import { CategorySelect } from "@/components/CategorySelect";
-import { useAccount } from "@/providers/EmailAccountProvider";
+import { formatShortDate } from "@/utils/date";
+import { decodeSnippet } from "@/utils/gmail/decode";
+import { getEmailUrl, getGmailSearchUrl } from "@/utils/url";
 
 const COLUMNS = 4;
 
@@ -80,7 +80,7 @@ export function GroupedTable({
         acc[category.name] = category;
         return acc;
       },
-      {},
+      {}
     );
   }, [categories]);
 
@@ -88,7 +88,7 @@ export function GroupedTable({
     const grouped = groupBy(
       emailGroups,
       (group) =>
-        categoryMap[group.category?.name || ""]?.name || "Uncategorized",
+        categoryMap[group.category?.name || ""]?.name || "Uncategorized"
     );
 
     // Add empty arrays for categories without any emails
@@ -113,14 +113,14 @@ export function GroupedTable({
         cell: ({ row }) => {
           return row.getCanExpand() ? (
             <button
-              type="button"
-              onClick={row.getToggleExpandedHandler()}
               className="p-2"
+              onClick={row.getToggleExpandedHandler()}
+              type="button"
             >
               <ChevronRight
                 className={cn(
                   "h-4 w-4 transform transition-all duration-300 ease-in-out",
-                  row.getIsExpanded() ? "rotate-90" : "rotate-0",
+                  row.getIsExpanded() ? "rotate-90" : "rotate-0"
                 )}
               />
             </button>
@@ -132,14 +132,14 @@ export function GroupedTable({
         accessorKey: "address",
         cell: ({ row }) => (
           <Link
+            className="hover:underline"
             href={getGmailSearchUrl(row.original.address, userEmail)}
             target="_blank"
-            className="hover:underline"
           >
             <div className="flex items-center justify-between">
               <EmailCell
-                emailAddress={row.original.address}
                 className="flex gap-2"
+                emailAddress={row.original.address}
               />
             </div>
           </Link>
@@ -183,7 +183,7 @@ export function GroupedTable({
         ),
       },
     ],
-    [categories, userEmail, emailAccountId],
+    [categories, userEmail, emailAccountId]
   );
 
   const table = useReactTable({
@@ -219,9 +219,11 @@ export function GroupedTable({
 
             const onRemoveAllFromCategory = async () => {
               const yes = confirm(
-                "This will remove all emails from this category. You can re-categorize them later. Do you want to continue?",
+                "This will remove all emails from this category. You can re-categorize them later. Do you want to continue?"
               );
-              if (!yes) return;
+              if (!yes) {
+                return;
+              }
               const result = await removeAllFromCategoryAction(emailAccountId, {
                 categoryName,
               });
@@ -247,21 +249,21 @@ export function GroupedTable({
                   category={category}
                   count={senders.length}
                   isExpanded={!!isCategoryExpanded}
+                  onArchiveAll={onArchiveAll}
+                  onEditCategory={onEditCategory}
+                  onRemoveAllFromCategory={onRemoveAllFromCategory}
                   onToggle={() => {
                     setExpanded((prev) =>
                       isCategoryExpanded
                         ? (prev || []).filter((c) => c !== categoryName)
-                        : [...(prev || []), categoryName],
+                        : [...(prev || []), categoryName]
                     );
                   }}
-                  onArchiveAll={onArchiveAll}
-                  onEditCategory={onEditCategory}
-                  onRemoveAllFromCategory={onRemoveAllFromCategory}
                 />
                 {isCategoryExpanded && (
                   <SenderRows
-                    table={table}
                     senders={senders}
+                    table={table}
                     userEmail={userEmail}
                   />
                 )}
@@ -272,15 +274,15 @@ export function GroupedTable({
       </Table>
 
       <CreateCategoryDialog
-        isOpen={selectedCategoryName !== null}
-        onOpenChange={(open) =>
-          setSelectedCategoryName(open ? selectedCategoryName : null)
-        }
-        closeModal={() => setSelectedCategoryName(null)}
         category={
           selectedCategoryName
             ? categories.find((c) => c.name === selectedCategoryName)
             : undefined
+        }
+        closeModal={() => setSelectedCategoryName(null)}
+        isOpen={selectedCategoryName !== null}
+        onOpenChange={(open) =>
+          setSelectedCategoryName(open ? selectedCategoryName : null)
         }
       />
     </>
@@ -303,14 +305,14 @@ export function SendersTable({
         cell: ({ row }) => {
           return row.getCanExpand() ? (
             <button
-              type="button"
-              onClick={row.getToggleExpandedHandler()}
               className="p-2"
+              onClick={row.getToggleExpandedHandler()}
+              type="button"
             >
               <ChevronRight
                 className={cn(
                   "h-4 w-4 transform transition-all duration-300 ease-in-out",
-                  row.getIsExpanded() ? "rotate-90" : "rotate-0",
+                  row.getIsExpanded() ? "rotate-90" : "rotate-0"
                 )}
               />
             </button>
@@ -323,9 +325,9 @@ export function SendersTable({
         cell: ({ row }) => (
           <div className="flex items-center justify-between">
             <EmailCell
+              className="flex gap-2"
               emailAddress={row.original.address}
               name={row.original.name}
-              className="flex gap-2"
             />
           </div>
         ),
@@ -338,16 +340,16 @@ export function SendersTable({
         cell: ({ row }) => {
           return (
             <CategorySelect
+              categories={categories}
               emailAccountId={emailAccountId}
               sender={row.original.address}
               senderCategory={row.original.category}
-              categories={categories}
             />
           );
         },
       },
     ],
-    [categories, emailAccountId],
+    [categories, emailAccountId]
   );
 
   const table = useReactTable({
@@ -361,7 +363,7 @@ export function SendersTable({
   return (
     <Table>
       <TableBody>
-        <SenderRows table={table} senders={senders} userEmail={userEmail} />
+        <SenderRows senders={senders} table={table} userEmail={userEmail} />
       </TableBody>
     </Table>
   );
@@ -387,25 +389,25 @@ function GroupRow({
   return (
     <TableRow className="h-8 cursor-pointer bg-muted/50">
       <TableCell
+        className="py-1 font-medium text-foreground text-sm"
         colSpan={3}
-        className="py-1 text-sm font-medium text-foreground"
         onClick={onToggle}
       >
         <div className="flex items-center">
           <ChevronRight
             className={cn(
               "mr-2 size-4 transform transition-all duration-300 ease-in-out",
-              isExpanded ? "rotate-90" : "rotate-0",
+              isExpanded ? "rotate-90" : "rotate-0"
             )}
           />
           {category.name}
-          <span className="ml-2 text-xs text-muted-foreground">({count})</span>
+          <span className="ml-2 text-muted-foreground text-xs">({count})</span>
         </div>
       </TableCell>
       <TableCell className="flex justify-end gap-1.5 py-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="xs">
+            <Button size="xs" variant="ghost">
               <MoreVerticalIcon className="size-4" />
               <span className="sr-only">More</span>
             </Button>
@@ -422,7 +424,7 @@ function GroupRow({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="outline" size="xs" onClick={onArchiveAll}>
+        <Button onClick={onArchiveAll} size="xs" variant="outline">
           <ArchiveIcon className="mr-2 size-4" />
           Archive all
         </Button>
@@ -454,17 +456,19 @@ function SenderRows({
     const row = table
       .getRowModel()
       .rows.find((r) => r.original.address === sender.address);
-    if (!row) return null;
+    if (!row) {
+      return null;
+    }
     return (
       <Fragment key={row.id}>
         <TableRow>
           {row.getVisibleCells().map((cell) => (
             <TableCell
+              className="py-1"
               key={cell.id}
               style={{
                 width: (cell.column.columnDef.meta as any)?.size || "auto",
               }}
-              className="py-1"
             >
               {flexRender(cell.column.columnDef.cell, cell.getContext())}
             </TableCell>
@@ -527,15 +531,15 @@ function ExpandedRows({
         const date = firstMessage.date;
 
         return (
-          <TableRow key={thread.id} className="bg-muted/50">
+          <TableRow className="bg-muted/50" key={thread.id}>
             <TableCell className="py-3">
-              <ViewEmailButton threadId={thread.id} messageId={thread.id} />
+              <ViewEmailButton messageId={thread.id} threadId={thread.id} />
             </TableCell>
             <TableCell className="py-3">
               <Link
+                className="hover:underline"
                 href={getEmailUrl(thread.id, userEmail, provider)}
                 target="_blank"
-                className="hover:underline"
               >
                 {subject}
               </Link>

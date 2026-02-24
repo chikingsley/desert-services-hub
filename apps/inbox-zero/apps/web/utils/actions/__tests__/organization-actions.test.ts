@@ -30,7 +30,7 @@ describe("organization actions", () => {
 
     const result = await createOrganizationAction(
       "ea_1" as any,
-      { name: "Acme", slug: "acme" } as any,
+      { name: "Acme", slug: "acme" } as any
     );
 
     expect(prisma.member.findFirst).toHaveBeenCalledWith({

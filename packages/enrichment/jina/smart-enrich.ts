@@ -11,8 +11,6 @@
 import { enrichCompanyByName } from "@/packages/enrichment/pdl/company";
 
 export interface SmartEnrichResult {
-  success: boolean;
-  source: "pdl" | "jina" | "none";
   company?: {
     name: string;
     website?: string | null;
@@ -25,9 +23,11 @@ export interface SmartEnrichResult {
     industry?: string | null;
     linkedIn?: string | null;
   };
-  likelihood?: number; // PDL match confidence (1-10)
-  timeMs: number;
   error?: string;
+  likelihood?: number; // PDL match confidence (1-10)
+  source: "pdl" | "jina" | "none";
+  success: boolean;
+  timeMs: number;
 }
 
 /**

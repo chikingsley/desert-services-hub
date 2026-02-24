@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Tag, FileEdit } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { AnimatePresence, motion } from "framer-motion";
+import { FileEdit, Tag, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { AnnouncementCard } from "@/components/feature-announcements/AnnouncementDialog";
 import { FollowUpRemindersIllustration } from "@/components/feature-announcements/FollowUpRemindersIllustration";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Announcement } from "@/utils/announcements";
 
 const DETAIL_ICON_CLASS = "h-4 w-4 text-gray-600 dark:text-gray-400";
@@ -36,28 +36,28 @@ export function AnnouncementDialogDemo() {
         {isOpen && (
           <>
             <motion.div
+              animate={{ opacity: 1 }}
+              className="fixed inset-0 z-40 bg-black/40"
+              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
               key="backdrop"
               onClick={handleClose}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-40 bg-black/40"
             />
 
             <motion.div
-              key="modal-container"
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 400 }}
               className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4"
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              key="modal-container"
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
             >
               <div className="pointer-events-auto relative">
                 <button
-                  type="button"
+                  className="absolute -top-9 -right-9 z-10 flex items-center justify-center rounded-full border border-white/20 bg-white/10 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
                   onClick={handleClose}
-                  className="absolute -right-9 -top-9 z-10 flex items-center justify-center rounded-full border border-white/20 bg-white/10 p-2 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+                  type="button"
                 >
                   <X className="h-5 w-5" />
                 </button>

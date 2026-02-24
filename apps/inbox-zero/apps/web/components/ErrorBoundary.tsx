@@ -1,7 +1,7 @@
 "use client";
 
-import { Component } from "react";
 import * as Sentry from "@sentry/nextjs";
+import { Component } from "react";
 
 export class ErrorBoundary extends Component<
   { children: React.ReactNode; extra?: any; fallback?: React.ReactNode },
@@ -20,8 +20,9 @@ export class ErrorBoundary extends Component<
     Sentry.captureException(error, { ...errorInfo, extra: this.props.extra });
   }
   render() {
-    if (this.state.hasError)
+    if (this.state.hasError) {
       return this.props.fallback ?? <div>Something went wrong :(</div>;
+    }
 
     return this.props.children;
   }

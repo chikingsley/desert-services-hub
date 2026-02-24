@@ -1,22 +1,22 @@
 "use client";
 
-import { PageWrapper } from "@/components/PageWrapper";
-import { PageHeader } from "@/components/PageHeader";
-import { SettingCard } from "@/components/SettingCard";
-import { Toggle } from "@/components/Toggle";
-import { toastSuccess, toastError } from "@/components/Toast";
-import { LoadingContent } from "@/components/LoadingContent";
-import { PremiumAlertWithData } from "@/components/PremiumAlert";
-import { useCalendars } from "@/hooks/useCalendars";
-import { useAccount } from "@/providers/EmailAccountProvider";
 import { useAction } from "next-safe-action/hooks";
-import { updateMeetingBriefsEnabledAction } from "@/utils/actions/meeting-briefs";
-import { useMeetingBriefSettings } from "@/hooks/useMeetingBriefs";
+import { DeliveryChannelsSetting } from "@/app/(app)/[emailAccountId]/briefs/DeliveryChannelsSetting";
+import { IntegrationsSetting } from "@/app/(app)/[emailAccountId]/briefs/IntegrationsSetting";
+import { BriefsOnboarding } from "@/app/(app)/[emailAccountId]/briefs/Onboarding";
 import { TimeDurationSetting } from "@/app/(app)/[emailAccountId]/briefs/TimeDurationSetting";
 import { UpcomingMeetings } from "@/app/(app)/[emailAccountId]/briefs/UpcomingMeetings";
-import { BriefsOnboarding } from "@/app/(app)/[emailAccountId]/briefs/Onboarding";
-import { IntegrationsSetting } from "@/app/(app)/[emailAccountId]/briefs/IntegrationsSetting";
-import { DeliveryChannelsSetting } from "@/app/(app)/[emailAccountId]/briefs/DeliveryChannelsSetting";
+import { LoadingContent } from "@/components/LoadingContent";
+import { PageHeader } from "@/components/PageHeader";
+import { PageWrapper } from "@/components/PageWrapper";
+import { PremiumAlertWithData } from "@/components/PremiumAlert";
+import { SettingCard } from "@/components/SettingCard";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Toggle } from "@/components/Toggle";
+import { useCalendars } from "@/hooks/useCalendars";
+import { useMeetingBriefSettings } from "@/hooks/useMeetingBriefs";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { updateMeetingBriefsEnabledAction } from "@/utils/actions/meeting-briefs";
 
 export default function MeetingBriefsPage() {
   const { emailAccountId } = useAccount();
@@ -36,26 +36,26 @@ export default function MeetingBriefsPage() {
       onError: () => {
         toastError({ description: "Failed to save settings" });
       },
-    },
+    }
   );
 
   if (isLoadingCalendars || isLoading || error) {
     return (
       <PageWrapper>
-        <LoadingContent loading={isLoadingCalendars || isLoading} error={error}>
+        <LoadingContent error={error} loading={isLoadingCalendars || isLoading}>
           <div />
         </LoadingContent>
       </PageWrapper>
     );
   }
 
-  if (!hasCalendarConnected || !data?.enabled) {
+  if (!(hasCalendarConnected && data?.enabled)) {
     return (
       <BriefsOnboarding
         emailAccountId={emailAccountId}
         hasCalendarConnected={hasCalendarConnected}
-        onEnable={() => execute({ enabled: true })}
         isEnabling={status === "executing"}
+        onEnable={() => execute({ enabled: true })}
       />
     );
   }
@@ -64,36 +64,36 @@ export default function MeetingBriefsPage() {
     <PageWrapper>
       <PageHeader title="Meeting Briefs" />
 
-      <div className="mt-4 space-y-4 max-w-3xl">
+      <div className="mt-4 max-w-3xl space-y-4">
         <PremiumAlertWithData />
 
-        <LoadingContent loading={isLoading} error={error}>
+        <LoadingContent error={error} loading={isLoading}>
           <div className="space-y-2">
             <SettingCard
-              title="Enable Meeting Briefs"
               description="Receive email briefings before meetings with external guests"
               right={
                 <Toggle
-                  name="enabled"
-                  enabled={!!data?.enabled}
-                  onChange={(enabled) => execute({ enabled })}
                   disabled={!hasCalendarConnected}
+                  enabled={!!data?.enabled}
+                  name="enabled"
+                  onChange={(enabled) => execute({ enabled })}
                 />
               }
+              title="Enable Meeting Briefs"
             />
 
             {!!data?.enabled && (
               <>
                 <SettingCard
-                  title="Send briefing before meeting"
-                  description="How long before the meeting to send the briefing"
                   collapseOnMobile
+                  description="How long before the meeting to send the briefing"
                   right={
                     <TimeDurationSetting
                       initialMinutes={data?.minutesBefore ?? 240}
                       onSaved={mutate}
                     />
                   }
+                  title="Send briefing before meeting"
                 />
 
                 <DeliveryChannelsSetting />

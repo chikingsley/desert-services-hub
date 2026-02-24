@@ -1,9 +1,9 @@
-import { createScopedLogger } from "@/utils/logger";
-import type { ParsedMessage } from "@/utils/types";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { sleep } from "@/utils/sleep";
 import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { createScopedLogger } from "@/utils/logger";
+import { sleep } from "@/utils/sleep";
+import type { ParsedMessage } from "@/utils/types";
 
 const logger = createScopedLogger("email-report-fetch");
 
@@ -41,7 +41,7 @@ export async function fetchEmailsForReport({
 
 async function fetchReceivedEmails(
   emailProvider: EmailProvider,
-  targetCount: number,
+  targetCount: number
 ): Promise<ParsedMessage[]> {
   try {
     return await emailProvider.getInboxMessages(targetCount);
@@ -53,7 +53,7 @@ async function fetchReceivedEmails(
 
 async function fetchSentEmails(
   emailProvider: EmailProvider,
-  targetCount: number,
+  targetCount: number
 ): Promise<ParsedMessage[]> {
   try {
     return await emailProvider.getSentMessages(targetCount);
@@ -64,7 +64,7 @@ async function fetchSentEmails(
 }
 
 export async function fetchEmailTemplates(
-  emailProvider: EmailProvider,
+  emailProvider: EmailProvider
 ): Promise<string[]> {
   try {
     const drafts = await emailProvider.getDrafts({ maxResults: 50 });
@@ -77,7 +77,9 @@ export async function fetchEmailTemplates(
           templates.push(draft.textPlain.trim());
         }
 
-        if (templates.length >= 10) break;
+        if (templates.length >= 10) {
+          break;
+        }
       } catch (error) {
         logger.warn("Failed to process draft:", { error });
       }

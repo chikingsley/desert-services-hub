@@ -1,14 +1,14 @@
 export interface InternalContactRow {
-  role: string;
-  name: string;
   email?: string;
-  phone?: string;
+  name: string;
   notes?: string;
+  phone?: string;
+  role: string;
 }
 
 export interface InternalContactSheetDocument {
-  title: string;
-  subtitle?: string;
-  updated: string;
   contacts: InternalContactRow[];
+  subtitle?: string;
+  title: string;
+  updated: string;
 }

@@ -1,11 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { ExternalLinkIcon } from "lucide-react";
-import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
-import { LoadingContent } from "@/components/LoadingContent";
+import Link from "next/link";
+import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
+import { DateCell } from "@/app/(app)/[emailAccountId]/assistant/DateCell";
+import { FixWithChat } from "@/app/(app)/[emailAccountId]/assistant/FixWithChat";
+import { ResultsDisplay } from "@/app/(app)/[emailAccountId]/assistant/ResultDisplay";
+import { RulesSelect } from "@/app/(app)/[emailAccountId]/assistant/RulesSelect";
 import type { GetExecutedRulesResponse } from "@/app/api/user/executed-rules/history/route";
 import { AlertBasic } from "@/components/Alert";
+import { Badge } from "@/components/Badge";
+import { LoadingContent } from "@/components/LoadingContent";
+import { TablePagination } from "@/components/TablePagination";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -15,19 +21,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TablePagination } from "@/components/TablePagination";
-import { Badge } from "@/components/Badge";
-import { RulesSelect } from "@/app/(app)/[emailAccountId]/assistant/RulesSelect";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { useChat } from "@/providers/ChatProvider";
+import { ViewEmailButton } from "@/components/ViewEmailButton";
 import { useExecutedRules } from "@/hooks/useExecutedRules";
+import { useChat } from "@/providers/ChatProvider";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { isGoogleProvider } from "@/utils/email/provider-types";
 import { decodeSnippet } from "@/utils/gmail/decode";
 import type { ParsedMessage } from "@/utils/types";
-import { ViewEmailButton } from "@/components/ViewEmailButton";
-import { FixWithChat } from "@/app/(app)/[emailAccountId]/assistant/FixWithChat";
-import { ResultsDisplay } from "@/app/(app)/[emailAccountId]/assistant/ResultDisplay";
-import { DateCell } from "@/app/(app)/[emailAccountId]/assistant/DateCell";
-import { isGoogleProvider } from "@/utils/email/provider-types";
 import { getEmailUrlForMessage } from "@/utils/url";
 
 export function History() {
@@ -40,17 +40,17 @@ export function History() {
     <>
       <RulesSelect />
       <Card className="mt-2">
-        <LoadingContent loading={isLoading} error={error}>
+        <LoadingContent error={error} loading={isLoading}>
           {data?.results.length ? (
             <HistoryTable data={data.results} totalPages={data.totalPages} />
           ) : (
             <AlertBasic
-              title="No history"
               description={
                 ruleId === "all"
                   ? "No emails have been processed yet."
                   : "No emails have been processed for this rule."
               }
+              title="No history"
             />
           )}
         </LoadingContent>
@@ -83,16 +83,16 @@ function HistoryTable({
             <TableRow key={er.message.id}>
               <TableCell>
                 <EmailCell
-                  from={er.message.headers.from}
-                  subject={er.message.headers.subject}
-                  snippet={er.message.snippet}
-                  threadId={er.message.threadId}
-                  messageId={er.message.id}
-                  userEmail={userEmail}
                   createdAt={er.executedRules[0]?.createdAt}
+                  from={er.message.headers.from}
+                  messageId={er.message.id}
+                  snippet={er.message.snippet}
+                  subject={er.message.headers.subject}
+                  threadId={er.message.threadId}
+                  userEmail={userEmail}
                 />
                 {!er.executedRules[0]?.automated && (
-                  <Badge color="yellow" className="mt-2">
+                  <Badge className="mt-2" color="yellow">
                     Applied manually
                   </Badge>
                 )}
@@ -145,10 +145,10 @@ function EmailCell({
           userEmail={userEmail}
         />
         <ViewEmailButton
-          threadId={threadId}
+          className="ml-2"
           messageId={messageId}
           size="xs"
-          className="ml-2"
+          threadId={threadId}
         />
       </div>
       <div className="mt-1 text-muted-foreground">{decodeSnippet(snippet)}</div>
@@ -171,9 +171,9 @@ function RuleCell({
         <ResultsDisplay results={executedRules} />
       </div>
       <FixWithChat
-        setInput={setInput}
         message={message}
         results={executedRules}
+        setInput={setInput}
       />
     </div>
   );
@@ -196,9 +196,9 @@ function OpenInGmailButton({
 
   return (
     <Link
+      className="ml-2 text-muted-foreground hover:text-foreground"
       href={getEmailUrlForMessage(messageId, threadId, userEmail, provider)}
       target="_blank"
-      className="ml-2 text-muted-foreground hover:text-foreground"
     >
       <ExternalLinkIcon className="h-4 w-4" />
     </Link>

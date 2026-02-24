@@ -1,8 +1,8 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { fetchMessagesAndGenerateDraft } from "./generate-draft";
-import type { ParsedMessage } from "@/utils/types";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EmailProvider } from "@/utils/email/types";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { ParsedMessage } from "@/utils/types";
+import { fetchMessagesAndGenerateDraft } from "./generate-draft";
 
 vi.mock("server-only", () => ({}));
 
@@ -130,7 +130,7 @@ describe("fetchMessagesAndGenerateDraft - AI content escaping", () => {
       "thread-1",
       client,
       testMessage,
-      mockLogger,
+      mockLogger
     );
 
     // AI content should be escaped - hidden div should NOT be renderable
@@ -157,7 +157,7 @@ describe("fetchMessagesAndGenerateDraft - AI content escaping", () => {
       "thread-1",
       createMockClient(),
       createMockMessage(),
-      mockLogger,
+      mockLogger
     );
 
     // Hidden span should be escaped
@@ -178,7 +178,7 @@ describe("fetchMessagesAndGenerateDraft - AI content escaping", () => {
       "thread-1",
       createMockClient(),
       createMockMessage(),
-      mockLogger,
+      mockLogger
     );
 
     // Script tags should be escaped
@@ -201,7 +201,7 @@ describe("fetchMessagesAndGenerateDraft - AI content escaping", () => {
       "thread-1",
       createMockClient(),
       createMockMessage(),
-      mockLogger,
+      mockLogger
     );
 
     // Normal text should be unchanged

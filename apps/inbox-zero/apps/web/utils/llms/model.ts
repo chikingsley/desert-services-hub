@@ -1,13 +1,13 @@
-import type { LanguageModelV3 } from "@ai-sdk/provider";
-import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createAzure } from "@ai-sdk/azure";
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createAzure } from "@ai-sdk/azure";
+import { createGateway } from "@ai-sdk/gateway";
+import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createGroq } from "@ai-sdk/groq";
+import { createOpenAI } from "@ai-sdk/openai";
+import type { LanguageModelV3 } from "@ai-sdk/provider";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { createGateway } from "@ai-sdk/gateway";
 import { createOllama } from "ollama-ai-provider-v2";
 import { env } from "@/env";
 import { Provider } from "@/utils/llms/config";
@@ -37,7 +37,7 @@ export type SelectModel = ResolvedModel & {
 export function getModel(
   userAi: UserAIFields,
   modelType: ModelType = "default",
-  online = false,
+  online = false
 ): SelectModel {
   const primaryModel = selectModelByType(userAi, modelType, online);
   const fallbackModels = getFallbackModels({
@@ -53,7 +53,7 @@ export function getModel(
     model: primaryModel.modelName,
     providerOptions: primaryModel.providerOptions,
     fallbackModels: fallbackModels.map(
-      (fallback) => `${fallback.provider}:${fallback.modelName}`,
+      (fallback) => `${fallback.provider}:${fallback.modelName}`
     ),
   });
 
@@ -63,9 +63,11 @@ export function getModel(
 function selectModelByType(
   userAi: UserAIFields,
   modelType: ModelType,
-  online = false,
+  online = false
 ): ResolvedModel {
-  if (userAi.aiApiKey) return selectDefaultModel(userAi, online);
+  if (userAi.aiApiKey) {
+    return selectDefaultModel(userAi, online);
+  }
 
   switch (modelType) {
     case "economy":
@@ -88,7 +90,7 @@ function selectModel(
     aiApiKey: string | null;
   },
   providerOptions?: Record<string, any>,
-  online = false,
+  online = false
 ): ResolvedModel {
   switch (aiProvider) {
     case Provider.OPEN_AI: {
@@ -107,7 +109,7 @@ function selectModel(
         provider: Provider.OPEN_AI,
         modelName,
         model: createOpenAI({ apiKey: aiApiKey || env.OPENAI_API_KEY })(
-          modelName,
+          modelName
         ),
         providerOptions: openAiProviderOptions,
       };
@@ -161,7 +163,9 @@ function selectModel(
     }
     case Provider.OPENROUTER: {
       let modelName = aiModel || "anthropic/claude-sonnet-4.5";
-      if (online) modelName += ":online";
+      if (online) {
+        modelName += ":online";
+      }
 
       const openrouter = createOpenRouter({
         apiKey: aiApiKey || env.OPENROUTER_API_KEY,
@@ -200,8 +204,9 @@ function selectModel(
     }
     case "ollama": {
       const modelName = env.OLLAMA_MODEL;
-      if (!modelName)
+      if (!modelName) {
         throw new Error("OLLAMA_MODEL environment variable is not set");
+      }
       return {
         provider: Provider.OLLAMA,
         modelName,
@@ -249,7 +254,7 @@ function selectModel(
  * Creates OpenRouter provider options from a comma-separated string
  */
 function createOpenRouterProviderOptions(
-  providers: string,
+  providers: string
 ): Record<string, any> {
   const order = providers
     .split(",")
@@ -276,7 +281,7 @@ function createOpenRouterProviderOptions(
  */
 function selectEconomyModel(
   userAi: UserAIFields,
-  online = false,
+  online = false
 ): ResolvedModel {
   if (env.ECONOMY_LLM_PROVIDER && env.ECONOMY_LLM_MODEL) {
     const apiKey = getProviderApiKey(env.ECONOMY_LLM_PROVIDER);
@@ -294,7 +299,7 @@ function selectEconomyModel(
       env.ECONOMY_OPENROUTER_PROVIDERS
     ) {
       providerOptions = createOpenRouterProviderOptions(
-        env.ECONOMY_OPENROUTER_PROVIDERS,
+        env.ECONOMY_OPENROUTER_PROVIDERS
       );
     }
 
@@ -305,7 +310,7 @@ function selectEconomyModel(
         aiApiKey: apiKey,
       },
       providerOptions,
-      online,
+      online
     );
   }
 
@@ -332,7 +337,7 @@ function selectChatModel(userAi: UserAIFields, online = false): ResolvedModel {
       env.CHAT_OPENROUTER_PROVIDERS
     ) {
       providerOptions = createOpenRouterProviderOptions(
-        env.CHAT_OPENROUTER_PROVIDERS,
+        env.CHAT_OPENROUTER_PROVIDERS
       );
     }
 
@@ -343,7 +348,7 @@ function selectChatModel(userAi: UserAIFields, online = false): ResolvedModel {
         aiApiKey: apiKey,
       },
       providerOptions,
-      online,
+      online
     );
   }
 
@@ -352,7 +357,7 @@ function selectChatModel(userAi: UserAIFields, online = false): ResolvedModel {
 
 function selectDefaultModel(
   userAi: UserAIFields,
-  online = false,
+  online = false
 ): ResolvedModel {
   let aiProvider: string;
   let aiModel: string | null = null;
@@ -372,7 +377,7 @@ function selectDefaultModel(
 
   if (aiProvider === Provider.OPENROUTER) {
     const openRouterOptions = createOpenRouterProviderOptions(
-      env.DEFAULT_OPENROUTER_PROVIDERS || "",
+      env.DEFAULT_OPENROUTER_PROVIDERS || ""
     );
 
     // Preserve any custom options set earlier; always ensure reasoning exists.
@@ -394,7 +399,7 @@ function selectDefaultModel(
       aiApiKey,
     },
     providerOptions,
-    online,
+    online
   );
 }
 
@@ -432,13 +437,19 @@ function getFallbackModels({
   online: boolean;
 }): ResolvedModel[] {
   // Keep user-selected API key behavior strict and predictable.
-  if (userAi.aiApiKey) return [];
+  if (userAi.aiApiKey) {
+    return [];
+  }
 
   const fallbackConfig = getFallbackConfig(modelType);
-  if (!fallbackConfig) return [];
+  if (!fallbackConfig) {
+    return [];
+  }
 
   const fallbackDefinitions = parseFallbackConfig(fallbackConfig);
-  if (!fallbackDefinitions.length) return [];
+  if (!fallbackDefinitions.length) {
+    return [];
+  }
 
   const fallbacks: ResolvedModel[] = [];
 
@@ -485,7 +496,7 @@ function getFallbackModels({
         aiApiKey: apiKey,
       },
       providerOptions,
-      online,
+      online
     );
 
     const isDuplicateOfPrimary =
@@ -494,10 +505,12 @@ function getFallbackModels({
     const isDuplicateFallback = fallbacks.some(
       (existing) =>
         existing.provider === resolvedFallback.provider &&
-        existing.modelName === resolvedFallback.modelName,
+        existing.modelName === resolvedFallback.modelName
     );
 
-    if (isDuplicateOfPrimary || isDuplicateFallback) continue;
+    if (isDuplicateOfPrimary || isDuplicateFallback) {
+      continue;
+    }
 
     fallbacks.push(resolvedFallback);
   }
@@ -508,22 +521,28 @@ function getFallbackModels({
 function getFallbackConfig(modelType: ModelType): string | undefined {
   const configuredFallbacks = getConfiguredFallbacksByType(modelType);
 
-  if (configuredFallbacks) return configuredFallbacks;
+  if (configuredFallbacks) {
+    return configuredFallbacks;
+  }
 
   return getLegacyFallbackConfig();
 }
 
 function getLegacyFallbackConfig(): string | undefined {
-  if (!env.USE_BACKUP_MODEL) return;
+  if (!env.USE_BACKUP_MODEL) {
+    return;
+  }
 
   const legacyBackupModel = env.OPENROUTER_BACKUP_MODEL?.trim();
-  if (legacyBackupModel) return `openrouter:${legacyBackupModel}`;
+  if (legacyBackupModel) {
+    return `openrouter:${legacyBackupModel}`;
+  }
 
   return `openrouter:${LEGACY_OPENROUTER_BACKUP_DEFAULT_MODEL}`;
 }
 
 function getConfiguredFallbacksByType(
-  modelType: ModelType,
+  modelType: ModelType
 ): string | undefined {
   switch (modelType) {
     case "economy":
@@ -536,7 +555,7 @@ function getConfiguredFallbacksByType(
 }
 
 function getOpenRouterProviderOptionsByType(
-  modelType: ModelType,
+  modelType: ModelType
 ): Record<string, any> | undefined {
   const providersByType: Record<ModelType, string | undefined> = {
     default: env.DEFAULT_OPENROUTER_PROVIDERS,
@@ -545,12 +564,14 @@ function getOpenRouterProviderOptionsByType(
   };
 
   const providers = providersByType[modelType];
-  if (!providers) return;
+  if (!providers) {
+    return;
+  }
   return createOpenRouterProviderOptions(providers);
 }
 
 function parseFallbackConfig(
-  fallbackConfig: string,
+  fallbackConfig: string
 ): Array<{ provider: string; modelName: string | null }> {
   return fallbackConfig
     .split(",")

@@ -1,12 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  getArchiveCandidates,
   type EmailGroup,
+  getArchiveCandidates,
 } from "./get-archive-candidates";
 
 function createEmailGroup(
   address: string,
-  categoryName: string | null,
+  categoryName: string | null
 ): EmailGroup {
   return {
     address,

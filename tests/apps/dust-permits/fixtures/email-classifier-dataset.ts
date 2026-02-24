@@ -8,13 +8,13 @@
 import type { EmailInput, EmailIntent } from "@/lib/email-classifier";
 
 export interface LabeledEmail {
-  id: string;
   category: string;
   email: EmailInput;
   expected: {
     isDustPermit: boolean;
     intent: EmailIntent;
   };
+  id: string;
 }
 
 export const LABELED_EMAILS: LabeledEmail[] = [

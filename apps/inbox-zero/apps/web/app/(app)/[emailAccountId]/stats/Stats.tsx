@@ -1,25 +1,25 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
-import type { DateRange } from "react-day-picker";
 import { subDays } from "date-fns/subDays";
-import { EmailAnalytics } from "@/app/(app)/[emailAccountId]/stats/EmailAnalytics";
-import { StatsSummary } from "@/app/(app)/[emailAccountId]/stats/StatsSummary";
-import { StatsOnboarding } from "@/app/(app)/[emailAccountId]/stats/StatsOnboarding";
-import { useStatLoader } from "@/providers/StatLoaderProvider";
-import { EmailActionsAnalytics } from "@/app/(app)/[emailAccountId]/stats/EmailActionsAnalytics";
-import { RuleStatsChart } from "./RuleStatsChart";
-import { ResponseTimeAnalytics } from "./ResponseTimeAnalytics";
-import { PageHeading } from "@/components/Typography";
-import { PageWrapper } from "@/components/PageWrapper";
-import { useOrgAccess } from "@/hooks/useOrgAccess";
-import { LoadStatsButton } from "@/app/(app)/[emailAccountId]/stats/LoadStatsButton";
+import { LayoutGrid } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { DateRange } from "react-day-picker";
 import { ActionBar } from "@/app/(app)/[emailAccountId]/stats/ActionBar";
 import { DetailedStatsFilter } from "@/app/(app)/[emailAccountId]/stats/DetailedStatsFilter";
-import { LayoutGrid } from "lucide-react";
+import { EmailActionsAnalytics } from "@/app/(app)/[emailAccountId]/stats/EmailActionsAnalytics";
+import { EmailAnalytics } from "@/app/(app)/[emailAccountId]/stats/EmailAnalytics";
+import { LoadStatsButton } from "@/app/(app)/[emailAccountId]/stats/LoadStatsButton";
+import { StatsOnboarding } from "@/app/(app)/[emailAccountId]/stats/StatsOnboarding";
+import { StatsSummary } from "@/app/(app)/[emailAccountId]/stats/StatsSummary";
 import { DatePickerWithRange } from "@/components/DatePickerWithRange";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PageWrapper } from "@/components/PageWrapper";
+import { PageHeading } from "@/components/Typography";
 import { CardBasic } from "@/components/ui/card";
+import { useOrgAccess } from "@/hooks/useOrgAccess";
+import { useStatLoader } from "@/providers/StatLoaderProvider";
+import { ResponseTimeAnalytics } from "./ResponseTimeAnalytics";
+import { RuleStatsChart } from "./RuleStatsChart";
 
 const selectOptions = [
   { label: "Last week", value: "7" },
@@ -32,7 +32,7 @@ const defaultSelected = selectOptions[1];
 
 export function Stats() {
   const [dateDropdown, setDateDropdown] = useState<string>(
-    defaultSelected.label,
+    defaultSelected.label
   );
 
   const now = useMemo(() => new Date(), []);
@@ -42,7 +42,7 @@ export function Stats() {
   });
 
   const [period, setPeriod] = useState<"day" | "week" | "month" | "year">(
-    "week",
+    "week"
   );
 
   const { isAccountOwner, accountInfo } = useOrgAccess();
@@ -60,7 +60,7 @@ export function Stats() {
         setPeriod("month");
       }
     },
-    [period],
+    [period]
   );
 
   const { isLoading, onLoad } = useStatLoader();
@@ -82,15 +82,13 @@ export function Stats() {
       <PageHeading>{title}</PageHeading>
       <ActionBar className="mt-6" rightContent={<LoadStatsButton />}>
         <DatePickerWithRange
+          dateDropdown={dateDropdown}
           dateRange={dateRange}
+          onSetDateDropdown={onSetDateDropdown}
           onSetDateRange={setDateRange}
           selectOptions={selectOptions}
-          dateDropdown={dateDropdown}
-          onSetDateDropdown={onSetDateDropdown}
         />
         <DetailedStatsFilter
-          label={`Group by ${period}`}
-          icon={<LayoutGrid className="mr-2 h-4 w-4" />}
           columns={[
             {
               label: "Day",
@@ -113,14 +111,16 @@ export function Stats() {
               setChecked: () => setPeriod("year"),
             },
           ]}
+          icon={<LayoutGrid className="mr-2 h-4 w-4" />}
+          label={`Group by ${period}`}
         />
       </ActionBar>
-      <div className="grid gap-2 sm:gap-4 mt-2 sm:mt-4">
+      <div className="mt-2 grid gap-2 sm:mt-4 sm:gap-4">
         <ErrorBoundary fallback={<SectionError title="Summary" />}>
           <StatsSummary
             dateRange={dateRange}
-            refreshInterval={refreshInterval}
             period={period}
+            refreshInterval={refreshInterval}
           />
         </ErrorBoundary>
         <ErrorBoundary fallback={<SectionError title="Email Analytics" />}>

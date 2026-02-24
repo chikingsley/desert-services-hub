@@ -7,9 +7,9 @@
   flex-direction: column;
   width: 100%;
   height: 100%;
+  overflow: visible;
   border-radius: 4px;
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
-  overflow: visible;
   transition: box-shadow 0.2s ease;
 }
 
@@ -18,16 +18,16 @@
 }
 
 .FreetextHighlight__toolbar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 4px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 4px;
   position: absolute;
   top: 4px;
   left: 4px;
   z-index: 10;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -42,9 +42,9 @@
   justify-content: center;
   width: 20px;
   height: 20px;
+  color: white;
   cursor: grab;
   user-select: none;
-  color: white;
   border-radius: 3px;
   transition: background 0.2s;
 }
@@ -63,12 +63,12 @@
   justify-content: center;
   width: 20px;
   height: 20px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: white;
-  border-radius: 3px;
   padding: 0;
+  color: white;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
   transition: background 0.2s;
 }
 
@@ -77,33 +77,33 @@
 }
 
 .FreetextHighlight__content {
+  position: relative;
+  z-index: 1;
   flex: 1;
   padding: 8px;
   overflow: hidden;
-  position: relative;
-  z-index: 1;
 }
 
 .FreetextHighlight__text {
   width: 100%;
   height: 100%;
-  cursor: text;
   overflow: auto;
   word-wrap: break-word;
   white-space: pre-wrap;
+  cursor: text;
 }
 
 .FreetextHighlight__input {
   width: 100%;
   height: 100%;
-  border: none;
-  background: transparent;
+  padding: 0;
+  margin: 0;
   font: inherit;
   color: inherit;
   resize: none;
   outline: none;
-  padding: 0;
-  margin: 0;
+  background: transparent;
+  border: none;
 }
 
 .FreetextHighlight--scrolledTo .FreetextHighlight__container {
@@ -124,12 +124,12 @@
   justify-content: center;
   width: 20px;
   height: 20px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: white;
-  border-radius: 3px;
   padding: 0;
+  color: white;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
   transition: background 0.2s;
 }
 
@@ -140,22 +140,22 @@
 .FreetextHighlight__style-panel {
   position: absolute;
   top: 100%;
-  left: 0;
   right: 0;
+  left: 0;
+  z-index: 9999;
+  padding: 8px;
+  margin-top: 2px;
   background: white;
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  padding: 8px;
-  z-index: 9999;
-  margin-top: 2px;
 }
 
 .FreetextHighlight__style-row {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: 4px;
+  align-items: flex-start;
   margin-bottom: 8px;
 }
 
@@ -172,51 +172,51 @@
 .FreetextHighlight__style-row input[type="color"] {
   width: 28px;
   height: 24px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 3px;
   padding: 0;
   cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
 }
 
 .FreetextHighlight__style-row select {
+  min-width: 80px;
   padding: 4px 6px;
   font-size: 11px;
+  cursor: pointer;
+  background: white;
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 3px;
-  background: white;
-  cursor: pointer;
-  min-width: 80px;
 }
 
 .FreetextHighlight__color-options {
   display: flex;
-  align-items: center;
-  gap: 6px;
   flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
   width: 100%;
 }
 
 .FreetextHighlight__color-presets {
   display: flex;
-  gap: 4px;
   flex-wrap: wrap;
+  gap: 4px;
 }
 
 .FreetextHighlight__color-preset {
   width: 20px;
   height: 20px;
+  padding: 0;
+  cursor: pointer;
   border: 2px solid rgba(0, 0, 0, 0.15);
   border-radius: 3px;
-  cursor: pointer;
-  padding: 0;
   transition:
     transform 0.15s,
     border-color 0.15s;
 }
 
 .FreetextHighlight__color-preset:hover {
-  transform: scale(1.15);
   border-color: rgba(0, 0, 0, 0.3);
+  transform: scale(1.15);
 }
 
 .FreetextHighlight__color-preset.active {
@@ -232,13 +232,13 @@
     linear-gradient(-45deg, #ccc 25%, transparent 25%),
     linear-gradient(45deg, transparent 75%, #ccc 75%),
     linear-gradient(-45deg, transparent 75%, #ccc 75%);
-  background-size: 8px 8px;
+  background-color: white;
   background-position:
     0 0,
     0 4px,
     4px -4px,
     -4px 0px;
-  background-color: white;
+  background-size: 8px 8px;
 }
 
 .FreetextHighlight__delete-button {
@@ -247,12 +247,12 @@
   justify-content: center;
   width: 20px;
   height: 20px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: white;
-  border-radius: 3px;
   padding: 0;
+  color: white;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
   transition: background 0.2s;
 }
 

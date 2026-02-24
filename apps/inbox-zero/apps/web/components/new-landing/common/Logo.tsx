@@ -8,10 +8,10 @@ interface LogoProps {
 function GlassLogo() {
   return (
     <Image
-      src="/images/new-landing/inbox-zero-glass.png"
       alt="Logo"
-      width={142}
       height={19}
+      src="/images/new-landing/inbox-zero-glass.png"
+      width={142}
     />
   );
 }
@@ -19,13 +19,13 @@ function GlassLogo() {
 function DefaultLogo() {
   return (
     <svg
-      width="142"
-      height="19"
-      viewBox="0 0 142 19"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      role="img"
       aria-labelledby="logo-title-default"
+      fill="none"
+      height="19"
+      role="img"
+      viewBox="0 0 142 19"
+      width="142"
+      xmlns="http://www.w3.org/2000/svg"
     >
       <title id="logo-title-default">Inbox Zero logo</title>
       <path
@@ -38,12 +38,12 @@ function DefaultLogo() {
       />
       <defs>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint0_linear_265_1083"
           x1="14.4"
-          y1="4.13721"
           x2="14.4"
+          y1="4.13721"
           y2="18.0544"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#2563EB" />
           <stop offset="1" stopColor="#6595FF" />
@@ -56,13 +56,13 @@ function DefaultLogo() {
 function MobileLogo() {
   return (
     <svg
-      width="98"
-      height="17"
-      viewBox="0 0 98 17"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      role="img"
       aria-labelledby="logo-title-mobile"
+      fill="none"
+      height="17"
+      role="img"
+      viewBox="0 0 98 17"
+      width="98"
+      xmlns="http://www.w3.org/2000/svg"
     >
       <title id="logo-title-mobile">Inbox Zero logo</title>
       <path

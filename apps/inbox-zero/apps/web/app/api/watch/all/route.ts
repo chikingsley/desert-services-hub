@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { hasCronSecret, hasPostCronSecret } from "@/utils/cron";
-import { withError } from "@/utils/middleware";
+import { ensureEmailAccountsWatched } from "@/utils/email/watch-manager";
 import { captureException } from "@/utils/error";
 import type { Logger } from "@/utils/logger";
-import { ensureEmailAccountsWatched } from "@/utils/email/watch-manager";
+import { withError } from "@/utils/middleware";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 800;

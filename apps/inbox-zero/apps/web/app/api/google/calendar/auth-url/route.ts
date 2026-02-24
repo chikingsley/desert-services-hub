@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { withEmailAccount } from "@/utils/middleware";
 import { getCalendarOAuth2Client } from "@/utils/calendar/client";
 import { CALENDAR_STATE_COOKIE_NAME } from "@/utils/calendar/constants";
 import { CALENDAR_SCOPES } from "@/utils/gmail/scopes";
+import { withEmailAccount } from "@/utils/middleware";
 import {
   generateOAuthState,
   oauthStateCookieOptions,
@@ -40,9 +40,9 @@ export const GET = withEmailAccount(
     response.cookies.set(
       CALENDAR_STATE_COOKIE_NAME,
       state,
-      oauthStateCookieOptions,
+      oauthStateCookieOptions
     );
 
     return response;
-  },
+  }
 );

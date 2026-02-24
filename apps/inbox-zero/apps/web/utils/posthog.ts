@@ -1,7 +1,7 @@
 import { PostHog } from "posthog-node";
 import { env } from "@/env";
-import { createScopedLogger } from "@/utils/logger";
 import { hash } from "@/utils/hash";
+import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("posthog");
 
@@ -15,7 +15,7 @@ async function getPosthogUserId(options: { email: string }) {
       headers: {
         Authorization: `Bearer ${env.POSTHOG_API_SECRET}`,
       },
-    },
+    }
   );
 
   const resGet: { results: { id: string; distinct_ids: string[] }[] } =
@@ -31,7 +31,7 @@ async function getPosthogUserId(options: { email: string }) {
   if (!resGet.results[0].distinct_ids?.includes(options.email)) {
     // double check distinct id
     throw new Error(
-      `Distinct id ${resGet.results[0].distinct_ids} does not include ${options.email}`,
+      `Distinct id ${resGet.results[0].distinct_ids} does not include ${options.email}`
     );
   }
 
@@ -41,7 +41,7 @@ async function getPosthogUserId(options: { email: string }) {
 }
 
 export async function deletePosthogUser(options: { email: string }) {
-  if (!env.POSTHOG_API_SECRET || !env.POSTHOG_PROJECT_ID) {
+  if (!(env.POSTHOG_API_SECRET && env.POSTHOG_PROJECT_ID)) {
     logger.warn("Posthog env variables not set");
     return;
   }
@@ -102,7 +102,7 @@ export async function posthogCaptureEvent(
   email: string,
   event: string,
   properties?: Record<string, any>,
-  sendFeatureFlags?: boolean,
+  sendFeatureFlags?: boolean
 ) {
   try {
     if (!env.NEXT_PUBLIC_POSTHOG_KEY) {
@@ -130,13 +130,13 @@ export async function trackUserSignedUp(email: string, createdAt: Date) {
     {
       $set_once: { createdAt },
     },
-    true,
+    true
   );
 }
 
 export async function trackStripeCustomerCreated(
   email: string,
-  stripeCustomerId: string,
+  stripeCustomerId: string
 ) {
   return posthogCaptureEvent(
     email,
@@ -144,7 +144,7 @@ export async function trackStripeCustomerCreated(
     {
       $set_once: { stripeCustomerId },
     },
-    true,
+    true
   );
 }
 
@@ -198,7 +198,7 @@ export async function trackUpgradedToPremium(email: string, attributes: any) {
 
 export async function trackSubscriptionTrialStarted(
   email: string,
-  attributes: any,
+  attributes: any
 ) {
   return posthogCaptureEvent(email, "Premium subscription trial started", {
     ...attributes,
@@ -213,7 +213,7 @@ export async function trackSubscriptionTrialStarted(
 export async function trackSubscriptionCustom(
   email: string,
   status: string,
-  attributes: any,
+  attributes: any
 ) {
   const event = `Premium subscription ${status}`;
 
@@ -229,7 +229,7 @@ export async function trackSubscriptionCustom(
 
 export async function trackSubscriptionStatusChanged(
   email: string,
-  attributes: any,
+  attributes: any
 ) {
   return posthogCaptureEvent(email, "Subscription status changed", {
     ...attributes,
@@ -244,7 +244,7 @@ export async function trackSubscriptionStatusChanged(
 export async function trackSubscriptionCancelled(
   email: string,
   status: string,
-  attributes: any,
+  attributes: any
 ) {
   return posthogCaptureEvent(email, "Cancelled premium subscription", {
     ...attributes,
@@ -259,7 +259,7 @@ export async function trackSubscriptionCancelled(
 export async function trackSwitchedPremiumPlan(
   email: string,
   status: string,
-  attributes: any,
+  attributes: any
 ) {
   return posthogCaptureEvent(email, "Switched premium plan", {
     ...attributes,

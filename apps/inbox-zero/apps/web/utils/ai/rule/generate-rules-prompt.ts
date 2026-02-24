@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createGenerateObject } from "@/utils/llms";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { getModel } from "@/utils/llms/model";
-import { getUserInfoPrompt } from "@/utils/ai/helpers";
 import { env } from "@/env";
+import { getUserInfoPrompt } from "@/utils/ai/helpers";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
 
 const parameters = z.object({
   rules: z
@@ -20,9 +20,9 @@ const parametersSnippets = z.object({
           .string()
           .nullable()
           .describe(
-            "Optional: Include ONLY if this is a snippet-based rule. The exact snippet text this rule is based on.",
+            "Optional: Include ONLY if this is a snippet-based rule. The exact snippet text this rule is based on."
           ),
-      }),
+      })
     )
     .describe("List of generated rules for email management"),
 });
@@ -121,20 +121,24 @@ IMPORTANT: Do not create overly specific rules that only occur on a one off basi
 
   const result = aiResponse.object;
 
-  if (!result) return;
+  if (!result) {
+    return;
+  }
 
   return parseRulesResponse(result, hasSnippets);
 }
 
 function parseRulesResponse(
   result: z.infer<typeof parameters> | z.infer<typeof parametersSnippets>,
-  hasSnippets: boolean,
+  hasSnippets: boolean
 ): string[] {
   if (hasSnippets) {
     const parsedRules = result as z.infer<typeof parametersSnippets>;
     return parsedRules.rules.map(({ rule, snippet }) => {
       const formattedRule = `* ${rule}\n`;
-      if (snippet) return `${formattedRule}${formatSnippet(snippet)}\n`;
+      if (snippet) {
+        return `${formattedRule}${formatSnippet(snippet)}\n`;
+      }
       return formattedRule;
     });
   }

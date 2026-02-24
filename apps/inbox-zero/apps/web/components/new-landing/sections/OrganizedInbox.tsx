@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   Section,
   SectionContent,
@@ -6,11 +7,10 @@ import {
   SectionHeading,
   SectionSubtitle,
 } from "@/components/new-landing/common/Typography";
-import Image from "next/image";
 
 interface OrganizedInboxProps {
-  title: React.ReactNode;
   subtitle: React.ReactNode;
+  title: React.ReactNode;
 }
 
 export function OrganizedInbox({ title, subtitle }: OrganizedInboxProps) {
@@ -20,18 +20,18 @@ export function OrganizedInbox({ title, subtitle }: OrganizedInboxProps) {
       <SectionSubtitle>{subtitle}</SectionSubtitle>
       <SectionContent className="flex justify-center">
         <Image
-          className="hidden md:block"
-          src="/images/new-landing/an-organized-inbox.png"
           alt="an organized inbox"
-          width={1000}
+          className="hidden md:block"
           height={1000}
+          src="/images/new-landing/an-organized-inbox.png"
+          width={1000}
         />
         <Image
-          className="block md:hidden"
-          src="/images/new-landing/an-organized-inbox-mobile.png"
           alt="an organized inbox"
-          width={1000}
+          className="block md:hidden"
           height={1000}
+          src="/images/new-landing/an-organized-inbox-mobile.png"
+          width={1000}
         />
       </SectionContent>
     </Section>

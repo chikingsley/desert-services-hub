@@ -1,13 +1,13 @@
-import { ActionType } from "@/generated/prisma/enums";
-import { Card, CardContent } from "@/components/ui/card";
-import { getActionIcon } from "@/utils/action-display";
+import { TooltipExplanation } from "@/components/TooltipExplanation";
 import { SectionHeader } from "@/components/Typography";
+import { Card, CardContent } from "@/components/ui/card";
+import { ActionType } from "@/generated/prisma/enums";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { getActionIcon } from "@/utils/action-display";
 import {
   getAvailableActions,
   getExtraActions,
 } from "@/utils/ai/rule/create-rule-schema";
-import { TooltipExplanation } from "@/components/TooltipExplanation";
 
 const actionNames: Record<ActionType, string> = {
   [ActionType.LABEL]: "Label",
@@ -34,7 +34,7 @@ const actionTooltips: Partial<Record<ActionType, string>> = {
 export function AvailableActionsPanel() {
   const { provider } = useAccount();
   return (
-    <Card className="h-fit bg-slate-50 dark:bg-slate-900 hidden sm:block">
+    <Card className="hidden h-fit bg-slate-50 sm:block dark:bg-slate-900">
       <CardContent className="pt-4">
         <div className="grid gap-2">
           <ActionSection
@@ -57,15 +57,15 @@ function ActionSection({
   return (
     <div>
       <SectionHeader>{title}</SectionHeader>
-      <div className="grid gap-2 mt-1">
+      <div className="mt-1 grid gap-2">
         {actions.map((actionType) => {
           const Icon = getActionIcon(actionType);
           const tooltip = actionTooltips[actionType];
           return (
-            <div key={actionType} className="flex items-center gap-2">
+            <div className="flex items-center gap-2" key={actionType}>
               <Icon className="size-3.5 text-muted-foreground" />
               <span className="text-sm">{actionNames[actionType]}</span>
-              {tooltip && <TooltipExplanation text={tooltip} size="sm" />}
+              {tooltip && <TooltipExplanation size="sm" text={tooltip} />}
             </div>
           );
         })}

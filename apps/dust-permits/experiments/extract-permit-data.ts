@@ -13,21 +13,21 @@ import { ApiError, createPartFromUri, GoogleGenAI } from "@google/genai";
 
 // Types
 interface OwnerInfo {
-  name: string | null;
   address: string | null;
+  name: string | null;
   type: string | null;
 }
 
 interface ContactInfo {
-  name: string | null;
   contact: string | null;
+  name: string | null;
 }
 
 interface SiteData {
-  totalAcreage: number | null;
-  disturbedAcreage: number | null;
   buildingArea: number | null;
+  disturbedAcreage: number | null;
   parkingArea: number | null;
+  totalAcreage: number | null;
 }
 
 interface Coordinates {
@@ -36,17 +36,17 @@ interface Coordinates {
 }
 
 interface PermitData {
+  _notes: string | null;
+  apn: string | null;
+  architect: ContactInfo | null;
+  constructionType: string[];
+  coordinates: Coordinates | null;
+  engineer: ContactInfo | null;
+  legalDescription: string | null;
+  owner: OwnerInfo | null;
   projectName: string | null;
   siteAddress: string | null;
-  owner: OwnerInfo | null;
-  architect: ContactInfo | null;
-  engineer: ContactInfo | null;
   siteData: SiteData | null;
-  coordinates: Coordinates | null;
-  apn: string | null;
-  legalDescription: string | null;
-  constructionType: string[];
-  _notes: string | null;
 }
 
 // Constants

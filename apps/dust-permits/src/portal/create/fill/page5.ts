@@ -22,9 +22,9 @@ import { portal } from "@/portal/utils/selectors";
 import { page5 as page5Selectors } from "@/portal/utils/selectors/page5";
 
 export interface FillPage5Result {
-  reachedPage5: boolean;
   currentPage: number | null;
   nextClicked: boolean;
+  reachedPage5: boolean;
 }
 
 /**

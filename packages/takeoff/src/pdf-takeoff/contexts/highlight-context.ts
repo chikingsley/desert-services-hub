@@ -21,12 +21,15 @@ export interface HighlightContainerUtils<T extends Highlight = Highlight> {
   highlight: ViewportHighlight<T>;
 
   /**
-   * Convert a Viewport rectangle to a scaled rectangle. Can be used
-   * for storing and updating area selection highlights, for example.
-   *
-   * @returns - Scaled/display agnostic rectangle.
+   * All the DOM refs for the highlights shared on the same page
+   * as `highlight`
    */
-  viewportToScaled(rect: LTWHP): Scaled;
+  highlightBindings: HighlightBindings;
+
+  /**
+   * Whether the highlight has been autoscrolled to.
+   */
+  isScrolledTo: boolean;
 
   /**
    *  Capture a PNG data url of a viewport rectangle.
@@ -36,15 +39,12 @@ export interface HighlightContainerUtils<T extends Highlight = Highlight> {
   screenshot(position: LTWH): string;
 
   /**
-   * Whether the highlight has been autoscrolled to.
+   * Convert a Viewport rectangle to a scaled rectangle. Can be used
+   * for storing and updating area selection highlights, for example.
+   *
+   * @returns - Scaled/display agnostic rectangle.
    */
-  isScrolledTo: boolean;
-
-  /**
-   * All the DOM refs for the highlights shared on the same page
-   * as `highlight`
-   */
-  highlightBindings: HighlightBindings;
+  viewportToScaled(rect: LTWHP): Scaled;
 }
 
 export const HighlightContext = createContext<

@@ -24,11 +24,13 @@ export const Tooltip = ({
   // Make tooltip work on mobile with a click
   const [isOpen, setIsOpen] = useState(false);
 
-  if (hide) return children;
+  if (hide) {
+    return children;
+  }
 
   return (
     <TooltipProvider delayDuration={200}>
-      <ShadcnTooltip open={isOpen} onOpenChange={setIsOpen}>
+      <ShadcnTooltip onOpenChange={setIsOpen} open={isOpen}>
         <TooltipTrigger asChild onClick={() => setIsOpen(!isOpen)}>
           {children}
         </TooltipTrigger>

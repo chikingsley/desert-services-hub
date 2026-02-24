@@ -51,18 +51,18 @@ const SELECTORS = {
 } as const;
 
 export interface DownloadOptions {
-  url: string;
-  outputDir?: string;
   headless?: boolean;
+  outputDir?: string;
   timeout?: number;
+  url: string;
 }
 
 export interface DownloadResult {
-  success: boolean;
-  filePath?: string;
   error?: string;
+  filePath?: string;
   linkExpired?: boolean;
   newLinkSent?: boolean;
+  success: boolean;
 }
 
 /**

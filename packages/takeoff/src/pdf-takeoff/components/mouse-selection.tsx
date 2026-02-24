@@ -46,9 +46,32 @@ const getContainerCoords = (
  */
 export interface MouseSelectionProps {
   /**
-   * The PDFViewer instance containing this MouseSelection.
+   * Condition to check before any mouse selection starts.
+   *
+   * @param event - mouse event associated with the new selection.
+   * @returns - `True` if mouse selection should start.
    */
-  viewer: PDFViewer;
+  enableAreaSelection(event: MouseEvent): boolean;
+
+  /**
+   * Callback whenever the mouse selection area changes.
+   *
+   * @param isVisible - Whether the mouse selection is rendered (i.e., non-zero area)
+   */
+  onChange?(isVisible: boolean): void;
+
+  /**
+   * Callback triggered whenever a new valid mouse selection begins.
+   *
+   * @param event - mouse event associated with the new selection.
+   */
+  onDragStart?(event: MouseEvent): void;
+
+  /**
+   * Callback triggered whenever the current mouse selection is reset.
+   * This includes when dragging ends but the selection is invalid.
+   */
+  onReset?(): void;
 
   /**
    * Callback triggered whenever the user stops dragging their mouse and a valid
@@ -70,37 +93,13 @@ export interface MouseSelectionProps {
   ): void;
 
   /**
-   * Callback triggered whenever the current mouse selection is reset.
-   * This includes when dragging ends but the selection is invalid.
-   */
-  onReset?(): void;
-
-  /**
-   * Callback triggered whenever a new valid mouse selection begins.
-   *
-   * @param event - mouse event associated with the new selection.
-   */
-  onDragStart?(event: MouseEvent): void;
-
-  /**
-   * Condition to check before any mouse selection starts.
-   *
-   * @param event - mouse event associated with the new selection.
-   * @returns - `True` if mouse selection should start.
-   */
-  enableAreaSelection(event: MouseEvent): boolean;
-
-  /**
-   * Callback whenever the mouse selection area changes.
-   *
-   * @param isVisible - Whether the mouse selection is rendered (i.e., non-zero area)
-   */
-  onChange?(isVisible: boolean): void;
-
-  /**
    * Optional style props for the mouse selection rectangle.
    */
   style?: CSSProperties;
+  /**
+   * The PDFViewer instance containing this MouseSelection.
+   */
+  viewer: PDFViewer;
 }
 
 /**

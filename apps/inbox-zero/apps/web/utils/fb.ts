@@ -22,7 +22,9 @@ export const sendCompleteRegistrationEvent = async ({
   const pixelId = env.FB_PIXEL_ID;
   const apiVersion = "v20.0";
 
-  if (!accessToken || !pixelId) return;
+  if (!(accessToken && pixelId)) {
+    return;
+  }
 
   const url = `https://graph.facebook.com/${apiVersion}/${pixelId}/events?access_token=${accessToken}`;
 

@@ -13,10 +13,10 @@ export type DraftFlow = "new-company" | "existing-company" | "renew" | "revise";
 
 export interface PersistDraftPermitInput {
   applicationId: string;
-  flow: DraftFlow;
-  sourcePermitId?: string | null;
-  formData?: DeepPartial<FormData>;
   companyName?: string | null;
+  flow: DraftFlow;
+  formData?: DeepPartial<FormData>;
+  sourcePermitId?: string | null;
 }
 
 function inferCompanyName(

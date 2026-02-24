@@ -1,7 +1,7 @@
 import "server-only";
 import type { LanguageModelUsage } from "ai";
-import { redis } from "@/utils/redis";
 import { createScopedLogger } from "@/utils/logger";
+import { redis } from "@/utils/redis";
 
 const logger = createScopedLogger("redis/usage");
 

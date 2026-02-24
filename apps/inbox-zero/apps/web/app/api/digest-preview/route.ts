@@ -1,8 +1,8 @@
-import type { NextRequest } from "next/server";
-import { render } from "@react-email/render";
 import DigestEmail, {
   type DigestEmailProps,
 } from "@inboxzero/resend/emails/digest";
+import { render } from "@react-email/render";
+import type { NextRequest } from "next/server";
 import { digestPreviewBody } from "@/app/api/digest-preview/validation";
 
 // http://localhost:3000/api/digest-preview?categories=["Newsletter","Receipt","Marketing","Cold Emails"]
@@ -24,8 +24,9 @@ export async function GET(request: NextRequest) {
       categories,
     });
 
-    if (!success)
+    if (!success) {
       return new Response("Invalid categories parameter", { status: 400 });
+    }
 
     const digestData = createMockDigestData(data.categories);
 
@@ -162,40 +163,56 @@ function mapRuleNameToCategory(ruleName: string): string {
   const lowerName = ruleName.toLowerCase();
 
   // Direct matches for common rule names
-  if (lowerName === "newsletter" || lowerName === "newsletters")
+  if (lowerName === "newsletter" || lowerName === "newsletters") {
     return "newsletter";
-  if (lowerName === "receipt" || lowerName === "receipts") return "receipt";
-  if (lowerName === "marketing") return "marketing";
-  if (lowerName === "calendar" || lowerName === "meetings") return "calendar";
-  if (lowerName === "notification" || lowerName === "notifications")
+  }
+  if (lowerName === "receipt" || lowerName === "receipts") {
+    return "receipt";
+  }
+  if (lowerName === "marketing") {
+    return "marketing";
+  }
+  if (lowerName === "calendar" || lowerName === "meetings") {
+    return "calendar";
+  }
+  if (lowerName === "notification" || lowerName === "notifications") {
     return "notification";
-  if (lowerName === "to reply" || lowerName === "toreply") return "toReply";
+  }
+  if (lowerName === "to reply" || lowerName === "toreply") {
+    return "toReply";
+  }
 
   // Partial matches for rule names containing keywords
-  if (lowerName.includes("newsletter") || lowerName.includes("news"))
+  if (lowerName.includes("newsletter") || lowerName.includes("news")) {
     return "newsletter";
+  }
   if (
     lowerName.includes("receipt") ||
     lowerName.includes("order") ||
     lowerName.includes("purchase")
-  )
+  ) {
     return "receipt";
+  }
   if (
     lowerName.includes("marketing") ||
     lowerName.includes("promo") ||
     lowerName.includes("deal")
-  )
+  ) {
     return "marketing";
+  }
   if (
     lowerName.includes("calendar") ||
     lowerName.includes("meeting") ||
     lowerName.includes("event")
-  )
+  ) {
     return "calendar";
-  if (lowerName.includes("notification") || lowerName.includes("alert"))
+  }
+  if (lowerName.includes("notification") || lowerName.includes("alert")) {
     return "notification";
-  if (lowerName.includes("reply") || lowerName.includes("response"))
+  }
+  if (lowerName.includes("reply") || lowerName.includes("response")) {
     return "toReply";
+  }
 
   // Return the original name if no mapping found (will trigger custom rule display)
 

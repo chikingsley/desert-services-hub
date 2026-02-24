@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { CheckIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { ButtonLoader } from "@/components/Loading";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,12 +15,12 @@ import {
 import { setNewsletterStatusAction } from "@/utils/actions/unsubscriber";
 
 interface ResubscribeDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  senderName: string;
-  newsletterEmail: string;
   emailAccountId: string;
   mutate: () => Promise<void>;
+  newsletterEmail: string;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+  senderName: string;
 }
 
 export function ResubscribeDialog({
@@ -50,7 +50,7 @@ export function ResubscribeDialog({
   };
 
   const handleDialogClose = (dialogOpen: boolean) => {
-    if (!dialogOpen && !doneLoading) {
+    if (!(dialogOpen || doneLoading)) {
       onOpenChange(false);
       setUnblockComplete(false);
       setDoneLoading(false);
@@ -70,7 +70,7 @@ export function ResubscribeDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogClose}>
+    <Dialog onOpenChange={handleDialogClose} open={open}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Resubscribe to "{senderName}"</DialogTitle>
@@ -82,7 +82,7 @@ export function ResubscribeDialog({
         <div className="rounded-lg border">
           {/* Step 1 */}
           <div className="flex gap-4 p-4">
-            <div className="flex size-7 shrink-0 items-center justify-center rounded-full border bg-muted text-sm font-medium">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-full border bg-muted font-medium text-sm">
               {unblockComplete ? (
                 <CheckIcon className="size-4 text-green-600" />
               ) : (
@@ -92,22 +92,22 @@ export function ResubscribeDialog({
             <div className="flex flex-1 items-center justify-between gap-4">
               <div>
                 <div className="font-medium">Unblock Sender</div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   We're currently auto-archiving this sender. Click "Unblock" to
                   allow emails from them.
                 </p>
               </div>
               {unblockComplete ? (
-                <p className="shrink-0 text-sm font-medium text-green-600">
+                <p className="shrink-0 font-medium text-green-600 text-sm">
                   Unblocked
                 </p>
               ) : (
                 <Button
+                  className="shrink-0"
+                  disabled={unblockLoading}
+                  onClick={handleUnblock}
                   size="sm"
                   variant="outline"
-                  className="shrink-0"
-                  onClick={handleUnblock}
-                  disabled={unblockLoading}
                 >
                   {unblockLoading && <ButtonLoader />}
                   Unblock
@@ -121,7 +121,7 @@ export function ResubscribeDialog({
 
           {/* Step 2 */}
           <div className="flex gap-4 p-4">
-            <div className="flex size-7 shrink-0 items-center justify-center rounded-full border bg-muted text-sm font-medium">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-full border bg-muted font-medium text-sm">
               {doneLoading ? (
                 <CheckIcon className="size-4 text-green-600" />
               ) : (
@@ -130,7 +130,7 @@ export function ResubscribeDialog({
             </div>
             <div>
               <div className="font-medium">Manually Resubscribe</div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Visit the sender's website and manually resubscribe.
               </p>
             </div>
@@ -139,15 +139,15 @@ export function ResubscribeDialog({
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button
-            variant="outline"
-            onClick={() => handleDialogClose(false)}
             disabled={doneLoading}
+            onClick={() => handleDialogClose(false)}
+            variant="outline"
           >
             Cancel
           </Button>
           <Button
-            onClick={handleDone}
             disabled={!unblockComplete || doneLoading}
+            onClick={handleDone}
           >
             {doneLoading && <ButtonLoader />}
             Done

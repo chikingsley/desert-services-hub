@@ -7,7 +7,9 @@ import * as cheerio from "cheerio";
  * @returns The extracted signature or null if no signature is found
  */
 export function extractSignatureFromHtml(htmlContent: string): string | null {
-  if (!htmlContent) return null;
+  if (!htmlContent) {
+    return null;
+  }
 
   try {
     const $ = cheerio.load(htmlContent);

@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
-import { resolveLabelNameAndId } from "./resolve-label";
+import { describe, expect, it, vi } from "vitest";
 import type { EmailProvider } from "@/utils/email/types";
+import { resolveLabelNameAndId } from "./resolve-label";
 
 vi.mock("server-only", () => ({}));
 

@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ActionType, ScheduledActionStatus } from "@/generated/prisma/enums";
-import { cancelScheduledActions } from "./scheduler";
-import { canActionBeDelayed } from "@/utils/delayed-actions";
 import prisma from "@/utils/__mocks__/prisma";
+import { canActionBeDelayed } from "@/utils/delayed-actions";
+import { cancelScheduledActions } from "./scheduler";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/utils/prisma");

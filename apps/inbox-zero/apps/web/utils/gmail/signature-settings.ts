@@ -1,14 +1,14 @@
 import type { gmail_v1 } from "@googleapis/gmail";
-import { createScopedLogger } from "@/utils/logger";
 import { withGmailRetry } from "@/utils/gmail/retry";
+import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("gmail-signature");
 
 export interface GmailSignature {
-  email: string;
-  signature: string;
-  isDefault: boolean;
   displayName?: string;
+  email: string;
+  isDefault: boolean;
+  signature: string;
 }
 
 /**
@@ -16,13 +16,13 @@ export interface GmailSignature {
  * https://developers.google.com/gmail/api/reference/rest/v1/users.settings.sendAs
  */
 export async function getGmailSignatures(
-  gmail: gmail_v1.Gmail,
+  gmail: gmail_v1.Gmail
 ): Promise<GmailSignature[]> {
   try {
     const sendAsList = await withGmailRetry(() =>
       gmail.users.settings.sendAs.list({
         userId: "me",
-      }),
+      })
     );
 
     if (!sendAsList.data.sendAs || sendAsList.data.sendAs.length === 0) {
@@ -33,7 +33,9 @@ export async function getGmailSignatures(
     const signatures: GmailSignature[] = [];
 
     for (const sendAs of sendAsList.data.sendAs) {
-      if (!sendAs.sendAsEmail) continue;
+      if (!sendAs.sendAsEmail) {
+        continue;
+      }
 
       signatures.push({
         email: sendAs.sendAsEmail,

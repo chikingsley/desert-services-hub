@@ -1,14 +1,14 @@
 import { z } from "zod";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailForLLM } from "@/utils/types";
-import { getModel } from "@/utils/llms/model";
-import { createGenerateObject } from "@/utils/llms";
-import type { Logger } from "@/utils/logger";
 import {
   getEmailListPrompt,
   getUserInfoPrompt,
   getUserRulesPrompt,
 } from "@/utils/ai/helpers";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import type { EmailForLLM } from "@/utils/types";
 
 // const braintrust = new Braintrust("recurring-pattern-detection");
 
@@ -38,7 +38,9 @@ export async function aiDetectRecurringPattern({
   // All emails should be from the same sender
   const senderEmail = emails[0].from;
 
-  if (!senderEmail) return null;
+  if (!senderEmail) {
+    return null;
+  }
 
   const system = `You are an AI assistant that helps analyze if a sender's emails should consistently be matched to a specific rule.
 

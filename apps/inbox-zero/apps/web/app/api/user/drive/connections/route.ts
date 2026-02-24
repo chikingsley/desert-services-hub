@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
 import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export type GetDriveConnectionsResponse = Awaited<ReturnType<typeof getData>>;
 
@@ -11,7 +11,7 @@ export const GET = withEmailAccount(
 
     const result = await getData({ emailAccountId });
     return NextResponse.json(result);
-  },
+  }
 );
 
 async function getData({ emailAccountId }: { emailAccountId: string }) {

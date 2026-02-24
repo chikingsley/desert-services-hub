@@ -1,10 +1,11 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useAction } from "next-safe-action/hooks";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { SettingCard } from "@/components/SettingCard";
+import { toastError, toastSuccess } from "@/components/Toast";
 import { Toggle } from "@/components/Toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +27,6 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { toastError, toastSuccess } from "@/components/Toast";
 import { useAutomationJob } from "@/hooks/useAutomationJob";
 import { useMessagingChannels } from "@/hooks/useMessagingChannels";
 import { useAccount } from "@/providers/EmailAccountProvider";
@@ -35,17 +35,17 @@ import {
   toggleAutomationJobAction,
   triggerTestCheckInAction,
 } from "@/utils/actions/automation-jobs";
-import { getActionErrorMessage } from "@/utils/error";
 import {
   AUTOMATION_CRON_PRESETS,
   DEFAULT_AUTOMATION_JOB_CRON,
 } from "@/utils/automation-jobs/defaults";
 import { describeCronSchedule } from "@/utils/automation-jobs/describe";
+import { getActionErrorMessage } from "@/utils/error";
 
 export function ProactiveUpdatesSetting() {
   const [open, setOpen] = useState(false);
   const [cronExpression, setCronExpression] = useState(
-    DEFAULT_AUTOMATION_JOB_CRON,
+    DEFAULT_AUTOMATION_JOB_CRON
   );
   const [messagingChannelId, setMessagingChannelId] = useState("");
   const [prompt, setPrompt] = useState("");
@@ -67,9 +67,9 @@ export function ProactiveUpdatesSetting() {
         (channel) =>
           channel.provider === "SLACK" &&
           channel.isConnected &&
-          channel.hasSendDestination,
+          channel.hasSendDestination
       ) ?? [],
-    [channelsData?.channels],
+    [channelsData?.channels]
   );
 
   const hasConnectedSlack = connectedSlackChannels.length > 0;
@@ -82,7 +82,9 @@ export function ProactiveUpdatesSetting() {
       return;
     }
 
-    if (isDialogFormInitializedRef.current) return;
+    if (isDialogFormInitializedRef.current) {
+      return;
+    }
 
     setCronExpression(job?.cronExpression ?? DEFAULT_AUTOMATION_JOB_CRON);
     setPrompt(job?.prompt ?? "");
@@ -94,16 +96,22 @@ export function ProactiveUpdatesSetting() {
   }, [open, job]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
 
     const hasSelectedConnectedChannel = connectedSlackChannels.some(
-      (channel) => channel.id === messagingChannelId,
+      (channel) => channel.id === messagingChannelId
     );
 
-    if (hasSelectedConnectedChannel) return;
+    if (hasSelectedConnectedChannel) {
+      return;
+    }
 
     const fallbackChannelId = connectedSlackChannels[0]?.id ?? "";
-    if (messagingChannelId === fallbackChannelId) return;
+    if (messagingChannelId === fallbackChannelId) {
+      return;
+    }
 
     setMessagingChannelId(fallbackChannelId);
   }, [open, connectedSlackChannels, messagingChannelId]);
@@ -122,7 +130,7 @@ export function ProactiveUpdatesSetting() {
             getActionErrorMessage(error.error) ?? "Failed to update setting",
         });
       },
-    },
+    }
   );
 
   const { execute: executeSave, status: saveStatus } = useAction(
@@ -140,7 +148,7 @@ export function ProactiveUpdatesSetting() {
             getActionErrorMessage(error.error) ?? "Failed to save settings",
         });
       },
-    },
+    }
   );
 
   const { execute: executeTestCheckIn, status: testCheckInStatus } = useAction(
@@ -156,32 +164,36 @@ export function ProactiveUpdatesSetting() {
             "Failed to send test check-in",
         });
       },
-    },
+    }
   );
 
   const handleToggle = useCallback(
     (nextEnabled: boolean) => {
-      if (!emailAccountId || (!hasConnectedSlack && nextEnabled)) return;
+      if (!emailAccountId || (!hasConnectedSlack && nextEnabled)) {
+        return;
+      }
       executeToggle({ enabled: nextEnabled });
     },
-    [emailAccountId, hasConnectedSlack, executeToggle],
+    [emailAccountId, hasConnectedSlack, executeToggle]
   );
 
   const selectedPreset = useMemo(() => {
     return (
       AUTOMATION_CRON_PRESETS.find(
-        (preset) => preset.cronExpression === cronExpression,
+        (preset) => preset.cronExpression === cronExpression
       ) ?? null
     );
   }, [cronExpression]);
 
   const scheduleText = useMemo(
     () => describeCronSchedule(cronExpression),
-    [cronExpression],
+    [cronExpression]
   );
 
   const handleSave = useCallback(() => {
-    if (!messagingChannelId) return;
+    if (!messagingChannelId) {
+      return;
+    }
 
     executeSave({
       cronExpression,
@@ -194,7 +206,6 @@ export function ProactiveUpdatesSetting() {
 
   return (
     <SettingCard
-      title="Scheduled check-ins"
       description="Your AI checks in on Slack with updates you can act on."
       right={
         showLoading ? (
@@ -202,15 +213,15 @@ export function ProactiveUpdatesSetting() {
         ) : (
           <div className="flex items-center gap-2">
             {!hasConnectedSlack && (
-              <Button asChild variant="outline" size="sm">
+              <Button asChild size="sm" variant="outline">
                 <Link href="/settings">Connect Slack</Link>
               </Button>
             )}
 
             {enabled && (
-              <Dialog open={open} onOpenChange={setOpen}>
+              <Dialog onOpenChange={setOpen} open={open}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button size="sm" variant="outline">
                     Configure
                   </Button>
                 </DialogTrigger>
@@ -231,8 +242,8 @@ export function ProactiveUpdatesSetting() {
                             Slack channel
                           </Label>
                           <Select
-                            value={messagingChannelId}
                             onValueChange={setMessagingChannelId}
+                            value={messagingChannelId}
                           >
                             <SelectTrigger id="scheduled-checkins-channel">
                               <SelectValue placeholder="Select a Slack channel" />
@@ -252,64 +263,64 @@ export function ProactiveUpdatesSetting() {
                           <div className="grid grid-cols-3 gap-2">
                             {AUTOMATION_CRON_PRESETS.map((preset) => (
                               <Button
+                                className="w-full"
                                 key={preset.id}
+                                onClick={() => {
+                                  setCronExpression(preset.cronExpression);
+                                  setShowCronEditor(false);
+                                }}
                                 type="button"
                                 variant={
                                   selectedPreset?.id === preset.id
                                     ? "default"
                                     : "outline"
                                 }
-                                className="w-full"
-                                onClick={() => {
-                                  setCronExpression(preset.cronExpression);
-                                  setShowCronEditor(false);
-                                }}
                               >
                                 {preset.label}
                               </Button>
                             ))}
                           </div>
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <div className="flex items-center justify-between text-muted-foreground text-xs">
                             <span>{scheduleText}</span>
                             <button
-                              type="button"
                               className="underline underline-offset-2"
                               onClick={() =>
                                 setShowCronEditor((value) => !value)
                               }
+                              type="button"
                             >
                               {showCronEditor ? "done" : "edit"}
                             </button>
                           </div>
                           {showCronEditor && (
                             <Input
-                              value={cronExpression}
                               onChange={(event) =>
                                 setCronExpression(event.target.value)
                               }
                               placeholder="Cron expression in UTC"
+                              value={cronExpression}
                             />
                           )}
                         </div>
 
                         <div className="space-y-2">
                           <button
-                            type="button"
-                            className="text-sm text-muted-foreground"
+                            className="text-muted-foreground text-sm"
                             onClick={() =>
                               setShowCustomPrompt((value) => !value)
                             }
+                            type="button"
                           >
                             + Customize what's included
                           </button>
                           {showCustomPrompt && (
                             <Textarea
                               id="scheduled-checkins-prompt"
-                              placeholder="Add custom instructions for what should be included."
-                              value={prompt}
                               onChange={(event) =>
                                 setPrompt(event.target.value)
                               }
+                              placeholder="Add custom instructions for what should be included."
+                              value={prompt}
                             />
                           )}
                         </div>
@@ -317,10 +328,10 @@ export function ProactiveUpdatesSetting() {
                         <div className="flex items-center justify-between pt-2">
                           {job ? (
                             <button
-                              type="button"
-                              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground disabled:opacity-50"
+                              className="text-muted-foreground text-xs underline underline-offset-2 hover:text-foreground disabled:opacity-50"
                               disabled={testCheckInStatus === "executing"}
                               onClick={() => executeTestCheckIn({})}
+                              type="button"
                             >
                               {testCheckInStatus === "executing"
                                 ? "Sending..."
@@ -331,18 +342,18 @@ export function ProactiveUpdatesSetting() {
                           )}
                           <div className="flex gap-2">
                             <Button
-                              variant="outline"
-                              onClick={() => setOpen(false)}
                               disabled={saveStatus === "executing"}
+                              onClick={() => setOpen(false)}
+                              variant="outline"
                             >
                               Cancel
                             </Button>
                             <Button
-                              onClick={handleSave}
                               disabled={
                                 !messagingChannelId ||
                                 saveStatus === "executing"
                               }
+                              onClick={handleSave}
                             >
                               {saveStatus === "executing"
                                 ? "Saving..."
@@ -354,7 +365,7 @@ export function ProactiveUpdatesSetting() {
                     </div>
 
                     <div className="flex flex-col justify-center bg-muted/20 p-6">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                         Preview
                       </p>
                       <HowItWorksPreview />
@@ -365,18 +376,19 @@ export function ProactiveUpdatesSetting() {
             )}
 
             <Toggle
-              name="proactive-updates-enabled"
-              enabled={enabled}
-              onChange={handleToggle}
               disabled={
                 toggleStatus === "executing" ||
                 !emailAccountId ||
-                (!hasConnectedSlack && !enabled)
+                !(hasConnectedSlack || enabled)
               }
+              enabled={enabled}
+              name="proactive-updates-enabled"
+              onChange={handleToggle}
             />
           </div>
         )
       }
+      title="Scheduled check-ins"
     />
   );
 }
@@ -386,9 +398,15 @@ function formatSlackChannelLabel(channel: {
   channelId: string | null;
   teamName: string | null;
 }) {
-  if (channel.channelName) return `#${channel.channelName}`;
-  if (channel.channelId) return `Channel ${channel.channelId}`;
-  if (channel.teamName) return channel.teamName;
+  if (channel.channelName) {
+    return `#${channel.channelName}`;
+  }
+  if (channel.channelId) {
+    return `Channel ${channel.channelId}`;
+  }
+  if (channel.teamName) {
+    return channel.teamName;
+  }
   return "Slack workspace";
 }
 
@@ -435,16 +453,15 @@ function HowItWorksPreview() {
     let currentStage = 0;
 
     const advanceStage = () => {
-      if (currentStage >= timings.length) return;
+      if (currentStage >= timings.length) {
+        return;
+      }
 
-      timeout = setTimeout(
-        () => {
-          currentStage++;
-          setStage(currentStage);
-          advanceStage();
-        },
-        timings[currentStage] ?? 1000,
-      );
+      timeout = setTimeout(() => {
+        currentStage++;
+        setStage(currentStage);
+        advanceStage();
+      }, timings[currentStage] ?? 1000);
     };
 
     advanceStage();
@@ -456,7 +473,7 @@ function HowItWorksPreview() {
     <div className="mt-3 overflow-hidden rounded-md border bg-background shadow-sm">
       {/* Slack-like header */}
       <div className="flex items-center gap-1.5 border-b px-3 py-2">
-        <span className="text-xs font-bold text-foreground">
+        <span className="font-bold text-foreground text-xs">
           # inbox-updates
         </span>
       </div>
@@ -468,21 +485,21 @@ function HowItWorksPreview() {
             (msg, i) =>
               stage >= i + 1 && (
                 <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
                   className="group flex gap-2 rounded px-1 py-1.5 hover:bg-muted/30"
+                  initial={{ opacity: 0, y: 8 }}
+                  key={i}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                 >
                   {/* Avatar */}
                   <div className="mt-0.5 shrink-0">
                     {msg.isUser ? (
-                      <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-blue-100 text-[10px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-blue-100 font-bold text-[10px] text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
                         You
                       </div>
                     ) : (
                       <div
-                        className={`flex h-7 w-7 items-center justify-center rounded-sm text-[10px] font-bold ${msg.avatarColor}`}
+                        className={`flex h-7 w-7 items-center justify-center rounded-sm font-bold text-[10px] ${msg.avatarColor}`}
                       >
                         {msg.avatar}
                       </div>
@@ -491,20 +508,20 @@ function HowItWorksPreview() {
 
                   {/* Content */}
                   <div className="min-w-0 flex-1">
-                    <span className="text-[13px] font-bold text-foreground">
+                    <span className="font-bold text-[13px] text-foreground">
                       {msg.sender}
                     </span>
                     {msg.lines.map((line, j) => (
                       <p
+                        className="text-[13px] text-muted-foreground leading-snug"
                         key={j}
-                        className="text-[13px] leading-snug text-muted-foreground"
                       >
                         {line}
                       </p>
                     ))}
                   </div>
                 </motion.div>
-              ),
+              )
           )}
         </AnimatePresence>
 
@@ -512,21 +529,21 @@ function HowItWorksPreview() {
         <AnimatePresence>
           {stage >= 1 && stage < 3 && (
             <motion.div
-              initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
               className="flex items-center gap-2 px-1 py-1"
+              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-emerald-100 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+              <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-emerald-100 font-bold text-[10px] text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
                 IZ
               </div>
               <div className="flex items-center gap-0.5">
                 {[0, 1, 2].map((dot) => (
                   <motion.div
-                    key={dot}
-                    className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40"
                     animate={{ opacity: [0.3, 1, 0.3] }}
+                    className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40"
+                    key={dot}
                     transition={{
                       duration: 1,
                       repeat: Number.POSITIVE_INFINITY,

@@ -1,12 +1,12 @@
 /** biome-ignore-all lint/style/noMagicNumbers: test */
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import { aiDetectRecurringPattern } from "@/utils/ai/choose-rule/ai-detect-recurring-pattern";
-import type { EmailForLLM } from "@/utils/types";
-import { getRuleName, getRuleConfig } from "@/utils/rule/consts";
-import { SystemType } from "@/generated/prisma/enums";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { getEmailAccount } from "@/__tests__/helpers";
-import { createScopedLogger } from "@/utils/logger";
+import { SystemType } from "@/generated/prisma/enums";
+import { aiDetectRecurringPattern } from "@/utils/ai/choose-rule/ai-detect-recurring-pattern";
 import { formatUtcDate } from "@/utils/date";
+import { createScopedLogger } from "@/utils/logger";
+import { getRuleConfig, getRuleName } from "@/utils/rule/consts";
+import type { EmailForLLM } from "@/utils/types";
 
 // Run with: pnpm test-ai ai-detect-recurring-pattern
 
@@ -284,9 +284,9 @@ describe.runIf(isAiTest)(
 
       expect(
         result === null ||
-          result?.matchedRule === getRuleName(SystemType.NOTIFICATION),
+          result?.matchedRule === getRuleName(SystemType.NOTIFICATION)
       ).toBeTruthy();
     });
   },
-  TIMEOUT,
+  TIMEOUT
 );

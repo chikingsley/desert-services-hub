@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { parseAsString, useQueryState } from "nuqs";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { parseAsString, useQueryState } from "nuqs";
+import { useEffect, useRef, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmailItem } from "./EmailFirehoseItem";
-import { useEmailStream } from "./useEmailStream";
-import type { CleanThread } from "@/utils/redis/clean.types";
 import { CleanAction } from "@/generated/prisma/enums";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import type { CleanThread } from "@/utils/redis/clean.types";
+import { EmailItem } from "./EmailFirehoseItem";
+import { useEmailStream } from "./useEmailStream";
 
 export function EmailFirehose({
   threads,
@@ -49,7 +49,7 @@ export function EmailFirehose({
   // Handle scroll events to detect user interaction
   const handleScroll = () => {
     // Only set userHasScrolled if this is not a programmatic scroll
-    if (!userHasScrolled && !isProgrammaticScrollRef.current) {
+    if (!(userHasScrolled || isProgrammaticScrollRef.current)) {
       setUserHasScrolled(true);
     }
   };
@@ -82,7 +82,7 @@ export function EmailFirehose({
 
   return (
     <div className="flex flex-col space-y-4">
-      <Tabs defaultValue="done" className="w-full">
+      <Tabs className="w-full" defaultValue="done">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="done">
             {action === CleanAction.ARCHIVE ? "Archived" : "Marked read"}
@@ -90,9 +90,9 @@ export function EmailFirehose({
           <TabsTrigger value="keep">Kept</TabsTrigger>
         </TabsList>
         <div
-          ref={parentRef}
-          onScroll={handleScroll}
           className="mt-2 h-[calc(100vh-300px)] overflow-y-auto rounded-md border bg-muted/20"
+          onScroll={handleScroll}
+          ref={parentRef}
         >
           {emails.length > 0 ? (
             <div
@@ -101,19 +101,17 @@ export function EmailFirehose({
             >
               {virtualizer.getVirtualItems().map((virtualItem) => (
                 <div
+                  className="absolute top-0 left-0 w-full p-1"
                   key={virtualItem.key}
-                  className="absolute left-0 top-0 w-full p-1"
                   style={{
                     height: `${virtualItem.size}px`,
                     transform: `translateY(${virtualItem.start}px)`,
                   }}
                 >
                   <EmailItem
-                    email={emails[virtualItem.index]}
-                    userEmail={userEmail}
-                    emailAccountId={emailAccountId}
                     action={action}
-                    undoState={undoStates[emails[virtualItem.index].threadId]}
+                    email={emails[virtualItem.index]}
+                    emailAccountId={emailAccountId}
                     setUndoing={(threadId) => {
                       setUndoStates((prev) => ({
                         ...prev,
@@ -126,6 +124,8 @@ export function EmailFirehose({
                         [threadId]: "undone",
                       }));
                     }}
+                    undoState={undoStates[emails[virtualItem.index].threadId]}
+                    userEmail={userEmail}
                   />
                 </div>
               ))}

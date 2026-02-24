@@ -1,14 +1,14 @@
 import { type InferUITool, tool } from "ai";
 import { z } from "zod";
-import type { Logger } from "@/utils/logger";
-import prisma from "@/utils/prisma";
-import { posthogCaptureEvent } from "@/utils/posthog";
-import { createEmailProvider } from "@/utils/email/provider";
-import { getRuleLabel } from "@/utils/rule/consts";
 import { SystemType } from "@/generated/prisma/enums";
-import type { ParsedMessage } from "@/utils/types";
-import { getEmailForLLM } from "@/utils/get-email-from-message";
 import { formatEmailWithName } from "@/utils/email";
+import { createEmailProvider } from "@/utils/email/provider";
+import { getEmailForLLM } from "@/utils/get-email-from-message";
+import type { Logger } from "@/utils/logger";
+import { posthogCaptureEvent } from "@/utils/posthog";
+import prisma from "@/utils/prisma";
+import { getRuleLabel } from "@/utils/rule/consts";
+import type { ParsedMessage } from "@/utils/types";
 
 const emptyInputSchema = z.object({}).describe("No parameters required");
 const sendEmailToolInputSchema = z
@@ -27,7 +27,7 @@ const replyEmailToolInputSchema = z
       .trim()
       .min(1)
       .describe(
-        "Message ID to reply to. Use a messageId returned by searchInbox.",
+        "Message ID to reply to. Use a messageId returned by searchInbox."
       ),
     content: z.string().trim().min(1).max(10_000),
   })
@@ -137,7 +137,7 @@ const searchInboxInputSchema = z.object({
     .max(300)
     .optional()
     .describe(
-      "Inbox search query. Use concise keywords by default. For Google accounts, Gmail syntax like from:, to:, subject:, and in: is supported.",
+      "Inbox search query. Use concise keywords by default. For Google accounts, Gmail syntax like from:, to:, subject:, and in: is supported."
     ),
   after: z.coerce
     .date()
@@ -227,12 +227,12 @@ export const searchInboxTool = ({
               message,
               inboxOnly,
               unreadOnly,
-            }),
+            })
           )
           .slice(0, limit);
 
         const items = filteredMessages.map((message) =>
-          mapMessageForSearchResult(message, labelsById),
+          mapMessageForSearchResult(message, labelsById)
         );
 
         return {
@@ -257,7 +257,7 @@ const readEmailInputSchema = z.object({
     .trim()
     .min(1)
     .describe(
-      "The message ID to read. Use a messageId returned by searchInbox.",
+      "The message ID to read. Use a messageId returned by searchInbox."
     ),
 });
 
@@ -329,13 +329,13 @@ const manageInboxInputSchema = z.object({
   threadIds: threadIdsSchema
     .optional()
     .describe(
-      "Thread IDs to archive or mark read/unread. Provide IDs from searchInbox results.",
+      "Thread IDs to archive or mark read/unread. Provide IDs from searchInbox results."
     ),
   labelId: z
     .string()
     .optional()
     .describe(
-      "Optional provider label/category ID to apply while archiving threads.",
+      "Optional provider label/category ID to apply while archiving threads."
     ),
   read: z
     .boolean()
@@ -367,7 +367,7 @@ export const manageInboxTool = ({
       const parsedInputResult = manageInboxInputSchema.safeParse(input);
       if (!parsedInputResult.success) {
         const errorMessage = getManageInboxValidationError(
-          parsedInputResult.error,
+          parsedInputResult.error
         );
         logger.warn("Invalid manageInbox input", {
           issues: parsedInputResult.error.issues,
@@ -415,7 +415,7 @@ export const manageInboxTool = ({
           await emailProvider.bulkArchiveFromSenders(
             fromEmails,
             email,
-            emailAccountId,
+            emailAccountId
           );
 
           return {
@@ -441,12 +441,12 @@ export const manageInboxTool = ({
               await emailProvider.archiveThreadWithLabel(
                 threadId,
                 email,
-                parsedInput.labelId,
+                parsedInput.labelId
               );
             } else {
               await emailProvider.markReadThread(
                 threadId,
-                parsedInput.read ?? true,
+                parsedInput.read ?? true
               );
             }
           },
@@ -488,7 +488,7 @@ const updateInboxFeaturesInputSchema = z
       .max(2880)
       .optional()
       .describe(
-        "Minutes before a meeting to send a brief (1-2880). Applies when meeting briefs are enabled.",
+        "Minutes before a meeting to send a brief (1-2880). Applies when meeting briefs are enabled."
       ),
     meetingBriefsSendEmail: z
       .boolean()
@@ -504,7 +504,7 @@ const updateInboxFeaturesInputSchema = z
       .optional()
       .nullable()
       .describe(
-        "Custom filing instructions. Set null to clear existing instructions.",
+        "Custom filing instructions. Set null to clear existing instructions."
       ),
   })
   .refine(
@@ -514,7 +514,7 @@ const updateInboxFeaturesInputSchema = z
       value.meetingBriefsSendEmail !== undefined ||
       value.filingEnabled !== undefined ||
       value.filingPrompt !== undefined,
-    { message: "At least one field must be provided." },
+    { message: "At least one field must be provided." }
   );
 
 export const updateInboxFeaturesTool = ({
@@ -550,7 +550,9 @@ export const updateInboxFeaturesTool = ({
         },
       });
 
-      if (!existing) return { error: "Email account not found" };
+      if (!existing) {
+        return { error: "Email account not found" };
+      }
 
       await prisma.emailAccount.update({
         where: { id: emailAccountId },
@@ -685,7 +687,7 @@ export const replyEmailTool = ({
           logger,
         });
         const message = await emailProvider.getMessage(
-          parsedInput.data.messageId,
+          parsedInput.data.messageId
         );
         await emailProvider.replyToEmail(message, parsedInput.data.content);
 
@@ -733,7 +735,7 @@ export const forwardEmailTool = ({
           logger,
         });
         const message = await emailProvider.getMessage(
-          parsedInput.data.messageId,
+          parsedInput.data.messageId
         );
         await emailProvider.forwardEmail(message, {
           to: parsedInput.data.to,
@@ -806,11 +808,13 @@ async function getDefaultSenderAddress({
     },
   });
 
-  if (!emailAccount) return fallbackEmail;
+  if (!emailAccount) {
+    return fallbackEmail;
+  }
 
   return formatEmailWithName(
     emailAccount.name,
-    emailAccount.email || fallbackEmail,
+    emailAccount.email || fallbackEmail
   );
 }
 
@@ -823,30 +827,36 @@ function shouldIncludeMessage({
   inboxOnly: boolean;
   unreadOnly: boolean;
 }) {
-  if (!message.labelIds?.length) return !unreadOnly;
+  if (!message.labelIds?.length) {
+    return !unreadOnly;
+  }
 
   const labelIds =
     message.labelIds?.map((labelId) => labelId.toLowerCase()) || [];
   const isInInbox = labelIds.includes("inbox");
   const isUnread = labelIds.includes("unread");
 
-  if (inboxOnly && !isInInbox) return false;
-  if (unreadOnly && !isUnread) return false;
+  if (inboxOnly && !isInInbox) {
+    return false;
+  }
+  if (unreadOnly && !isUnread) {
+    return false;
+  }
 
   return true;
 }
 
 function mapMessageForSearchResult(
   message: ParsedMessage,
-  labelsById: Map<string, string>,
+  labelsById: Map<string, string>
 ) {
   const labelIds = message.labelIds || [];
   const labelNames = labelIds.map(
-    (labelId) => labelsById.get(labelId.toLowerCase()) || labelId,
+    (labelId) => labelsById.get(labelId.toLowerCase()) || labelId
   );
   const category = inferConversationCategory(labelNames);
   const isUnread = labelIds.some(
-    (labelId) => labelId.toLowerCase() === "unread",
+    (labelId) => labelId.toLowerCase() === "unread"
   );
 
   return {
@@ -873,16 +883,21 @@ type ConversationCategory =
 
 function inferConversationCategory(labelNames: string[]): ConversationCategory {
   const normalized = new Set(
-    labelNames.map((labelName) => labelName.trim().toLowerCase()),
+    labelNames.map((labelName) => labelName.trim().toLowerCase())
   );
 
-  if (normalized.has(getRuleLabel(SystemType.TO_REPLY).toLowerCase()))
+  if (normalized.has(getRuleLabel(SystemType.TO_REPLY).toLowerCase())) {
     return "to_reply";
-  if (normalized.has(getRuleLabel(SystemType.AWAITING_REPLY).toLowerCase()))
+  }
+  if (normalized.has(getRuleLabel(SystemType.AWAITING_REPLY).toLowerCase())) {
     return "awaiting_reply";
-  if (normalized.has(getRuleLabel(SystemType.FYI).toLowerCase())) return "fyi";
-  if (normalized.has(getRuleLabel(SystemType.ACTIONED).toLowerCase()))
+  }
+  if (normalized.has(getRuleLabel(SystemType.FYI).toLowerCase())) {
+    return "fyi";
+  }
+  if (normalized.has(getRuleLabel(SystemType.ACTIONED).toLowerCase())) {
     return "actioned";
+  }
   return "uncategorized";
 }
 
@@ -890,12 +905,14 @@ function summarizeSearchResults(
   items: Array<{
     category: ConversationCategory;
     isUnread: boolean;
-  }>,
+  }>
 ) {
   return items.reduce(
     (acc, item) => {
       acc.total += 1;
-      if (item.isUnread) acc.unread += 1;
+      if (item.isUnread) {
+        acc.unread += 1;
+      }
       acc.byCategory[item.category] += 1;
       return acc;
     },
@@ -909,16 +926,18 @@ function summarizeSearchResults(
         actioned: 0,
         uncategorized: 0,
       },
-    },
+    }
   );
 }
 
 function createLabelLookupMap(labels: Array<{ id: string; name: string }>) {
   const labelsById = new Map(
-    labels.map((label) => [label.id.toLowerCase(), label.name]),
+    labels.map((label) => [label.id.toLowerCase(), label.name])
   );
 
-  if (labelsById.size > 0) return labelsById;
+  if (labelsById.size > 0) {
+    return labelsById;
+  }
 
   const toReplyLabel = getRuleLabel(SystemType.TO_REPLY);
   const awaitingReplyLabel = getRuleLabel(SystemType.AWAITING_REPLY);
@@ -956,7 +975,7 @@ async function runThreadActionsInParallel({
       batch.map(async (threadId) => {
         await runAction(threadId);
         return threadId;
-      }),
+      })
     );
 
     for (const [index, result] of batchResults.entries()) {
@@ -972,7 +991,9 @@ async function runThreadActionsInParallel({
 
 function getManageInboxValidationError(error: z.ZodError) {
   const firstIssue = error.issues[0];
-  if (!firstIssue) return "Invalid manageInbox input";
+  if (!firstIssue) {
+    return "Invalid manageInbox input";
+  }
 
   if (firstIssue.code === "too_small" && firstIssue.path[0] === "threadIds") {
     return "Invalid manageInbox input: threadIds must include at least one thread ID";
@@ -983,7 +1004,9 @@ function getManageInboxValidationError(error: z.ZodError) {
   }
 
   const field = firstIssue.path.map(String).join(".");
-  if (!field) return `Invalid manageInbox input: ${firstIssue.message}`;
+  if (!field) {
+    return `Invalid manageInbox input: ${firstIssue.message}`;
+  }
 
   return `Invalid manageInbox input: ${field} ${firstIssue.message}`;
 }
@@ -1002,7 +1025,9 @@ function getReplyEmailValidationError(error: z.ZodError) {
 
 function getValidationErrorMessage(toolName: string, error: z.ZodError) {
   const firstIssue = error.issues[0];
-  if (!firstIssue) return `Invalid ${toolName} input`;
+  if (!firstIssue) {
+    return `Invalid ${toolName} input`;
+  }
 
   if (firstIssue.code === "unrecognized_keys") {
     const firstKey = firstIssue.keys[0];
@@ -1013,7 +1038,9 @@ function getValidationErrorMessage(toolName: string, error: z.ZodError) {
   }
 
   const field = firstIssue.path.map(String).join(".");
-  if (!field) return `Invalid ${toolName} input: ${firstIssue.message}`;
+  if (!field) {
+    return `Invalid ${toolName} input: ${firstIssue.message}`;
+  }
 
   return `Invalid ${toolName} input: ${field} ${firstIssue.message}`;
 }

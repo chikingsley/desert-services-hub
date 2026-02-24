@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { betterAuthConfig } from "@/utils/auth";
 import { SafeError } from "@/utils/error";
 import { withError } from "@/utils/middleware";

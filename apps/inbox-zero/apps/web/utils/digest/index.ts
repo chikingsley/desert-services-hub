@@ -1,9 +1,9 @@
-import { publishToQstashQueue } from "@/utils/upstash";
+import type { DigestBody } from "@/app/api/ai/digest/validation";
+import type { EmailForAction } from "@/utils/ai/types";
 import type { Logger } from "@/utils/logger";
 import { emailToContent } from "@/utils/mail";
-import type { DigestBody } from "@/app/api/ai/digest/validation";
 import type { ParsedMessage } from "@/utils/types";
-import type { EmailForAction } from "@/utils/ai/types";
+import { publishToQstashQueue } from "@/utils/upstash";
 
 export async function enqueueDigestItem({
   email,

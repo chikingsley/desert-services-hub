@@ -1,11 +1,11 @@
 "use client";
 
-import type React from "react";
 import { Provider } from "jotai";
-import { ComposeModalProvider } from "@/providers/ComposeModalProvider";
-import { jotaiStore } from "@/store";
+import type React from "react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ChatProvider } from "@/providers/ChatProvider";
+import { ComposeModalProvider } from "@/providers/ComposeModalProvider";
+import { jotaiStore } from "@/store";
 
 export function AppProviders(props: { children: React.ReactNode }) {
   return (

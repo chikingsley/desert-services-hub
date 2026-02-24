@@ -1,6 +1,12 @@
 "use client";
 
+import { ChevronDown, Trash2, XCircle } from "lucide-react";
 import Image from "next/image";
+import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
+import type { GetCalendarsResponse } from "@/app/api/user/calendars/route";
+import { TypographyP } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,25 +14,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Trash2, XCircle, ChevronDown } from "lucide-react";
-import { CalendarList } from "./CalendarList";
-import { useAction } from "next-safe-action/hooks";
-import {
-  disconnectCalendarAction,
-  toggleCalendarAction,
-} from "@/utils/actions/calendar";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { useCalendars } from "@/hooks/useCalendars";
-import { useState } from "react";
-import type { GetCalendarsResponse } from "@/app/api/user/calendars/route";
-import { TypographyP } from "@/components/Typography";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
+import { useCalendars } from "@/hooks/useCalendars";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import {
+  disconnectCalendarAction,
+  toggleCalendarAction,
+} from "@/utils/actions/calendar";
+import { CalendarList } from "./CalendarList";
 
 type CalendarConnection = GetCalendarsResponse["connections"][0];
 
@@ -72,13 +72,13 @@ export function CalendarConnectionCard({
   const { execute: executeDisconnect, isExecuting: isDisconnecting } =
     useAction(disconnectCalendarAction.bind(null, emailAccountId));
   const { execute: executeToggle } = useAction(
-    toggleCalendarAction.bind(null, emailAccountId),
+    toggleCalendarAction.bind(null, emailAccountId)
   );
 
   const handleDisconnect = async () => {
     if (
       confirm(
-        "Are you sure you want to disconnect this calendar? This will remove all associated calendars.",
+        "Are you sure you want to disconnect this calendar? This will remove all associated calendars."
       )
     ) {
       executeDisconnect({ connectionId: connection.id });
@@ -88,7 +88,7 @@ export function CalendarConnectionCard({
 
   const handleToggleCalendar = async (
     calendarId: string,
-    isEnabled: boolean,
+    isEnabled: boolean
   ) => {
     setOptimisticUpdates((prev) => ({ ...prev, [calendarId]: isEnabled }));
 
@@ -102,13 +102,13 @@ export function CalendarConnectionCard({
                   ...conn,
                   calendars:
                     conn.calendars?.map((cal) =>
-                      cal.id === calendarId ? { ...cal, isEnabled } : cal,
+                      cal.id === calendarId ? { ...cal, isEnabled } : cal
                     ) || [],
                 }
-              : conn,
+              : conn
           ),
         },
-        false,
+        false
       );
     }
 
@@ -136,11 +136,11 @@ export function CalendarConnectionCard({
         <div className="flex items-center justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <Image
-              src={providerInfo.icon}
               alt={providerInfo.alt}
-              width={32}
               height={32}
+              src={providerInfo.icon}
               unoptimized
+              width={32}
             />
             <div className="min-w-0">
               <CardTitle className="text-lg">{providerInfo.name}</CardTitle>
@@ -157,12 +157,12 @@ export function CalendarConnectionCard({
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <Button
-              variant="destructiveSoft"
-              size="sm"
-              onClick={handleDisconnect}
               disabled={isDisconnecting}
               Icon={Trash2}
               loading={isDisconnecting}
+              onClick={handleDisconnect}
+              size="sm"
+              variant="destructiveSoft"
             >
               Disconnect
             </Button>
@@ -172,11 +172,11 @@ export function CalendarConnectionCard({
       <Separator className="mb-4" />
       <CardContent className="p-4 pt-0">
         {calendars.length > 0 ? (
-          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <Collapsible onOpenChange={setIsOpen} open={isOpen}>
             <CollapsibleTrigger asChild>
               <button
+                className="flex w-full items-center gap-2 text-left text-muted-foreground text-sm transition-colors hover:text-foreground"
                 type="button"
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full text-left"
               >
                 <span>
                   {enabledCalendars.length} of {calendars.length} calendars

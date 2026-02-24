@@ -1,25 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { toastError, toastSuccess, toastInfo } from "@/components/Toast";
-import { getActionErrorMessage } from "@/utils/error";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { LoadingContent } from "@/components/LoadingContent";
-import { Skeleton } from "@/components/ui/skeleton";
-import { SettingCard } from "@/components/SettingCard";
-import { useEmailAccountFull } from "@/hooks/useEmailAccountFull";
 import { useAction } from "next-safe-action/hooks";
-import { fetchSignaturesFromProviderAction } from "@/utils/actions/email-account";
-import { saveSignatureAction } from "@/utils/actions/user";
-import type { EmailSignature } from "@/utils/email/types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useCallback, useState } from "react";
+import { LoadingContent } from "@/components/LoadingContent";
+import { SettingCard } from "@/components/SettingCard";
+import { toastError, toastInfo, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -28,30 +14,44 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { useEmailAccountFull } from "@/hooks/useEmailAccountFull";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { fetchSignaturesFromProviderAction } from "@/utils/actions/email-account";
+import { saveSignatureAction } from "@/utils/actions/user";
 import { isGoogleProvider } from "@/utils/email/provider-types";
+import type { EmailSignature } from "@/utils/email/types";
+import { getActionErrorMessage } from "@/utils/error";
 
 export function PersonalSignatureSetting() {
   const { data, isLoading, error } = useEmailAccountFull();
 
   return (
     <SettingCard
-      title="Email signature"
       description="Set your email signature to include in drafted messages."
       right={
         <LoadingContent
-          loading={isLoading}
           error={error}
+          loading={isLoading}
           loadingComponent={<Skeleton className="h-8 w-32" />}
         >
           <SignatureDialog currentSignature={data?.signature || ""}>
-            <Button variant="outline" size="sm">
+            <Button size="sm" variant="outline">
               Edit
             </Button>
           </SignatureDialog>
         </LoadingContent>
       }
+      title="Email signature"
     />
   );
 }
@@ -91,7 +91,7 @@ function SignatureDialog({
       onSettled: () => {
         mutate();
       },
-    },
+    }
   );
 
   const { executeAsync: executeFetchSignatures, isExecuting: isFetching } =
@@ -144,7 +144,7 @@ function SignatureDialog({
         setManualSignature(signature.signature);
       }
     },
-    [signatures],
+    [signatures]
   );
 
   const handleSave = useCallback(() => {
@@ -157,7 +157,7 @@ function SignatureDialog({
   }, [executeSave]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
@@ -174,9 +174,9 @@ function SignatureDialog({
         <div className="space-y-4">
           <div className="flex gap-2">
             <Button
-              variant="outline"
-              onClick={handleLoadFromProvider}
               disabled={isFetching}
+              onClick={handleLoadFromProvider}
+              variant="outline"
             >
               {isFetching
                 ? "Loading..."
@@ -184,8 +184,8 @@ function SignatureDialog({
             </Button>
             {signatures.length > 1 && (
               <Select
-                value={selectedSignature}
                 onValueChange={handleSelectSignature}
+                value={selectedSignature}
               >
                 <SelectTrigger className="w-[250px]">
                   <SelectValue placeholder="Select signature" />
@@ -206,11 +206,11 @@ function SignatureDialog({
             <div className="space-y-2">
               <Label htmlFor="signature">Signature (HTML supported)</Label>
               <Textarea
+                className="min-h-[200px] font-mono text-sm"
                 id="signature"
-                value={manualSignature}
                 onChange={(e) => setManualSignature(e.target.value)}
                 placeholder="Enter your email signature..."
-                className="min-h-[200px] font-mono text-sm"
+                value={manualSignature}
               />
             </div>
             <div className="space-y-2">
@@ -220,10 +220,10 @@ function SignatureDialog({
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleClear}>
+            <Button onClick={handleClear} variant="outline">
               Clear
             </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
+            <Button disabled={isSaving} onClick={handleSave}>
               {isSaving ? "Saving..." : "Save Signature"}
             </Button>
           </div>
@@ -256,10 +256,10 @@ function SignaturePreview({ signature }: { signature: string }) {
 
   return (
     <iframe
-      title="Signature Preview"
+      className="min-h-[200px] w-full rounded-md border border-input bg-muted/50"
       sandbox="allow-same-origin"
       srcDoc={previewHtml}
-      className="min-h-[200px] w-full rounded-md border border-input bg-muted/50"
+      title="Signature Preview"
     />
   );
 }

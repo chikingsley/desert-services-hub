@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
 import { useAccount } from "@/providers/EmailAccountProvider";
 
 export function SentryIdentify({ email }: { email: string }) {

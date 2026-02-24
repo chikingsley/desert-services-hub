@@ -1,29 +1,29 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import type { RulesResponse } from "@/app/api/user/rules/route";
+import { LoadingContent } from "@/components/LoadingContent";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { RuleForm } from "./RuleForm";
-import { LoadingContent } from "@/components/LoadingContent";
+import { ActionType, LogicalOperator } from "@/generated/prisma/enums";
+import { useDialogState } from "@/hooks/useDialogState";
 import { useRule } from "@/hooks/useRule";
 import type { CreateRuleBody } from "@/utils/actions/rule.validation";
-import { useDialogState } from "@/hooks/useDialogState";
-import { ActionType, LogicalOperator } from "@/generated/prisma/enums";
 import { ConditionType } from "@/utils/config";
-import type { RulesResponse } from "@/app/api/user/rules/route";
+import { RuleForm } from "./RuleForm";
 
 interface RuleDialogProps {
-  ruleId?: string;
   duplicateRule?: RulesResponse[number];
+  editMode?: boolean;
+  initialRule?: Partial<CreateRuleBody>;
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  initialRule?: Partial<CreateRuleBody>;
-  editMode?: boolean;
+  ruleId?: string;
 }
 
 export function useRuleDialog() {
@@ -32,10 +32,10 @@ export function useRuleDialog() {
   const RuleDialogComponent = useCallback(() => {
     return (
       <RuleDialog
-        ruleId={ruleDialog.data?.ruleId}
+        editMode={false}
         isOpen={ruleDialog.isOpen}
         onClose={ruleDialog.onClose}
-        editMode={false}
+        ruleId={ruleDialog.data?.ruleId}
       />
     );
   }, [ruleDialog.data?.ruleId, ruleDialog.isOpen, ruleDialog.onClose]);
@@ -61,7 +61,9 @@ export function RuleDialog({
 
   // Transform duplicateRule to initialRule format
   const duplicateInitialRule = useMemo(() => {
-    if (!duplicateRule) return undefined;
+    if (!duplicateRule) {
+      return undefined;
+    }
     return transformRuleForDuplication(duplicateRule);
   }, [duplicateRule]);
 
@@ -69,27 +71,31 @@ export function RuleDialog({
   const finalInitialRule = duplicateInitialRule || initialRule;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog onOpenChange={onClose} open={isOpen}>
       <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader className={ruleId ? "sr-only" : ""}>
           <DialogTitle>{ruleId ? "Edit Rule" : "Create Rule"}</DialogTitle>
         </DialogHeader>
         <div>
           {ruleId ? (
-            <LoadingContent loading={isLoading} error={error}>
+            <LoadingContent error={error} loading={isLoading}>
               {data && (
                 <RuleForm
-                  rule={data.rule}
                   alwaysEditMode={editMode}
-                  onSuccess={handleSuccess}
                   isDialog={true}
                   mutate={mutate}
                   onCancel={onClose}
+                  onSuccess={handleSuccess}
+                  rule={data.rule}
                 />
               )}
             </LoadingContent>
           ) : (
             <RuleForm
+              alwaysEditMode={true}
+              isDialog={true}
+              onCancel={onClose}
+              onSuccess={handleSuccess}
               rule={{
                 name: "",
                 conditions: [
@@ -106,10 +112,6 @@ export function RuleDialog({
                 conditionalOperator: LogicalOperator.AND,
                 ...finalInitialRule,
               }}
-              alwaysEditMode={true}
-              onSuccess={handleSuccess}
-              isDialog={true}
-              onCancel={onClose}
             />
           )}
         </div>
@@ -119,7 +121,7 @@ export function RuleDialog({
 }
 
 function transformRuleForDuplication(
-  rule: RulesResponse[number],
+  rule: RulesResponse[number]
 ): Partial<CreateRuleBody> {
   const conditions: CreateRuleBody["conditions"] = [];
 

@@ -17,13 +17,15 @@ async function scanUsageKeys() {
     keys.map(async (key) => {
       const data = await redis.hgetall(key);
       const cost = data?.cost as string;
-      if (!cost) return { email: key, cost: 0, data };
+      if (!cost) {
+        return { email: key, cost: 0, data };
+      }
       return {
         email: key,
         cost: Number.parseFloat(Number.parseFloat(cost).toFixed(1)),
         data,
       };
-    }),
+    })
   );
 
   const totalCost = costs.reduce((acc, { cost }) => acc + cost, 0);

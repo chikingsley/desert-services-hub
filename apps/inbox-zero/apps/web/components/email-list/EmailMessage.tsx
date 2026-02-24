@@ -1,31 +1,31 @@
-import { useCallback, useMemo, useState, useRef, useEffect } from "react";
 import {
+  ChevronsDownUpIcon,
+  ChevronsUpDownIcon,
   ForwardIcon,
   ReplyIcon,
-  ChevronsUpDownIcon,
-  ChevronsDownUpIcon,
 } from "lucide-react";
-import { Tooltip } from "@/components/Tooltip";
-import { extractNameFromEmail } from "@/utils/email";
-import { formatShortDate } from "@/utils/date";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ReplyingToEmail } from "@/app/(app)/[emailAccountId]/compose/ComposeEmailForm";
 import { ComposeEmailFormLazy } from "@/app/(app)/[emailAccountId]/compose/ComposeEmailFormLazy";
+import { EmailAttachments } from "@/components/email-list/EmailAttachments";
+import { HtmlEmail, PlainEmail } from "@/components/email-list/EmailContents";
+import { EmailDetails } from "@/components/email-list/EmailDetails";
+import type { ThreadMessage } from "@/components/email-list/types";
+import { Loading } from "@/components/Loading";
+import { Tooltip } from "@/components/Tooltip";
+import { MessageText, MutedText } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import type { ParsedMessage } from "@/utils/types";
-import { forwardEmailHtml, forwardEmailSubject } from "@/utils/gmail/forward";
-import { extractEmailReply } from "@/utils/parse/extract-reply.client";
-import type { ReplyingToEmail } from "@/app/(app)/[emailAccountId]/compose/ComposeEmailForm";
-import { createReplyContent } from "@/utils/gmail/reply";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import { cn } from "@/utils";
 import { generateNudgeReplyAction } from "@/utils/actions/generate-reply";
-import type { ThreadMessage } from "@/components/email-list/types";
-import { EmailDetails } from "@/components/email-list/EmailDetails";
-import { HtmlEmail, PlainEmail } from "@/components/email-list/EmailContents";
-import { EmailAttachments } from "@/components/email-list/EmailAttachments";
-import { Loading } from "@/components/Loading";
-import { MessageText, MutedText } from "@/components/Typography";
-import { useAccount } from "@/providers/EmailAccountProvider";
+import { formatShortDate } from "@/utils/date";
+import { extractNameFromEmail } from "@/utils/email";
 import { formatReplySubject } from "@/utils/email/subject";
+import { forwardEmailHtml, forwardEmailSubject } from "@/utils/gmail/forward";
+import { createReplyContent } from "@/utils/gmail/reply";
+import { extractEmailReply } from "@/utils/parse/extract-reply.client";
+import type { ParsedMessage } from "@/utils/types";
 
 export function EmailMessage({
   message,
@@ -48,7 +48,7 @@ export function EmailMessage({
   onSendSuccess: (messageId: string, threadId: string) => void;
   generateNudge?: boolean;
 }) {
-  const [showReply, setShowReply] = useState(defaultShowReply || false);
+  const [showReply, setShowReply] = useState(defaultShowReply);
   const [showDetails, setShowDetails] = useState(false);
 
   const onReply = useCallback(() => setShowReply(true), []);
@@ -70,18 +70,18 @@ export function EmailMessage({
     <li
       className={cn(
         "bg-background p-4 shadow sm:rounded-lg",
-        !expanded && "cursor-pointer",
+        !expanded && "cursor-pointer"
       )}
       onClick={onExpand}
     >
       <TopBar
-        message={message}
         expanded={expanded}
-        showDetails={showDetails}
-        toggleDetails={toggleDetails}
-        showReplyButton={showReplyButton}
-        onReply={onReply}
+        message={message}
         onForward={onForward}
+        onReply={onReply}
+        showDetails={showDetails}
+        showReplyButton={showReplyButton}
+        toggleDetails={toggleDetails}
       />
 
       {expanded && (
@@ -98,14 +98,14 @@ export function EmailMessage({
 
           {(showReply || showForward) && (
             <ReplyPanel
-              message={message}
-              refetch={refetch}
-              onSendSuccess={onSendSuccess}
-              onCloseCompose={onCloseCompose}
               defaultShowReply={defaultShowReply}
-              showReply={showReply}
               draftMessage={draftMessage}
               generateNudge={generateNudge}
+              message={message}
+              onCloseCompose={onCloseCompose}
+              onSendSuccess={onSendSuccess}
+              refetch={refetch}
+              showReply={showReply}
             />
           )}
         </>
@@ -135,7 +135,7 @@ function TopBar({
     <div className="sm:flex sm:items-center sm:justify-between">
       <div className="flex items-center gap-2">
         <div className="flex items-center">
-          <h3 className="text-base font-medium">
+          <h3 className="font-medium text-base">
             <span className="text-foreground">
               {message.labelIds?.includes("SENT")
                 ? "Me"
@@ -146,10 +146,10 @@ function TopBar({
         </div>
         {expanded && (
           <Button
-            variant="ghost"
-            size="sm"
             className="size-6 p-0"
             onClick={toggleDetails}
+            size="sm"
+            variant="ghost"
           >
             {showDetails ? (
               <ChevronsDownUpIcon className="size-4" />
@@ -160,7 +160,7 @@ function TopBar({
         )}
       </div>
       <div className="flex items-center space-x-2">
-        <MutedText className="mt-1 whitespace-nowrap sm:ml-3 sm:mt-0">
+        <MutedText className="mt-1 whitespace-nowrap sm:mt-0 sm:ml-3">
           <time dateTime={message.headers.date}>
             {formatShortDate(new Date(message.headers.date))}
           </time>
@@ -168,13 +168,13 @@ function TopBar({
         {showReplyButton && (
           <div className="relative flex items-center">
             <Tooltip content="Reply">
-              <Button variant="ghost" size="icon" onClick={onReply}>
+              <Button onClick={onReply} size="icon" variant="ghost">
                 <ReplyIcon className="h-4 w-4" />
                 <span className="sr-only">Reply</span>
               </Button>
             </Tooltip>
             <Tooltip content="Forward">
-              <Button variant="ghost" size="icon">
+              <Button size="icon" variant="ghost">
                 <ForwardIcon className="h-4 w-4" onClick={onForward} />
                 <span className="sr-only">Forward</span>
               </Button>
@@ -226,7 +226,9 @@ function ReplyPanel({
       const isSent = message.labelIds?.includes("SENT");
 
       // Doesn't need a nudge if it's not sent
-      if (!isSent) return;
+      if (!isSent) {
+        return;
+      }
 
       setIsGeneratingReply(true);
 
@@ -253,12 +255,16 @@ function ReplyPanel({
     }
 
     // Only generate a nudge if there's no draft message and generateNudge is true
-    if (generateNudge && !draftMessage) generateReply();
+    if (generateNudge && !draftMessage) {
+      generateReply();
+    }
   }, [generateNudge, message, draftMessage, emailAccountId]);
 
   const replyingToEmail: ReplyingToEmail = useMemo(() => {
     if (showReply) {
-      if (draftMessage) return prepareDraftReplyEmail(draftMessage);
+      if (draftMessage) {
+        return prepareDraftReplyEmail(draftMessage);
+      }
 
       // use nudge if available
       if (reply) {
@@ -290,24 +296,24 @@ function ReplyPanel({
             <MessageText>Generating reply...</MessageText>
             <Button
               className="ml-4"
-              variant="outline"
-              size="sm"
               onClick={() => {
                 setIsGeneratingReply(false);
               }}
+              size="sm"
+              variant="outline"
             >
               Skip
             </Button>
           </div>
         ) : (
           <ComposeEmailFormLazy
-            replyingToEmail={replyingToEmail}
-            refetch={refetch}
+            onDiscard={onCloseCompose}
             onSuccess={(messageId, threadId) => {
               onSendSuccess(messageId, threadId);
               onCloseCompose();
             }}
-            onDiscard={onCloseCompose}
+            refetch={refetch}
+            replyingToEmail={replyingToEmail}
           />
         )}
       </div>
@@ -317,7 +323,7 @@ function ReplyPanel({
 
 const prepareReplyingToEmail = (
   message: ParsedMessage,
-  content = "",
+  content = ""
 ): ReplyingToEmail => {
   const sentFromUser = message.labelIds?.includes("SENT");
 

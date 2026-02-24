@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SectionDescription, TypographyH3 } from "@/components/Typography";
-import { Footer } from "@/app/(landing)/home/Footer";
 import { FinalCTA } from "@/app/(landing)/home/FinalCTA";
-import { CardBasic } from "@/components/ui/card";
+import { Footer } from "@/app/(landing)/home/Footer";
+import { BlogHeader } from "@/components/layouts/BlogLayout";
+import { Button } from "@/components/new-landing/common/Button";
 import {
   PageHeading,
   Paragraph,
 } from "@/components/new-landing/common/Typography";
-import { Button } from "@/components/new-landing/common/Button";
-import { BlogHeader } from "@/components/layouts/BlogLayout";
+import { SectionDescription, TypographyH3 } from "@/components/Typography";
+import { CardBasic } from "@/components/ui/card";
 
 export const metadata: Metadata = {
   title: "Open Source Friends | Inbox Zero",

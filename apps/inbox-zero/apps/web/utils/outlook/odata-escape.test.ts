@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { escapeODataString } from "@/utils/outlook/odata-escape";
 
 describe("OData String Escaping", () => {
@@ -16,7 +16,7 @@ describe("OData String Escaping", () => {
   it("should handle multiple quotes", () => {
     expect(escapeODataString("'test'")).toBe("''test''");
     expect(escapeODataString("test's 'quoted' text")).toBe(
-      "test''s ''quoted'' text",
+      "test''s ''quoted'' text"
     );
   });
 
@@ -41,18 +41,18 @@ describe("OData String Escaping", () => {
     // When used in a filter, it should be safe
     const filter = `from/emailAddress/address eq '${escaped}'`;
     expect(filter).toBe(
-      "from/emailAddress/address eq 'attacker@example.com'' or subject eq ''sensitive'",
+      "from/emailAddress/address eq 'attacker@example.com'' or subject eq ''sensitive'"
     );
 
     // The filter should not allow breaking out of the string literal
     // Check that there are no unescaped single quotes followed by " or "
     // (All quotes should be doubled, so we shouldn't see a single quote followed by " or ")
     expect(filter).toContain(
-      "attacker@example.com'' or subject eq ''sensitive",
+      "attacker@example.com'' or subject eq ''sensitive"
     );
     // Verify the malicious pattern has been neutralized
     expect(filter).toBe(
-      "from/emailAddress/address eq 'attacker@example.com'' or subject eq ''sensitive'",
+      "from/emailAddress/address eq 'attacker@example.com'' or subject eq ''sensitive'"
     );
   });
 });

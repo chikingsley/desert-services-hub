@@ -1,13 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import useSWR from "swr";
 import { subDays } from "date-fns/subDays";
-import { ChevronDown } from "lucide-react";
-import { usePostHog } from "posthog-js/react";
 import {
   ArchiveIcon,
   CheckIcon,
+  ChevronDown,
   ChevronsDownIcon,
   ChevronsUpIcon,
   InboxIcon,
@@ -15,52 +12,50 @@ import {
   MailXIcon,
   ThumbsUpIcon,
 } from "lucide-react";
+import { usePostHog } from "posthog-js/react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
-import { LoadingContent } from "@/components/LoadingContent";
-import type {
-  NewsletterStatsQuery,
-  NewsletterStatsResponse,
-} from "@/app/api/user/stats/newsletters/route";
-import { getDateRangeParams } from "@/app/(app)/[emailAccountId]/stats/params";
-import { NewsletterModal } from "@/app/(app)/[emailAccountId]/stats/NewsletterModal";
-import { useEmailsToIncludeFilter } from "@/app/(app)/[emailAccountId]/stats/EmailsToIncludeFilter";
-import { usePremium } from "@/components/PremiumAlert";
-import {
-  useNewsletterFilter,
-  useBulkUnsubscribeShortcuts,
-  type NewsletterFilterType,
-} from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/hooks";
-import { useStatLoader } from "@/providers/StatLoaderProvider";
-import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
-import { useLabels } from "@/hooks/useLabels";
-import {
-  BulkUnsubscribeMobile,
-  BulkUnsubscribeRowMobile,
-} from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/BulkUnsubscribeMobile";
+import useSWR from "swr";
+import { useWindowSize } from "usehooks-ts";
+import { ArchiveProgress } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/ArchiveProgress";
+import { BulkActions } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/BulkActions";
 import {
   BulkUnsubscribeDesktop,
   BulkUnsubscribeRowDesktop,
 } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/BulkUnsubscribeDesktop";
 import {
+  BulkUnsubscribeMobile,
+  BulkUnsubscribeRowMobile,
+} from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/BulkUnsubscribeMobile";
+import {
   BulkUnsubscribeDesktopSkeleton,
   BulkUnsubscribeMobileSkeleton,
 } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/BulkUnsubscribeSkeleton";
-import { Card } from "@/components/ui/card";
+import {
+  type NewsletterFilterType,
+  useBulkUnsubscribeShortcuts,
+  useNewsletterFilter,
+} from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/hooks";
 import { SearchBar } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/SearchBar";
-import { useToggleSelect } from "@/hooks/useToggleSelect";
-import { BulkActions } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/BulkActions";
-import { ArchiveProgress } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/ArchiveProgress";
-import { ClientOnly } from "@/components/ClientOnly";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { useWindowSize } from "usehooks-ts";
-import { LoadStatsButton } from "@/app/(app)/[emailAccountId]/stats/LoadStatsButton";
-import { PageWrapper } from "@/components/PageWrapper";
-import { PageHeader } from "@/components/PageHeader";
-import { TextLink } from "@/components/Typography";
-import { DismissibleVideoCard } from "@/components/VideoCard";
 import { ActionBar } from "@/app/(app)/[emailAccountId]/stats/ActionBar";
+import { useEmailsToIncludeFilter } from "@/app/(app)/[emailAccountId]/stats/EmailsToIncludeFilter";
+import { LoadStatsButton } from "@/app/(app)/[emailAccountId]/stats/LoadStatsButton";
+import { NewsletterModal } from "@/app/(app)/[emailAccountId]/stats/NewsletterModal";
+import { getDateRangeParams } from "@/app/(app)/[emailAccountId]/stats/params";
+import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
+import type {
+  NewsletterStatsQuery,
+  NewsletterStatsResponse,
+} from "@/app/api/user/stats/newsletters/route";
+import { ClientOnly } from "@/components/ClientOnly";
 import { DatePickerWithRange } from "@/components/DatePickerWithRange";
+import { LoadingContent } from "@/components/LoadingContent";
+import { PageHeader } from "@/components/PageHeader";
+import { PageWrapper } from "@/components/PageWrapper";
+import { usePremium } from "@/components/PremiumAlert";
+import { TextLink } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,6 +63,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DismissibleVideoCard } from "@/components/VideoCard";
+import { useLabels } from "@/hooks/useLabels";
+import { useToggleSelect } from "@/hooks/useToggleSelect";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { useStatLoader } from "@/providers/StatLoaderProvider";
 
 type Newsletter = NewsletterStatsResponse["newsletters"][number];
 
@@ -119,7 +119,7 @@ export function BulkUnsubscribe() {
   const isMobile = windowSize.width < 768;
 
   const [dateDropdown, setDateDropdown] = useState<string>(
-    defaultSelected.label,
+    defaultSelected.label
   );
 
   const now = useMemo(() => new Date(), []);
@@ -138,7 +138,7 @@ export function BulkUnsubscribe() {
         });
       }
     },
-    [now],
+    [now]
   );
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -170,7 +170,7 @@ export function BulkUnsubscribe() {
         setSortDirection("desc");
       }
     },
-    [sortColumn],
+    [sortColumn]
   );
 
   const { typesArray } = useEmailsToIncludeFilter();
@@ -279,25 +279,25 @@ export function BulkUnsubscribe() {
 
     return (
       <RowComponent
-        key={item.name}
-        item={item}
-        userEmail={userEmail}
-        emailAccountId={emailAccountId}
-        onOpenNewsletter={onOpenNewsletter}
-        labels={userLabels}
-        mutate={mutate}
-        selected={selectedRow?.name === item.name}
-        onSelectRow={() => setSelectedRow(item)}
-        onDoubleClick={() => onOpenNewsletter(item)}
-        hasUnsubscribeAccess={hasUnsubscribeAccess}
-        refetchPremium={refetchPremium}
-        openPremiumModal={openModal}
-        checked={selected.get(item.name) || false}
-        onToggleSelect={onToggleSelect}
-        readPercentage={readPercentage}
         archivedEmails={archivedEmails}
         archivedPercentage={archivedPercentage}
+        checked={selected.get(item.name)}
+        emailAccountId={emailAccountId}
         filter={filter}
+        hasUnsubscribeAccess={hasUnsubscribeAccess}
+        item={item}
+        key={item.name}
+        labels={userLabels}
+        mutate={mutate}
+        onDoubleClick={() => onOpenNewsletter(item)}
+        onOpenNewsletter={onOpenNewsletter}
+        onSelectRow={() => setSelectedRow(item)}
+        onToggleSelect={onToggleSelect}
+        openPremiumModal={openModal}
+        readPercentage={readPercentage}
+        refetchPremium={refetchPremium}
+        selected={selectedRow?.name === item.name}
+        userEmail={userEmail}
       />
     );
   });
@@ -316,8 +316,8 @@ export function BulkUnsubscribe() {
               emails. You can read more in our{" "}
               <TextLink
                 href="https://docs.getinboxzero.com/essentials/bulk-email-unsubscriber"
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               >
                 help center
               </TextLink>
@@ -330,21 +330,21 @@ export function BulkUnsubscribe() {
 
       <DismissibleVideoCard
         className="my-4"
-        icon={<ArchiveIcon className="size-5" />}
-        title="Getting started with Bulk Unsubscribe"
         description={
           "Learn how to use the Bulk Unsubscribe to unsubscribe from and archive unwanted emails."
         }
-        videoSrc="https://www.youtube.com/embed/T1rnooV4OYc"
-        thumbnailSrc="https://img.youtube.com/vi/T1rnooV4OYc/0.jpg"
+        icon={<ArchiveIcon className="size-5" />}
         storageKey="bulk-unsubscribe-onboarding-video"
+        thumbnailSrc="https://img.youtube.com/vi/T1rnooV4OYc/0.jpg"
+        title="Getting started with Bulk Unsubscribe"
+        videoSrc="https://www.youtube.com/embed/T1rnooV4OYc"
       />
 
-      <div className="items-center justify-between flex mt-4 flex-wrap">
+      <div className="mt-4 flex flex-wrap items-center justify-between">
         <ActionBar rightContent={<LoadStatsButton />}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-10">
+              <Button className="h-10" size="sm" variant="outline">
                 {selectedFilter?.icon}
                 <span className="ml-2">{selectedFilter?.label ?? "All"}</span>
                 <ChevronDown className="ml-2 h-4 w-4 text-gray-400" />
@@ -354,8 +354,8 @@ export function BulkUnsubscribe() {
               {filterOptions.map((option) => (
                 <div key={option.value}>
                   <DropdownMenuItem
-                    onClick={() => setFilter(option.value)}
                     className="flex items-center justify-between"
+                    onClick={() => setFilter(option.value)}
                   >
                     <span className="flex items-center gap-2">
                       {option.icon}
@@ -371,11 +371,11 @@ export function BulkUnsubscribe() {
             </DropdownMenuContent>
           </DropdownMenu>
           <DatePickerWithRange
+            dateDropdown={dateDropdown}
             dateRange={dateRange}
+            onSetDateDropdown={onSetDateDropdown}
             onSetDateRange={setDateRange}
             selectOptions={selectOptions}
-            dateDropdown={dateDropdown}
-            onSetDateDropdown={onSetDateDropdown}
           />
           <SearchBar onSearch={setSearch} />
         </ActionBar>
@@ -386,12 +386,12 @@ export function BulkUnsubscribe() {
       </ClientOnly>
 
       <BulkActions
-        selected={selected}
-        mutate={mutate}
-        onClearSelection={clearSelection}
         deselectItem={deselectItem}
-        newsletters={rows}
         filter={filter}
+        mutate={mutate}
+        newsletters={rows}
+        onClearSelection={clearSelection}
+        selected={selected}
         totalCount={rows?.length ?? 0}
       />
 
@@ -410,8 +410,8 @@ export function BulkUnsubscribe() {
           )
         ) : (
           <LoadingContent
-            loading={!data && isLoading}
             error={error}
+            loading={!data && isLoading}
             loadingComponent={
               isMobile ? (
                 <BulkUnsubscribeMobileSkeleton />
@@ -426,23 +426,23 @@ export function BulkUnsubscribe() {
                   <BulkUnsubscribeMobile tableRows={tableRows} />
                 ) : (
                   <BulkUnsubscribeDesktop
-                    sortColumn={sortColumn}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                    tableRows={tableRows}
                     isAllSelected={isAllSelected}
                     isSomeSelected={isSomeSelected}
+                    onSort={handleSort}
                     onToggleSelectAll={onToggleSelectAll}
+                    sortColumn={sortColumn}
+                    sortDirection={sortDirection}
+                    tableRows={tableRows}
                   />
                 )}
                 {/* Only show expand/collapse when there might be more results */}
                 {(expanded || (rows && rows.length >= 50)) && (
                   <div className="mt-2 px-6 pb-6">
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setExpanded(!expanded)}
                       className="w-full"
+                      onClick={() => setExpanded(!expanded)}
+                      size="sm"
+                      variant="outline"
                     >
                       {expanded ? (
                         <>
@@ -460,9 +460,9 @@ export function BulkUnsubscribe() {
                 )}
               </>
             ) : (
-              <div className="flex flex-col items-center justify-center py-16 px-4">
+              <div className="flex flex-col items-center justify-center px-4 py-16">
                 <InboxIcon className="h-16 w-16 text-gray-300" />
-                <h3 className="mt-4 text-lg font-semibold">No emails found</h3>
+                <h3 className="mt-4 font-semibold text-lg">No emails found</h3>
                 <p className="mt-2 text-center text-muted-foreground">
                   Adjust the filters or click "Load More" to load additional
                   emails.
@@ -473,10 +473,10 @@ export function BulkUnsubscribe() {
         )}
       </Card>
       <NewsletterModal
+        mutate={mutate}
         newsletter={openedNewsletter}
         onClose={() => setOpenedNewsletter(undefined)}
         refreshInterval={refreshInterval}
-        mutate={mutate}
       />
       <PremiumModal />
     </PageWrapper>

@@ -1,9 +1,9 @@
-import type { ParsedMessageHeaders } from "@/utils/types";
 import { extractEmailAddress } from "@/utils/email";
+import type { ParsedMessageHeaders } from "@/utils/types";
 
 export interface ReplyAllRecipients {
-  to: string;
   cc: string[];
+  to: string;
 }
 
 /**
@@ -18,7 +18,7 @@ export interface ReplyAllRecipients {
 export function buildReplyAllRecipients(
   headers: ParsedMessageHeaders,
   overrideTo: string | undefined,
-  currentUserEmail: string,
+  currentUserEmail: string
 ): ReplyAllRecipients {
   // Determine the primary recipient (TO field)
   const replyToRaw = overrideTo || headers["reply-to"] || headers.from;
@@ -40,7 +40,7 @@ export function buildReplyAllRecipients(
         email: extractEmailAddress(addr.trim()),
       }))
       .filter(
-        ({ email }) => email && email !== replyTo && email !== currentUser,
+        ({ email }) => email && email !== replyTo && email !== currentUser
       );
 
     for (const { raw, email } of originalCcAddresses) {
@@ -61,7 +61,7 @@ export function buildReplyAllRecipients(
         email: extractEmailAddress(addr.trim()),
       }))
       .filter(
-        ({ email }) => email && email !== replyTo && email !== currentUser,
+        ({ email }) => email && email !== replyTo && email !== currentUser
       );
 
     for (const { raw, email } of originalToAddresses) {
@@ -93,11 +93,11 @@ export function formatCcList(ccList: string[]): string | undefined {
  */
 export function mergeAndDedupeRecipients(
   existing: string[],
-  manual: string | undefined,
+  manual: string | undefined
 ): string[] {
   const result = [...existing];
   const seen = new Set(
-    existing.map((e) => extractEmailAddress(e).toLowerCase()),
+    existing.map((e) => extractEmailAddress(e).toLowerCase())
   );
 
   if (manual) {

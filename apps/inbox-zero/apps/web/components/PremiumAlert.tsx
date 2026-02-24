@@ -1,16 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { CrownIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { hasAiAccess, hasUnsubscribeAccess, isPremium } from "@/utils/premium";
-import { Tooltip } from "@/components/Tooltip";
-import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
-import type { PremiumTier } from "@/generated/prisma/enums";
+import Link from "next/link";
 import { starterTierName } from "@/app/(app)/premium/config";
-import { useUser } from "@/hooks/useUser";
+import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
+import { Tooltip } from "@/components/Tooltip";
+import { Button } from "@/components/ui/button";
 import { ActionCard } from "@/components/ui/card";
 import { env } from "@/env";
+import type { PremiumTier } from "@/generated/prisma/enums";
+import { useUser } from "@/hooks/useUser";
+import { hasAiAccess, hasUnsubscribeAccess, isPremium } from "@/utils/premium";
 
 export function usePremium() {
   const swrResponse = useUser();
@@ -77,9 +77,9 @@ export function PremiumAiAssistantAlert({
     return (
       <div className={className}>
         <ActionCard
+          description="This feature is not available on trial plans."
           icon={<CrownIcon className="h-5 w-5" />}
           title="Active Subscription Required"
-          description="This feature is not available on trial plans."
         />
       </div>
     );
@@ -89,36 +89,36 @@ export function PremiumAiAssistantAlert({
     <div className={className}>
       {isBasicPlan ? (
         <ActionCard
-          icon={<CrownIcon className="h-5 w-5" />}
-          title={`${starterTierName} Plan Required`}
-          description={`Switch to the ${starterTierName} plan to use this feature.`}
           action={
-            <Button variant="primaryBlack" onClick={openModal}>
+            <Button onClick={openModal} variant="primaryBlack">
               Switch Plan
             </Button>
           }
+          description={`Switch to the ${starterTierName} plan to use this feature.`}
+          icon={<CrownIcon className="h-5 w-5" />}
+          title={`${starterTierName} Plan Required`}
         />
       ) : showSetApiKey ? (
         <ActionCard
-          icon={<CrownIcon className="h-5 w-5" />}
-          title="API Key Required"
-          description="You need to set an AI API key to use this feature."
           action={
-            <Button variant="primaryBlack" asChild>
+            <Button asChild variant="primaryBlack">
               <Link href="/settings">Set API Key</Link>
             </Button>
           }
+          description="You need to set an AI API key to use this feature."
+          icon={<CrownIcon className="h-5 w-5" />}
+          title="API Key Required"
         />
       ) : (
         <ActionCard
-          icon={<CrownIcon className="h-5 w-5" />}
-          title="Premium Feature"
-          description={`This is a premium feature. Upgrade to the ${starterTierName} plan.`}
           action={
-            <Button variant="primaryBlack" onClick={openModal}>
+            <Button onClick={openModal} variant="primaryBlack">
               Upgrade
             </Button>
           }
+          description={`This is a premium feature. Upgrade to the ${starterTierName} plan.`}
+          icon={<CrownIcon className="h-5 w-5" />}
+          title="Premium Feature"
         />
       )}
       <PremiumModal />
@@ -141,16 +141,16 @@ export function PremiumAlertWithData({
     data,
   } = usePremium();
 
-  if (!isLoadingPremium && !hasAiAccess) {
+  if (!(isLoadingPremium || hasAiAccess)) {
     return (
       <PremiumAiAssistantAlert
-        showSetApiKey={isProPlanWithoutApiKey}
+        activeOnly={activeOnly}
         className={className}
-        tier={tier}
+        showSetApiKey={isProPlanWithoutApiKey}
         stripeSubscriptionStatus={
           data?.premium?.stripeSubscriptionStatus || null
         }
-        activeOnly={activeOnly}
+        tier={tier}
       />
     );
   }
@@ -163,7 +163,9 @@ export function PremiumTooltip(props: {
   showTooltip: boolean;
   openModal: () => void;
 }) {
-  if (!props.showTooltip) return props.children;
+  if (!props.showTooltip) {
+    return props.children;
+  }
 
   return (
     <Tooltip

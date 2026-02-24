@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, type Mock } from "vitest";
+import { describe, expect, it, type Mock, vi } from "vitest";
 import { deleteDraft, getDraft } from "@/utils/gmail/draft";
 import { GmailLabel } from "@/utils/gmail/label";
 

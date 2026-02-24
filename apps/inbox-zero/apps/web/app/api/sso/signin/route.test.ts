@@ -42,9 +42,12 @@ describe("SSO Signin Route", () => {
     organizationSlug?: string;
   }) => {
     const searchParams = new URLSearchParams();
-    if (params.email) searchParams.set("email", params.email);
-    if (params.organizationSlug)
+    if (params.email) {
+      searchParams.set("email", params.email);
+    }
+    if (params.organizationSlug) {
       searchParams.set("organizationSlug", params.organizationSlug);
+    }
 
     const url = `http://localhost/api/sso/signin?${searchParams.toString()}`;
     return new NextRequest(url);

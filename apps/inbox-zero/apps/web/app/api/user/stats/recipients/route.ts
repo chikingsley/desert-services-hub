@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { withEmailAccount } from "@/utils/middleware";
 import { getEmailFieldStats } from "@/app/api/user/stats/helpers";
+import { withEmailAccount } from "@/utils/middleware";
 
 const recipientStatsQuery = z.object({
   fromDate: z.coerce.number().nullish(),
@@ -14,7 +14,7 @@ export interface RecipientsResponse {
 }
 
 async function getRecipientStatistics(
-  options: RecipientStatsQuery & { emailAccountId: string },
+  options: RecipientStatsQuery & { emailAccountId: string }
 ): Promise<RecipientsResponse> {
   const [mostReceived] = await Promise.all([getMostSentTo(options)]);
 
@@ -23,7 +23,7 @@ async function getRecipientStatistics(
       (d: { to?: string; count: number }) => ({
         name: d.to || "",
         value: d.count,
-      }),
+      })
     ),
   };
 }
@@ -63,5 +63,5 @@ export const GET = withEmailAccount(
     });
 
     return NextResponse.json(result);
-  },
+  }
 );

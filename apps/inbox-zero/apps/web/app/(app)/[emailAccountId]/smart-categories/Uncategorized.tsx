@@ -1,29 +1,29 @@
 "use client";
 
-import useSWRInfinite from "swr/infinite";
-import { useMemo, useCallback } from "react";
 import { ChevronsDownIcon, SparklesIcon, StopCircleIcon } from "lucide-react";
+import { useCallback, useMemo } from "react";
+import useSWRInfinite from "swr/infinite";
+import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
+import type { UncategorizedSendersResponse } from "@/app/api/user/categorize/senders/uncategorized/route";
 import { ClientOnly } from "@/components/ClientOnly";
 import { SendersTable } from "@/components/GroupedTable";
+import { ButtonLoader } from "@/components/Loading";
 import { LoadingContent } from "@/components/LoadingContent";
-import { Button } from "@/components/ui/button";
-import type { UncategorizedSendersResponse } from "@/app/api/user/categorize/senders/uncategorized/route";
-import { TopBar } from "@/components/TopBar";
+import { PremiumTooltip, usePremium } from "@/components/PremiumAlert";
 import { toastError } from "@/components/Toast";
+import { Toggle } from "@/components/Toggle";
+import { TooltipExplanation } from "@/components/TooltipExplanation";
+import { TopBar } from "@/components/TopBar";
+import { SectionDescription } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import {
-  useHasProcessingItems,
   pushToAiCategorizeSenderQueueAtom,
   stopAiCategorizeSenderQueue,
+  useHasProcessingItems,
 } from "@/store/ai-categorize-sender-queue";
-import { SectionDescription } from "@/components/Typography";
-import { ButtonLoader } from "@/components/Loading";
-import { PremiumTooltip, usePremium } from "@/components/PremiumAlert";
-import { usePremiumModal } from "@/app/(app)/premium/PremiumModal";
-import { Toggle } from "@/components/Toggle";
 import { setAutoCategorizeAction } from "@/utils/actions/categorize";
-import { TooltipExplanation } from "@/components/TooltipExplanation";
 import type { CategoryWithRules } from "@/utils/category.server";
-import { useAccount } from "@/providers/EmailAccountProvider";
 
 export function Uncategorized({
   categories,
@@ -43,7 +43,7 @@ export function Uncategorized({
       senderAddresses?.map((sender) => {
         return { address: sender.email, name: sender.name, category: null };
       }),
-    [senderAddresses],
+    [senderAddresses]
   );
 
   const { emailAccountId } = useAccount();
@@ -53,12 +53,12 @@ export function Uncategorized({
       <TopBar>
         <div className="flex gap-2">
           <PremiumTooltip
-            showTooltip={!hasAiAccess}
             openModal={openPremiumModal}
+            showTooltip={!hasAiAccess}
           >
             <Button
-              loading={hasProcessingItems}
               disabled={!hasAiAccess}
+              loading={hasProcessingItems}
               onClick={async () => {
                 if (!senderAddresses?.length) {
                   toastError({ description: "No senders to categorize" });
@@ -78,10 +78,10 @@ export function Uncategorized({
 
           {hasProcessingItems && (
             <Button
-              variant="outline"
               onClick={() => {
                 stopAiCategorizeSenderQueue();
               }}
+              variant="outline"
             >
               <StopCircleIcon className="mr-2 size-4" />
               Stop
@@ -105,12 +105,12 @@ export function Uncategorized({
       <ClientOnly>
         {senders?.length ? (
           <>
-            <SendersTable senders={senders} categories={categories} />
+            <SendersTable categories={categories} senders={senders} />
             {hasMore && (
               <Button
-                variant="outline"
-                className="mx-2 mb-4 mt-2 w-full"
+                className="mx-2 mt-2 mb-4 w-full"
                 onClick={loadMore}
+                variant="outline"
               >
                 {isLoading ? (
                   <ButtonLoader />
@@ -143,9 +143,9 @@ function AutoCategorizeToggle({
 }) {
   return (
     <Toggle
-      name="autoCategorizeSenders"
-      label="Auto categorize"
       enabled={autoCategorizeSenders}
+      label="Auto categorize"
+      name="autoCategorizeSenders"
       onChange={async (enabled) => {
         await setAutoCategorizeAction(emailAccountId, {
           autoCategorizeSenders: enabled,
@@ -158,10 +158,12 @@ function AutoCategorizeToggle({
 function useSenders() {
   const getKey = (
     pageIndex: number,
-    previousPageData: UncategorizedSendersResponse | null,
+    previousPageData: UncategorizedSendersResponse | null
   ) => {
     // Reached the end
-    if (previousPageData && !previousPageData.nextOffset) return null;
+    if (previousPageData && !previousPageData.nextOffset) {
+      return null;
+    }
 
     const baseUrl = "/api/user/categorize/senders/uncategorized";
     const offset = pageIndex === 0 ? 0 : previousPageData?.nextOffset;

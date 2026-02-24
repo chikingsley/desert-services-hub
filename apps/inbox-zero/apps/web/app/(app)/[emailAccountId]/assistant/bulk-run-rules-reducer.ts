@@ -33,7 +33,7 @@ export const initialBulkRunState: BulkRunState = {
 
 export function bulkRunReducer(
   state: BulkRunState,
-  action: BulkRunAction,
+  action: BulkRunAction
 ): BulkRunState {
   switch (action.type) {
     case "START":
@@ -62,7 +62,9 @@ export function bulkRunReducer(
 
     case "COMPLETE":
       // Don't override stopped status
-      if (state.status === "stopped") return state;
+      if (state.status === "stopped") {
+        return state;
+      }
 
       // No emails found - go back to idle
       if (action.count === 0) {
@@ -77,14 +79,18 @@ export function bulkRunReducer(
       return state;
 
     case "PAUSE":
-      if (state.status !== "processing") return state;
+      if (state.status !== "processing") {
+        return state;
+      }
       return {
         ...state,
         status: "paused",
       };
 
     case "RESUME":
-      if (state.status !== "paused") return state;
+      if (state.status !== "paused") {
+        return state;
+      }
       return {
         ...state,
         status: "processing",
@@ -92,7 +98,9 @@ export function bulkRunReducer(
 
     case "STOP":
       // Don't override if already stopped
-      if (state.status === "stopped") return state;
+      if (state.status === "stopped") {
+        return state;
+      }
       return {
         ...state,
         status: "stopped",
@@ -109,9 +117,11 @@ export function bulkRunReducer(
 
 export function getProgressMessage(
   state: BulkRunState,
-  remaining: number,
+  remaining: number
 ): string | null {
-  if (state.processedThreadIds.size === 0) return null;
+  if (state.processedThreadIds.size === 0) {
+    return null;
+  }
 
   const completed = state.processedThreadIds.size - remaining;
 

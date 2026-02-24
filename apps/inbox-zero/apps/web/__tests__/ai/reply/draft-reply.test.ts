@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
+import { getEmailAccount } from "@/__tests__/helpers";
 import { aiDraftReply } from "@/utils/ai/reply/draft-reply";
 import type { EmailForLLM } from "@/utils/types";
-import { getEmailAccount } from "@/__tests__/helpers";
 
 const TIMEOUT = 60_000;
 
@@ -40,7 +40,7 @@ describe.runIf(isAiTest)("aiDraftReply", () => {
       }
       console.debug("Generated reply (with knowledge/history):\n", result);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 
   test(
@@ -68,7 +68,7 @@ describe.runIf(isAiTest)("aiDraftReply", () => {
       }
       console.debug("Generated reply (no knowledge/history):\n", result);
     },
-    TEST_TIMEOUT,
+    TEST_TIMEOUT
   );
 });
 

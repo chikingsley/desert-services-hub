@@ -1,14 +1,14 @@
-import { auth, drive, type drive_v3 } from "@googleapis/drive";
 import { Readable } from "node:stream";
+import { auth, drive, type drive_v3 } from "@googleapis/drive";
 import { env } from "@/env";
-import type { Logger } from "@/utils/logger";
-import { createScopedLogger } from "@/utils/logger";
 import type {
-  DriveProvider,
-  DriveFolder,
   DriveFile,
+  DriveFolder,
+  DriveProvider,
   UploadFileParams,
 } from "@/utils/drive/types";
+import type { Logger } from "@/utils/logger";
+import { createScopedLogger } from "@/utils/logger";
 
 export class GoogleDriveProvider implements DriveProvider {
   readonly name = "google" as const;

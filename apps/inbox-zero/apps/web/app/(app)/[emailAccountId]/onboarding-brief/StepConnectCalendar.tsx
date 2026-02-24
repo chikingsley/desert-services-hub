@@ -1,11 +1,11 @@
 "use client";
 
 import { Calendar, CheckIcon } from "lucide-react";
-import { PageHeading, TypographyP } from "@/components/Typography";
-import { useCalendars } from "@/hooks/useCalendars";
-import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
 import { ConnectCalendar } from "@/app/(app)/[emailAccountId]/calendars/ConnectCalendar";
+import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
+import { PageHeading, TypographyP } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
+import { useCalendars } from "@/hooks/useCalendars";
 import { useAccount } from "@/providers/EmailAccountProvider";
 import { prefixPath } from "@/utils/path";
 
@@ -26,20 +26,20 @@ export function StepConnectCalendar({ onNext }: { onNext: () => void }) {
 
       <div className="text-center">
         <PageHeading className="mt-4">Connect Your Calendar</PageHeading>
-        <TypographyP className="mt-2 max-w-lg mx-auto">
+        <TypographyP className="mx-auto mt-2 max-w-lg">
           We'll automatically detect your upcoming meetings with external guests
           and prepare personalized briefings.
         </TypographyP>
       </div>
 
-      <div className="flex flex-col items-center justify-center mt-8 gap-4">
+      <div className="mt-8 flex flex-col items-center justify-center gap-4">
         {hasCalendarConnected ? (
           <>
-            <div className="flex items-center gap-2 text-green-600 font-medium animate-in fade-in zoom-in duration-300">
+            <div className="fade-in zoom-in flex animate-in items-center gap-2 font-medium text-green-600 duration-300">
               <CheckIcon className="h-5 w-5" />
               Calendar Connected!
             </div>
-            <Button onClick={onNext} className="mt-2">
+            <Button className="mt-2" onClick={onNext}>
               Continue
             </Button>
           </>
@@ -47,7 +47,7 @@ export function StepConnectCalendar({ onNext }: { onNext: () => void }) {
           <ConnectCalendar
             onboardingReturnPath={prefixPath(
               emailAccountId,
-              "/onboarding-brief?step=2",
+              "/onboarding-brief?step=2"
             )}
           />
         )}

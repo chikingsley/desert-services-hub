@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { env } from "@/env";
-import { hasAiAccess, isPremium } from "@/utils/premium";
-import { unwatchEmails } from "@/utils/email/watch-manager";
 import { createEmailProvider } from "@/utils/email/provider";
-import prisma from "@/utils/prisma";
+import { unwatchEmails } from "@/utils/email/watch-manager";
 import type { Logger } from "@/utils/logger";
+import { hasAiAccess, isPremium } from "@/utils/premium";
+import prisma from "@/utils/prisma";
 
 export async function getWebhookEmailAccount(
   where: { email: string } | { watchEmailsSubscriptionId: string },
-  logger: Logger,
+  logger: Logger
 ) {
   const query = {
     select: {
@@ -119,7 +119,7 @@ type ValidationResult =
 
 export async function validateWebhookAccount(
   emailAccount: ValidatedWebhookAccountData | null,
-  logger: Logger,
+  logger: Logger
 ): Promise<ValidationResult> {
   if (!emailAccount) {
     logger.error("Account not found");
@@ -135,7 +135,7 @@ export async function validateWebhookAccount(
     ? { tier: "PROFESSIONAL_ANNUALLY" as const }
     : isPremium(
           emailAccount.user.premium?.lemonSqueezyRenewsAt || null,
-          emailAccount.user.premium?.stripeSubscriptionStatus || null,
+          emailAccount.user.premium?.stripeSubscriptionStatus || null
         )
       ? emailAccount.user.premium
       : undefined;
@@ -181,14 +181,13 @@ export async function validateWebhookAccount(
   const hasFilingEnabled =
     emailAccount.filingEnabled && !!emailAccount.filingPrompt;
 
-  if (!hasAutomationRules && !hasFilingEnabled) {
+  if (!(hasAutomationRules || hasFilingEnabled)) {
     logger.info("Has no rules enabled and filing not configured");
     return { success: false, response: NextResponse.json({ ok: true }) };
   }
 
   if (
-    !emailAccount.account?.access_token ||
-    !emailAccount.account?.refresh_token
+    !(emailAccount.account?.access_token && emailAccount.account?.refresh_token)
   ) {
     logger.error("Missing access or refresh token");
     return { success: false, response: NextResponse.json({ ok: true }) };

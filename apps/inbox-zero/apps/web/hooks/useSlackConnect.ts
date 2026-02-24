@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
 import { useAction } from "next-safe-action/hooks";
-import { fetchWithAccount } from "@/utils/fetch";
-import { captureException, getActionErrorMessage } from "@/utils/error";
-import { toastError, toastSuccess, toastInfo } from "@/components/Toast";
-import { linkSlackWorkspaceAction } from "@/utils/actions/messaging-channels";
+import { useRef, useState } from "react";
 import type { GetSlackAuthUrlResponse } from "@/app/api/slack/auth-url/route";
+import { toastError, toastInfo, toastSuccess } from "@/components/Toast";
+import { linkSlackWorkspaceAction } from "@/utils/actions/messaging-channels";
+import { captureException, getActionErrorMessage } from "@/utils/error";
+import { fetchWithAccount } from "@/utils/fetch";
 
 export function useSlackConnect({
   emailAccountId,
@@ -19,11 +19,13 @@ export function useSlackConnect({
   const connectingRef = useRef(false);
 
   const { executeAsync: linkSlack } = useAction(
-    linkSlackWorkspaceAction.bind(null, emailAccountId),
+    linkSlackWorkspaceAction.bind(null, emailAccountId)
   );
 
   const connect = async () => {
-    if (connecting || connectingRef.current) return;
+    if (connecting || connectingRef.current) {
+      return;
+    }
 
     connectingRef.current = true;
     setConnecting(true);
@@ -32,7 +34,9 @@ export function useSlackConnect({
         url: "/api/slack/auth-url",
         emailAccountId,
       });
-      if (!res.ok) throw new Error("Failed to get Slack auth URL");
+      if (!res.ok) {
+        throw new Error("Failed to get Slack auth URL");
+      }
       const data: GetSlackAuthUrlResponse = await res.json();
 
       if (data.existingWorkspace) {
@@ -40,7 +44,7 @@ export function useSlackConnect({
           teamId: data.existingWorkspace.teamId,
         });
 
-        if (!result?.serverError && !result?.validationErrors) {
+        if (!(result?.serverError || result?.validationErrors)) {
           toastSuccess({ description: "Slack connected" });
           onConnected?.();
           return;
@@ -51,7 +55,7 @@ export function useSlackConnect({
             serverError: result?.serverError,
             validationErrors: result?.validationErrors,
           },
-          "Failed to link Slack workspace",
+          "Failed to link Slack workspace"
         );
 
         if (linkError.includes("Could not find your Slack account")) {

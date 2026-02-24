@@ -1,13 +1,13 @@
-import { listMcpTools } from "@/utils/mcp/list-tools";
-import { getIntegration, type IntegrationKey } from "@/utils/mcp/integrations";
-import prisma from "@/utils/prisma";
-import type { Logger } from "@/utils/logger";
 import type { Prisma } from "@/generated/prisma/client";
+import type { Logger } from "@/utils/logger";
+import { getIntegration, type IntegrationKey } from "@/utils/mcp/integrations";
+import { listMcpTools } from "@/utils/mcp/list-tools";
+import prisma from "@/utils/prisma";
 
 export async function syncMcpTools(
   integration: IntegrationKey,
   emailAccountId: string,
-  log: Logger,
+  log: Logger
 ) {
   const integrationConfig = getIntegration(integration);
   if (!integrationConfig) {
@@ -98,7 +98,7 @@ export async function syncMcpTools(
     logger.error("Failed to sync MCP tools", { error });
 
     throw new Error(
-      `Failed to sync tools: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to sync tools: ${error instanceof Error ? error.message : "Unknown error"}`
     );
   }
 }
@@ -125,7 +125,9 @@ const READ_ONLY_ACTIONS = [
  */
 export function isReadOnlyTool(toolName: string): boolean {
   const parts = toolName.toLowerCase().split("-");
-  if (parts.length < 2) return false;
+  if (parts.length < 2) {
+    return false;
+  }
 
   const action = parts[1];
   return READ_ONLY_ACTIONS.includes(action);

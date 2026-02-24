@@ -1,7 +1,7 @@
+import { bedrock } from "@ai-sdk/amazon-bedrock";
+import { anthropic } from "@ai-sdk/anthropic";
 import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
-import { anthropic } from "@ai-sdk/anthropic";
-import { bedrock } from "@ai-sdk/amazon-bedrock";
 
 type LLMProvider = "google" | "openai" | "anthropic" | "bedrock";
 

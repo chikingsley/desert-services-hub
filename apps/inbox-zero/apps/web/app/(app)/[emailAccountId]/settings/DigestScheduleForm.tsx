@@ -1,31 +1,31 @@
-import { z } from "zod";
-import { type SubmitHandler, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
 import { useCallback } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import useSWR from "swr";
+import { z } from "zod";
+import type { GetDigestScheduleResponse } from "@/app/api/user/digest-schedule/route";
+import { ErrorMessage } from "@/components/Input";
+import { LoadingContent } from "@/components/LoadingContent";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
+import { FormItem } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import {
   Select,
-  SelectItem,
   SelectContent,
+  SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { FormItem } from "@/components/ui/form";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { updateDigestScheduleAction } from "@/utils/actions/settings";
+import { getActionErrorMessage } from "@/utils/error";
 import {
+  bitmaskToDayOfWeek,
   createCanonicalTimeOfDay,
   dayOfWeekToBitmask,
-  bitmaskToDayOfWeek,
 } from "@/utils/schedule";
-import { Button } from "@/components/ui/button";
-import { toastError, toastSuccess } from "@/components/Toast";
-import { getActionErrorMessage } from "@/utils/error";
-import { updateDigestScheduleAction } from "@/utils/actions/settings";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { useAction } from "next-safe-action/hooks";
-import type { GetDigestScheduleResponse } from "@/app/api/user/digest-schedule/route";
-import { LoadingContent } from "@/components/LoadingContent";
-import { ErrorMessage } from "@/components/Input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const digestScheduleFormSchema = z.object({
   schedule: z.string().min(1, "Please select a frequency"),
@@ -73,13 +73,13 @@ export function DigestScheduleForm({
   showSaveButton: boolean;
 }) {
   const { data, isLoading, error, mutate } = useSWR<GetDigestScheduleResponse>(
-    "/api/user/digest-schedule",
+    "/api/user/digest-schedule"
   );
 
   return (
     <LoadingContent
-      loading={isLoading}
       error={error}
+      loading={isLoading}
       loadingComponent={<Skeleton className="min-h-[200px] w-full" />}
     >
       <DigestScheduleFormInner
@@ -128,7 +128,7 @@ function DigestScheduleFormInner({
           description: getActionErrorMessage(error.error),
         });
       },
-    },
+    }
   );
 
   const onSubmit: SubmitHandler<DigestScheduleFormValues> = useCallback(
@@ -154,13 +154,16 @@ function DigestScheduleFormInner({
       }
 
       let hour24 = Number.parseInt(hour, 10);
-      if (ampm === "AM" && hour24 === 12) hour24 = 0;
-      else if (ampm === "PM" && hour24 !== 12) hour24 += 12;
+      if (ampm === "AM" && hour24 === 12) {
+        hour24 = 0;
+      } else if (ampm === "PM" && hour24 !== 12) {
+        hour24 += 12;
+      }
 
       // Use canonical date (1970-01-01) to store only time information
       const timeOfDay = createCanonicalTimeOfDay(
         hour24,
-        Number.parseInt(minute, 10),
+        Number.parseInt(minute, 10)
       );
 
       const scheduleData = {
@@ -172,19 +175,19 @@ function DigestScheduleFormInner({
 
       execute(scheduleData);
     },
-    [execute],
+    [execute]
   );
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Label className="mb-2 mt-4">Send the digest email</Label>
+      <Label className="mt-4 mb-2">Send the digest email</Label>
 
       <div className="grid grid-cols-3 gap-2">
         <FormItem>
           <Label htmlFor="frequency-select">Every</Label>
           <Select
-            value={watchedValues.schedule}
             onValueChange={(val) => setValue("schedule", val)}
+            value={watchedValues.schedule}
           >
             <SelectTrigger id="frequency-select">
               {watchedValues.schedule
@@ -216,8 +219,8 @@ function DigestScheduleFormInner({
                 : "on"}
             </Label>
             <Select
-              value={watchedValues.dayOfWeek}
               onValueChange={(val) => setValue("dayOfWeek", val)}
+              value={watchedValues.dayOfWeek}
             >
               <SelectTrigger id="dayofweek-select">
                 {watchedValues.dayOfWeek
@@ -246,8 +249,8 @@ function DigestScheduleFormInner({
           <div className="flex items-end gap-2">
             <FormItem>
               <Select
-                value={watchedValues.hour}
                 onValueChange={(val) => setValue("hour", val)}
+                value={watchedValues.hour}
               >
                 <SelectTrigger id="hour-select">
                   {watchedValues.hour}
@@ -264,8 +267,8 @@ function DigestScheduleFormInner({
             <span className="pb-2">:</span>
             <FormItem>
               <Select
-                value={watchedValues.minute}
                 onValueChange={(val) => setValue("minute", val)}
+                value={watchedValues.minute}
               >
                 <SelectTrigger id="minute-select">
                   {watchedValues.minute}
@@ -281,8 +284,8 @@ function DigestScheduleFormInner({
             </FormItem>
             <FormItem>
               <Select
-                value={watchedValues.ampm}
                 onValueChange={(val) => setValue("ampm", val as "AM" | "PM")}
+                value={watchedValues.ampm}
               >
                 <SelectTrigger id="ampm-select">
                   {watchedValues.ampm}
@@ -320,9 +323,9 @@ function DigestScheduleFormInner({
       </div>
       {showSaveButton && (
         <Button
-          type="submit"
-          loading={isExecuting || isSubmitting}
           className="mt-4"
+          loading={isExecuting || isSubmitting}
+          type="submit"
         >
           Save
         </Button>
@@ -332,10 +335,12 @@ function DigestScheduleFormInner({
 }
 
 function getInitialScheduleProps(
-  digestSchedule?: GetDigestScheduleResponse | null,
+  digestSchedule?: GetDigestScheduleResponse | null
 ) {
   const initialSchedule = (() => {
-    if (!digestSchedule) return "daily";
+    if (!digestSchedule) {
+      return "daily";
+    }
     switch (digestSchedule.intervalDays) {
       case 1:
         return "daily";
@@ -351,7 +356,9 @@ function getInitialScheduleProps(
   })();
 
   const initialDayOfWeek = (() => {
-    if (!digestSchedule || digestSchedule.daysOfWeek == null) return "1";
+    if (!digestSchedule || digestSchedule.daysOfWeek == null) {
+      return "1";
+    }
     const dayOfWeek = bitmaskToDayOfWeek(digestSchedule.daysOfWeek);
     return dayOfWeek !== null ? dayOfWeek.toString() : "1";
   })();

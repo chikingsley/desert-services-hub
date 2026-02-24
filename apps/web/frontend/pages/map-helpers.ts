@@ -11,32 +11,32 @@ export const USGS_3DEP_GET_SAMPLES_URL =
   "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples";
 
 export interface ParcelInfo {
-  apn: string;
-  address: string | null;
-  owner: string | null;
   acres: number | null;
+  address: string | null;
+  apn: string;
+  owner: string | null;
 }
 
 export type LngLatTuple = [number, number];
 
 export interface ParcelResult {
-  info: ParcelInfo;
   geojson: GeoJSON.Feature<GeoJSON.Polygon, { APN: string }>;
+  info: ParcelInfo;
 }
 
 export interface LowestPoint {
-  point: LngLatTuple;
-  elevationMeters: number;
-  source: "terrain" | "3dep";
   approximate: boolean;
+  elevationMeters: number;
+  point: LngLatTuple;
   resolutionMeters: number | null;
+  source: "terrain" | "3dep";
 }
 
 interface EsriAttributes {
   APN?: string | number;
-  PHYSICAL_ADDRESS?: string;
-  OWNER_NAME?: string;
   LAND_SIZE?: number;
+  OWNER_NAME?: string;
+  PHYSICAL_ADDRESS?: string;
 }
 
 interface EsriFeature {
@@ -274,8 +274,8 @@ interface UsgsSample {
     x?: number;
     y?: number;
   };
-  value?: string | number;
   resolution?: number;
+  value?: string | number;
 }
 
 interface UsgsSampleResponse {

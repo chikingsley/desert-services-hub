@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createScopedLogger } from "@/utils/logger";
+import type { OutlookClient } from "./client";
 import {
+  getOutlookChildFolders,
   getOutlookFolderTree,
   getOutlookRootFolders,
-  getOutlookChildFolders,
 } from "./folders";
-import type { OutlookClient } from "./client";
-import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("outlook/folders");
 
@@ -17,7 +17,7 @@ vi.mock("@/utils/outlook/retry", () => ({
 }));
 
 function createMockClient(
-  mockResponses: Record<string, { value: unknown[] }>,
+  mockResponses: Record<string, { value: unknown[] }>
 ): OutlookClient {
   const mockGet = vi.fn();
   const mockApi = vi.fn().mockReturnValue({
@@ -33,7 +33,7 @@ function createMockClient(
 
     // Sort patterns by length (longest first) to match more specific patterns first
     const sortedPatterns = Object.entries(mockResponses).sort(
-      ([a], [b]) => b.length - a.length,
+      ([a], [b]) => b.length - a.length
     );
 
     for (const [pattern, response] of sortedPatterns) {
@@ -186,7 +186,7 @@ describe("getOutlookFolderTree", () => {
     const inbox = result.find((f) => f.displayName === "Inbox");
     expect(inbox?.childFolders[0].displayName).toBe("InboxChild");
     expect(inbox?.childFolders[0].childFolders[0].displayName).toBe(
-      "NestedFolder",
+      "NestedFolder"
     );
 
     const drafts = result.find((f) => f.displayName === "Drafts");
@@ -271,7 +271,7 @@ describe("getOutlookFolderTree", () => {
 
     // Should NOT have called the API for level2's children
     const level2ChildCalls = apiCallTracker.filter((call) =>
-      call.includes("level2-id/childFolders"),
+      call.includes("level2-id/childFolders")
     );
     expect(level2ChildCalls).toHaveLength(0);
   });
@@ -359,13 +359,13 @@ describe("getOutlookFolderTree", () => {
 
     // Should NOT have fetched children for no-children-id
     const noChildrenCalls = apiCallTracker.filter((call) =>
-      call.includes("no-children-id/childFolders"),
+      call.includes("no-children-id/childFolders")
     );
     expect(noChildrenCalls).toHaveLength(0);
 
     // SHOULD have fetched children for has-children-id
     const hasChildrenCalls = apiCallTracker.filter((call) =>
-      call.includes("has-children-id/childFolders"),
+      call.includes("has-children-id/childFolders")
     );
     expect(hasChildrenCalls).toHaveLength(1);
   });
@@ -471,7 +471,7 @@ describe("getOutlookChildFolders", () => {
     const result = await getOutlookChildFolders(
       mockClient,
       "parent-id",
-      logger,
+      logger
     );
 
     expect(result).toHaveLength(2);

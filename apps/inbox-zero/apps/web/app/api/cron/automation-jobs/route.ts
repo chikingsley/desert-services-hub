@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
-import { withError } from "@/utils/middleware";
-import { hasCronSecret, hasPostCronSecret } from "@/utils/cron";
-import { captureException } from "@/utils/error";
-import type { Logger } from "@/utils/logger";
-import { publishToQstashQueue } from "@/utils/upstash";
-import { getNextAutomationJobRunAt } from "@/utils/automation-jobs/cron";
 import {
   AutomationJobRunStatus,
   MessagingProvider,
 } from "@/generated/prisma/enums";
-import { isDuplicateError } from "@/utils/prisma-helpers";
+import { getNextAutomationJobRunAt } from "@/utils/automation-jobs/cron";
+import { hasCronSecret, hasPostCronSecret } from "@/utils/cron";
+import { captureException } from "@/utils/error";
+import type { Logger } from "@/utils/logger";
+import { withError } from "@/utils/middleware";
 import { getPremiumUserFilter } from "@/utils/premium";
+import prisma from "@/utils/prisma";
+import { isDuplicateError } from "@/utils/prisma-helpers";
+import { publishToQstashQueue } from "@/utils/upstash";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -21,7 +21,7 @@ const BATCH_SIZE = 100;
 export const GET = withError("cron/automation-jobs", async (request) => {
   if (!hasCronSecret(request)) {
     captureException(
-      new Error("Unauthorized request: api/cron/automation-jobs"),
+      new Error("Unauthorized request: api/cron/automation-jobs")
     );
     return new Response("Unauthorized", { status: 401 });
   }
@@ -33,7 +33,7 @@ export const GET = withError("cron/automation-jobs", async (request) => {
 export const POST = withError("cron/automation-jobs", async (request) => {
   if (!(await hasPostCronSecret(request))) {
     captureException(
-      new Error("Unauthorized cron request: api/cron/automation-jobs"),
+      new Error("Unauthorized cron request: api/cron/automation-jobs")
     );
     return new Response("Unauthorized", { status: 401 });
   }
@@ -158,7 +158,9 @@ async function claimDueJobRun({
         data: { nextRunAt },
       });
 
-      if (claim.count === 0) return null;
+      if (claim.count === 0) {
+        return null;
+      }
 
       const run = await tx.automationJobRun.create({
         data: {
@@ -172,7 +174,9 @@ async function claimDueJobRun({
       return run.id;
     });
   } catch (error) {
-    if (isDuplicateError(error)) return null;
+    if (isDuplicateError(error)) {
+      return null;
+    }
 
     throw error;
   }

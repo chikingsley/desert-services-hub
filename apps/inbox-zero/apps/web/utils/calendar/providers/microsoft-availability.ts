@@ -2,8 +2,8 @@ import type { Client } from "@microsoft/microsoft-graph-client";
 import type { Logger } from "@/utils/logger";
 import { getCalendarClientWithRefresh } from "@/utils/outlook/calendar-client";
 import type {
-  CalendarAvailabilityProvider,
   BusyPeriod,
+  CalendarAvailabilityProvider,
 } from "../availability-types";
 
 async function fetchMicrosoftCalendarBusyPeriods({
@@ -87,7 +87,7 @@ async function fetchMicrosoftCalendarBusyPeriods({
 }
 
 export function createMicrosoftAvailabilityProvider(
-  logger: Logger,
+  logger: Logger
 ): CalendarAvailabilityProvider {
   return {
     name: "microsoft",

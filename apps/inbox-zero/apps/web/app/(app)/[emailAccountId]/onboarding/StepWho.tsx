@@ -1,25 +1,25 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowRightIcon, SendIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { ArrowRightIcon, SendIcon } from "lucide-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "@/components/ui/form";
-import { Input } from "@/components/Input";
-import { saveOnboardingAnswersAction } from "@/utils/actions/onboarding";
-import { MutedText, PageHeading, TypographyP } from "@/components/Typography";
 import { usersRolesInfo } from "@/app/(app)/[emailAccountId]/onboarding/config";
-import { USER_ROLES } from "@/utils/constants/user-roles";
-import { cn } from "@/utils";
-import { ScrollableFadeContainer } from "@/components/ScrollableFadeContainer";
-import {
-  stepWhoSchema,
-  type StepWhoSchema,
-} from "@/utils/actions/onboarding.validation";
 import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
 import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
-import { updateEmailAccountRoleAction } from "@/utils/actions/email-account";
+import { Input } from "@/components/Input";
+import { ScrollableFadeContainer } from "@/components/ScrollableFadeContainer";
+import { MutedText, PageHeading, TypographyP } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { cn } from "@/utils";
+import { updateEmailAccountRoleAction } from "@/utils/actions/email-account";
+import { saveOnboardingAnswersAction } from "@/utils/actions/onboarding";
+import {
+  type StepWhoSchema,
+  stepWhoSchema,
+} from "@/utils/actions/onboarding.validation";
+import { USER_ROLES } from "@/utils/constants/user-roles";
 
 export function StepWho({
   initialRole,
@@ -57,11 +57,11 @@ export function StepWho({
     if (defaultRole && scrollContainerRef.current) {
       // Find the button with the selected role
       const selectedIndex = USER_ROLES.findIndex(
-        (role) => role.value === defaultRole,
+        (role) => role.value === defaultRole
       );
       if (selectedIndex !== -1) {
         const buttons = scrollContainerRef.current.querySelectorAll(
-          'button[type="button"]',
+          'button[type="button"]'
         );
         const selectedButton = buttons[selectedIndex];
         if (selectedButton) {
@@ -97,7 +97,7 @@ export function StepWho({
 
       <Form {...form}>
         <form
-          className="space-y-6 mt-4"
+          className="mt-4 space-y-6"
           onSubmit={form.handleSubmit(async (values) => {
             const roleToSave =
               values.role === "Other" ? customRole : values.role;
@@ -106,7 +106,7 @@ export function StepWho({
               emailAccountId,
               {
                 role: roleToSave,
-              },
+              }
             );
 
             // may deprecate this in the future, but to keep consistency with old data we're storing this too
@@ -123,31 +123,31 @@ export function StepWho({
           })}
         >
           <ScrollableFadeContainer
-            ref={scrollContainerRef}
             className="grid gap-2 px-1 pt-6 pb-6"
             fadeFromClass="from-slate-50"
+            ref={scrollContainerRef}
           >
             {Object.entries(usersRolesInfo).map(([roleName, role]) => {
               const Icon = role.icon;
               const description = USER_ROLES.find(
-                (r) => r.value === roleName,
+                (r) => r.value === roleName
               )?.description;
 
               return (
                 <button
-                  type="button"
-                  key={roleName}
                   className={cn(
-                    "rounded-xl border bg-card p-4 text-card-foreground shadow-sm text-left flex items-center gap-4 transition-all",
+                    "flex items-center gap-4 rounded-xl border bg-card p-4 text-left text-card-foreground shadow-sm transition-all",
                     watchedRole === roleName &&
-                      "border-blue-600 ring-2 ring-blue-100",
+                      "border-blue-600 ring-2 ring-blue-100"
                   )}
+                  key={roleName}
                   onClick={() => {
                     setValue("role", roleName);
                     if (roleName !== "Other") {
                       setCustomRole("");
                     }
                   }}
+                  type="button"
                 >
                   <IconCircle size="sm">
                     <Icon className="size-4" />
@@ -165,8 +165,8 @@ export function StepWho({
           {watchedRole === "Other" && (
             <div className="px-1 pb-6">
               <Input
+                className="w-full border-slate-300 px-4 py-3 text-lg transition-all focus:border-blue-600 focus:ring-blue-600"
                 name="customRole"
-                type="text"
                 placeholder="Enter your role..."
                 registerProps={{
                   value: customRole,
@@ -174,22 +174,22 @@ export function StepWho({
                     setCustomRole(e.target.value),
                   autoFocus: true,
                 }}
-                className="w-full border-slate-300 focus:border-blue-600 focus:ring-blue-600 transition-all py-3 px-4 text-lg"
+                type="text"
               />
             </div>
           )}
 
-          <div className="flex w-full max-w-xs mx-auto">
+          <div className="mx-auto flex w-full max-w-xs">
             <Button
-              type="submit"
               className="w-full"
-              loading={form.formState.isSubmitting}
               disabled={
                 !watchedRole || (watchedRole === "Other" && !customRole.trim())
               }
+              loading={form.formState.isSubmitting}
+              type="submit"
             >
               Continue
-              <ArrowRightIcon className="size-4 ml-2" />
+              <ArrowRightIcon className="ml-2 size-4" />
             </Button>
           </div>
         </form>

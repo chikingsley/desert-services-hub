@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
 import { withAuth } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export type ApiKeyResponse = Awaited<ReturnType<typeof getApiKeys>>;
 

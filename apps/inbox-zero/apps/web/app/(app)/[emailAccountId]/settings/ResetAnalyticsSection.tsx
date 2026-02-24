@@ -5,11 +5,11 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Item,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
   ItemActions,
+  ItemContent,
+  ItemDescription,
   ItemSeparator,
+  ItemTitle,
 } from "@/components/ui/item";
 import { resetAnalyticsAction } from "@/utils/actions/user";
 
@@ -19,7 +19,7 @@ export function ResetAnalyticsSection({
   emailAccountId: string;
 }) {
   const { executeAsync: executeResetAnalytics } = useAction(
-    resetAnalyticsAction.bind(null, emailAccountId),
+    resetAnalyticsAction.bind(null, emailAccountId)
   );
 
   return (
@@ -28,14 +28,10 @@ export function ResetAnalyticsSection({
       <Item size="sm">
         <ItemContent>
           <ItemTitle>Reset Analytics</ItemTitle>
-          <ItemDescription>
-            Permanently delete all analytics
-          </ItemDescription>
+          <ItemDescription>Permanently delete all analytics</ItemDescription>
         </ItemContent>
         <ItemActions>
           <Button
-            size="sm"
-            variant="outline"
             onClick={async () => {
               toast.promise(() => executeResetAnalytics(), {
                 loading: "Resetting analytics...",
@@ -47,6 +43,8 @@ export function ResetAnalyticsSection({
                 },
               });
             }}
+            size="sm"
+            variant="outline"
           >
             Reset
           </Button>

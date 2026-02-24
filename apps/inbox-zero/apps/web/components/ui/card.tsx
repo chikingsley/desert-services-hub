@@ -7,12 +7,12 @@ const Card = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & { size?: "default" | "sm" }
 >(({ className, size = "default", ...props }, ref) => (
   <div
-    ref={ref}
-    data-size={size}
     className={cn(
       "group/card rounded-lg border bg-card text-card-foreground shadow-sm",
-      className,
+      className
     )}
+    data-size={size}
+    ref={ref}
     {...props}
   />
 ));
@@ -23,11 +23,11 @@ const CardHeader = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <div
-    ref={ref}
     className={cn(
       "flex flex-col space-y-1.5 p-6 group-data-[size=sm]/card:p-4",
-      className,
+      className
     )}
+    ref={ref}
     {...props}
   />
 ));
@@ -38,11 +38,11 @@ const CardTitle = React.forwardRef<
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <h3
-    ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-none tracking-tight group-data-[size=sm]/card:text-base",
-      className,
+      "font-semibold text-2xl leading-none tracking-tight group-data-[size=sm]/card:text-base",
+      className
     )}
+    ref={ref}
     {...props}
   />
 ));
@@ -53,8 +53,8 @@ const CardDescription = React.forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
   <p
+    className={cn("text-muted-foreground text-sm", className)}
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
 ));
@@ -65,11 +65,11 @@ const CardContent = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <div
-    ref={ref}
     className={cn(
       "p-6 pt-0 group-data-[size=sm]/card:p-4 group-data-[size=sm]/card:pt-0",
-      className,
+      className
     )}
+    ref={ref}
     {...props}
   />
 ));
@@ -80,11 +80,11 @@ const CardFooter = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <div
-    ref={ref}
     className={cn(
       "flex items-center p-6 pt-0 group-data-[size=sm]/card:p-4 group-data-[size=sm]/card:pt-0",
-      className,
+      className
     )}
+    ref={ref}
     {...props}
   />
 ));
@@ -95,11 +95,11 @@ const CardBasic = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <div
-    ref={ref}
     className={cn(
       "rounded-lg border bg-card p-6 text-card-foreground shadow-sm",
-      className,
+      className
     )}
+    ref={ref}
     {...props}
   />
 ));
@@ -110,11 +110,11 @@ const CardGreen = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <Card
-    ref={ref}
     className={cn(
       "border-green-100 bg-gradient-to-tr from-transparent via-green-50/80 to-green-500/15 dark:border-green-900 dark:from-green-950/50 dark:via-green-900/20 dark:to-green-800/10",
-      className,
+      className
     )}
+    ref={ref}
     {...props}
   />
 ));
@@ -125,11 +125,11 @@ const CardBlue = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <Card
-    ref={ref}
     className={cn(
       "border-blue-100 bg-gradient-to-tr from-transparent via-blue-50/80 to-blue-500/15 dark:border-blue-900 dark:from-blue-950/50 dark:via-blue-900/20 dark:to-blue-800/10",
-      className,
+      className
     )}
+    ref={ref}
     {...props}
   />
 ));
@@ -140,11 +140,11 @@ const CardRed = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <Card
-    ref={ref}
     className={cn(
       "border-red-100 bg-gradient-to-tr from-transparent via-red-50/80 to-red-500/15 dark:border-red-900 dark:from-red-950/50 dark:via-red-900/20 dark:to-red-800/10",
-      className,
+      className
     )}
+    ref={ref}
     {...props}
   />
 ));
@@ -170,7 +170,7 @@ const ActionCard = React.forwardRef<
       variant = "green",
       ...props
     },
-    ref,
+    ref
   ) => {
     const CardVariant =
       variant === "blue"
@@ -186,7 +186,7 @@ const ActionCard = React.forwardRef<
           : "text-green-600 dark:text-green-400";
 
     return (
-      <CardVariant ref={ref} className={cn("max-w-2xl", className)} {...props}>
+      <CardVariant className={cn("max-w-2xl", className)} ref={ref} {...props}>
         <div className="flex items-center justify-between gap-4 p-6">
           <div className="flex items-start gap-3">
             {icon && (
@@ -195,8 +195,8 @@ const ActionCard = React.forwardRef<
               </div>
             )}
             <div>
-              <h3 className="text-lg font-semibold">{title}</h3>
-              <div className="mt-1 text-sm text-muted-foreground">
+              <h3 className="font-semibold text-lg">{title}</h3>
+              <div className="mt-1 text-muted-foreground text-sm">
                 {description}
               </div>
             </div>
@@ -205,7 +205,7 @@ const ActionCard = React.forwardRef<
         </div>
       </CardVariant>
     );
-  },
+  }
 );
 ActionCard.displayName = "ActionCard";
 

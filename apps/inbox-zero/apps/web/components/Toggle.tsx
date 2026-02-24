@@ -1,18 +1,18 @@
 import type { FieldError } from "react-hook-form";
-import { ErrorMessage, ExplainText, Label } from "./Input";
 import { TooltipExplanation } from "@/components/TooltipExplanation";
 import { Switch } from "@/components/ui/switch";
+import { ErrorMessage, ExplainText, Label } from "./Input";
 
 export interface ToggleProps {
-  name: string;
+  disabled?: boolean;
+  enabled: boolean;
+  error?: FieldError;
+  explainText?: string;
   label?: string;
   labelRight?: string;
-  tooltipText?: string;
-  enabled: boolean;
-  explainText?: string;
-  error?: FieldError;
+  name: string;
   onChange: (enabled: boolean) => void;
-  disabled?: boolean;
+  tooltipText?: string;
 }
 
 export const Toggle = (props: ToggleProps) => {
@@ -23,18 +23,18 @@ export const Toggle = (props: ToggleProps) => {
       <div className="flex items-center">
         {label && (
           <span className="mr-3 flex items-center gap-1 text-nowrap">
-            <Label name={props.name} label={label} />
+            <Label label={label} name={props.name} />
             {tooltipText && <TooltipExplanation text={tooltipText} />}
           </span>
         )}
         <Switch
           checked={enabled}
-          onCheckedChange={onChange}
           disabled={disabled}
+          onCheckedChange={onChange}
         />
         {labelRight && (
           <span className="ml-3 flex items-center gap-1 text-nowrap">
-            <Label name={props.name} label={labelRight} />
+            <Label label={labelRight} name={props.name} />
             {tooltipText && <TooltipExplanation text={tooltipText} />}
           </span>
         )}

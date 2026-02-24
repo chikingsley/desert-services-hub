@@ -3,22 +3,21 @@
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/Badge";
 import { EnableFeatureCard } from "@/components/EnableFeatureCard";
-import { toastSuccess } from "@/components/Toast";
-import { toastError } from "@/components/Toast";
+import { toastError, toastSuccess } from "@/components/Toast";
 import { SectionDescription } from "@/components/Typography";
-import {
-  markOnboardingAsCompleted,
-  REPLY_ZERO_ONBOARDING_COOKIE,
-} from "@/utils/cookies";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { prefixPath } from "@/utils/path";
-import { getRuleLabel } from "@/utils/rule/consts";
 import { SystemType } from "@/generated/prisma/enums";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import {
   enableDraftRepliesAction,
   toggleRuleAction,
 } from "@/utils/actions/rule";
+import {
+  markOnboardingAsCompleted,
+  REPLY_ZERO_ONBOARDING_COOKIE,
+} from "@/utils/cookies";
+import { prefixPath } from "@/utils/path";
 import { CONVERSATION_STATUS_TYPES } from "@/utils/reply-tracker/conversation-status-config";
+import { getRuleLabel } from "@/utils/rule/consts";
 
 export function EnableReplyTracker({ enabled }: { enabled: boolean }) {
   const router = useRouter();
@@ -26,7 +25,7 @@ export function EnableReplyTracker({ enabled }: { enabled: boolean }) {
 
   return (
     <EnableFeatureCard
-      title="Reply Zero"
+      buttonText={enabled ? "Got it!" : "Enable Reply Zero"}
       description={
         <>
           Your inbox is filled with emails that don't need your attention.
@@ -55,9 +54,8 @@ export function EnableReplyTracker({ enabled }: { enabled: boolean }) {
           </SectionDescription>
         </div>
       }
-      imageSrc="/images/illustrations/communication.svg"
       imageAlt="Reply tracking"
-      buttonText={enabled ? "Got it!" : "Enable Reply Zero"}
+      imageSrc="/images/illustrations/communication.svg"
       onEnable={async () => {
         markOnboardingAsCompleted(REPLY_ZERO_ONBOARDING_COOKIE);
 
@@ -71,7 +69,7 @@ export function EnableReplyTracker({ enabled }: { enabled: boolean }) {
             toggleRuleAction(emailAccountId, {
               enabled: true,
               systemType,
-            }),
+            })
           ),
           enableDraftRepliesAction(emailAccountId, { enable: true }),
         ];
@@ -92,6 +90,7 @@ export function EnableReplyTracker({ enabled }: { enabled: boolean }) {
 
         router.push(prefixPath(emailAccountId, "/reply-zero?enabled=true"));
       }}
+      title="Reply Zero"
     />
   );
 }

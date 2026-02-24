@@ -1,3 +1,5 @@
+import { db } from "@lib/db/client";
+import type { EstimateRow } from "@lib/db/types";
 import { validateUpdateEstimatePayload } from "@/packages/estimates/estimating/estimate-payload-validation";
 import {
   getEstimate,
@@ -8,8 +10,6 @@ import type {
   EstimateLineItem,
   LineItemChange,
 } from "@/packages/estimates/estimating/types";
-import { db } from "@lib/db/client";
-import type { EstimateRow } from "@lib/db/types";
 
 function normalizeChangeLineItem(
   rawItem: Record<string, unknown>,

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import prisma from "@/utils/__mocks__/prisma";
-import { disableUnusedAutoDrafts } from "./disable-unused-auto-drafts";
 import { ActionType } from "@/generated/prisma/enums";
+import prisma from "@/utils/__mocks__/prisma";
 import { createScopedLogger } from "@/utils/logger";
+import { disableUnusedAutoDrafts } from "./disable-unused-auto-drafts";
 
 const logger = createScopedLogger("test");
 
@@ -119,7 +119,7 @@ describe("disableUnusedAutoDrafts", () => {
           }));
         }
         return [];
-      },
+      }
     );
 
     const result = await disableUnusedAutoDrafts(logger);
@@ -145,7 +145,7 @@ describe("disableUnusedAutoDrafts", () => {
       Array.from({ length: 10 }, (_, i) => ({
         id: `exec-${i}`,
         wasDraftSent: false,
-      })),
+      }))
     );
 
     const result = await disableUnusedAutoDrafts(logger);
@@ -155,7 +155,7 @@ describe("disableUnusedAutoDrafts", () => {
         where: expect.objectContaining({
           executedRule: { ruleId: { in: ["rule-1", "rule-2"] } },
         }),
-      }),
+      })
     );
     expect(prisma.action.deleteMany).toHaveBeenCalledWith({
       where: {

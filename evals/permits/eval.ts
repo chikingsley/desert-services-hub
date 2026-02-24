@@ -17,7 +17,9 @@ import type { PermitRetrievalStrategy } from "./strategies/types";
 const DIR = import.meta.dirname ?? join(process.cwd(), "evals/permits");
 
 function loadQrels(): Map<string, string> {
-  const lines = readFileSync(join(DIR, "qrels.tsv"), "utf-8").trim().split("\n");
+  const lines = readFileSync(join(DIR, "qrels.tsv"), "utf-8")
+    .trim()
+    .split("\n");
   const qrels = new Map<string, string>();
   for (const line of lines.slice(1)) {
     const [queryId, corpusId] = line.split("\t");
@@ -28,8 +30,8 @@ function loadQrels(): Map<string, string> {
 
 interface Query {
   _id: string;
-  text: string;
   metadata: { type: string; permit_id: string };
+  text: string;
 }
 
 function loadQueries(): Query[] {
@@ -54,15 +56,16 @@ async function loadStrategy(name: string): Promise<PermitRetrievalStrategy> {
       return mod.default;
     }
     default:
-      throw new Error(`Unknown strategy: ${name}. Available: ilike, fts, fts-rerank`);
+      throw new Error(
+        `Unknown strategy: ${name}. Available: ilike, fts, fts-rerank`
+      );
   }
 }
 
 async function main() {
-  const strategyName =
-    process.argv.includes("--strategy")
-      ? process.argv[process.argv.indexOf("--strategy") + 1]
-      : "fts";
+  const strategyName = process.argv.includes("--strategy")
+    ? process.argv[process.argv.indexOf("--strategy") + 1]
+    : "fts";
 
   console.log("Loading eval dataset...");
   const qrels = loadQrels();
@@ -103,7 +106,9 @@ async function main() {
   console.log("\n--- Results ---");
   console.log(`Strategy: ${strategyName}`);
   console.log(`Queries:  ${queries.length}`);
-  console.log(`Time:     ${(elapsed / 1000).toFixed(1)}s (${(elapsed / queries.length).toFixed(0)}ms/query)`);
+  console.log(
+    `Time:     ${(elapsed / 1000).toFixed(1)}s (${(elapsed / queries.length).toFixed(0)}ms/query)`
+  );
   for (const [k, v] of Object.entries(metrics)) {
     console.log(`  ${k}: ${(v * 100).toFixed(1)}%`);
   }
@@ -114,11 +119,13 @@ async function main() {
   for (const type of queryTypes) {
     const typeQueries = queries.filter((q) => q.metadata.type === type);
     const typeResults = results.filter((r) =>
-      typeQueries.some((q) => q._id === r.queryId),
+      typeQueries.some((q) => q._id === r.queryId)
     );
     const r1 = recallAtK(typeResults, qrels, 1);
     const r5 = recallAtK(typeResults, qrels, 5);
-    console.log(`  ${type.padEnd(20)} R@1=${(r1 * 100).toFixed(1)}%  R@5=${(r5 * 100).toFixed(1)}%  (n=${typeQueries.length})`);
+    console.log(
+      `  ${type.padEnd(20)} R@1=${(r1 * 100).toFixed(1)}%  R@5=${(r5 * 100).toFixed(1)}%  (n=${typeQueries.length})`
+    );
   }
 
   // Failure analysis
@@ -128,7 +135,7 @@ async function main() {
   for (const f of failures.slice(0, 15)) {
     const query = queries.find((q) => q._id === f.queryId);
     console.log(
-      `  ${f.queryId}: expected ${f.expected}, rank=${f.rank ?? "MISS"}, query="${query?.text}"`,
+      `  ${f.queryId}: expected ${f.expected}, rank=${f.rank ?? "MISS"}, query="${query?.text}"`
     );
   }
   if (failures.length > 15) {

@@ -1,10 +1,10 @@
-import prisma from "@/utils/prisma";
-import { MessagingProvider } from "@/generated/prisma/enums";
 import {
-  sendDocumentFiledToSlack,
   sendDocumentAskToSlack,
+  sendDocumentFiledToSlack,
 } from "@inboxzero/slack";
+import { MessagingProvider } from "@/generated/prisma/enums";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 export async function sendFilingSlackNotifications({
   emailAccountId,
@@ -31,7 +31,9 @@ export async function sendFilingSlackNotifications({
     },
   });
 
-  if (channels.length === 0) return;
+  if (channels.length === 0) {
+    return;
+  }
 
   const filing = await prisma.documentFiling.findUnique({
     where: { id: filingId },
@@ -48,7 +50,9 @@ export async function sendFilingSlackNotifications({
   const deliveryPromises: Promise<void>[] = [];
 
   for (const channel of channels) {
-    if (!channel.accessToken || !channel.channelId) continue;
+    if (!(channel.accessToken && channel.channelId)) {
+      continue;
+    }
 
     switch (channel.provider) {
       case MessagingProvider.SLACK:
@@ -59,7 +63,7 @@ export async function sendFilingSlackNotifications({
               channelId: channel.channelId,
               filename: filing.filename,
               reasoning: filing.reasoning,
-            }),
+            })
           );
         } else {
           deliveryPromises.push(
@@ -69,7 +73,7 @@ export async function sendFilingSlackNotifications({
               filename: filing.filename,
               folderPath: filing.folderPath,
               driveProvider: filing.driveConnection.provider,
-            }),
+            })
           );
         }
         break;

@@ -1,5 +1,5 @@
-import type React from "react";
 import { AlertCircle, TerminalIcon } from "lucide-react";
+import type React from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/utils";
 
@@ -17,7 +17,7 @@ export function AlertBasic({
   className?: string;
 }) {
   return (
-    <Alert variant={variant} className={className}>
+    <Alert className={className} variant={variant}>
       {icon === null ? null : icon || <TerminalIcon className="h-4 w-4" />}
       {title ? <AlertTitle>{title}</AlertTitle> : null}
       {description ? <AlertDescription>{description}</AlertDescription> : null}
@@ -42,8 +42,8 @@ export function AlertWithButton({
 }) {
   return (
     <Alert
+      className={cn("bg-background pt-5 pb-3", className)}
       variant={variant}
-      className={cn("bg-background pb-3 pt-5", className)}
     >
       {icon === null ? null : icon || <TerminalIcon className="h-4 w-4" />}
       <div className="flex items-center justify-between">
@@ -67,7 +67,7 @@ export function AlertError({
   className?: string;
 }) {
   return (
-    <Alert variant="destructive" className={className}>
+    <Alert className={className} variant="destructive">
       <AlertCircle className="h-4 w-4" />
       <AlertTitle>{title}</AlertTitle>
       <AlertDescription>{description}</AlertDescription>

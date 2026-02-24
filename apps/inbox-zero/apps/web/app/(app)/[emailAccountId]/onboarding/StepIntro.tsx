@@ -1,23 +1,23 @@
 "use client";
 
-import Image from "next/image";
 import { MailIcon } from "lucide-react";
-import { CardBasic } from "@/components/ui/card";
-import { MutedText, PageHeading, TypographyP } from "@/components/Typography";
+import Image from "next/image";
+import { ContinueButton } from "@/app/(app)/[emailAccountId]/onboarding/ContinueButton";
 import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
 import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
-import { ContinueButton } from "@/app/(app)/[emailAccountId]/onboarding/ContinueButton";
+import { MutedText, PageHeading, TypographyP } from "@/components/Typography";
+import { CardBasic } from "@/components/ui/card";
 
 export function StepIntro({ onNext }: { onNext: () => void }) {
   return (
     <OnboardingWrapper>
-      <IconCircle size="lg" className="mx-auto">
+      <IconCircle className="mx-auto" size="lg">
         <MailIcon className="size-6" />
       </IconCircle>
 
-      <div className="text-center mt-4">
+      <div className="mt-4 text-center">
         <PageHeading>Get to know Inbox Zero</PageHeading>
-        <TypographyP className="mt-2 max-w-lg mx-auto">
+        <TypographyP className="mx-auto mt-2 max-w-lg">
           We'll take you through the steps to get you started and set you up for
           success.
         </TypographyP>
@@ -25,16 +25,16 @@ export function StepIntro({ onNext }: { onNext: () => void }) {
       <div className="mt-8">
         <div className="grid gap-4 sm:gap-8">
           <Benefit
-            index={1}
-            title="We sort your emails"
             description="Every email is automatically organized into categories like 'To Reply', 'Newsletters', and 'Cold Emails'. Create any categories you want."
             image="/images/onboarding/newsletters.png"
+            index={1}
+            title="We sort your emails"
           />
           <Benefit
-            index={2}
-            title="Pre-drafted replies"
             description="When you check your inbox, every email needing a response will have a pre-drafted reply in your tone, ready for you to send."
             image="/images/onboarding/draft.png"
+            index={2}
+            title="Pre-drafted replies"
           />
           {/* <Benefit
             index={3}
@@ -43,13 +43,13 @@ export function StepIntro({ onNext }: { onNext: () => void }) {
             image="/images/onboarding/digest.png"
           /> */}
           <Benefit
-            index={3}
-            title="Bulk Unsubscriber"
             description="See which emails you never read, and one-click unsubscribe and archive them."
             image="/images/onboarding/bulk-unsubscribe.png"
+            index={3}
+            title="Bulk Unsubscriber"
           />
         </div>
-        <div className="flex justify-center mt-8">
+        <div className="mt-8 flex justify-center">
           <ContinueButton onClick={onNext} />
         </div>
       </div>
@@ -69,21 +69,21 @@ function Benefit({
   image: string;
 }) {
   return (
-    <CardBasic className="rounded-2xl shadow-none grid sm:grid-cols-5 p-0 pl-4 pt-4 gap-4 sm:gap-8 max-h-[400px]">
-      <div className="flex items-center gap-4 col-span-2">
+    <CardBasic className="grid max-h-[400px] gap-4 rounded-2xl p-0 pt-4 pl-4 shadow-none sm:grid-cols-5 sm:gap-8">
+      <div className="col-span-2 flex items-center gap-4">
         <IconCircle>{index}</IconCircle>
         <div>
           <div className="font-semibold text-lg sm:text-xl">{title}</div>
           <MutedText className="mt-1 leading-6">{description}</MutedText>
         </div>
       </div>
-      <div className="col-span-3 text-sm text-muted-foreground rounded-tl-2xl pl-4 pt-4 bg-slate-50 border-t border-l border-slate-200 overflow-hidden">
+      <div className="col-span-3 overflow-hidden rounded-tl-2xl border-slate-200 border-t border-l bg-slate-50 pt-4 pl-4 text-muted-foreground text-sm">
         <Image
-          src={image}
           alt="Benefit"
-          width={700}
+          className="h-full w-full rounded-tl-xl border-slate-200 border-t border-l object-cover object-left-top"
           height={700}
-          className="w-full h-full object-left-top object-cover rounded-tl-xl border-t border-l border-slate-200"
+          src={image}
+          width={700}
         />
       </div>
     </CardBasic>

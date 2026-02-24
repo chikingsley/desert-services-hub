@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { sortActionsByPriority } from "./action-sort";
+import { describe, expect, it } from "vitest";
 import { ActionType } from "@/generated/prisma/enums";
+import { sortActionsByPriority } from "./action-sort";
 
 describe("sortActionsByPriority", () => {
   describe("basic sorting", () => {

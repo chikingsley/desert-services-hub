@@ -54,9 +54,9 @@ export function calculatePolygonArea(
 }
 
 export interface ItemMeasurement extends PresetItem {
-  value: string | number;
   count: number;
   rawValue: number;
+  value: string | number;
 }
 
 function measureSingleItem(

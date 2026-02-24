@@ -1,10 +1,10 @@
 export interface DustPermitTier {
-  min: number;
-  max: number;
-  price: number;
-  label: string;
   adeqFee: number;
   filingFee: number;
+  label: string;
+  max: number;
+  min: number;
+  price: number;
 }
 
 export const DUST_PERMIT_TIERS: DustPermitTier[] = [

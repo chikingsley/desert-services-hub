@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { cleanupOrphanedAccount } from "./orphaned-account";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getMockAccountWithEmailAccount } from "@/__tests__/helpers";
 import prisma from "@/utils/__mocks__/prisma";
 import { createScopedLogger } from "@/utils/logger";
-import { getMockAccountWithEmailAccount } from "@/__tests__/helpers";
+import { cleanupOrphanedAccount } from "./orphaned-account";
 
 const logger = createScopedLogger("test");
 
@@ -27,7 +27,7 @@ describe("cleanupOrphanedAccount", () => {
         id: "account-id",
         userId: "user-id",
         emailAccount: { id: "email-id" },
-      }) as any,
+      }) as any
     );
 
     await cleanupOrphanedAccount("account-id", logger);
@@ -41,7 +41,7 @@ describe("cleanupOrphanedAccount", () => {
         id: "account-id",
         userId: "user-id",
         emailAccount: null,
-      }) as any,
+      }) as any
     );
 
     prisma.emailAccount.count.mockResolvedValue(0);
@@ -66,7 +66,7 @@ describe("cleanupOrphanedAccount", () => {
         id: "account-id",
         userId: "user-id",
         emailAccount: null,
-      }) as any,
+      }) as any
     );
 
     prisma.emailAccount.count.mockResolvedValue(2);

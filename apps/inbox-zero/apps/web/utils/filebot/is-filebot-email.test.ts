@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { isFilebotEmail, getFilebotEmail } from "./is-filebot-email";
+import { describe, expect, it } from "vitest";
+import { getFilebotEmail, isFilebotEmail } from "./is-filebot-email";
 
 describe("isFilebotEmail", () => {
   it("should return true for valid filebot email", () => {
@@ -126,7 +126,7 @@ describe("getFilebotEmail", () => {
     expect(() =>
       getFilebotEmail({
         userEmail: "notanemail",
-      }),
+      })
     ).toThrow("Invalid email format");
   });
 });

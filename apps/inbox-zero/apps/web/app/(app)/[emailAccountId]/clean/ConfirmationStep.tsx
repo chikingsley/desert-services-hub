@@ -1,17 +1,17 @@
 "use client";
 
+import { HistoryIcon, SettingsIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import { PREVIEW_RUN_COUNT } from "@/app/(app)/[emailAccountId]/clean/consts";
+import { Badge } from "@/components/Badge";
+import { toastError } from "@/components/Toast";
 import { MutedText, TypographyH3 } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/Badge";
-import { cleanInboxAction } from "@/utils/actions/clean";
-import { toastError } from "@/components/Toast";
 import { CleanAction } from "@/generated/prisma/enums";
-import { PREVIEW_RUN_COUNT } from "@/app/(app)/[emailAccountId]/clean/consts";
-import { HistoryIcon, SettingsIcon } from "lucide-react";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { cleanInboxAction } from "@/utils/actions/clean";
 import { prefixPath } from "@/utils/path";
 
 export function ConfirmationStep({
@@ -55,20 +55,20 @@ export function ConfirmationStep({
     router.push(
       prefixPath(
         emailAccountId,
-        `/clean/run?jobId=${result?.data?.jobId}&isPreviewBatch=true`,
-      ),
+        `/clean/run?jobId=${result?.data?.jobId}&isPreviewBatch=true`
+      )
     );
   };
 
   return (
     <div className="text-center">
       <Image
-        src="/images/illustrations/business-success-chart.svg"
         alt="clean up"
-        width={200}
-        height={200}
         className="mx-auto dark:brightness-90 dark:invert"
+        height={200}
+        src="/images/illustrations/business-success-chart.svg"
         unoptimized
+        width={200}
       />
 
       <TypographyH3 className="mt-2">Ready to clean up your inbox</TypographyH3>
@@ -116,7 +116,7 @@ export function ConfirmationStep({
       </ul>
 
       <div className="mt-6">
-        <Button size="lg" onClick={handleStartCleaning}>
+        <Button onClick={handleStartCleaning} size="lg">
           Start Cleaning
         </Button>
       </div>
@@ -124,14 +124,14 @@ export function ConfirmationStep({
       {showFooter && (
         <MutedText className="mt-6 flex items-center justify-center space-x-6">
           <FooterLink
+            href={prefixPath(emailAccountId, "/clean/history")}
             icon={HistoryIcon}
             text="History"
-            href={prefixPath(emailAccountId, "/clean/history")}
           />
           <FooterLink
+            href={prefixPath(emailAccountId, "/clean/onboarding")}
             icon={SettingsIcon}
             text="Edit settings"
-            href={prefixPath(emailAccountId, "/clean/onboarding")}
           />
         </MutedText>
       )}
@@ -149,8 +149,8 @@ const FooterLink = ({
   href: string;
 }) => (
   <Link
-    href={href}
     className="flex items-center transition-colors hover:text-primary"
+    href={href}
   >
     <Icon className="mr-1 h-4 w-4" />
     <span>{text}</span>

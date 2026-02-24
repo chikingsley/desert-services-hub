@@ -1,21 +1,21 @@
 import { stepCountIs, tool } from "ai";
 import { z } from "zod";
-import { createGenerateText } from "@/utils/llms";
-import type { Logger } from "@/utils/logger";
-import { GroupItemType, LogicalOperator } from "@/generated/prisma/enums";
-import type { Rule } from "@/generated/prisma/client";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { RuleWithRelations } from "@/utils/rule/types";
-import type { ParsedMessage } from "@/utils/types";
-import { createRuleSchema } from "@/utils/ai/rule/create-rule-schema";
-import { deleteGroupItem } from "@/utils/group/group-item";
-import { createRule, partialUpdateRule } from "@/utils/rule/rule";
-import { getEmailForLLM } from "@/utils/get-email-from-message";
-import { stringifyEmailSimple } from "@/utils/stringify-email";
 import { env } from "@/env";
-import { posthogCaptureEvent } from "@/utils/posthog";
-import { getModel } from "@/utils/llms/model";
+import type { Rule } from "@/generated/prisma/client";
+import { GroupItemType, LogicalOperator } from "@/generated/prisma/enums";
 import { getUserInfoPrompt } from "@/utils/ai/helpers";
+import { createRuleSchema } from "@/utils/ai/rule/create-rule-schema";
+import { getEmailForLLM } from "@/utils/get-email-from-message";
+import { deleteGroupItem } from "@/utils/group/group-item";
+import { createGenerateText } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import { posthogCaptureEvent } from "@/utils/posthog";
+import { createRule, partialUpdateRule } from "@/utils/rule/rule";
+import type { RuleWithRelations } from "@/utils/rule/types";
+import { stringifyEmailSimple } from "@/utils/stringify-email";
+import type { ParsedMessage } from "@/utils/types";
 
 const emptyInputSchema = z.object({}).describe("No parameters required");
 
@@ -44,8 +44,9 @@ export async function processUserRequest({
     hasMatchedRule: !!matchedRule,
   });
 
-  if (messages[messages.length - 1].role === "assistant")
+  if (messages[messages.length - 1].role === "assistant") {
     throw new Error("Assistant message cannot be last");
+  }
 
   const userRules = rulesToXML(rules);
 
@@ -99,7 +100,7 @@ ${matchedRule ? ruleToXML(matchedRule) : "No rule matched"}
       : ""
   }
 
-${!matchedRule ? userRules : ""}
+${matchedRule ? "" : userRules}
 
 ${getUserInfoPrompt({ emailAccount })}
 
@@ -316,7 +317,7 @@ ${stringifyEmailSimple(getEmailForLLM(originalEmail))}
                 }
 
                 const groupItem = matchedRule?.group?.items?.find(
-                  (item) => item.type === groupItemType && item.value === value,
+                  (item) => item.type === groupItemType && item.value === value
                 );
 
                 if (!groupItem) {
@@ -465,7 +466,7 @@ function ruleToXML(rule: RuleWithRelations) {
             `<pattern>
 <type>${item.type}</type>
 <value>${item.value}</value>
-</pattern>`,
+</pattern>`
         )
         .join("\n      ")}
   </patterns>`
@@ -485,8 +486,12 @@ function hasStaticConditions(rule: RuleWithRelations) {
 }
 
 function getPatternType(type: string) {
-  if (type === "from") return GroupItemType.FROM;
-  if (type === "subject") return GroupItemType.SUBJECT;
+  if (type === "from") {
+    return GroupItemType.FROM;
+  }
+  if (type === "subject") {
+    return GroupItemType.SUBJECT;
+  }
 }
 
 async function trackToolCall({ tool, email }: { tool: string; email: string }) {

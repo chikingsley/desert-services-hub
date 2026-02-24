@@ -5,34 +5,34 @@ import type { TakeoffAnnotation } from "@takeoff/pdf-takeoff/types";
 
 // Bundle item within a takeoff bundle
 export interface TakeoffBundleItem {
-  id: string;
-  itemId: string;
   code: string;
-  name: string;
-  unit: string;
-  price: number;
+  id: string;
   isRequired: boolean;
+  itemId: string;
+  name: string;
+  price: number;
   quantityMultiplier: number;
+  unit: string;
 }
 
 // Takeoff catalog item interface - matches the API response
 export interface TakeoffCatalogItem {
-  id: string;
-  code: string;
-  label: string;
-  description: string | null;
-  unit: string;
-  unitPrice: number;
-  color: string;
-  type: "count" | "linear" | "area";
-  isBundle?: boolean;
   bundleItems?: TakeoffBundleItem[];
   categoryId: string | null;
   categoryName: string;
+  code: string;
+  color: string;
+  defaultQty: number;
+  description: string | null;
+  id: string;
+  isBundle?: boolean;
+  label: string;
+  notes: string | null;
   subcategoryId: string | null;
   subcategoryName: string | null;
-  notes: string | null;
-  defaultQty: number;
+  type: "count" | "linear" | "area";
+  unit: string;
+  unitPrice: number;
 }
 
 // Cache for takeoff items
@@ -210,18 +210,18 @@ function addDirectItem(
 }
 
 export interface TakeoffSummaryItem {
+  bundleName?: string;
+  catalogCode: string;
+  description: string;
+  isFromBundle?: boolean;
+  isRequired?: boolean;
   itemId: string;
   label: string;
-  quantity: number;
-  unit: string;
-  catalogCode: string;
   name: string;
-  description: string;
-  unitPrice: number;
+  quantity: number;
   sectionName: string;
-  isFromBundle?: boolean;
-  bundleName?: string;
-  isRequired?: boolean;
+  unit: string;
+  unitPrice: number;
 }
 
 // Aggregate annotations by item type and calculate quantities

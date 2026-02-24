@@ -1,7 +1,7 @@
 import { ThreadTrackerType } from "@/generated/prisma/enums";
-import { ReplyTrackerEmails } from "./ReplyTrackerEmails";
-import { getPaginatedThreadTrackers } from "./fetch-trackers";
 import type { TimeRange } from "./date-filter";
+import { getPaginatedThreadTrackers } from "./fetch-trackers";
+import { ReplyTrackerEmails } from "./ReplyTrackerEmails";
 
 export async function AwaitingReply({
   emailAccountId,
@@ -25,12 +25,12 @@ export async function AwaitingReply({
 
   return (
     <ReplyTrackerEmails
-      trackers={trackers}
       emailAccountId={emailAccountId}
-      userEmail={userEmail}
-      type={ThreadTrackerType.AWAITING}
-      totalPages={totalPages}
       isAnalyzing={isAnalyzing}
+      totalPages={totalPages}
+      trackers={trackers}
+      type={ThreadTrackerType.AWAITING}
+      userEmail={userEmail}
     />
   );
 }

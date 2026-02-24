@@ -7,8 +7,8 @@
 }
 
 .TextHighlight__part {
-  cursor: pointer;
   position: absolute;
+  cursor: pointer;
   background: rgba(255, 226, 143, 1);
   transition: background 0.3s;
 }
@@ -25,19 +25,19 @@
 /* Toolbar - appears on hover */
 .TextHighlight__toolbar {
   display: flex;
-  align-items: center;
   gap: 4px;
+  align-items: center;
   padding: 2px 4px;
+  pointer-events: none;
   background: rgba(0, 0, 0, 0.7);
   border-radius: 4px;
   opacity: 0;
-  pointer-events: none;
   transition: opacity 0.2s ease;
 }
 
 .TextHighlight__toolbar--visible {
-  opacity: 1;
   pointer-events: auto;
+  opacity: 1;
 }
 
 .TextHighlight__style-button,
@@ -47,12 +47,12 @@
   justify-content: center;
   width: 20px;
   height: 20px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: white;
-  border-radius: 3px;
   padding: 0;
+  color: white;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
   transition: background 0.2s;
 }
 
@@ -66,11 +66,11 @@
 
 /* Style Panel */
 .TextHighlight__style-panel {
+  min-width: 180px;
+  padding: 8px;
   margin-top: 4px;
   background: rgba(0, 0, 0, 0.9);
   border-radius: 6px;
-  padding: 8px;
-  min-width: 180px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -86,11 +86,11 @@
 }
 
 .TextHighlight__style-row label {
-  color: #ccc;
+  margin-right: 8px;
   font-size: 11px;
+  color: #ccc;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-right: 8px;
 }
 
 /* Style type buttons (highlight, underline, strikethrough) */
@@ -106,11 +106,11 @@
   width: 28px;
   height: 28px;
   padding: 0;
+  color: #f5f5f5;
+  cursor: pointer;
   background: transparent;
   border: 1px solid #666;
   border-radius: 4px;
-  cursor: pointer;
-  color: #f5f5f5;
   transition: all 0.2s;
 }
 
@@ -120,15 +120,15 @@
 
 .TextHighlight__style-type-button.active {
   color: #b958ff;
-  border-color: #b958ff;
   background: rgba(185, 88, 255, 0.2);
+  border-color: #b958ff;
 }
 
 /* Color options */
 .TextHighlight__color-options {
   display: flex;
-  align-items: center;
   gap: 6px;
+  align-items: center;
 }
 
 .TextHighlight__color-presets {
@@ -139,13 +139,13 @@
 .TextHighlight__color-preset {
   width: 18px;
   height: 18px;
+  padding: 0;
+  cursor: pointer;
   border: 2px solid transparent;
   border-radius: 50%;
-  cursor: pointer;
   transition:
     transform 0.2s,
     border-color 0.2s;
-  padding: 0;
 }
 
 .TextHighlight__color-preset:hover {
@@ -160,10 +160,10 @@
   width: 24px;
   height: 24px;
   padding: 0;
-  border: none;
-  border-radius: 4px;
   cursor: pointer;
   background: transparent;
+  border: none;
+  border-radius: 4px;
 }
 
 .TextHighlight__color-options
@@ -184,19 +184,19 @@
 
 /* Strikethrough style */
 .TextHighlight__part.TextHighlight__part--strikethrough {
-  background: transparent !important;
   overflow: visible;
+  background: transparent !important;
 }
 
 .TextHighlight__part.TextHighlight__part--strikethrough::after {
-  content: "";
   position: absolute;
-  left: 0;
-  right: 0;
   top: 50%;
+  right: 0;
+  left: 0;
+  z-index: 1;
   height: 2px;
+  pointer-events: none;
+  content: "";
   background-color: currentColor;
   transform: translateY(-50%);
-  pointer-events: none;
-  z-index: 1;
 }

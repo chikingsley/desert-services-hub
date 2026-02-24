@@ -1,9 +1,9 @@
+import type { EditorEstimate, EditorLineItem } from "@lib/db/types";
 import type {
   Catalog,
   CatalogItem,
   CatalogSubcategory,
 } from "@/packages/estimates/catalog/types";
-import type { EditorEstimate, EditorLineItem } from "@lib/db/types";
 
 export function generateEstimateNumber(sequenceNum = 1): string {
   const now = new Date();

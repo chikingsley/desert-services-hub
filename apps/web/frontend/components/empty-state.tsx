@@ -2,10 +2,10 @@ import { FileText } from "lucide-react";
 import type React from "react";
 
 interface EmptyStateProps {
+  action?: React.ReactNode;
+  description: string;
   icon?: React.ReactNode;
   title: string;
-  description: string;
-  action?: React.ReactNode;
 }
 
 export function EmptyState({

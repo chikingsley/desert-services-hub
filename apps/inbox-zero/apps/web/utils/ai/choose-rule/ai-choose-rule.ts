@@ -1,11 +1,11 @@
 import { z } from "zod";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { stringifyEmail } from "@/utils/stringify-email";
-import { isDefined, type EmailForLLM } from "@/utils/types";
-import { getModel, type ModelType } from "@/utils/llms/model";
-import { createGenerateObject } from "@/utils/llms";
 import { getUserInfoPrompt, getUserRulesPrompt } from "@/utils/ai/helpers";
 import { PROMPT_SECURITY_INSTRUCTIONS } from "@/utils/ai/security";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel, type ModelType } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { stringifyEmail } from "@/utils/stringify-email";
+import { type EmailForLLM, isDefined } from "@/utils/types";
 
 type GetAiResponseOptions = {
   email: EmailForLLM;
@@ -30,7 +30,9 @@ export async function aiChooseRule<
   rules: { rule: T; isPrimary?: boolean }[];
   reason: string;
 }> {
-  if (!rules.length) return { rules: [], reason: "No rules to evaluate" };
+  if (!rules.length) {
+    return { rules: [], reason: "No rules to evaluate" };
+  }
 
   const { result: aiResponse } = await getAiResponse({
     email,
@@ -48,9 +50,11 @@ export async function aiChooseRule<
 
   const rulesWithMetadata = aiResponse.matchedRules
     .map((match) => {
-      if (!match.ruleName) return undefined;
+      if (!match.ruleName) {
+        return undefined;
+      }
       const rule = rules.find(
-        (r) => r.name.toLowerCase() === match.ruleName.toLowerCase(),
+        (r) => r.name.toLowerCase() === match.ruleName.toLowerCase()
       );
       return rule ? { rule, isPrimary: match.isPrimary } : undefined;
     })
@@ -92,15 +96,14 @@ async function getAiResponse(options: GetAiResponseOptions): Promise<{
     });
 
     return { result, modelOptions };
-  } else {
-    return getAiResponseSingleRule({
-      email,
-      emailAccount,
-      rules,
-      modelOptions,
-      generateObject,
-    });
   }
+  return getAiResponseSingleRule({
+    email,
+    emailAccount,
+    rules,
+    modelOptions,
+    generateObject,
+  });
 }
 
 async function getAiResponseSingleRule({
@@ -206,7 +209,7 @@ async function getAiResponseMultiRule({
   const rulesSection = rules
     .map(
       (rule) =>
-        `<rule>\n<name>${rule.name}</name>\n<instructions>${rule.instructions}</instructions>\n</rule>`,
+        `<rule>\n<name>${rule.name}</name>\n<instructions>${rule.instructions}</instructions>\n</rule>`
     )
     .join("\n");
 
@@ -278,15 +281,15 @@ ${stringifyEmail(email, 500)}
             isPrimary: z
               .boolean()
               .describe(
-                "True if the rule is the primary match, false otherwise",
+                "True if the rule is the primary match, false otherwise"
               ),
-          }),
+          })
         )
         .describe("Array of all matching rules"),
       reasoning: z
         .string()
         .describe(
-          "The reasoning you used to choose the rules. Keep it concise",
+          "The reasoning you used to choose the rules. Keep it concise"
         ),
       noMatchFound: z
         .boolean()

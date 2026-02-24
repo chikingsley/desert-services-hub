@@ -1,12 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
+  getEmailSearchUrl,
   getEmailUrl,
   getEmailUrlForMessage,
-  getEmailSearchUrl,
-  getGmailUrl,
-  getGmailSearchUrl,
   getGmailBasicSearchUrl,
   getGmailFilterSettingsUrl,
+  getGmailSearchUrl,
+  getGmailUrl,
 } from "./url";
 
 describe("getEmailUrl", () => {
@@ -14,7 +14,7 @@ describe("getEmailUrl", () => {
     it("builds Gmail URL with email address", () => {
       const result = getEmailUrl("msg123", "user@gmail.com", "google");
       expect(result).toBe(
-        "https://mail.google.com/mail/u/user@gmail.com/#all/msg123",
+        "https://mail.google.com/mail/u/user@gmail.com/#all/msg123"
       );
     });
 
@@ -38,14 +38,14 @@ describe("getEmailUrl", () => {
     it("encodes special characters in message ID", () => {
       const result = getEmailUrl("msg+123/abc", null, "microsoft");
       expect(result).toBe(
-        "https://outlook.live.com/mail/0/inbox/id/msg%2B123%2Fabc",
+        "https://outlook.live.com/mail/0/inbox/id/msg%2B123%2Fabc"
       );
     });
 
     it("encodes message ID with spaces and special chars", () => {
       const result = getEmailUrl("msg id=abc", null, "microsoft");
       expect(result).toBe(
-        "https://outlook.live.com/mail/0/inbox/id/msg%20id%3Dabc",
+        "https://outlook.live.com/mail/0/inbox/id/msg%20id%3Dabc"
       );
     });
   });
@@ -54,7 +54,7 @@ describe("getEmailUrl", () => {
     it("uses Gmail format when provider is undefined", () => {
       const result = getEmailUrl("msg123", "user@gmail.com");
       expect(result).toBe(
-        "https://mail.google.com/mail/u/user@gmail.com/#all/msg123",
+        "https://mail.google.com/mail/u/user@gmail.com/#all/msg123"
       );
     });
 
@@ -64,7 +64,7 @@ describe("getEmailUrl", () => {
       // The getProviderConfig function only falls back when provider is undefined,
       // not when the provider key doesn't exist in PROVIDER_CONFIG.
       expect(() =>
-        getEmailUrl("msg123", "user@gmail.com", "unknown"),
+        getEmailUrl("msg123", "user@gmail.com", "unknown")
       ).toThrow();
     });
   });
@@ -77,7 +77,7 @@ describe("getEmailUrlForMessage", () => {
         "messageId123",
         "threadId456",
         "user@gmail.com",
-        "google",
+        "google"
       );
       expect(result).toContain("messageId123");
       expect(result).not.toContain("threadId456");
@@ -90,7 +90,7 @@ describe("getEmailUrlForMessage", () => {
         "messageId123",
         "threadId456",
         "user@outlook.com",
-        "microsoft",
+        "microsoft"
       );
       expect(result).toContain("threadId456");
       expect(result).not.toContain("messageId123");
@@ -102,7 +102,7 @@ describe("getEmailUrlForMessage", () => {
       const result = getEmailUrlForMessage(
         "messageId123",
         "threadId456",
-        "user@example.com",
+        "user@example.com"
       );
       expect(result).toContain("threadId456");
     });
@@ -126,7 +126,7 @@ describe("getGmailSearchUrl", () => {
   it("builds advanced search URL with from parameter", () => {
     const result = getGmailSearchUrl("sender@example.com", "user@gmail.com");
     expect(result).toBe(
-      "https://mail.google.com/mail/u/user@gmail.com/#advanced-search/from=sender%40example.com",
+      "https://mail.google.com/mail/u/user@gmail.com/#advanced-search/from=sender%40example.com"
     );
   });
 
@@ -138,7 +138,7 @@ describe("getGmailSearchUrl", () => {
   it("handles from with display name", () => {
     const result = getGmailSearchUrl(
       "John Doe <john@example.com>",
-      "user@gmail.com",
+      "user@gmail.com"
     );
     expect(result).toContain("from=John%20Doe%20%3Cjohn%40example.com%3E");
   });
@@ -149,10 +149,10 @@ describe("getEmailSearchUrl", () => {
     const result = getEmailSearchUrl(
       "sender@example.com",
       "user@gmail.com",
-      "google",
+      "google"
     );
     expect(result).toBe(
-      "https://mail.google.com/mail/u/user@gmail.com/#advanced-search/from=sender%40example.com",
+      "https://mail.google.com/mail/u/user@gmail.com/#advanced-search/from=sender%40example.com"
     );
   });
 
@@ -160,10 +160,10 @@ describe("getEmailSearchUrl", () => {
     const result = getEmailSearchUrl(
       "sender@example.com",
       "user@outlook.com",
-      "microsoft",
+      "microsoft"
     );
     expect(result).toBe(
-      "https://outlook.live.com/mail/0/search/q/from%3Asender%40example.com",
+      "https://outlook.live.com/mail/0/search/q/from%3Asender%40example.com"
     );
   });
 
@@ -171,10 +171,10 @@ describe("getEmailSearchUrl", () => {
     const result = getEmailSearchUrl(
       "sender@example.com",
       "user@gmail.com",
-      "",
+      ""
     );
     expect(result).toBe(
-      "https://mail.google.com/mail/u/user@gmail.com/#advanced-search/from=sender%40example.com",
+      "https://mail.google.com/mail/u/user@gmail.com/#advanced-search/from=sender%40example.com"
     );
   });
 
@@ -182,10 +182,10 @@ describe("getEmailSearchUrl", () => {
     const result = getEmailSearchUrl(
       "sender@example.com",
       "user@gmail.com",
-      "unknown-provider",
+      "unknown-provider"
     );
     expect(result).toBe(
-      "https://mail.google.com/mail/u/user@gmail.com/#advanced-search/from=sender%40example.com",
+      "https://mail.google.com/mail/u/user@gmail.com/#advanced-search/from=sender%40example.com"
     );
   });
 });
@@ -194,14 +194,14 @@ describe("getGmailBasicSearchUrl", () => {
   it("builds search URL with query", () => {
     const result = getGmailBasicSearchUrl("user@gmail.com", "is:unread");
     expect(result).toBe(
-      "https://mail.google.com/mail/u/user@gmail.com/#search/is%3Aunread",
+      "https://mail.google.com/mail/u/user@gmail.com/#search/is%3Aunread"
     );
   });
 
   it("encodes complex queries", () => {
     const result = getGmailBasicSearchUrl(
       "user@gmail.com",
-      "from:sender@test.com subject:hello",
+      "from:sender@test.com subject:hello"
     );
     expect(result).toContain("#search/");
     expect(result).toContain("from%3Asender%40test.com");
@@ -211,7 +211,7 @@ describe("getGmailBasicSearchUrl", () => {
   it("handles queries with special characters", () => {
     const result = getGmailBasicSearchUrl(
       "user@gmail.com",
-      "label:inbox/important",
+      "label:inbox/important"
     );
     expect(result).toContain("label%3Ainbox%2Fimportant");
   });
@@ -221,7 +221,7 @@ describe("getGmailFilterSettingsUrl", () => {
   it("builds filter settings URL with email address", () => {
     const result = getGmailFilterSettingsUrl("user@gmail.com");
     expect(result).toBe(
-      "https://mail.google.com/mail/u/user@gmail.com/#settings/filters",
+      "https://mail.google.com/mail/u/user@gmail.com/#settings/filters"
     );
   });
 

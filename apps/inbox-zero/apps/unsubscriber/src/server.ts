@@ -1,8 +1,8 @@
-import fastify from "fastify";
 import cors from "@fastify/cors";
+import fastify from "fastify";
 import { z } from "zod";
-import { autoUnsubscribe } from "./main";
 import { env } from "./env";
+import { autoUnsubscribe } from "./main";
 
 const server = fastify({ logger: true });
 

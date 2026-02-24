@@ -12,57 +12,57 @@ export type ProjectEstimateLinkSource =
   | string;
 
 export interface ProjectEstimateLink {
-  estimateId: number;
-  mondayItemId: string | null;
-  sharepointUrl: string | null;
   bidStatus: string | null;
-  source: string;
-  isCanonical: boolean;
   canonicalizedAt: string | null;
   createdAt: string;
+  estimateId: number;
+  isCanonical: boolean;
+  mondayItemId: string | null;
+  sharepointUrl: string | null;
+  source: string;
 }
 
 export interface CanonicalProjectEstimate {
-  projectId: number;
-  estimateId: number;
-  source: string;
-  canonicalizedAt: string | null;
-  mondayItemId: string | null;
-  sharepointUrl: string | null;
-  bidStatus: string | null;
   baseNumber: string | null;
-  jobName: string;
-  jobAddress: string | null;
+  bidStatus: string | null;
+  canonicalizedAt: string | null;
   clientName: string | null;
   currentVersionId: string | null;
   currentVersionTotal: number | null;
+  estimateId: number;
+  jobAddress: string | null;
+  jobName: string;
+  mondayItemId: string | null;
+  projectId: number;
+  sharepointUrl: string | null;
+  source: string;
 }
 
 export interface CanonicalProjectSovSection {
   id: string;
   name: string;
-  title: string | null;
   showSubtotal: boolean;
   sortOrder: number;
+  title: string | null;
 }
 
 export interface CanonicalProjectSovLineItem {
-  id: string;
-  sectionId: string | null;
-  itemName: string | null;
   description: string;
+  id: string;
+  isExcluded: boolean;
+  itemName: string | null;
+  notes: string | null;
   quantity: number;
+  sectionId: string | null;
+  sortOrder: number;
   unit: string;
   unitPrice: number;
-  isExcluded: boolean;
-  notes: string | null;
-  sortOrder: number;
 }
 
 export interface CanonicalProjectSov {
   canonicalEstimate: CanonicalProjectEstimate;
-  sections: CanonicalProjectSovSection[];
   lineItems: CanonicalProjectSovLineItem[];
+  sections: CanonicalProjectSovSection[];
 }
 
 export async function linkEstimateToProject(

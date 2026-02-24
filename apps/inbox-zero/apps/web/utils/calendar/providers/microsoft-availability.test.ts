@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createMicrosoftAvailabilityProvider } from "./microsoft-availability";
-import { createScopedLogger } from "@/utils/logger";
 import type { Client } from "@microsoft/microsoft-graph-client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createScopedLogger } from "@/utils/logger";
+import { createMicrosoftAvailabilityProvider } from "./microsoft-availability";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/utils/outlook/calendar-client", () => ({
@@ -37,7 +37,7 @@ describe("createMicrosoftAvailabilityProvider", () => {
       "@/utils/outlook/calendar-client"
     );
     vi.mocked(getCalendarClientWithRefresh).mockResolvedValue(
-      mockClient as Client,
+      mockClient as Client
     );
   });
 
@@ -62,7 +62,7 @@ describe("createMicrosoftAvailabilityProvider", () => {
       // Verify that the Prefer header is set to request UTC times
       expect(mockApiResponse.header).toHaveBeenCalledWith(
         "Prefer",
-        'outlook.timezone="UTC"',
+        'outlook.timezone="UTC"'
       );
     });
 

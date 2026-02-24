@@ -3,8 +3,8 @@ import type { PDFViewer } from "pdfjs-dist/types/web/pdf_viewer";
 import type { LTWHP, Scaled, ScaledPosition, ViewportPosition } from "../types";
 
 interface WIDTH_HEIGHT {
-  width: number;
   height: number;
+  width: number;
 }
 
 /** @category Utilities */

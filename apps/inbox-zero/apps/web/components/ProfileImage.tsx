@@ -11,7 +11,7 @@ export function ProfileImage({
 }) {
   return (
     <Avatar>
-      <AvatarImage src={image || undefined} width={size} height={size} />
+      <AvatarImage height={size} src={image || undefined} width={size} />
       <AvatarFallback>{label.at(0)?.toUpperCase()}</AvatarFallback>
     </Avatar>
   );

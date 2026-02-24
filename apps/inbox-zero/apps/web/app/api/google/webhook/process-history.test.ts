@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { processHistoryForUser } from "./process-history";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getHistory } from "@/utils/gmail/history";
+import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import {
   getWebhookEmailAccount,
   validateWebhookAccount,
 } from "@/utils/webhook/validate-webhook-account";
-import { createScopedLogger } from "@/utils/logger";
-import prisma from "@/utils/prisma";
+import { processHistoryForUser } from "./process-history";
 
 const logger = createScopedLogger("test");
 // Mock logger.with to return the same logger instance so spies work
@@ -80,7 +80,7 @@ describe("processHistoryForUser - 404 Handling", () => {
     const result = await processHistoryForUser(
       { emailAddress: email, historyId },
       {},
-      logger,
+      logger
     );
 
     const jsonResponse = await (result as any).json();
@@ -129,7 +129,7 @@ describe("processHistoryForUser - 404 Handling", () => {
         lastSyncedHistoryId: 1000,
         webhookHistoryId: 2000,
         skippedHistoryItems: 500, // (2000 - 500) - 1000 = 500
-      }),
+      })
     );
   });
 });

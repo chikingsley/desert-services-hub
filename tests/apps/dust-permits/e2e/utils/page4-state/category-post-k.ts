@@ -18,6 +18,9 @@ export interface PostKState {
   b2: { hasWaterTier: boolean; hasAvgDailyAcres: boolean };
   c2: { hasWaterTier: boolean; hasAvgDailyAcres: boolean };
   c3: { hasWaterTier: boolean; hasAvgDailyAcres: boolean };
+  d4: { hasCubicYardsImport: boolean; hasCubicYardsExport: boolean };
+  f1MarOct: { hasAvgDailyAcres: boolean };
+  f1NovFeb: { hasAvgDailyAcres: boolean };
   f2: { hasWaterTier: boolean; hasAvgDailyAcres: boolean };
   g1: { hasWaterTier: boolean; hasAvgDailyAcres: boolean };
   g2: { hasWaterTier: boolean; hasAvgDailyAcres: boolean };
@@ -25,9 +28,6 @@ export interface PostKState {
   i1: { hasWaterTier: boolean; hasAvgDailyAcres: boolean };
   i2: { hasWaterTier: boolean; hasAvgDailyAcres: boolean };
   j: { hasWaterTier: boolean; hasAvgDailyAcres: boolean };
-  d4: { hasCubicYardsImport: boolean; hasCubicYardsExport: boolean };
-  f1NovFeb: { hasAvgDailyAcres: boolean };
-  f1MarOct: { hasAvgDailyAcres: boolean };
 }
 
 export function getPostKState(

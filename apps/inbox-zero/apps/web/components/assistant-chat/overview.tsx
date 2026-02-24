@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { MessageText, TypographyH3 } from "@/components/Typography";
-import { ExamplesDialog } from "./examples-dialog";
 import { MessageCircleIcon } from "lucide-react";
+import { MessageText, TypographyH3 } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { ExamplesDialog } from "./examples-dialog";
 
 export const Overview = ({
   setInput,

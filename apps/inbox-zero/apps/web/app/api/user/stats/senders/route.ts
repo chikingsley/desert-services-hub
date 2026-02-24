@@ -1,7 +1,7 @@
-import { z } from "zod";
 import { NextResponse } from "next/server";
-import { withEmailAccount } from "@/utils/middleware";
+import { z } from "zod";
 import { getEmailFieldStats } from "@/app/api/user/stats/helpers";
+import { withEmailAccount } from "@/utils/middleware";
 
 const senderStatsQuery = z.object({
   fromDate: z.coerce.number().nullish(),
@@ -10,15 +10,15 @@ const senderStatsQuery = z.object({
 export type SenderStatsQuery = z.infer<typeof senderStatsQuery>;
 
 export interface SendersResponse {
-  mostActiveSenderEmails: { name: string; value: number }[];
   mostActiveSenderDomains: { name: string; value: number }[];
+  mostActiveSenderEmails: { name: string; value: number }[];
 }
 
 /**
  * Get sender statistics from database
  */
 async function getSenderStatistics(
-  options: SenderStatsQuery & { emailAccountId: string },
+  options: SenderStatsQuery & { emailAccountId: string }
 ): Promise<SendersResponse> {
   const [mostReceived, mostReceivedDomains] = await Promise.all([
     getMostReceivedFrom(options),
@@ -30,13 +30,13 @@ async function getSenderStatistics(
       (d: { from?: string; count: number }) => ({
         name: d.from || "",
         value: d.count,
-      }),
+      })
     ),
     mostActiveSenderDomains: mostReceivedDomains.data.map(
       (d: { from?: string; count: number }) => ({
         name: d.from || "",
         value: d.count,
-      }),
+      })
     ),
   };
 }

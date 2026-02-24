@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { handleAccountLinking } from "./account-linking";
-import prisma from "@/utils/__mocks__/prisma";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getMockEmailAccountSelect } from "@/__tests__/helpers";
+import prisma from "@/utils/__mocks__/prisma";
 import { createScopedLogger } from "@/utils/logger";
+import { handleAccountLinking } from "./account-linking";
 
 const logger = createScopedLogger("test");
 
@@ -37,7 +37,7 @@ describe("handleAccountLinking", () => {
 
     expect(cleanupOrphanedAccount).toHaveBeenCalledWith(
       "orphaned-account-id",
-      logger,
+      logger
     );
     expect(result).toEqual({ type: "continue_create" });
   });
@@ -96,7 +96,7 @@ describe("handleAccountLinking", () => {
       getMockEmailAccountSelect({
         userId: "different-user-id",
         email: "existing@gmail.com",
-      }) as any,
+      }) as any
     );
 
     const result = await handleAccountLinking({
@@ -113,7 +113,7 @@ describe("handleAccountLinking", () => {
     if (result.type === "redirect") {
       const url = new URL(result.response.headers.get("location") || "");
       expect(url.searchParams.get("error")).toBe(
-        "account_already_exists_use_merge",
+        "account_already_exists_use_merge"
       );
     }
   });

@@ -17,17 +17,6 @@ import type { LTWHP, Scaled } from "../types";
  */
 export interface PolygonCanvasProps {
   /**
-   * Whether polygon mode is active.
-   */
-  isActive: boolean;
-
-  /**
-   * Stroke color for the polygon.
-   * @default "#8b5cf6"
-   */
-  strokeColor?: string;
-
-  /**
    * Fill color for the polygon.
    * @default strokeColor with 20% opacity
    */
@@ -38,6 +27,28 @@ export interface PolygonCanvasProps {
    * @default 0.2
    */
   fillOpacity?: number;
+  /**
+   * Whether polygon mode is active.
+   */
+  isActive: boolean;
+
+  /**
+   * Callback when polygon creation is cancelled.
+   */
+  onCancel: () => void;
+
+  /**
+   * Callback when polygon is complete.
+   *
+   * @param points - Array of scaled points forming the polygon.
+   */
+  onComplete: (points: Scaled[]) => void;
+
+  /**
+   * Stroke color for the polygon.
+   * @default "#8b5cf6"
+   */
+  strokeColor?: string;
 
   /**
    * Stroke width for the polygon.
@@ -49,24 +60,12 @@ export interface PolygonCanvasProps {
    * The PDF viewer instance.
    */
   viewer: InstanceType<typeof TPDFViewer>;
-
-  /**
-   * Callback when polygon is complete.
-   *
-   * @param points - Array of scaled points forming the polygon.
-   */
-  onComplete: (points: Scaled[]) => void;
-
-  /**
-   * Callback when polygon creation is cancelled.
-   */
-  onCancel: () => void;
 }
 
 interface Point {
+  pageNumber: number;
   x: number;
   y: number;
-  pageNumber: number;
 }
 
 /**

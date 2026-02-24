@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
+  formatDateTimeInUserTimezone,
   formatInUserTimezone,
   formatTimeInUserTimezone,
-  formatDateTimeInUserTimezone,
 } from "./date";
 
 describe("timezone formatting", () => {
@@ -63,7 +63,7 @@ describe("timezone formatting", () => {
       // 7 PM UTC = 11 AM PST on Dec 30
       const result = formatDateTimeInUserTimezone(
         utcDate,
-        "America/Los_Angeles",
+        "America/Los_Angeles"
       );
       expect(result).toBe("Dec 30, 2024 at 11:00 AM");
     });
@@ -79,7 +79,7 @@ describe("timezone formatting", () => {
       const earlyUtc = new Date("2024-12-30T03:00:00Z");
       const result = formatDateTimeInUserTimezone(
         earlyUtc,
-        "America/Los_Angeles",
+        "America/Los_Angeles"
       );
       expect(result).toBe("Dec 29, 2024 at 7:00 PM");
     });
@@ -95,7 +95,7 @@ describe("timezone formatting", () => {
       const result = formatInUserTimezone(
         utcDate,
         "America/Sao_Paulo",
-        "yyyy-MM-dd HH:mm",
+        "yyyy-MM-dd HH:mm"
       );
       expect(result).toBe("2024-12-30 16:00");
     });
@@ -115,7 +115,7 @@ describe("timezone formatting", () => {
 
       const formattedTime = formatTimeInUserTimezone(
         meetingTimeUtc,
-        userTimezone,
+        userTimezone
       );
 
       // User should see "4:00 PM", not "7:00 PM"
@@ -129,7 +129,7 @@ describe("timezone formatting", () => {
 
       const formattedDateTime = formatDateTimeInUserTimezone(
         sydneyMorningUtc,
-        userTimezone,
+        userTimezone
       );
 
       // User should see Dec 30 at 10 AM, not Dec 29
@@ -154,7 +154,7 @@ describe("timezone formatting", () => {
     it("should fall back to UTC for corrupted timezone data", () => {
       const result = formatDateTimeInUserTimezone(
         utcDate,
-        "corrupted_data_123",
+        "corrupted_data_123"
       );
       expect(result).toBe("Dec 30, 2024 at 7:00 PM");
     });

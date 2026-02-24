@@ -1,9 +1,9 @@
 import { afterAll, describe, expect, test } from "bun:test";
+import { db } from "@lib/db/client";
 import { findItem } from "@/packages/estimates/catalog/catalog";
 import { applyLineItemChanges } from "@/packages/estimates/estimating/estimate-line-item-change-service";
 import { getEstimateWithDetails } from "@/packages/estimates/estimating/estimate-read-service";
 import { createEstimate } from "@/packages/estimates/estimating/estimate-write-service";
-import { db } from "@lib/db/client";
 
 const TEST_PREFIX = "_TEST_ESTIMATE_GUARDS_";
 const testEstimateIds: string[] = [];

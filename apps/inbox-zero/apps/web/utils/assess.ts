@@ -1,13 +1,13 @@
-import uniq from "lodash/uniq";
 import countBy from "lodash/countBy";
-import type { EmailProvider } from "@/utils/email/types";
+import uniq from "lodash/uniq";
 import { GmailProvider } from "@/utils/email/google";
-import { getEmailClient } from "@/utils/mail";
-import { isDefined } from "@/utils/types";
-import type { Logger } from "@/utils/logger";
+import type { EmailProvider } from "@/utils/email/types";
 import { GmailLabel } from "@/utils/gmail/label";
-import { OutlookLabel } from "@/utils/outlook/label";
 import { getFilters, getForwardingAddresses } from "@/utils/gmail/settings";
+import type { Logger } from "@/utils/logger";
+import { getEmailClient } from "@/utils/mail";
+import { OutlookLabel } from "@/utils/outlook/label";
+import { isDefined } from "@/utils/types";
 
 export async function assessUser({
   client,
@@ -35,7 +35,7 @@ export async function assessUser({
   // does user forward emails to other accounts?
   const forwardingAddressesCount = await getForwardingAddressesCount(
     client,
-    logger,
+    logger
   );
 
   // does user use snippets?
@@ -60,40 +60,36 @@ async function getUnreadEmailCount(client: EmailProvider) {
   if (client instanceof GmailProvider) {
     const label = await client.getLabelById(GmailLabel.UNREAD);
     return label?.threadsTotal || 0;
-  } else {
-    const label = await client.getLabelById(OutlookLabel.UNREAD);
-    return label?.threadsTotal || 0;
   }
+  const label = await client.getLabelById(OutlookLabel.UNREAD);
+  return label?.threadsTotal || 0;
 }
 
 export async function getInboxCount(client: EmailProvider) {
   if (client instanceof GmailProvider) {
     const label = await client.getLabelById(GmailLabel.INBOX);
     return label?.threadsTotal || 0;
-  } else {
-    const label = await client.getLabelById(OutlookLabel.INBOX);
-    return label?.threadsTotal || 0;
   }
+  const label = await client.getLabelById(OutlookLabel.INBOX);
+  return label?.threadsTotal || 0;
 }
 
 export async function getUnreadCount(client: EmailProvider) {
   if (client instanceof GmailProvider) {
     const label = await client.getLabelById(GmailLabel.UNREAD);
     return label?.threadsTotal || 0;
-  } else {
-    const label = await client.getLabelById(OutlookLabel.UNREAD);
-    return label?.threadsTotal || 0;
   }
+  const label = await client.getLabelById(OutlookLabel.UNREAD);
+  return label?.threadsTotal || 0;
 }
 
 async function getSentCount(client: EmailProvider) {
   if (client instanceof GmailProvider) {
     const label = await client.getLabelById(GmailLabel.SENT);
     return label?.threadsTotal || 0;
-  } else {
-    const label = await client.getLabelById(OutlookLabel.SENT);
-    return label?.threadsTotal || 0;
   }
+  const label = await client.getLabelById(OutlookLabel.SENT);
+  return label?.threadsTotal || 0;
 }
 
 async function getLabelCount(client: EmailProvider) {
@@ -101,10 +97,9 @@ async function getLabelCount(client: EmailProvider) {
   if (client instanceof GmailProvider) {
     const DEFAULT_LABEL_COUNT = 13;
     return labels.length - DEFAULT_LABEL_COUNT;
-  } else {
-    const DEFAULT_LABEL_COUNT = 8;
-    return labels.length - DEFAULT_LABEL_COUNT;
   }
+  const DEFAULT_LABEL_COUNT = 8;
+  return labels.length - DEFAULT_LABEL_COUNT;
 }
 
 async function getFiltersCount(client: EmailProvider) {
@@ -119,7 +114,7 @@ async function getFiltersCount(client: EmailProvider) {
 
 async function getForwardingAddressesCount(
   client: EmailProvider,
-  logger: Logger,
+  logger: Logger
 ) {
   if (client instanceof GmailProvider) {
     try {

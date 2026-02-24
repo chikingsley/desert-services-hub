@@ -22,7 +22,7 @@ export class RedirectError extends Error {
 export function redirectWithMessage(
   redirectUrl: URL,
   message: string,
-  responseHeaders: Headers,
+  responseHeaders: Headers
 ): NextResponse {
   redirectUrl.searchParams.set("message", message);
   return NextResponse.redirect(redirectUrl, { headers: responseHeaders });
@@ -34,7 +34,7 @@ export function redirectWithMessage(
 export function redirectWithError(
   redirectUrl: URL,
   error: string,
-  responseHeaders: Headers,
+  responseHeaders: Headers
 ): NextResponse {
   redirectUrl.searchParams.set("error", error);
   return NextResponse.redirect(redirectUrl, { headers: responseHeaders });

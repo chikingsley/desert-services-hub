@@ -14,8 +14,8 @@ export function ActionBar({
   return (
     <div
       className={cn(
-        "flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-3",
-        className,
+        "flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
+        className
       )}
     >
       <div className="flex flex-wrap items-center gap-3">{children}</div>

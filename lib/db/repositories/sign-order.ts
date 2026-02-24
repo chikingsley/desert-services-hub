@@ -28,42 +28,42 @@ export const SIGN_ORDER_TYPES = [
 export type SignOrderType = (typeof SIGN_ORDER_TYPES)[number];
 
 export interface SignOrderRecord {
+  createdAt: string;
+  draftId: string | null;
   id: number;
+  mailboxEmail: string;
+  messageId: string | null;
+  metadata: Record<string, unknown>;
+  noiAzc: string | null;
+  permitId: string | null;
   projectId: number | null;
   projectName: string;
-  signType: SignOrderType;
   quantity: number;
-  permitId: string | null;
-  noiAzc: string | null;
-  vendorEmail: string;
   requestedByEmail: string;
-  mailboxEmail: string;
-  subject: string;
   signDetails: string;
-  draftId: string | null;
-  messageId: string | null;
+  signType: SignOrderType;
   status: SignOrderStatus;
-  metadata: Record<string, unknown>;
-  createdAt: string;
+  subject: string;
   updatedAt: string;
+  vendorEmail: string;
 }
 
 export interface CreateSignOrderInput {
+  draftId?: string | null;
+  mailboxEmail: string;
+  messageId?: string | null;
+  metadata?: Record<string, unknown>;
+  noiAzc?: string | null;
+  permitId?: string | null;
   projectId?: number | null;
   projectName: string;
-  signType: SignOrderType;
   quantity: number;
-  permitId?: string | null;
-  noiAzc?: string | null;
-  vendorEmail: string;
   requestedByEmail: string;
-  mailboxEmail: string;
-  subject: string;
   signDetails: string;
-  draftId?: string | null;
-  messageId?: string | null;
+  signType: SignOrderType;
   status?: SignOrderStatus;
-  metadata?: Record<string, unknown>;
+  subject: string;
+  vendorEmail: string;
 }
 
 function parseMetadata(raw: unknown): Record<string, unknown> {

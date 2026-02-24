@@ -1,63 +1,20 @@
 "use client";
 
 import { SparklesIcon } from "lucide-react";
-import {
-  Card,
-  CardBasic,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Container } from "@/components/Container";
-import {
-  PageHeading,
-  PageSubHeading,
-  SectionDescription,
-  SectionHeader,
-  MessageText,
-  TypographyP,
-  TypographyH3,
-  TypographyH4,
-  TextLink,
-  MutedText,
-} from "@/components/Typography";
-import { Button } from "@/components/Button";
-import { Button as ShadButton } from "@/components/ui/button";
-import { Badge } from "@/components/Badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableRow, TableCell } from "@/components/ui/table";
-import { ActionCard } from "@/components/ui/card";
-import { AlertBasic } from "@/components/Alert";
-import { Notice } from "@/components/Notice";
-import { TestErrorButton } from "@/app/(landing)/components/TestError";
-import { TestActionButton } from "@/app/(landing)/components/TestAction";
-import {
-  MultiSelectFilter,
-  useMultiSelectFilter,
-} from "@/components/MultiSelectFilter";
-import { TagInput } from "@/components/TagInput";
-import { TooltipExplanation } from "@/components/TooltipExplanation";
 import { Suspense, useState } from "react";
-import { PremiumAiAssistantAlert } from "@/components/PremiumAlert";
-import { ActionType, ExecutedRuleStatus } from "@/generated/prisma/enums";
-import type { Rule } from "@/generated/prisma/client";
-import { SettingCard } from "@/components/SettingCard";
-import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
-import { isValidEmail } from "@/utils/email";
-import { ActionBadges } from "@/app/(app)/[emailAccountId]/assistant/Rules";
-import { DismissibleVideoCard } from "@/components/VideoCard";
-import { PremiumExpiredCardContent } from "@/components/PremiumCard";
-import { AnnouncementDialogDemo } from "@/components/feature-announcements/AnnouncementDialogDemo";
-import {
-  ResultsDisplay,
-  ResultDisplayContent,
-} from "@/app/(app)/[emailAccountId]/assistant/ResultDisplay";
 import {
   ActivityLog,
   type ActivityLogEntry,
 } from "@/app/(app)/[emailAccountId]/assistant/BulkProcessActivityLog";
+import {
+  ResultDisplayContent,
+  ResultsDisplay,
+} from "@/app/(app)/[emailAccountId]/assistant/ResultDisplay";
+import { ActionBadges } from "@/app/(app)/[emailAccountId]/assistant/Rules";
+import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
+import { TestActionButton } from "@/app/(landing)/components/TestAction";
+import { TestErrorButton } from "@/app/(landing)/components/TestError";
+import { AlertBasic } from "@/components/Alert";
 import {
   AddToKnowledgeBase,
   BasicToolInfo,
@@ -66,6 +23,49 @@ import {
   type ThreadLookup,
   UpdateAbout,
 } from "@/components/assistant-chat/tools";
+import { Badge } from "@/components/Badge";
+import { Button } from "@/components/Button";
+import { Container } from "@/components/Container";
+import { AnnouncementDialogDemo } from "@/components/feature-announcements/AnnouncementDialogDemo";
+import {
+  MultiSelectFilter,
+  useMultiSelectFilter,
+} from "@/components/MultiSelectFilter";
+import { Notice } from "@/components/Notice";
+import { PremiumAiAssistantAlert } from "@/components/PremiumAlert";
+import { PremiumExpiredCardContent } from "@/components/PremiumCard";
+import { SettingCard } from "@/components/SettingCard";
+import { TagInput } from "@/components/TagInput";
+import { TooltipExplanation } from "@/components/TooltipExplanation";
+import {
+  MessageText,
+  MutedText,
+  PageHeading,
+  PageSubHeading,
+  SectionDescription,
+  SectionHeader,
+  TextLink,
+  TypographyH3,
+  TypographyH4,
+  TypographyP,
+} from "@/components/Typography";
+import { Button as ShadButton } from "@/components/ui/button";
+import {
+  ActionCard,
+  Card,
+  CardBasic,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DismissibleVideoCard } from "@/components/VideoCard";
+import type { Rule } from "@/generated/prisma/client";
+import { ActionType, ExecutedRuleStatus } from "@/generated/prisma/enums";
+import { isValidEmail } from "@/utils/email";
 
 export const maxDuration = 3;
 
@@ -118,7 +118,7 @@ export default function Components() {
                 </p>
               </CardContent>
               <CardFooter>
-                <ShadButton variant="outline" className="w-full">
+                <ShadButton className="w-full" variant="outline">
                   Action
                 </ShadButton>
               </CardFooter>
@@ -138,7 +138,7 @@ export default function Components() {
                 </p>
               </CardContent>
               <CardFooter>
-                <ShadButton variant="outline" size="sm" className="w-full">
+                <ShadButton className="w-full" size="sm" variant="outline">
                   Action
                 </ShadButton>
               </CardFooter>
@@ -147,24 +147,24 @@ export default function Components() {
 
           <div className="space-y-4">
             <ActionCard
+              action={<ShadButton variant="primaryBlack">Click Me</ShadButton>}
+              description="This is the default green variant of the ActionCard component."
               icon={<SparklesIcon className="size-5" />}
               title="Action Card (Green)"
-              description="This is the default green variant of the ActionCard component."
-              action={<ShadButton variant="primaryBlack">Click Me</ShadButton>}
             />
             <ActionCard
-              variant="blue"
+              action={<ShadButton variant="primaryBlack">Click Me</ShadButton>}
+              description="This is the blue variant of the ActionCard component."
               icon={<SparklesIcon className="size-5" />}
               title="Action Card (Blue)"
-              description="This is the blue variant of the ActionCard component."
-              action={<ShadButton variant="primaryBlack">Click Me</ShadButton>}
+              variant="blue"
             />
             <ActionCard
-              variant="destructive"
+              action={<ShadButton variant="primaryBlack">Click Me</ShadButton>}
+              description="This is the destructive variant of the ActionCard component."
               icon={<SparklesIcon className="size-5" />}
               title="Action Card (Destructive)"
-              description="This is the destructive variant of the ActionCard component."
-              action={<ShadButton variant="primaryBlack">Click Me</ShadButton>}
+              variant="destructive"
             />
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function Components() {
             <ShadButton variant="default">ShadButton Default</ShadButton>
             <ShadButton variant="secondary">ShadButton Secondary</ShadButton>
             <ShadButton variant="outline">ShadButton Outline</ShadButton>
-            <ShadButton variant="outline" loading>
+            <ShadButton loading variant="outline">
               ShadButton Loading
             </ShadButton>
             <ShadButton variant="ghost">ShadButton Ghost</ShadButton>
@@ -231,7 +231,7 @@ export default function Components() {
           <div className="underline">Tabs</div>
           <div className="mt-4">
             <Suspense>
-              <Tabs defaultValue="account" className="w-[400px]">
+              <Tabs className="w-[400px]" defaultValue="account">
                 <TabsList>
                   <TabsTrigger value="account">Account</TabsTrigger>
                   <TabsTrigger value="password">Password</TabsTrigger>
@@ -247,23 +247,23 @@ export default function Components() {
           <div className="underline">Alerts</div>
           <div className="mt-4 space-y-2">
             <AlertBasic
-              title="Alert title default"
               description="Alert description"
+              title="Alert title default"
               variant="default"
             />
             <AlertBasic
-              title="Alert title success"
               description="Alert description"
+              title="Alert title success"
               variant="success"
             />
             <AlertBasic
-              title="Alert title destructive"
               description="Alert description"
+              title="Alert title destructive"
               variant="destructive"
             />
             <AlertBasic
-              title="Alert title blue"
               description="Alert description"
+              title="Alert title blue"
               variant="blue"
             />
           </div>
@@ -328,14 +328,14 @@ export default function Components() {
           <div className="underline">DismissibleVideoCard</div>
           <div className="mt-4">
             <DismissibleVideoCard
-              icon={<SparklesIcon className="h-5 w-5" />}
-              title="Getting started with AI Assistant"
               description={
                 "Learn how to use the AI Assistant to automatically label, archive, and more."
               }
-              videoSrc="https://www.youtube.com/embed/SoeNDVr7ve4"
-              thumbnailSrc="https://img.youtube.com/vi/SoeNDVr7ve4/0.jpg"
+              icon={<SparklesIcon className="h-5 w-5" />}
               storageKey={`video-dismissible-${Date.now()}`}
+              thumbnailSrc="https://img.youtube.com/vi/SoeNDVr7ve4/0.jpg"
+              title="Getting started with AI Assistant"
+              videoSrc="https://www.youtube.com/embed/SoeNDVr7ve4"
             />
           </div>
         </div>
@@ -350,7 +350,7 @@ export default function Components() {
         <div>
           <div className="underline">IconCircle</div>
           <div className="mt-4">
-            <IconCircle size="md" color="blue" Icon={SparklesIcon} />
+            <IconCircle color="blue" Icon={SparklesIcon} size="md" />
           </div>
         </div>
 
@@ -439,8 +439,8 @@ export default function Components() {
                   id: "notify_sender",
                 },
               ]}
-              provider="gmail"
               labels={[{ id: "label", name: "Label" }]}
+              provider="gmail"
             />
           </div>
         </div>
@@ -581,7 +581,7 @@ export default function Components() {
               />
             </div>
 
-            <div className="p-4 border border-border rounded mt-4">
+            <div className="mt-4 rounded border border-border p-4">
               <ResultDisplayContent
                 result={{
                   createdAt: new Date("2025-01-01"),
@@ -599,7 +599,7 @@ export default function Components() {
               />
             </div>
 
-            <div className="p-4 border border-border rounded mt-4">
+            <div className="mt-4 rounded border border-border p-4">
               <ResultDisplayContent
                 result={{
                   createdAt: new Date("2025-01-01"),
@@ -630,7 +630,7 @@ export default function Components() {
               />
             </div>
 
-            <div className="p-4 border border-border rounded mt-4">
+            <div className="mt-4 rounded border border-border p-4">
               <ResultDisplayContent
                 result={{
                   createdAt: new Date("2025-01-01"),
@@ -668,8 +668,8 @@ export default function Components() {
             <MutedText>Paused state:</MutedText>
             <ActivityLog
               entries={getActivityLogEntries()}
-              processingCount={2}
               paused={true}
+              processingCount={2}
             />
 
             <MutedText>Long text truncation test:</MutedText>
@@ -739,13 +739,9 @@ export default function Components() {
               <BasicToolInfo text="Reading rules and settings..." />
               <BasicToolInfo text="Reading learned patterns..." />
               <BasicToolInfo text='Creating rule "Newsletters"...' />
-              <BasicToolInfo
-                text='Updating rule "Newsletters" conditions...'
-              />
+              <BasicToolInfo text='Updating rule "Newsletters" conditions...' />
               <BasicToolInfo text='Updating rule "Newsletters" actions...' />
-              <BasicToolInfo
-                text='Updating learned patterns for rule "Newsletters"...'
-              />
+              <BasicToolInfo text='Updating learned patterns for rule "Newsletters"...' />
               <BasicToolInfo text="Updating about..." />
               <BasicToolInfo text="Adding to knowledge base..." />
             </div>
@@ -854,7 +850,6 @@ export default function Components() {
           <div className="underline">MultiSelectFilter</div>
           <div className="mt-4">
             <MultiSelectFilter
-              title="Categories"
               options={[
                 { label: "Receipts", value: "receipts" },
                 { label: "Newsletters", value: "newsletters" },
@@ -863,6 +858,7 @@ export default function Components() {
               ]}
               selectedValues={selectedValues}
               setSelectedValues={setSelectedValues}
+              title="Categories"
             />
           </div>
         </div>
@@ -875,37 +871,37 @@ export default function Components() {
                 Basic (type and press Enter):
               </MutedText>
               <TagInput
-                value={basicTags}
+                className="max-w-md"
+                label="Tags"
                 onChange={setBasicTags}
                 placeholder="Add tags..."
-                label="Tags"
-                className="max-w-md"
+                value={basicTags}
               />
             </div>
             <div>
               <MutedText className="mb-2">With email validation:</MutedText>
               <TagInput
-                value={emailTags}
+                className="max-w-md"
+                label="Email addresses"
                 onChange={setEmailTags}
                 placeholder="Enter email addresses"
-                label="Email addresses"
                 validate={(email) =>
                   isValidEmail(email)
                     ? null
                     : "Please enter a valid email address"
                 }
-                className="max-w-md"
+                value={emailTags}
               />
             </div>
             <div>
               <MutedText className="mb-2">With external error:</MutedText>
               <TagInput
-                value={["tag1", "tag2"]}
+                className="max-w-md"
+                error="This field has an error"
+                label="Tags"
                 onChange={() => {}}
                 placeholder="Add tags..."
-                label="Tags"
-                error="This field has an error"
-                className="max-w-md"
+                value={["tag1", "tag2"]}
               />
             </div>
           </div>
@@ -915,27 +911,27 @@ export default function Components() {
           <div className="underline">SettingCard</div>
           <div className="mt-4 space-y-4">
             <SettingCard
-              title="Email Notifications"
               description="Receive notifications about new emails and important updates"
               right={
-                <ShadButton variant="outline" size="sm">
+                <ShadButton size="sm" variant="outline">
                   Configure
                 </ShadButton>
               }
+              title="Email Notifications"
             />
             <SettingCard
-              title="Auto-Reply"
               description="Automatically respond to incoming emails when you're away"
               right={
-                <ShadButton variant="ghost" size="sm">
+                <ShadButton size="sm" variant="ghost">
                   Edit
                 </ShadButton>
               }
+              title="Auto-Reply"
             />
             <SettingCard
-              title="Sync Frequency"
               description="How often to check for new emails"
               right={<Badge color="green">Every 5 minutes</Badge>}
+              title="Sync Frequency"
             />
           </div>
         </div>
@@ -972,7 +968,7 @@ export default function Components() {
               <PremiumExpiredCardContent
                 premium={{
                   lemonSqueezyRenewsAt: new Date(
-                    Date.now() - 24 * 60 * 60 * 1000,
+                    Date.now() - 24 * 60 * 60 * 1000
                   ), // Yesterday
                   stripeSubscriptionId: null,
                   stripeSubscriptionStatus: null,
@@ -985,7 +981,7 @@ export default function Components() {
               <MutedText className="mb-2">
                 No Banner (Active Premium):
               </MutedText>
-              <div className="min-h-[20px] text-xs text-muted-foreground">
+              <div className="min-h-[20px] text-muted-foreground text-xs">
                 <PremiumExpiredCardContent
                   premium={{
                     lemonSqueezyRenewsAt: null,
@@ -1002,7 +998,7 @@ export default function Components() {
               <MutedText className="mb-2">
                 No Banner (Never Had Premium):
               </MutedText>
-              <div className="min-h-[20px] text-xs text-muted-foreground">
+              <div className="min-h-[20px] text-muted-foreground text-xs">
                 <PremiumExpiredCardContent premium={null} />
                 Banner should not appear for users who never had premium
               </div>
@@ -1168,7 +1164,7 @@ function getAssistantSearchInboxOutput() {
 
 function EmailRowExample() {
   return (
-    <div className="border rounded-md overflow-hidden">
+    <div className="overflow-hidden rounded-md border">
       <Table>
         <TableBody>
           <TableRow>

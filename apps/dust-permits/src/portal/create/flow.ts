@@ -565,8 +565,11 @@ export async function revisePermitFull(
 
 /** Result of the full renew-and-pay flow. */
 export interface RenewAndPayResult {
-  success: boolean;
+  amount?: string;
   applicationId?: string;
+  cardLastFour?: string;
+  convenienceFee?: string;
+  error?: string;
   /** What stage the flow reached before stopping or completing */
   stage:
     | "renew-failed"
@@ -577,11 +580,8 @@ export interface RenewAndPayResult {
     | "payment-continue-failed"
     | "payment-review"
     | "paid";
-  amount?: string;
-  convenienceFee?: string;
+  success: boolean;
   totalPaid?: string;
-  cardLastFour?: string;
-  error?: string;
 }
 
 /**

@@ -1,8 +1,8 @@
 import type { SVGProps } from "react";
 
 interface SparkleProps extends SVGProps<SVGSVGElement> {
-  size?: number;
   "aria-label"?: string;
+  size?: number;
 }
 
 export function Sparkle({
@@ -13,15 +13,15 @@ export function Sparkle({
 }: SparkleProps) {
   return (
     <svg
-      width={size}
-      height={size}
-      viewBox="0 0 15 15"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      role={ariaLabel ? "img" : undefined}
-      aria-label={ariaLabel}
       aria-hidden={ariaLabel ? undefined : true}
+      aria-label={ariaLabel}
+      className={className}
+      fill="none"
+      height={size}
+      role={ariaLabel ? "img" : undefined}
+      viewBox="0 0 15 15"
+      width={size}
+      xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <path
@@ -34,12 +34,12 @@ export function Sparkle({
       />
       <defs>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint0_linear_137_69791"
           x1="7.33333"
-          y1="0"
           x2="7.33333"
+          y1="0"
           y2="14.6667"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#9F9F9F" />
           <stop offset="1" stopColor="#E1E1E1" />

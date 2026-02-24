@@ -1,6 +1,6 @@
 import type { Message } from "@microsoft/microsoft-graph-types";
-import type { OutlookClient } from "@/utils/outlook/client";
 import type { Logger } from "@/utils/logger";
+import type { OutlookClient } from "@/utils/outlook/client";
 import { isNotFoundError } from "@/utils/outlook/errors";
 import {
   convertMessage,
@@ -26,7 +26,7 @@ export async function getDraft({
             .getClient()
             .api(`/me/messages/${draftId}`)
             .get() as Promise<Message>,
-        logger,
+        logger
       ),
       getFolderIds(client, logger),
       getCategoryMap(client, logger),
@@ -69,7 +69,7 @@ export async function sendDraft({
   // The message ID stays the same after sending
   await withOutlookRetry(
     () => client.getClient().api(`/me/messages/${draftId}/send`).post({}),
-    logger,
+    logger
   );
 
   // Get the sent message to retrieve the conversationId (threadId)
@@ -79,7 +79,7 @@ export async function sendDraft({
         .getClient()
         .api(`/me/messages/${draftId}`)
         .get() as Promise<Message>,
-    logger,
+    logger
   );
 
   const threadId = sentMessage.conversationId;
@@ -112,7 +112,7 @@ export async function deleteDraft({
     // This is fine - getDraft() treats drafts not in Drafts folder as "deleted"
     await withOutlookRetry(
       () => client.getClient().api(`/me/messages/${draftId}`).delete(),
-      logger,
+      logger
     );
 
     logger.info("Draft deleted successfully", { draftId });

@@ -2,7 +2,6 @@
 
 import { format } from "date-fns/format";
 import { CalendarIcon } from "lucide-react";
-import { cn } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -10,6 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn } from "@/utils";
 
 export function SetDateDropdown({
   onChange,
@@ -26,12 +26,12 @@ export function SetDateDropdown({
     <Popover modal={true}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
           className={cn(
             "w-full pl-3 text-left font-normal",
-            !value && "text-muted-foreground",
+            !value && "text-muted-foreground"
           )}
           disabled={disabled}
+          variant="outline"
         >
           {value ? (
             format(value, "PPP")
@@ -41,15 +41,15 @@ export function SetDateDropdown({
           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent align="start" className="w-auto p-0">
         <Calendar
-          mode="single"
-          selected={value}
-          onSelect={onChange}
           disabled={(date) =>
             date > new Date() || date < new Date("1900-01-01")
           }
           initialFocus
+          mode="single"
+          onSelect={onChange}
+          selected={value}
         />
       </PopoverContent>
     </Popover>

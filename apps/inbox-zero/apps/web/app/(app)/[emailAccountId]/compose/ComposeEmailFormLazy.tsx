@@ -8,5 +8,5 @@ export const ComposeEmailFormLazy = dynamic(
   () => import("./ComposeEmailForm").then((mod) => mod.ComposeEmailForm),
   {
     loading: () => <Loading />,
-  },
+  }
 );

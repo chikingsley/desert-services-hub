@@ -1,7 +1,7 @@
 "use client";
 
 import { useAction } from "next-safe-action/hooks";
-import { Button } from "@/components/ui/button";
+import { toastError, toastSuccess } from "@/components/Toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,17 +13,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
   Item,
-  ItemContent,
-  ItemTitle,
   ItemActions,
+  ItemContent,
   ItemSeparator,
+  ItemTitle,
 } from "@/components/ui/item";
-import { toggleAllRulesAction } from "@/utils/actions/rule";
-import { toastError, toastSuccess } from "@/components/Toast";
-import { getActionErrorMessage } from "@/utils/error";
 import { useRules } from "@/hooks/useRules";
+import { toggleAllRulesAction } from "@/utils/actions/rule";
+import { getActionErrorMessage } from "@/utils/error";
 
 export function ToggleAllRulesSection({
   emailAccountId,
@@ -45,10 +45,12 @@ export function ToggleAllRulesSection({
       onError: (error) => {
         toastError({ description: getActionErrorMessage(error.error) });
       },
-    },
+    }
   );
 
-  if (!hasRules || !hasEnabledRules) return null;
+  if (!(hasRules && hasEnabledRules)) {
+    return null;
+  }
 
   return (
     <>
@@ -60,7 +62,7 @@ export function ToggleAllRulesSection({
         <ItemActions>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="outline" disabled={isExecuting}>
+              <Button disabled={isExecuting} size="sm" variant="outline">
                 Disable All
               </Button>
             </AlertDialogTrigger>
@@ -75,8 +77,8 @@ export function ToggleAllRulesSection({
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
-                  type="button"
                   onClick={() => execute({ enabled: false })}
+                  type="button"
                 >
                   Disable All
                 </AlertDialogAction>

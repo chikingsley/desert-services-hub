@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { HashIcon, LockIcon, MailIcon, MessageSquareIcon } from "lucide-react";
 import Link from "next/link";
-import { MailIcon, HashIcon, LockIcon, MessageSquareIcon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
+import { LoadingContent } from "@/components/LoadingContent";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Toggle } from "@/components/Toggle";
+import { MutedText } from "@/components/Typography";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -12,24 +16,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Toggle } from "@/components/Toggle";
-import { toastSuccess, toastError } from "@/components/Toast";
-import { LoadingContent } from "@/components/LoadingContent";
-import { MutedText } from "@/components/Typography";
-import { useAccount } from "@/providers/EmailAccountProvider";
+import type { MessagingProvider } from "@/generated/prisma/enums";
 import { useMeetingBriefSettings } from "@/hooks/useMeetingBriefs";
 import {
-  useMessagingChannels,
   useChannelTargets,
+  useMessagingChannels,
 } from "@/hooks/useMessagingChannels";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import {
-  updateSlackChannelAction,
   updateChannelFeaturesAction,
   updateEmailDeliveryAction,
+  updateSlackChannelAction,
 } from "@/utils/actions/messaging-channels";
 import { getActionErrorMessage } from "@/utils/error";
 import { prefixPath } from "@/utils/path";
-import type { MessagingProvider } from "@/generated/prisma/enums";
 
 const PROVIDER_CONFIG: Record<
   MessagingProvider,
@@ -68,7 +68,7 @@ export function DeliveryChannelsSetting() {
           description: getActionErrorMessage(error.error) ?? "Failed to update",
         });
       },
-    },
+    }
   );
 
   const connectedChannels =
@@ -80,7 +80,7 @@ export function DeliveryChannelsSetting() {
 
   return (
     <Card>
-      <CardContent className="p-4 space-y-4">
+      <CardContent className="space-y-4 p-4">
         <div>
           <h3 className="font-medium">Delivery Channels</h3>
           <MutedText>Choose where to receive meeting briefings</MutedText>
@@ -91,30 +91,30 @@ export function DeliveryChannelsSetting() {
             <MailIcon className="h-5 w-5 text-muted-foreground" />
             <div className="flex-1 font-medium text-sm">Email</div>
             <Toggle
-              name="emailDelivery"
-              enabled={briefSettings?.meetingBriefsSendEmail ?? true}
               disabled={isLoadingBriefSettings}
+              enabled={briefSettings?.meetingBriefsSendEmail ?? true}
+              name="emailDelivery"
               onChange={(sendEmail) => executeEmailDelivery({ sendEmail })}
             />
           </div>
 
-          <LoadingContent loading={isLoadingChannels} error={channelsError}>
+          <LoadingContent error={channelsError} loading={isLoadingChannels}>
             {connectedChannels.map((channel) => (
               <ChannelRow
-                key={channel.id}
                 channel={channel}
                 emailAccountId={emailAccountId}
+                key={channel.id}
                 onUpdate={mutateChannels}
               />
             ))}
           </LoadingContent>
 
-          {!isLoadingChannels && !hasSlack && slackAvailable && (
+          {!(isLoadingChannels || hasSlack) && slackAvailable && (
             <MutedText className="text-xs">
               Want to receive briefs in Slack?{" "}
               <Link
+                className="text-foreground underline"
                 href={prefixPath(emailAccountId, "/settings")}
-                className="underline text-foreground"
               >
                 Connect Slack in Settings
               </Link>
@@ -166,7 +166,7 @@ function ChannelRow({
           description: getActionErrorMessage(error.error) ?? "Failed to update",
         });
       },
-    },
+    }
   );
 
   const { execute: executeFeatures } = useAction(
@@ -181,7 +181,7 @@ function ChannelRow({
           description: getActionErrorMessage(error.error) ?? "Failed to update",
         });
       },
-    },
+    }
   );
 
   return (
@@ -195,6 +195,7 @@ function ChannelRow({
                 {config?.name ?? channel.provider}
               </span>
               <Select
+                disabled={isLoadingTargets || !!targetsError}
                 onValueChange={(value) => {
                   const target = privateTargets?.find((t) => t.id === value);
                   if (target) {
@@ -205,7 +206,6 @@ function ChannelRow({
                     });
                   }
                 }}
-                disabled={isLoadingTargets || !!targetsError}
               >
                 <SelectTrigger className="h-8 w-48 text-xs">
                   <SelectValue
@@ -221,14 +221,14 @@ function ChannelRow({
                 <SelectContent>
                   {privateTargets?.map((target) => (
                     <SelectItem key={target.id} value={target.id}>
-                      <LockIcon className="inline h-3 w-3 mr-1" />
+                      <LockIcon className="mr-1 inline h-3 w-3" />
                       {target.name}
                     </SelectItem>
                   ))}
                   {!isLoadingTargets &&
                     privateTargets &&
                     privateTargets.length === 0 && (
-                      <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                      <div className="px-2 py-1.5 text-muted-foreground text-xs">
                         No private channels found. Create one and invite the bot
                         first.
                       </div>
@@ -239,7 +239,7 @@ function ChannelRow({
             {!isLoadingTargets && (
               <MutedText className="text-xs">
                 Create a private Slack channel, then type{" "}
-                <code className="bg-muted px-1 rounded">
+                <code className="rounded bg-muted px-1">
                   /invite @InboxZero
                 </code>{" "}
                 in it. The channel will appear above once the bot is invited.
@@ -248,13 +248,13 @@ function ChannelRow({
           </div>
         ) : (
           <button
-            type="button"
-            className="font-medium text-sm text-left hover:underline"
+            className="text-left font-medium text-sm hover:underline"
             onClick={() => setSelectingTarget(true)}
             title="Change channel"
+            type="button"
           >
             {config?.name ?? channel.provider}{" "}
-            <span className="text-muted-foreground font-normal">
+            <span className="font-normal text-muted-foreground">
               &middot; {config?.targetPrefix}
               {channel.channelName}
             </span>
@@ -264,8 +264,8 @@ function ChannelRow({
 
       {channel.channelId && !selectingTarget && (
         <Toggle
-          name={`briefs-${channel.id}`}
           enabled={channel.sendMeetingBriefs}
+          name={`briefs-${channel.id}`}
           onChange={(sendMeetingBriefs) =>
             executeFeatures({
               channelId: channel.id,

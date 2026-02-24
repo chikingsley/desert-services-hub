@@ -1,6 +1,6 @@
-import type { OutlookClient } from "@/utils/outlook/client";
 import { publishDelete, type TinybirdEmailAction } from "@inboxzero/tinybird";
 import type { Logger } from "@/utils/logger";
+import type { OutlookClient } from "@/utils/outlook/client";
 import { withOutlookRetry } from "@/utils/outlook/retry";
 
 export async function trashThread(options: {
@@ -31,7 +31,7 @@ export async function trashThread(options: {
               client.getClient().api(`/me/messages/${message.id}/move`).post({
                 destinationId: "deleteditems",
               }),
-            logger,
+            logger
           );
         } catch (error) {
           // Log the error but don't fail the entire operation
@@ -42,7 +42,7 @@ export async function trashThread(options: {
           });
           return null;
         }
-      }),
+      })
     );
 
     const publishPromise = publishDelete({
@@ -67,14 +67,13 @@ export async function trashThread(options: {
           error,
         });
         return { status: 200 };
-      } else {
-        logger.error("Failed to trash thread", {
-          email: ownerEmail,
-          threadId,
-          error,
-        });
-        throw error;
       }
+      logger.error("Failed to trash thread", {
+        email: ownerEmail,
+        threadId,
+        error,
+      });
+      throw error;
     }
 
     if (publishResult.status === "rejected") {
@@ -104,7 +103,7 @@ export async function trashThread(options: {
       // Filter messages by conversationId manually
       const threadMessages = messages.value.filter(
         (message: { conversationId: string }) =>
-          message.conversationId === threadId,
+          message.conversationId === threadId
       );
 
       if (threadMessages.length > 0) {
@@ -120,7 +119,7 @@ export async function trashThread(options: {
                     .post({
                       destinationId: "deleteditems",
                     }),
-                logger,
+                logger
               );
             } catch (moveError) {
               // Log the error but don't fail the entire operation
@@ -132,7 +131,7 @@ export async function trashThread(options: {
               });
               return null;
             }
-          },
+          }
         );
 
         await Promise.allSettled(movePromises);
@@ -143,7 +142,7 @@ export async function trashThread(options: {
             client.getClient().api(`/me/messages/${threadId}/move`).post({
               destinationId: "deleteditems",
             }),
-          logger,
+          logger
         );
       }
 

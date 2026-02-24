@@ -1,6 +1,6 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import { aiAnalyzeWritingStyle } from "@/utils/ai/knowledge/writing-style";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { getEmailAccount } from "@/__tests__/helpers";
+import { aiAnalyzeWritingStyle } from "@/utils/ai/knowledge/writing-style";
 
 // Run with: pnpm test-ai ai-writing-style
 
@@ -40,7 +40,7 @@ describe.runIf(isAiTest)(
       expect(result).toBeNull();
     });
   },
-  TIMEOUT,
+  TIMEOUT
 );
 
 function getTestEmails() {

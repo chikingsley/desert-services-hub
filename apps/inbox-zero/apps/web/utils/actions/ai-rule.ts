@@ -1,13 +1,6 @@
 "use server";
 
 import { z } from "zod";
-import prisma from "@/utils/prisma";
-import { isNotFoundError, isDuplicateError } from "@/utils/prisma-helpers";
-import {
-  runRules,
-  type RunRulesResult,
-} from "@/utils/ai/choose-rule/run-rules";
-import { emailToContent } from "@/utils/mail";
 import {
   runRulesBody,
   testAiCustomContentBody,
@@ -16,18 +9,25 @@ import {
   createRulesBody,
   saveRulesPromptBody,
 } from "@/utils/actions/rule.validation";
-import { aiPromptToRules } from "@/utils/ai/rule/prompt-to-rules";
+import { actionClient } from "@/utils/actions/safe-action";
+import {
+  type RunRulesResult,
+  runRules,
+} from "@/utils/ai/choose-rule/run-rules";
 import { aiDiffRules } from "@/utils/ai/rule/diff-rules";
 import { aiFindExistingRules } from "@/utils/ai/rule/find-existing-rules";
 import { aiGenerateRulesPrompt } from "@/utils/ai/rule/generate-rules-prompt";
-import { aiFindSnippets } from "@/utils/ai/snippets/find-snippets";
-import { createRule, updateRule, deleteRule } from "@/utils/rule/rule";
-import { actionClient } from "@/utils/actions/safe-action";
-import { getEmailAccountWithAi } from "@/utils/user/get";
-import { SafeError } from "@/utils/error";
-import { createEmailProvider } from "@/utils/email/provider";
+import { aiPromptToRules } from "@/utils/ai/rule/prompt-to-rules";
 import { aiPromptToRulesOld } from "@/utils/ai/rule/prompt-to-rules-old";
+import { aiFindSnippets } from "@/utils/ai/snippets/find-snippets";
+import { createEmailProvider } from "@/utils/email/provider";
+import { SafeError } from "@/utils/error";
+import { emailToContent } from "@/utils/mail";
+import prisma from "@/utils/prisma";
+import { isDuplicateError, isNotFoundError } from "@/utils/prisma-helpers";
+import { createRule, deleteRule, updateRule } from "@/utils/rule/rule";
 import type { CreateRuleResult } from "@/utils/rule/types";
+import { getEmailAccountWithAi } from "@/utils/user/get";
 
 export const runRulesAction = actionClient
   .metadata({ name: "runRules" })
@@ -41,8 +41,12 @@ export const runRulesAction = actionClient
 
       const emailAccount = await getEmailAccountWithAi({ emailAccountId });
 
-      if (!emailAccount) throw new SafeError("Email account not found");
-      if (!provider) throw new SafeError("Provider not found");
+      if (!emailAccount) {
+        throw new SafeError("Email account not found");
+      }
+      if (!provider) {
+        throw new SafeError("Provider not found");
+      }
 
       const emailProvider = await createEmailProvider({
         emailAccountId,
@@ -51,7 +55,7 @@ export const runRulesAction = actionClient
       });
       const message = await emailProvider.getMessage(messageId);
 
-      const fetchExecutedRule = !isTest && !rerun;
+      const fetchExecutedRule = !(isTest || rerun);
 
       const executedRules = fetchExecutedRule
         ? await prisma.executedRule.findMany({
@@ -103,7 +107,7 @@ export const runRulesAction = actionClient
       });
 
       return result;
-    },
+    }
   );
 
 export const testAiCustomContentAction = actionClient
@@ -116,7 +120,9 @@ export const testAiCustomContentAction = actionClient
     }) => {
       const emailAccount = await getEmailAccountWithAi({ emailAccountId });
 
-      if (!emailAccount) throw new SafeError("Email account not found");
+      if (!emailAccount) {
+        throw new SafeError("Email account not found");
+      }
 
       const emailProvider = await createEmailProvider({
         emailAccountId,
@@ -160,7 +166,7 @@ export const testAiCustomContentAction = actionClient
       });
 
       return result;
-    },
+    }
   );
 
 export const setRuleRunOnThreadsAction = actionClient
@@ -175,7 +181,7 @@ export const setRuleRunOnThreadsAction = actionClient
         where: { id: ruleId, emailAccountId },
         data: { runOnThreads },
       });
-    },
+    }
   );
 
 /**
@@ -262,9 +268,11 @@ export const saveRulesPromptAction = actionClient
         });
 
         if (
-          !diff.addedRules.length &&
-          !diff.editedRules.length &&
-          !diff.removedRules.length
+          !(
+            diff.addedRules.length ||
+            diff.editedRules.length ||
+            diff.removedRules.length
+          )
         ) {
           logger.info("No changes detected in rules, returning early");
           return { createdRules: 0, editedRules: 0, removedRules: 0 };
@@ -350,7 +358,7 @@ export const saveRulesPromptAction = actionClient
             emailAccount,
             promptFile: existingRules.editedRules
               .map(
-                (r) => `Rule ID: ${r.rule?.id}. Prompt: ${r.updatedPromptRule}`,
+                (r) => `Rule ID: ${r.rule?.id}. Prompt: ${r.updatedPromptRule}`
               )
               .join("\n\n"),
             isEditing: true,
@@ -430,7 +438,7 @@ export const saveRulesPromptAction = actionClient
         editedRules: editRulesCount,
         removedRules: removeRulesCount,
       };
-    },
+    }
   );
 
 export const createRulesAction = actionClient
@@ -519,7 +527,7 @@ export const createRulesAction = actionClient
         rules: createdRules,
         errors: errors.length > 0 ? errors : undefined,
       };
-    },
+    }
   );
 
 /**
@@ -536,7 +544,9 @@ export const generateRulesPromptAction = actionClient
   .action(async ({ ctx: { emailAccountId, provider, logger } }) => {
     const emailAccount = await getEmailAccountWithAi({ emailAccountId });
 
-    if (!emailAccount) throw new SafeError("Email account not found");
+    if (!emailAccount) {
+      throw new SafeError("Email account not found");
+    }
 
     const emailProvider = await createEmailProvider({
       emailAccountId,
@@ -575,7 +585,9 @@ export const generateRulesPromptAction = actionClient
       userLabels: labelsWithCounts.map((label) => label.label),
     });
 
-    if (!result) throw new SafeError("Error generating rules prompt");
+    if (!result) {
+      throw new SafeError("Error generating rules prompt");
+    }
 
     return { rulesPrompt: result.join("\n\n") };
   });

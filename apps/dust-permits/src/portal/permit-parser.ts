@@ -11,27 +11,27 @@
 import { readFile, utils } from "xlsx";
 
 export interface PortalPermit {
-  id: string;
-  projectName: string | null;
-  facilityId: string | null;
-  companyId: string | null;
-  companyName: string | null;
-  status: string | null;
-  submittedDate: string | null;
-  effectiveDate: string | null;
-  expirationDate: string | null;
-  closedDate: string | null;
-  previousAppId: string | null;
-  projectStartDate: string | null;
-  projectEndDate: string | null;
   address: string | null;
   city: string | null;
-  parcel: string | null;
-  isBlockPermit: boolean;
-  isAccelerated: boolean;
-  invoiceNumber: string | null;
-  invoiceCharges: number | null;
+  closedDate: string | null;
+  companyId: string | null;
+  companyName: string | null;
+  effectiveDate: string | null;
+  expirationDate: string | null;
+  facilityId: string | null;
+  id: string;
   invoiceBalance: number | null;
+  invoiceCharges: number | null;
+  invoiceNumber: string | null;
+  isAccelerated: boolean;
+  isBlockPermit: boolean;
+  parcel: string | null;
+  previousAppId: string | null;
+  projectEndDate: string | null;
+  projectName: string | null;
+  projectStartDate: string | null;
+  status: string | null;
+  submittedDate: string | null;
 }
 
 // Column indices for the xlsx/xls format

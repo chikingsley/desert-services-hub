@@ -1,16 +1,16 @@
+import { MeetingBriefingStatus } from "@/generated/prisma/enums";
+import { aiGenerateMeetingBriefing } from "@/utils/ai/meeting-briefs/generate-briefing";
+import type { CalendarEvent } from "@/utils/calendar/event-types";
+import { extractDomainFromEmail } from "@/utils/email";
+import type { Logger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
 import { isDuplicateError } from "@/utils/prisma-helpers";
-import { MeetingBriefingStatus } from "@/generated/prisma/enums";
 import {
   fetchUpcomingEvents,
   filterEventsWithExternalGuests,
 } from "./fetch-upcoming-events";
 import { gatherContextForEvent } from "./gather-context";
-import { aiGenerateMeetingBriefing } from "@/utils/ai/meeting-briefs/generate-briefing";
 import { sendBriefing } from "./send-briefing";
-import type { Logger } from "@/utils/logger";
-import type { CalendarEvent } from "@/utils/calendar/event-types";
-import { extractDomainFromEmail } from "@/utils/email";
 
 export type EmailAccountForBrief = {
   id: string;
@@ -55,7 +55,7 @@ export async function processMeetingBriefings({
   // 2. Filter to events with external guests
   const eventsWithExternalGuests = filterEventsWithExternalGuests(
     allEvents,
-    userEmail,
+    userEmail
   );
 
   if (eventsWithExternalGuests.length === 0) {
@@ -75,10 +75,10 @@ export async function processMeetingBriefings({
   });
 
   const briefedEventIds = new Set(
-    existingBriefings.map((b) => b.calendarEventId),
+    existingBriefings.map((b) => b.calendarEventId)
   );
   const eventsToProcess = eventsWithExternalGuests.filter(
-    (event) => !briefedEventIds.has(event.id),
+    (event) => !briefedEventIds.has(event.id)
   );
 
   if (eventsToProcess.length === 0) {

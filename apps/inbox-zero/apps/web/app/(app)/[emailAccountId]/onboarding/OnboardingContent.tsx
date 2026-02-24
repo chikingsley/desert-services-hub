@@ -1,37 +1,37 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { StepWho } from "@/app/(app)/[emailAccountId]/onboarding/StepWho";
-import { StepWelcome } from "@/app/(app)/[emailAccountId]/onboarding/StepWelcome";
-import { StepEmailsSorted } from "@/app/(app)/[emailAccountId]/onboarding/StepEmailsSorted";
-import { StepDraftReplies } from "@/app/(app)/[emailAccountId]/onboarding/StepDraftReplies";
+import { useCallback, useEffect } from "react";
 import { StepBulkUnsubscribe } from "@/app/(app)/[emailAccountId]/onboarding/StepBulkUnsubscribe";
-import { StepLabels } from "@/app/(app)/[emailAccountId]/onboarding/StepLabels";
-import { usePersona } from "@/hooks/usePersona";
-import { analyzePersonaAction } from "@/utils/actions/email-account";
-import { StepFeatures } from "@/app/(app)/[emailAccountId]/onboarding/StepFeatures";
-import { StepDraft } from "@/app/(app)/[emailAccountId]/onboarding/StepDraft";
-import { StepCustomRules } from "@/app/(app)/[emailAccountId]/onboarding/StepCustomRules";
-import { StepInboxProcessed } from "@/app/(app)/[emailAccountId]/onboarding/StepInboxProcessed";
-import {
-  ASSISTANT_ONBOARDING_COOKIE,
-  markOnboardingAsCompleted,
-} from "@/utils/cookies";
-import { completedOnboardingAction } from "@/utils/actions/onboarding";
-import { useOnboardingAnalytics } from "@/hooks/useAnalytics";
-import { prefixPath } from "@/utils/path";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { useSignUpEvent } from "@/hooks/useSignupEvent";
-import { isDefined } from "@/utils/types";
 import { StepCompanySize } from "@/app/(app)/[emailAccountId]/onboarding/StepCompanySize";
+import { StepCustomRules } from "@/app/(app)/[emailAccountId]/onboarding/StepCustomRules";
+import { StepDraft } from "@/app/(app)/[emailAccountId]/onboarding/StepDraft";
+import { StepDraftReplies } from "@/app/(app)/[emailAccountId]/onboarding/StepDraftReplies";
+import { StepEmailsSorted } from "@/app/(app)/[emailAccountId]/onboarding/StepEmailsSorted";
+import { StepFeatures } from "@/app/(app)/[emailAccountId]/onboarding/StepFeatures";
+import { StepInboxProcessed } from "@/app/(app)/[emailAccountId]/onboarding/StepInboxProcessed";
 import { StepInviteTeam } from "@/app/(app)/[emailAccountId]/onboarding/StepInviteTeam";
-import { usePremium } from "@/components/PremiumAlert";
-import { useOrganizationMembership } from "@/hooks/useOrganizationMembership";
+import { StepLabels } from "@/app/(app)/[emailAccountId]/onboarding/StepLabels";
+import { StepWelcome } from "@/app/(app)/[emailAccountId]/onboarding/StepWelcome";
+import { StepWho } from "@/app/(app)/[emailAccountId]/onboarding/StepWho";
 import {
   STEP_KEYS,
   STEP_ORDER,
 } from "@/app/(app)/[emailAccountId]/onboarding/steps";
+import { usePremium } from "@/components/PremiumAlert";
+import { useOnboardingAnalytics } from "@/hooks/useAnalytics";
+import { useOrganizationMembership } from "@/hooks/useOrganizationMembership";
+import { usePersona } from "@/hooks/usePersona";
+import { useSignUpEvent } from "@/hooks/useSignupEvent";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { analyzePersonaAction } from "@/utils/actions/email-account";
+import { completedOnboardingAction } from "@/utils/actions/onboarding";
+import {
+  ASSISTANT_ONBOARDING_COOKIE,
+  markOnboardingAsCompleted,
+} from "@/utils/cookies";
+import { prefixPath } from "@/utils/path";
+import { isDefined } from "@/utils/types";
 
 interface OnboardingContentProps {
   step: number;
@@ -47,7 +47,7 @@ export function OnboardingContent({ step }: OnboardingContentProps) {
 
   const canInviteTeam =
     (membership?.isOwner && membership?.organizationId) ||
-    (!membership?.organizationId && !membership?.hasPendingInvitationToOrg);
+    !(membership?.organizationId || membership?.hasPendingInvitationToOrg);
 
   const stepMap: Record<string, (() => React.ReactNode) | undefined> = {
     [STEP_KEYS.WELCOME]: () => <StepWelcome onNext={onNext} />,
@@ -57,36 +57,36 @@ export function OnboardingContent({ step }: OnboardingContentProps) {
     [STEP_KEYS.FEATURES]: () => <StepFeatures onNext={onNext} />,
     [STEP_KEYS.WHO]: () => (
       <StepWho
-        initialRole={data?.role || data?.personaAnalysis?.persona}
         emailAccountId={emailAccountId}
+        initialRole={data?.role || data?.personaAnalysis?.persona}
         onNext={onNext}
       />
     ),
     [STEP_KEYS.COMPANY_SIZE]: () => <StepCompanySize onNext={onNext} />,
     [STEP_KEYS.LABELS]: () => (
       <StepLabels
-        provider={provider}
         emailAccountId={emailAccountId}
         onNext={onNext}
+        provider={provider}
       />
     ),
     [STEP_KEYS.DRAFT]: () => (
       <StepDraft
-        provider={provider}
         emailAccountId={emailAccountId}
         onNext={onNext}
+        provider={provider}
       />
     ),
     [STEP_KEYS.CUSTOM_RULES]: () => (
-      <StepCustomRules provider={provider} onNext={onNext} />
+      <StepCustomRules onNext={onNext} provider={provider} />
     ),
     [STEP_KEYS.INVITE_TEAM]: canInviteTeam
       ? () => (
           <StepInviteTeam
             emailAccountId={emailAccountId}
+            onNext={onNext}
             organizationId={membership?.organizationId ?? undefined}
             userName={membership?.userName}
-            onNext={onNext}
           />
         )
       : undefined,
@@ -109,7 +109,7 @@ export function OnboardingContent({ step }: OnboardingContentProps) {
     analytics.onNext(clampedStep);
     if (clampedStep < steps.length) {
       router.push(
-        prefixPath(emailAccountId, `/onboarding?step=${clampedStep + 1}`),
+        prefixPath(emailAccountId, `/onboarding?step=${clampedStep + 1}`)
       );
     } else {
       analytics.onComplete();

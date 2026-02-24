@@ -15,13 +15,13 @@ import { Input } from "@/apps/web/frontend/components/ui/input";
 import { Label } from "@/apps/web/frontend/components/ui/label";
 
 interface DeleteConfirmDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
   description: string;
+  isLoading?: boolean;
   itemName: string;
   onConfirm: () => void;
-  isLoading?: boolean;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+  title: string;
 }
 
 export function DeleteConfirmDialog({

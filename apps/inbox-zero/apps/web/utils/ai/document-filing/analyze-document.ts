@@ -1,51 +1,55 @@
 import { z } from "zod";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { getModel } from "@/utils/llms/model";
-import { createGenerateObject } from "@/utils/llms";
 import { cleanExtractedText } from "@/utils/drive/document-extraction";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
 
 const documentAnalysisSchema = z
   .object({
     action: z
       .enum(["use_existing", "create_new", "skip"])
       .describe(
-        "Whether to use an existing folder, create a new one, or skip this document.",
+        "Whether to use an existing folder, create a new one, or skip this document."
       ),
     folderId: z
       .string()
       .nullable()
       .describe(
-        "Required if action is 'use_existing'. The ID of the existing folder from the provided list.",
+        "Required if action is 'use_existing'. The ID of the existing folder from the provided list."
       ),
     folderPath: z
       .string()
       .nullable()
       .describe(
-        "Required if action is 'create_new'. The path for the new folder to create.",
+        "Required if action is 'create_new'. The path for the new folder to create."
       ),
     confidence: z
       .number()
       .min(0)
       .max(1)
       .describe(
-        "Confidence score from 0 to 1. Use 0.9+ only when very certain.",
+        "Confidence score from 0 to 1. Use 0.9+ only when very certain."
       ),
     reasoning: z
       .string()
       .describe(
-        "Brief explanation for why this folder was chosen or why the document was skipped.",
+        "Brief explanation for why this folder was chosen or why the document was skipped."
       ),
   })
   .refine(
     (data) => {
-      if (data.action === "use_existing") return !!data.folderId;
-      if (data.action === "create_new") return !!data.folderPath;
+      if (data.action === "use_existing") {
+        return !!data.folderId;
+      }
+      if (data.action === "create_new") {
+        return !!data.folderPath;
+      }
       return true;
     },
     {
       message:
         "folderId required for 'use_existing', folderPath required for 'create_new'",
-    },
+    }
   );
 export type DocumentAnalysisResult = z.infer<typeof documentAnalysisSchema>;
 
@@ -138,7 +142,7 @@ function buildPrompt({
       ? folders
           .map(
             (f) =>
-              `<folder id="${f.id}" path="${f.path}" provider="${f.driveProvider}" />`,
+              `<folder id="${f.id}" path="${f.path}" provider="${f.driveProvider}" />`
           )
           .join("\n")
       : "No existing folders found.";

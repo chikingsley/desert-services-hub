@@ -1,15 +1,15 @@
 export interface SdsEntry {
-  tradeName: string;
-  supplier: string;
   page: number;
-  url?: string;
   pdfPath?: string;
+  supplier: string;
+  tradeName: string;
+  url?: string;
 }
 
 export interface SdsListDocument {
-  title: string;
-  subtitle: string;
-  updated: string;
-  revision?: string;
   entries: SdsEntry[];
+  revision?: string;
+  subtitle: string;
+  title: string;
+  updated: string;
 }

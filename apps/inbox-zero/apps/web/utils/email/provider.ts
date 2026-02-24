@@ -23,7 +23,8 @@ export async function createEmailProvider({
   if (isGoogleProvider(provider)) {
     const client = await getGmailClientForEmail({ emailAccountId, logger });
     return new GmailProvider(client, logger);
-  } else if (isMicrosoftProvider(provider)) {
+  }
+  if (isMicrosoftProvider(provider)) {
     const client = await getOutlookClientForEmail({ emailAccountId, logger });
     return new OutlookProvider(client, logger);
   }

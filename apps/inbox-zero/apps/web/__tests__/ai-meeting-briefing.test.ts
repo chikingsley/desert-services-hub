@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { getEmailAccount, getMockMessage } from "@/__tests__/helpers";
 import {
   aiGenerateMeetingBriefing,
+  type BriefingContent,
   buildPrompt,
   formatMeetingForContext,
-  type BriefingContent,
 } from "@/utils/ai/meeting-briefs/generate-briefing";
-import type { MeetingBriefingData } from "@/utils/meeting-briefs/gather-context";
 import type { CalendarEvent } from "@/utils/calendar/event-types";
-import { getEmailAccount, getMockMessage } from "@/__tests__/helpers";
 import { createScopedLogger } from "@/utils/logger";
+import type { MeetingBriefingData } from "@/utils/meeting-briefs/gather-context";
 
 // pnpm test-ai ai-meeting-briefing
 
@@ -21,7 +21,7 @@ const logger = createScopedLogger("ai-meeting-briefing-test");
 const TIMEOUT = 60_000; // Longer timeout for agentic flow with research
 
 function getCalendarEvent(
-  overrides: Partial<CalendarEvent> = {},
+  overrides: Partial<CalendarEvent> = {}
 ): CalendarEvent {
   return {
     id: "event-1",
@@ -38,7 +38,7 @@ function getCalendarEvent(
 }
 
 function getMeetingBriefingData(
-  overrides: Partial<MeetingBriefingData> = {},
+  overrides: Partial<MeetingBriefingData> = {}
 ): MeetingBriefingData {
   return {
     event: getCalendarEvent(),
@@ -288,7 +288,7 @@ describe.runIf(isAiTest)(
       expect(
         bulletText.includes("partnership") ||
           bulletText.includes("ai") ||
-          bulletText.includes("automation"),
+          bulletText.includes("automation")
       ).toBe(true);
     });
 
@@ -393,7 +393,7 @@ describe.runIf(isAiTest)(
           bulletText.includes("product") ||
           bulletText.includes("meeting") ||
           bulletText.includes("previous") ||
-          bulletText.includes("enterprise"),
+          bulletText.includes("enterprise")
       ).toBe(true);
     });
 
@@ -476,7 +476,7 @@ describe.runIf(isAiTest)(
       expect(result.guests.length).toBeGreaterThan(0);
     });
   },
-  TIMEOUT,
+  TIMEOUT
 );
 
 function prettyPrintBriefing(result: BriefingContent, meetingTitle: string) {

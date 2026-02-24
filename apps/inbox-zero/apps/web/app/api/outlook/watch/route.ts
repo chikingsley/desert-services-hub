@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/utils/middleware";
-import prisma from "@/utils/prisma";
 import { createManagedOutlookSubscription } from "@/utils/outlook/subscription-manager";
+import prisma from "@/utils/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,7 @@ export const GET = withAuth("outlook/watch", async (request) => {
   if (emailAccounts.length === 0) {
     return NextResponse.json(
       { message: "No Microsoft email accounts found for this user." },
-      { status: 404 },
+      { status: 404 }
     );
   }
 
@@ -41,7 +41,7 @@ export const GET = withAuth("outlook/watch", async (request) => {
         },
       });
 
-      if (!account?.account.access_token || !account?.account.refresh_token) {
+      if (!(account?.account.access_token && account?.account.refresh_token)) {
         request.logger.warn("Missing tokens for account", { emailAccountId });
         results.push({
           emailAccountId,

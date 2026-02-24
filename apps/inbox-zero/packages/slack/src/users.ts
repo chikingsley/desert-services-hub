@@ -2,11 +2,13 @@ import type { WebClient } from "@slack/web-api";
 
 export async function lookupSlackUserByEmail(
   client: WebClient,
-  email: string,
+  email: string
 ): Promise<{ id: string; name: string } | null> {
   try {
     const response = await client.users.lookupByEmail({ email });
-    if (!response.user?.id) return null;
+    if (!response.user?.id) {
+      return null;
+    }
     return { id: response.user.id, name: response.user.name ?? "" };
   } catch (error: unknown) {
     const slackError =

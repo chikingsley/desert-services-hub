@@ -1,23 +1,23 @@
 import type { Email } from "@lib/db/types";
 
 export interface EmailStats {
-  total: number;
-  estimates: number;
   contracts: number;
-  dustPermits: number;
-  invoices: number;
-  payments: number;
-  hr: number;
-  it: number;
-  internal: number;
   docusign: number;
-  withAttachments: number;
+  dustPermits: number;
+  estimates: number;
   excluded: number;
+  hr: number;
+  internal: number;
+  invoices: number;
+  it: number;
+  payments: number;
+  total: number;
+  withAttachments: number;
 }
 
 export interface Pagination {
-  page: number;
   limit: number;
+  page: number;
   total: number;
   totalPages: number;
 }
@@ -31,9 +31,9 @@ export interface EmailsApiResponse {
 }
 
 export interface SenderOption {
-  email: string;
-  displayName: string;
   count: number;
+  displayName: string;
+  email: string;
 }
 
 // Tab config — each tab maps to a query param strategy

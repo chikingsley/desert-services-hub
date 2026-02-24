@@ -1,17 +1,17 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Geist } from "next/font/google";
 import localFont from "next/font/local";
+import Script from "next/script";
+import { Suspense } from "react";
 import type { WebApplication, WithContext } from "schema-dts";
 import "../styles/globals.css";
-import { PostHogPageview, PostHogProvider } from "@/providers/PostHogProvider";
+import { startupImage } from "@/app/startup-image";
+import { UTM } from "@/app/utm";
+import { Agentation } from "@/components/Agentation";
+import { Toaster } from "@/components/Toast";
 import { env } from "@/env";
 import { GlobalProviders } from "@/providers/GlobalProviders";
-import { UTM } from "@/app/utm";
-import { startupImage } from "@/app/startup-image";
-import { Toaster } from "@/components/Toast";
-import { Agentation } from "@/components/Agentation";
+import { PostHogPageview, PostHogProvider } from "@/providers/PostHogProvider";
 
 const aeonikFont = localFont({
   src: "../styles/aeonik-medium.woff",
@@ -125,18 +125,18 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full" suppressHydrationWarning>
+    <html className="h-full" lang="en" suppressHydrationWarning>
       <body
         className={`h-full ${env.NEXT_PUBLIC_USE_AEONIK_FONT ? aeonikFont.variable : ""} ${geist.variable} font-sans antialiased`}
       >
         <Script
-          id="json-ld"
-          type="application/ld+json"
-          strategy="beforeInteractive"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON.stringify on controlled object is safe
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(jsonLd),
           }}
+          id="json-ld"
+          strategy="beforeInteractive"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON.stringify on controlled object is safe
+          type="application/ld+json"
         />
         <PostHogProvider>
           <Suspense>

@@ -78,7 +78,7 @@ try {
       /import\s+\{[\s\S]*?\}\s+from\s+"[^"]+"/g,
       (match) => {
         return match.replace(/\s+/g, " ");
-      },
+      }
     );
 
     // Find all imports from @/generated/prisma/client
@@ -101,7 +101,7 @@ try {
         // Positive cases: { EnumName }, { foo, EnumName }, { EnumName, bar }
         // Negative cases: { type EnumName }, { type EnumName, ... }
         const valueImportPattern = new RegExp(
-          `(?<!type\\s)\\b${enumName}\\b(?!\\s*:)`,
+          `(?<!type\\s)\\b${enumName}\\b(?!\\s*:)`
         );
 
         if (valueImportPattern.test(importedItems)) {
@@ -124,13 +124,13 @@ try {
 
   if (problematicFiles.length === 0) {
     console.log(
-      "✅ All enum imports are correctly using @/generated/prisma/enums!\n",
+      "✅ All enum imports are correctly using @/generated/prisma/enums!\n"
     );
     process.exit(0);
   }
 
   console.log(
-    `❌ Found ${problematicFiles.length} problematic enum import(s):\n`,
+    `❌ Found ${problematicFiles.length} problematic enum import(s):\n`
   );
 
   for (const { file, line, content, enum: enumName } of problematicFiles) {
@@ -142,7 +142,7 @@ try {
 
   console.log("\n💡 Fix: Change enum imports to use @/generated/prisma/enums");
   console.log(
-    '   Example: import { ActionType } from "@/generated/prisma/enums";\n',
+    '   Example: import { ActionType } from "@/generated/prisma/enums";\n'
   );
 
   process.exit(1);

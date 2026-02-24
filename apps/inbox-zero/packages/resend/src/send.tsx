@@ -1,8 +1,12 @@
 import { render } from "@react-email/render";
 import { nanoid } from "nanoid";
-import { resend } from "./client";
 import type { ReactElement } from "react";
-import SummaryEmail, { type SummaryEmailProps } from "../emails/summary";
+import ActionRequiredEmail, {
+  type ActionRequiredEmailProps,
+} from "../emails/action-required";
+import ColdEmailNotification, {
+  type ColdEmailNotificationProps,
+} from "../emails/cold-email-notification";
 import DigestEmail, {
   type DigestEmailProps,
   generateDigestSubject,
@@ -10,19 +14,15 @@ import DigestEmail, {
 import InvitationEmail, {
   type InvitationEmailProps,
 } from "../emails/invitation";
+import MeetingBriefingEmail, {
+  generateMeetingBriefingSubject,
+  type MeetingBriefingEmailProps,
+} from "../emails/meeting-briefing";
 import ReconnectionEmail, {
   type ReconnectionEmailProps,
 } from "../emails/reconnection";
-import ActionRequiredEmail, {
-  type ActionRequiredEmailProps,
-} from "../emails/action-required";
-import MeetingBriefingEmail, {
-  type MeetingBriefingEmailProps,
-  generateMeetingBriefingSubject,
-} from "../emails/meeting-briefing";
-import ColdEmailNotification, {
-  type ColdEmailNotificationProps,
-} from "../emails/cold-email-notification";
+import SummaryEmail, { type SummaryEmailProps } from "../emails/summary";
+import { resend } from "./client";
 
 const RESEND_NOT_CONFIGURED_MESSAGE =
   "Resend is not configured. You need to add a RESEND_API_KEY in your .env file for emails to work.";
@@ -321,7 +321,7 @@ export const sendColdEmailNotification = async ({
   if (result.error) {
     console.error("Error sending cold email notification", result.error);
     throw new Error(
-      `Error sending cold email notification: ${result.error.message}`,
+      `Error sending cold email notification: ${result.error.message}`
     );
   }
 

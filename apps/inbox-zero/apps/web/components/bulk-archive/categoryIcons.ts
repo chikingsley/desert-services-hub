@@ -9,10 +9,18 @@ import {
 export function getCategoryIcon(categoryName: string) {
   const name = categoryName.toLowerCase();
 
-  if (name.includes("newsletter")) return NewspaperIcon;
-  if (name.includes("marketing")) return MegaphoneIcon;
-  if (name.includes("receipt")) return ReceiptIcon;
-  if (name.includes("notification")) return BellIcon;
+  if (name.includes("newsletter")) {
+    return NewspaperIcon;
+  }
+  if (name.includes("marketing")) {
+    return MegaphoneIcon;
+  }
+  if (name.includes("receipt")) {
+    return ReceiptIcon;
+  }
+  if (name.includes("notification")) {
+    return BellIcon;
+  }
 
   // Default icon for "Other" and any other category
   return MailIcon;

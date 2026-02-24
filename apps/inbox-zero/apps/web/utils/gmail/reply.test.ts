@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createReplyContent } from "@/utils/gmail/reply";
 import type { ParsedMessage } from "@/utils/types";
 
@@ -14,19 +14,19 @@ describe("email formatting", () => {
 
     // Mock all date methods to use UTC values
     vi.spyOn(Date.prototype, "getHours").mockImplementation(function (
-      this: Date,
+      this: Date
     ) {
       return this.getUTCHours();
     });
 
     vi.spyOn(Date.prototype, "getMinutes").mockImplementation(function (
-      this: Date,
+      this: Date
     ) {
       return this.getUTCMinutes();
     });
 
     vi.spyOn(Date.prototype, "getDate").mockImplementation(function (
-      this: Date,
+      this: Date
     ) {
       return this.getUTCDate();
     });
@@ -36,12 +36,20 @@ describe("email formatting", () => {
     mockToLocaleString.mockImplementation(function (
       this: Date,
       _locales?: Intl.LocalesArgument,
-      options?: Intl.DateTimeFormatOptions,
+      options?: Intl.DateTimeFormatOptions
     ) {
-      if (options?.weekday === "short") return "Thu";
-      if (options?.month === "short") return "Feb";
-      if (options?.year === "numeric") return "2025";
-      if (options?.day === "numeric") return "6";
+      if (options?.weekday === "short") {
+        return "Thu";
+      }
+      if (options?.month === "short") {
+        return "Feb";
+      }
+      if (options?.year === "numeric") {
+        return "2025";
+      }
+      if (options?.day === "numeric") {
+        return "6";
+      }
       return ""; // Default case
     });
   });
@@ -80,7 +88,7 @@ describe("email formatting", () => {
     style="margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex">
     <div>Original message content</div>
   </blockquote>
-</div>`.trim(),
+</div>`.trim()
     );
   });
 
@@ -113,7 +121,7 @@ describe("email formatting", () => {
     style="margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex">
     <div>תוכן ההודעה המקורית</div>
   </blockquote>
-</div>`.trim(),
+</div>`.trim()
     );
   });
 
@@ -163,7 +171,7 @@ describe("email formatting", () => {
 
     // Should preserve double newlines as <br><br> for paragraph spacing
     expect(html).toContain(
-      "First paragraph.<br><br>Second paragraph.<br><br>Third paragraph.",
+      "First paragraph.<br><br>Second paragraph.<br><br>Third paragraph."
     );
   });
 });

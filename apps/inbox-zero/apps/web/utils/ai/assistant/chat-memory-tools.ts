@@ -1,8 +1,8 @@
 import { type InferUITool, tool } from "ai";
 import { z } from "zod";
-import prisma from "@/utils/prisma";
 import { formatUtcDate } from "@/utils/date";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 export const searchMemoriesTool = ({
   email,
@@ -23,7 +23,7 @@ export const searchMemoriesTool = ({
         .min(1)
         .max(300)
         .describe(
-          "Search query to find relevant memories (e.g., 'newsletter rules', 'meeting preferences')",
+          "Search query to find relevant memories (e.g., 'newsletter rules', 'meeting preferences')"
         ),
     }),
     execute: async ({ query }) => {
@@ -80,7 +80,7 @@ export const saveMemoryTool = ({
         .min(1)
         .max(1000)
         .describe(
-          "The memory content to save. Should be a clear, self-contained statement of the preference or fact.",
+          "The memory content to save. Should be a clear, self-contained statement of the preference or fact."
         ),
     }),
     execute: async ({ content }) => {

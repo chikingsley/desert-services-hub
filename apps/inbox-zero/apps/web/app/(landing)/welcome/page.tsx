@@ -1,15 +1,15 @@
-import { Suspense } from "react";
-import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { after } from "next/server";
-import { OnboardingForm } from "@/app/(landing)/welcome/form";
+import { Suspense } from "react";
 import { SquaresPattern } from "@/app/(landing)/home/SquaresPattern";
-import { PageHeading, TypographyP } from "@/components/Typography";
-import { CardBasic } from "@/components/ui/card";
+import { OnboardingForm } from "@/app/(landing)/welcome/form";
 import {
   extractUtmValues,
   fetchUserAndStoreUtms,
 } from "@/app/(landing)/welcome/utms";
+import { PageHeading, TypographyP } from "@/components/Typography";
+import { CardBasic } from "@/components/ui/card";
 import { auth } from "@/utils/auth";
 
 export const metadata: Metadata = {
@@ -34,7 +34,9 @@ export default async function WelcomePage(props: {
 
   after(async () => {
     const user = await authPromise;
-    if (!user?.user) return;
+    if (!user?.user) {
+      return;
+    }
     await fetchUserAndStoreUtms(user.user.id, utmValues);
   });
 
@@ -42,7 +44,7 @@ export default async function WelcomePage(props: {
     <div className="flex flex-col justify-center px-6 py-20 text-gray-900">
       <SquaresPattern />
 
-      <CardBasic className="mx-auto flex max-w-2xl flex-col justify-center space-y-6 p-10 duration-500 animate-in fade-in">
+      <CardBasic className="fade-in mx-auto flex max-w-2xl animate-in flex-col justify-center space-y-6 p-10 duration-500">
         <div className="flex flex-col text-center">
           <PageHeading>Welcome to Inbox Zero</PageHeading>
           <TypographyP className="mt-2">Let{"'"}s get you set up!</TypographyP>

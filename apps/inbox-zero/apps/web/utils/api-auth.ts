@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
-import prisma from "@/utils/prisma";
 import { hashApiKey } from "@/utils/api-key";
-import { SafeError } from "@/utils/error";
 import { createEmailProvider } from "@/utils/email/provider";
+import { SafeError } from "@/utils/error";
 import type { RequestWithLogger } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export const API_KEY_HEADER = "API-Key";
 
@@ -16,11 +16,15 @@ export const API_KEY_HEADER = "API-Key";
 export async function validateApiKey(request: NextRequest) {
   const apiKey = request.headers.get(API_KEY_HEADER);
 
-  if (!apiKey) throw new SafeError("Missing API key", 401);
+  if (!apiKey) {
+    throw new SafeError("Missing API key", 401);
+  }
 
   const user = await getUserFromApiKey(apiKey);
 
-  if (!user) throw new SafeError("Invalid API key", 401);
+  if (!user) {
+    throw new SafeError("Invalid API key", 401);
+  }
 
   return { user };
 }
@@ -65,17 +69,20 @@ export async function getUserFromApiKey(secretKey: string) {
  * @throws SafeError if authentication fails
  */
 export async function validateApiKeyAndGetEmailProvider(
-  request: RequestWithLogger,
+  request: RequestWithLogger
 ) {
   const { user } = await validateApiKey(request);
 
   // TODO: support API For multiple accounts
   const account = user.accounts[0];
 
-  if (!account) throw new SafeError("Missing account", 401);
+  if (!account) {
+    throw new SafeError("Missing account", 401);
+  }
 
-  if (!account.access_token || !account.refresh_token || !account.expires_at)
+  if (!(account.access_token && account.refresh_token && account.expires_at)) {
     throw new SafeError("Missing access token", 401);
+  }
 
   const emailProvider = await createEmailProvider({
     emailAccountId: account.id,

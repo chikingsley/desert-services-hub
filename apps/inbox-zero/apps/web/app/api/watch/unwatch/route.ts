@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { unwatchEmails } from "@/utils/email/watch-manager";
 import { withEmailProvider } from "@/utils/middleware";
 import prisma from "@/utils/prisma";
-import { unwatchEmails } from "@/utils/email/watch-manager";
 
 export const POST = withEmailProvider(async (request) => {
   const logger = request.logger;
@@ -32,7 +32,7 @@ export const POST = withEmailProvider(async (request) => {
         message: "An unexpected error occurred while unwatching this account.",
         errorDetails: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 });

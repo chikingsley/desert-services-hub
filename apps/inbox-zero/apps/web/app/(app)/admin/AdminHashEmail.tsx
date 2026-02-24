@@ -1,17 +1,17 @@
 "use client";
 
-import { useCallback } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { useAction } from "next-safe-action/hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
+import { useCallback } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
+import { Input } from "@/components/Input";
+import { toastError, toastSuccess } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/Input";
-import { toastSuccess, toastError } from "@/components/Toast";
 import { adminHashEmailAction } from "@/utils/actions/admin";
 import {
-  hashEmailBody,
   type HashEmailBody,
+  hashEmailBody,
 } from "@/utils/actions/admin.validation";
 
 export const AdminHashEmail = () => {
@@ -39,7 +39,7 @@ export const AdminHashEmail = () => {
     (data) => {
       hashEmail({ email: data.email });
     },
-    [hashEmail],
+    [hashEmail]
   );
 
   const copyToClipboard = () => {
@@ -59,15 +59,15 @@ export const AdminHashEmail = () => {
       <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <Input
-            type="text"
-            name="email"
+            error={errors.email}
             label="Value to Hash"
+            name="email"
             placeholder="user@example.com"
             registerProps={register("email")}
-            error={errors.email}
+            type="text"
           />
 
-          <Button type="submit" loading={isExecuting}>
+          <Button loading={isExecuting} type="submit">
             Generate Hash
           </Button>
 
@@ -75,21 +75,21 @@ export const AdminHashEmail = () => {
             <div className="flex gap-2">
               <div className="flex-1">
                 <Input
-                  type="text"
-                  name="hashedValue"
+                  className="font-mono text-xs"
                   label="Hashed Value"
+                  name="hashedValue"
                   registerProps={{
                     value: result.data.hash,
                     readOnly: true,
                   }}
-                  className="font-mono text-xs"
+                  type="text"
                 />
               </div>
               <div className="flex items-end">
                 <Button
+                  onClick={copyToClipboard}
                   type="button"
                   variant="outline"
-                  onClick={copyToClipboard}
                 >
                   Copy
                 </Button>

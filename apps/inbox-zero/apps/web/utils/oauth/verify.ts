@@ -1,6 +1,6 @@
-import prisma from "@/utils/prisma";
 import { auth } from "@/utils/auth";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import { RedirectError } from "./redirect";
 
 /**
@@ -11,7 +11,7 @@ export async function verifyEmailAccountAccess(
   emailAccountId: string,
   logger: Logger,
   redirectUrl: URL,
-  responseHeaders: Headers,
+  responseHeaders: Headers
 ): Promise<{ userId: string }> {
   const session = await auth();
   if (!session?.user?.id) {

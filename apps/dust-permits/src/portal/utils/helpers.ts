@@ -275,13 +275,13 @@ const SIO_TABLE_INDEX_REGEX = /sioTable:(\d+):/;
  * Result from fillTextWithSelectors for tracking which selector worked.
  */
 export interface SelectorResult {
+  /** Human-readable field name for logging */
+  fieldName: string;
+  /** Index of the selector that worked (0 = primary, 1+ = fallback) */
+  selectorIndex: number | null;
   success: boolean;
   /** The selector that worked (null if all failed) */
   usedSelector: string | null;
-  /** Index of the selector that worked (0 = primary, 1+ = fallback) */
-  selectorIndex: number | null;
-  /** Human-readable field name for logging */
-  fieldName: string;
 }
 
 /**
@@ -910,10 +910,10 @@ type ClickStrategy =
 
 /** Result from clickApplicationWithRetry */
 export interface ClickRetryResult {
-  success: boolean;
   appId: string;
-  strategy: ClickStrategy | null;
   attempts: number;
+  strategy: ClickStrategy | null;
+  success: boolean;
 }
 
 /**
@@ -1383,9 +1383,9 @@ export async function waitForCondition(
  * Keys match ControlMeasure type values for direct lookup.
  */
 export interface ControlMeasureSelectors {
-  Primary?: string;
   Contingency?: string;
   None?: string;
+  Primary?: string;
 }
 
 /**

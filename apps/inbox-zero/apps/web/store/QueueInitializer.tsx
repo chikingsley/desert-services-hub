@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { processQueue, useQueueState } from "@/store/archive-queue";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { processQueue, useQueueState } from "@/store/archive-queue";
 
 let isInitialized = false;
 

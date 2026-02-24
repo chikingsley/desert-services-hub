@@ -1,7 +1,7 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import { aiExtractRelevantKnowledge } from "@/utils/ai/knowledge/extract";
-import type { Knowledge } from "@/generated/prisma/client";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { getEmailAccount } from "@/__tests__/helpers";
+import type { Knowledge } from "@/generated/prisma/client";
+import { aiExtractRelevantKnowledge } from "@/utils/ai/knowledge/extract";
 import { createScopedLogger } from "@/utils/logger";
 
 const TIMEOUT = 30_000;
@@ -107,10 +107,10 @@ describe.runIf(isAiTest)("aiExtractRelevantKnowledge", () => {
       expect(result?.relevantContent).toMatch(/3 stories/i);
       console.debug(
         "Generated content for Instagram query:\n",
-        result?.relevantContent,
+        result?.relevantContent
       );
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -131,10 +131,10 @@ describe.runIf(isAiTest)("aiExtractRelevantKnowledge", () => {
       expect(result?.relevantContent).toMatch(/60-90 second integration/i);
       console.debug(
         "Generated content for YouTube query:\n",
-        result?.relevantContent,
+        result?.relevantContent
       );
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -155,10 +155,10 @@ describe.runIf(isAiTest)("aiExtractRelevantKnowledge", () => {
       expect(result?.relevantContent).toMatch(/6-8pm EST/i);
       console.debug(
         "Generated content for TikTok query:\n",
-        result?.relevantContent,
+        result?.relevantContent
       );
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test("handles empty knowledge base", async () => {
@@ -193,10 +193,10 @@ describe.runIf(isAiTest)("aiExtractRelevantKnowledge", () => {
       expect(result?.relevantContent).toMatch(/tiktok/i);
       console.debug(
         "Generated content for multi-platform query:\n",
-        result?.relevantContent,
+        result?.relevantContent
       );
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -217,10 +217,10 @@ describe.runIf(isAiTest)("aiExtractRelevantKnowledge", () => {
       expect(result?.relevantContent).toMatch(/travel expenses/i);
       console.debug(
         "Generated content for speaking engagement query:\n",
-        result?.relevantContent,
+        result?.relevantContent
       );
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -241,10 +241,10 @@ describe.runIf(isAiTest)("aiExtractRelevantKnowledge", () => {
       expect(result?.relevantContent).toMatch(/strategy audit/i);
       console.debug(
         "Generated content for consulting query:\n",
-        result?.relevantContent,
+        result?.relevantContent
       );
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -266,9 +266,9 @@ describe.runIf(isAiTest)("aiExtractRelevantKnowledge", () => {
       expect(result?.relevantContent).toMatch(/6 months/i);
       console.debug(
         "Generated content for brand ambassador query:\n",
-        result?.relevantContent,
+        result?.relevantContent
       );
     },
-    TIMEOUT,
+    TIMEOUT
   );
 });

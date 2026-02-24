@@ -1,8 +1,10 @@
 "use client";
 
-import { SettingCard } from "@/components/SettingCard";
+import { KnowledgeBase } from "@/app/(app)/[emailAccountId]/assistant/knowledge/KnowledgeBase";
 import { useDraftReplies } from "@/app/(app)/[emailAccountId]/assistant/settings/DraftReplies";
+import { SettingCard } from "@/components/SettingCard";
 import { Tooltip } from "@/components/Tooltip";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { KnowledgeBase } from "@/app/(app)/[emailAccountId]/assistant/knowledge/KnowledgeBase";
 
 export function DraftKnowledgeSetting() {
   const { enabled, loading } = useDraftReplies();
@@ -23,7 +23,6 @@ export function DraftKnowledgeSetting() {
 
   return (
     <SettingCard
-      title="Draft knowledge base"
       description="Information the assistant uses when writing replies."
       right={
         isEnabled ? (
@@ -34,6 +33,7 @@ export function DraftKnowledgeSetting() {
           </Tooltip>
         )
       }
+      title="Draft knowledge base"
     />
   );
 }
@@ -42,7 +42,7 @@ function KnowledgeDialog({ enabled }: { enabled: boolean }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" disabled={!enabled}>
+        <Button disabled={!enabled} size="sm" variant="outline">
           Manage
         </Button>
       </DialogTrigger>

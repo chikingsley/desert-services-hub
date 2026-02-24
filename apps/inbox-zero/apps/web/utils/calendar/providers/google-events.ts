@@ -8,9 +8,9 @@ import type { Logger } from "@/utils/logger";
 
 export interface GoogleCalendarConnectionParams {
   accessToken: string | null;
-  refreshToken: string | null;
-  expiresAt: number | null;
   emailAccountId: string;
+  expiresAt: number | null;
+  refreshToken: string | null;
 }
 
 export class GoogleCalendarEventProvider implements CalendarEventProvider {
@@ -61,8 +61,8 @@ export class GoogleCalendarEventProvider implements CalendarEventProvider {
     return events
       .filter((event) =>
         event.attendees?.some(
-          (a) => a.email?.toLowerCase() === attendeeEmail.toLowerCase(),
-        ),
+          (a) => a.email?.toLowerCase() === attendeeEmail.toLowerCase()
+        )
       )
       .map((event) => this.parseEvent(event));
   }
@@ -94,16 +94,16 @@ export class GoogleCalendarEventProvider implements CalendarEventProvider {
 
   private parseEvent(event: calendar_v3.Schema$Event) {
     const startTime = new Date(
-      event.start?.dateTime || event.start?.date || Date.now(),
+      event.start?.dateTime || event.start?.date || Date.now()
     );
     const endTime = new Date(
-      event.end?.dateTime || event.end?.date || Date.now(),
+      event.end?.dateTime || event.end?.date || Date.now()
     );
 
     let videoConferenceLink = event.hangoutLink ?? undefined;
     if (event.conferenceData?.entryPoints) {
       const videoEntry = event.conferenceData.entryPoints.find(
-        (entry) => entry.entryPointType === "video",
+        (entry) => entry.entryPointType === "video"
       );
       videoConferenceLink = videoEntry?.uri ?? videoConferenceLink;
     }

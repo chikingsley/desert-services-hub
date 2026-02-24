@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
 import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export type GroupItemsResponse = Awaited<ReturnType<typeof getGroupItems>>;
 
@@ -29,10 +29,12 @@ export const GET = withEmailAccount(
     const emailAccountId = request.auth.emailAccountId;
 
     const { groupId } = await params;
-    if (!groupId) return NextResponse.json({ error: "Group id required" });
+    if (!groupId) {
+      return NextResponse.json({ error: "Group id required" });
+    }
 
     const result = await getGroupItems({ emailAccountId, groupId });
 
     return NextResponse.json(result);
-  },
+  }
 );

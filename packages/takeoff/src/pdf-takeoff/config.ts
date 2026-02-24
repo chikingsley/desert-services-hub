@@ -11,12 +11,12 @@ export type MeasurementType = "count" | "linear" | "area";
  * Configuration for a takeoff preset item.
  */
 export interface TakeoffItemConfig {
+  /** Color for annotations (hex) */
+  color: string;
   /** Unique identifier for this item type */
   id: string;
   /** Display label */
   label: string;
-  /** Color for annotations (hex) */
-  color: string;
   /** Type of measurement */
   type: MeasurementType;
   /** Optional unit label (e.g., "LF", "SF", "EA") */
@@ -55,16 +55,16 @@ export const DEFAULT_SCALE_PRESETS: ScalePresetConfig[] = [
  * Main configuration for a takeoff session.
  */
 export interface TakeoffConfig {
-  /** Available preset items */
-  items: TakeoffItemConfig[];
-  /** Available scale presets */
-  scalePresets?: ScalePresetConfig[];
+  /** Default fill opacity for polygons */
+  defaultFillOpacity?: number;
   /** Default scale preset ID */
   defaultScaleId?: string;
   /** Default stroke width for polylines */
   defaultStrokeWidth?: number;
-  /** Default fill opacity for polygons */
-  defaultFillOpacity?: number;
+  /** Available preset items */
+  items: TakeoffItemConfig[];
+  /** Available scale presets */
+  scalePresets?: ScalePresetConfig[];
 }
 
 /**

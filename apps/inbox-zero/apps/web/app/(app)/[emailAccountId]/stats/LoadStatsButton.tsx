@@ -1,8 +1,8 @@
 "use client";
 
 import { RefreshCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ButtonLoader } from "@/components/Loading";
+import { Button } from "@/components/ui/button";
 import { useStatLoader } from "@/providers/StatLoaderProvider";
 
 export function LoadStatsButton() {
@@ -11,9 +11,9 @@ export function LoadStatsButton() {
   return (
     <div>
       <Button
-        variant="outline"
-        onClick={() => onLoadBatch({ loadBefore: true, showToast: true })}
         disabled={isLoading}
+        onClick={() => onLoadBatch({ loadBefore: true, showToast: true })}
+        variant="outline"
       >
         {isLoading ? (
           <ButtonLoader />

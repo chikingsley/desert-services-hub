@@ -16,7 +16,7 @@ import type { Logger } from "./logger";
  */
 export async function withPrismaRetry<T>(
   operation: () => Promise<T>,
-  options: { maxRetries?: number; delayMs?: number; logger?: Logger } = {},
+  options: { maxRetries?: number; delayMs?: number; logger?: Logger } = {}
 ): Promise<T> {
   const { maxRetries = 3, delayMs = 100, logger } = options;
 

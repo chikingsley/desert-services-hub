@@ -8,9 +8,19 @@ import { useCallback, useEffect, useRef } from "react";
  */
 export interface SignaturePadProps {
   /**
+   * Canvas height in pixels.
+   * @default 200
+   */
+  height?: number;
+  /**
    * Whether the signature pad modal is open.
    */
   isOpen: boolean;
+
+  /**
+   * Callback when the modal is closed/cancelled.
+   */
+  onClose: () => void;
 
   /**
    * Callback when signature is completed.
@@ -20,21 +30,10 @@ export interface SignaturePadProps {
   onComplete: (dataUrl: string) => void;
 
   /**
-   * Callback when the modal is closed/cancelled.
-   */
-  onClose: () => void;
-
-  /**
    * Canvas width in pixels.
    * @default 400
    */
   width?: number;
-
-  /**
-   * Canvas height in pixels.
-   * @default 200
-   */
-  height?: number;
 }
 
 /**

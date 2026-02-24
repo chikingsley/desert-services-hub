@@ -1,10 +1,10 @@
 import { auth, gmail, type gmail_v1 } from "@googleapis/gmail";
 import { people } from "@googleapis/people";
-import { saveTokens } from "@/utils/auth";
 import { env } from "@/env";
-import type { Logger } from "@/utils/logger";
-import { SCOPES } from "@/utils/gmail/scopes";
+import { saveTokens } from "@/utils/auth";
 import { SafeError } from "@/utils/error";
+import { SCOPES } from "@/utils/gmail/scopes";
+import type { Logger } from "@/utils/logger";
 
 type AuthOptions = {
   accessToken?: string | null;
@@ -67,7 +67,9 @@ export const getGmailClientWithRefresh = async ({
   const g = gmail({ version: "v1", auth });
 
   const expiryDate = expiresAt ? expiresAt : null;
-  if (expiryDate && expiryDate > Date.now()) return g;
+  if (expiryDate && expiryDate > Date.now()) {
+    return g;
+  }
 
   // may throw `invalid_grant` error
   try {
@@ -120,6 +122,8 @@ export const getContactsClient = ({
 export const getAccessTokenFromClient = (client: gmail_v1.Gmail): string => {
   const accessToken = (client.context._options.auth as any).credentials
     .access_token;
-  if (!accessToken) throw new Error("No access token");
+  if (!accessToken) {
+    throw new Error("No access token");
+  }
   return accessToken;
 };

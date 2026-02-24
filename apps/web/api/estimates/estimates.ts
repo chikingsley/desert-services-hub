@@ -4,10 +4,6 @@
  */
 
 import {
-  EstimatePayloadValidationError,
-  validateCreateEstimatePayload,
-} from "@/packages/estimates/estimating/estimate-payload-validation";
-import {
   multiFilter,
   paginationSchema,
   parseQuery,
@@ -17,6 +13,10 @@ import {
 import { db } from "@lib/db/client";
 import { generateBaseNumber } from "@lib/utils";
 import { z } from "zod";
+import {
+  EstimatePayloadValidationError,
+  validateCreateEstimatePayload,
+} from "@/packages/estimates/estimating/estimate-payload-validation";
 
 const SORT_FIELDS = [
   "created_at",
@@ -35,19 +35,19 @@ const estimatesQuerySchema = paginationSchema.extend({
 });
 
 interface EstimateListRow {
-  id: string;
   base_number: string | null;
-  job_name: string;
   client_name: string | null;
-  job_address: string | null;
-  status: string;
   created_at: string;
-  takeoff_id: string | null;
+  current_version_created_at: string | null;
   current_version_id: string | null;
+  current_version_is_current: number | null;
   current_version_number: number | null;
   current_version_total: number | null;
-  current_version_is_current: number | null;
-  current_version_created_at: string | null;
+  id: string;
+  job_address: string | null;
+  job_name: string;
+  status: string;
+  takeoff_id: string | null;
 }
 
 async function getNextBaseNumber(): Promise<string> {

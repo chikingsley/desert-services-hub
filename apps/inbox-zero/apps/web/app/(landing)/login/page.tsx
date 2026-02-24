@@ -1,15 +1,15 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { LoginForm } from "@/app/(landing)/login/LoginForm";
-import { auth } from "@/utils/auth";
 import { AlertBasic } from "@/components/Alert";
-import { env } from "@/env";
-import { Button } from "@/components/ui/button";
-import { WELCOME_PATH } from "@/utils/config";
 import { CrispChatLoggedOutVisible } from "@/components/CrispChat";
 import { MutedText } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { env } from "@/env";
+import { auth } from "@/utils/auth";
+import { WELCOME_PATH } from "@/utils/config";
 import { isInternalPath } from "@/utils/path";
 
 export const metadata: Metadata = {
@@ -51,15 +51,15 @@ export default async function AuthenticationPage(props: {
         <MutedText className="px-8 pt-10 text-center">
           By clicking continue, you agree to our{" "}
           <Link
-            href="/terms"
             className="underline underline-offset-4 hover:text-foreground"
+            href="/terms"
           >
             Terms of Service
           </Link>{" "}
           and{" "}
           <Link
-            href="/privacy"
             className="underline underline-offset-4 hover:text-foreground"
+            href="/privacy"
           >
             Privacy Policy
           </Link>
@@ -70,8 +70,8 @@ export default async function AuthenticationPage(props: {
           Inbox Zero{"'"}s use and transfer of information received from Google
           APIs to any other app will adhere to{" "}
           <a
-            href="https://developers.google.com/terms/api-services-user-data-policy"
             className="underline underline-offset-4 hover:text-foreground"
+            href="https://developers.google.com/terms/api-services-user-data-policy"
           >
             Google API Services User Data
           </a>{" "}
@@ -83,13 +83,13 @@ export default async function AuthenticationPage(props: {
 }
 
 function ErrorAlert({ error }: { error: string }) {
-  if (error === "RequiresReconsent") return null;
+  if (error === "RequiresReconsent") {
+    return null;
+  }
 
   if (error === "OAuthAccountNotLinked") {
     return (
       <AlertBasic
-        variant="destructive"
-        title="Account already attached to another user"
         description={
           <>
             <span>You can merge accounts instead.</span>
@@ -98,6 +98,8 @@ function ErrorAlert({ error }: { error: string }) {
             </Button>
           </>
         }
+        title="Account already attached to another user"
+        variant="destructive"
       />
     );
   }
@@ -105,9 +107,9 @@ function ErrorAlert({ error }: { error: string }) {
   if (error === "email_already_linked") {
     return (
       <AlertBasic
-        variant="destructive"
-        title="Email Already Linked"
         description={`This email address is already linked to another Inbox Zero account. Please sign in with the original account, or use a different email address. If this error persists please contact support at ${env.NEXT_PUBLIC_SUPPORT_EMAIL}`}
+        title="Email Already Linked"
+        variant="destructive"
       />
     );
   }
@@ -115,9 +117,9 @@ function ErrorAlert({ error }: { error: string }) {
   return (
     <>
       <AlertBasic
-        variant="destructive"
-        title="Error logging in"
         description={`There was an error logging in. Please try log in again. If this error persists please contact support at ${env.NEXT_PUBLIC_SUPPORT_EMAIL}`}
+        title="Error logging in"
+        variant="destructive"
       />
       <Suspense>
         <CrispChatLoggedOutVisible />

@@ -1,10 +1,10 @@
-import type { DriveProvider, DriveFolder } from "@/utils/drive/types";
+import type { DriveFolder, DriveProvider } from "@/utils/drive/types";
 import type { Logger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
 
 interface FolderPathResult {
-  folder: DriveFolder;
   allFolders: { folder: DriveFolder; path: string }[];
+  folder: DriveFolder;
 }
 
 /**
@@ -14,7 +14,7 @@ interface FolderPathResult {
 export async function createFolderPath(
   provider: DriveProvider,
   path: string,
-  logger: Logger,
+  logger: Logger
 ): Promise<FolderPathResult> {
   const parts = path.split("/").filter(Boolean);
   let parentId: string | undefined;
@@ -25,7 +25,7 @@ export async function createFolderPath(
     const part = parts[i];
     const existingFolders = await provider.listFolders(parentId);
     const existing = existingFolders.find(
-      (f) => f.name.toLowerCase() === part.toLowerCase(),
+      (f) => f.name.toLowerCase() === part.toLowerCase()
     );
 
     if (existing) {
@@ -66,7 +66,7 @@ export async function createAndSaveFilingFolder({
   const { folder, allFolders } = await createFolderPath(
     driveProvider,
     folderPath,
-    logger,
+    logger
   );
 
   // Save all folders along the path so they appear as "allowed" in the UI
@@ -84,8 +84,8 @@ export async function createAndSaveFilingFolder({
           driveConnectionId,
           emailAccountId,
         },
-      }),
-    ),
+      })
+    )
   );
 
   logger.info("Saved filing folders for path", {

@@ -2,8 +2,8 @@ import { addDays } from "date-fns/addDays";
 import { subDays } from "date-fns/subDays";
 import { createCalendarEventProviders } from "@/utils/calendar/event-provider";
 import type { CalendarEvent } from "@/utils/calendar/event-types";
-import type { Logger } from "@/utils/logger";
 import { formatInUserTimezone } from "@/utils/date";
+import type { Logger } from "@/utils/logger";
 
 const RECENT_MEETING_LOOKBACK_DAYS = 14;
 const UPCOMING_MEETING_LOOKAHEAD_DAYS = 7;
@@ -11,10 +11,10 @@ const MAX_MEETINGS_PER_CATEGORY = 5;
 const MAX_DESCRIPTION_LENGTH = 500;
 
 export interface MeetingContext {
-  eventTitle: string;
-  eventTime: Date;
   eventDescription?: string;
   eventLocation?: string;
+  eventTime: Date;
+  eventTitle: string;
   isPast: boolean;
 }
 
@@ -23,10 +23,10 @@ export interface MeetingContext {
  */
 function allRecipientsAreAttendees(
   event: CalendarEvent,
-  requiredEmails: string[],
+  requiredEmails: string[]
 ): boolean {
   const attendeeEmails = new Set(
-    event.attendees.map((a) => a.email.toLowerCase()),
+    event.attendees.map((a) => a.email.toLowerCase())
   );
   return requiredEmails.every((email) => attendeeEmails.has(email));
 }
@@ -55,7 +55,7 @@ export async function getMeetingContext({
   try {
     const calendarProviders = await createCalendarEventProviders(
       emailAccountId,
-      logger,
+      logger
     );
 
     if (calendarProviders.length === 0) {
@@ -69,7 +69,7 @@ export async function getMeetingContext({
 
     // normalize all additional recipients for privacy filtering
     const normalizedAdditionalRecipients = additionalRecipients.map((e) =>
-      e.trim().toLowerCase(),
+      e.trim().toLowerCase()
     );
     const allRequiredAttendees = [
       normalizedRecipientEmail,
@@ -108,7 +108,7 @@ export async function getMeetingContext({
     const filterByAllAttendees = (events: CalendarEvent[]) =>
       normalizedAdditionalRecipients.length > 0
         ? events.filter((e) =>
-            allRecipientsAreAttendees(e, allRequiredAttendees),
+            allRecipientsAreAttendees(e, allRequiredAttendees)
           )
         : events;
 
@@ -117,26 +117,26 @@ export async function getMeetingContext({
 
     // sort past meetings by start time descending (most recent first)
     filteredPastMeetings.sort(
-      (a, b) => b.startTime.getTime() - a.startTime.getTime(),
+      (a, b) => b.startTime.getTime() - a.startTime.getTime()
     );
     // sort upcoming meetings by start time ascending (soonest first)
     filteredUpcomingMeetings.sort(
-      (a, b) => a.startTime.getTime() - b.startTime.getTime(),
+      (a, b) => a.startTime.getTime() - b.startTime.getTime()
     );
 
     // take only the first few from each category
     const limitedPastMeetings = filteredPastMeetings.slice(
       0,
-      MAX_MEETINGS_PER_CATEGORY,
+      MAX_MEETINGS_PER_CATEGORY
     );
     const limitedUpcomingMeetings = filteredUpcomingMeetings.slice(
       0,
-      MAX_MEETINGS_PER_CATEGORY,
+      MAX_MEETINGS_PER_CATEGORY
     );
 
     const mapToContext = (
       event: CalendarEvent,
-      isPast: boolean,
+      isPast: boolean
     ): MeetingContext => ({
       eventTitle: event.title,
       eventTime: event.startTime,
@@ -156,21 +156,25 @@ export async function getMeetingContext({
 }
 
 function truncateDescription(
-  description: string | undefined,
+  description: string | undefined
 ): string | undefined {
-  if (!description) return undefined;
-  if (description.length <= MAX_DESCRIPTION_LENGTH) return description;
+  if (!description) {
+    return undefined;
+  }
+  if (description.length <= MAX_DESCRIPTION_LENGTH) {
+    return description;
+  }
   return `${description.slice(0, MAX_DESCRIPTION_LENGTH)}...`;
 }
 
 function formatMeeting(
   meeting: MeetingContext,
-  timezone?: string | null,
+  timezone?: string | null
 ): string {
   const dateTime = formatInUserTimezone(
     meeting.eventTime,
     timezone,
-    "EEEE, MMMM d 'at' h:mm a",
+    "EEEE, MMMM d 'at' h:mm a"
   );
 
   let details = `- "${meeting.eventTitle}" on ${dateTime}`;
@@ -189,7 +193,7 @@ function formatMeeting(
  */
 export function formatMeetingContextForPrompt(
   meetings: MeetingContext[],
-  timezone?: string | null,
+  timezone?: string | null
 ): string | null {
   if (meetings.length === 0) {
     return null;
@@ -223,12 +227,12 @@ ${upcomingList}
   const instructions: string[] = [];
   if (pastMeetings.length > 0) {
     instructions.push(
-      "For past meetings, you might reference topics discussed.",
+      "For past meetings, you might reference topics discussed."
     );
   }
   if (upcomingMeetings.length > 0) {
     instructions.push(
-      'For upcoming meetings, you might say "Looking forward to our call" or "We can discuss this further in our upcoming meeting."',
+      'For upcoming meetings, you might say "Looking forward to our call" or "We can discuss this further in our upcoming meeting."'
     );
   }
 

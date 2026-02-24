@@ -10,24 +10,24 @@
  * RUN_E2E_FLOW_TESTS=true pnpm test-e2e draft-cleanup
  */
 
-import { describe, test, expect, beforeAll, afterEach } from "vitest";
+import { afterEach, beforeAll, describe, expect, test } from "vitest";
 import { shouldRunFlowTests, TIMEOUTS } from "./config";
-import { initializeFlowTests, setupFlowTest } from "./setup";
-import { generateTestSummary } from "./teardown";
+import type { TestAccount } from "./helpers/accounts";
 import {
   sendTestEmail,
   sendTestReply,
   TEST_EMAIL_SCENARIOS,
 } from "./helpers/email";
+import { clearLogs, logStep } from "./helpers/logging";
 import {
-  waitForExecutedRule,
-  waitForMessageInInbox,
   waitForDraftDeleted,
   waitForDraftSendLog,
+  waitForExecutedRule,
+  waitForMessageInInbox,
   waitForNoThreadDrafts,
 } from "./helpers/polling";
-import { logStep, clearLogs } from "./helpers/logging";
-import type { TestAccount } from "./helpers/accounts";
+import { initializeFlowTests, setupFlowTest } from "./setup";
+import { generateTestSummary } from "./teardown";
 
 describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
   let gmail: TestAccount;
@@ -98,7 +98,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
       });
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       expect(draftAction).toBeDefined();
@@ -164,7 +164,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
         wasSentFromDraft: draftSendLog.wasSentFromDraft,
       });
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   test(
@@ -216,7 +216,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
       });
 
       const firstDraftAction = firstRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       expect(firstDraftAction?.draftId).toBeTruthy();
@@ -259,7 +259,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
 
       logStep("All thread drafts cleared");
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   test(
@@ -311,7 +311,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
       });
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       expect(draftAction?.draftId).toBeTruthy();
@@ -355,7 +355,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
         sentMessageId: draftSendLog.sentMessageId,
       });
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   test(
@@ -389,7 +389,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
       });
 
       const aiDraftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
       expect(aiDraftAction?.draftId).toBeTruthy();
       const aiDraftId = aiDraftAction!.draftId!;
@@ -449,7 +449,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
       // Cleanup: delete the user draft
       await outlook.emailProvider.deleteDraft(userDraftId);
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   test(
@@ -483,7 +483,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
       });
 
       const aiDraftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
       expect(aiDraftAction?.draftId).toBeTruthy();
       const aiDraftId = aiDraftAction!.draftId!;
@@ -542,7 +542,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
       // Cleanup: delete the edited draft
       await outlook.emailProvider.deleteDraft(aiDraftId);
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   // ============================================================
@@ -601,7 +601,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
       });
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       expect(draftAction).toBeDefined();
@@ -664,7 +664,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
         wasSentFromDraft: draftSendLog.wasSentFromDraft,
       });
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   test(
@@ -716,7 +716,7 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
       });
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       expect(draftAction?.draftId).toBeTruthy();
@@ -758,6 +758,6 @@ describe.skipIf(!shouldRunFlowTests())("Draft Cleanup", () => {
         sentMessageId: draftSendLog.sentMessageId,
       });
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 });

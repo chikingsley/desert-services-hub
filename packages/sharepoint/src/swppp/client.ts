@@ -16,45 +16,45 @@ import { parseWorksheet } from "@sharepoint/swppp/parser";
 // ============================================================================
 
 export interface SwpppProject {
-  /** Row number in the worksheet (1-based, excluding header) */
-  rowNumber: number;
-  /** Source worksheet */
-  worksheet: WorksheetName;
-  /** Scheduled/install date (Excel serial number or empty) */
-  date: number | string | null;
-  /** Contractor/owner name */
-  contractor: string;
-  /** Project/job name */
-  jobName: string;
   /** Site address */
   address: string;
-  /** Contact person name */
-  contact: string;
-  /** Phone number(s) */
-  phone: string;
-  /** Work description */
-  workDescription: string;
-  /** Date entered/confirmed */
-  dateEntered: number | string | null;
   /** Comments */
   comments: string;
+  /** Contact person name */
+  contact: string;
+  /** Contractor/owner name */
+  contractor: string;
+  /** Scheduled/install date (Excel serial number or empty) */
+  date: number | string | null;
+  /** Date entered/confirmed */
+  dateEntered: number | string | null;
   /** Invoice number and date */
   invoice: string;
+  /** Project/job name */
+  jobName: string;
+  /** Phone number(s) */
+  phone: string;
+  /** Row number in the worksheet (1-based, excluding header) */
+  rowNumber: number;
   /** Work completed notes (if applicable) */
   workCompleted: string;
+  /** Work description */
+  workDescription: string;
+  /** Source worksheet */
+  worksheet: WorksheetName;
 }
 
 export interface SearchOptions {
-  /** Worksheet to search (default: all) */
-  worksheet?: WorksheetName;
-  /** Case-insensitive search in job name */
-  jobName?: string;
   /** Case-insensitive search in contractor name */
   contractor?: string;
-  /** Case-insensitive search across all text fields */
-  query?: string;
+  /** Case-insensitive search in job name */
+  jobName?: string;
   /** Maximum results to return */
   limit?: number;
+  /** Case-insensitive search across all text fields */
+  query?: string;
+  /** Worksheet to search (default: all) */
+  worksheet?: WorksheetName;
 }
 
 // ============================================================================

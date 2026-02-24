@@ -6,9 +6,30 @@ import { db } from "@lib/db/client";
 import type { RetrievalStrategy } from "./types";
 
 const STOPWORDS = new Set([
-  "the", "and", "for", "are", "but", "not", "you", "all", "can", "her",
-  "was", "one", "our", "out", "desert", "services", "project", "contract",
-  "permit", "estimate", "llc", "inc", "corp", "company",
+  "the",
+  "and",
+  "for",
+  "are",
+  "but",
+  "not",
+  "you",
+  "all",
+  "can",
+  "her",
+  "was",
+  "one",
+  "our",
+  "out",
+  "desert",
+  "services",
+  "project",
+  "contract",
+  "permit",
+  "estimate",
+  "llc",
+  "inc",
+  "corp",
+  "company",
 ]);
 
 function tokenize(text: string): string[] {
@@ -20,10 +41,10 @@ function tokenize(text: string): string[] {
 }
 
 interface ProjectRow {
-  id: number;
-  name: string;
   address: string | null;
   contractor: string | null;
+  id: number;
+  name: string;
 }
 
 let projectCache: ProjectRow[] = [];
@@ -33,7 +54,7 @@ const strategy: RetrievalStrategy = {
     // Load all projects into memory for fast scoring
     projectCache = await db
       .query<ProjectRow>(
-        "SELECT id, name, address, contractor FROM projects ORDER BY id",
+        "SELECT id, name, address, contractor FROM projects ORDER BY id"
       )
       .all();
     console.log(`  Loaded ${projectCache.length} projects`);
@@ -41,7 +62,9 @@ const strategy: RetrievalStrategy = {
 
   async retrieve(query) {
     const queryTokens = new Set(tokenize(query.text));
-    if (queryTokens.size === 0) return [];
+    if (queryTokens.size === 0) {
+      return [];
+    }
 
     const scored: { id: number; score: number }[] = [];
 
@@ -54,12 +77,14 @@ const strategy: RetrievalStrategy = {
 
       let overlap = 0;
       for (const token of queryTokens) {
-        if (projectTokens.has(token)) overlap++;
+        if (projectTokens.has(token)) {
+          overlap++;
+        }
       }
 
       if (overlap > 0) {
         score = Math.round(
-          (overlap / Math.max(queryTokens.size, projectTokens.size)) * 100,
+          (overlap / Math.max(queryTokens.size, projectTokens.size)) * 100
         );
         scored.push({ id: project.id, score });
       }

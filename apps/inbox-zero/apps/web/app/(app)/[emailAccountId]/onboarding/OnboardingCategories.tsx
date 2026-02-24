@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo } from "react";
 import shuffle from "lodash/shuffle";
 import {
   AirplayIcon,
@@ -15,6 +14,16 @@ import {
   PenIcon,
   UserIcon,
 } from "lucide-react";
+import React, { useCallback, useEffect, useMemo } from "react";
+import { ContinueButton } from "@/app/(app)/[emailAccountId]/onboarding/ContinueButton";
+import { usersRolesInfo } from "@/app/(app)/[emailAccountId]/onboarding/config";
+import {
+  IconCircle,
+  type IconCircleColor,
+} from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
+import { LoadingContent } from "@/components/LoadingContent";
+import { TooltipExplanation } from "@/components/TooltipExplanation";
+import { MutedText } from "@/components/Typography";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -23,28 +32,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePersona } from "@/hooks/usePersona";
+import { cn } from "@/utils";
 import { createRulesOnboardingAction } from "@/utils/actions/rule";
 import type {
   CategoryAction,
   CategoryConfig,
 } from "@/utils/actions/rule.validation";
 import { categoryConfig } from "@/utils/category-config";
-import { usePersona } from "@/hooks/usePersona";
-import { usersRolesInfo } from "@/app/(app)/[emailAccountId]/onboarding/config";
-import {
-  IconCircle,
-  type IconCircleColor,
-} from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
-import { LoadingContent } from "@/components/LoadingContent";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ContinueButton } from "@/app/(app)/[emailAccountId]/onboarding/ContinueButton";
-import { cn } from "@/utils";
-import { TooltipExplanation } from "@/components/TooltipExplanation";
 import {
   isGoogleProvider,
   isMicrosoftProvider,
 } from "@/utils/email/provider-types";
-import { MutedText } from "@/components/Typography";
 
 // copy paste of old file
 export function CategoriesSetup({
@@ -70,7 +70,7 @@ export function CategoriesSetup({
       description: "",
       action: c.action,
       key: c.key,
-    })),
+    }))
   );
 
   const suggestedLabels = usersRolesInfo[data?.role || ""]?.suggestedLabels;
@@ -84,7 +84,7 @@ export function CategoriesSetup({
           description: s.description,
           action: undefined,
           key: null,
-        })),
+        }))
       );
     }
   }, [suggestedLabels, isLoading]);
@@ -106,7 +106,7 @@ export function CategoriesSetup({
         return updated;
       });
     },
-    [],
+    []
   );
 
   const updateBasicCategory = useCallback(
@@ -117,7 +117,7 @@ export function CategoriesSetup({
         return updated;
       });
     },
-    [],
+    []
   );
 
   const icons = useMemo(() => getRandomIcons(), []);
@@ -129,30 +129,32 @@ export function CategoriesSetup({
       <div className="grid grid-cols-1 gap-2">
         {basicCategories.map((category, index) => {
           const config = categoryConfig(provider).find(
-            (c) => c.key === category.name,
+            (c) => c.key === category.name
           );
-          if (!config) return null;
+          if (!config) {
+            return null;
+          }
           return (
             <CategoryCard
-              key={config.label}
-              index={index}
-              label={config.label}
               description={config.tooltipText}
               Icon={config.Icon}
               iconColor={config.iconColor}
-              update={updateBasicCategory}
-              value={category.action}
-              useTooltip
+              index={index}
+              key={config.label}
+              label={config.label}
               provider={provider}
+              update={updateBasicCategory}
+              useTooltip
+              value={category.action}
             />
           );
         })}
       </div>
 
       <LoadingContent
-        loading={isLoading}
         error={error}
-        loadingComponent={<Skeleton className="w-full h-[500px] mt-6" />}
+        loading={isLoading}
+        loadingComponent={<Skeleton className="mt-6 h-[500px] w-full" />}
       >
         {suggestedCategories.length > 0 ? (
           <>
@@ -161,16 +163,16 @@ export function CategoriesSetup({
               {suggestedCategories.map((category, index) => {
                 return (
                   <CategoryCard
-                    key={category.name}
-                    index={index}
-                    label={category.name}
+                    description={category.description}
                     Icon={icons[index % icons.length]}
                     iconColor="blue"
-                    description={category.description}
-                    update={updateSuggestedCategory}
-                    value={category.action}
-                    useTooltip={false}
+                    index={index}
+                    key={category.name}
+                    label={category.name}
                     provider={provider}
+                    update={updateSuggestedCategory}
+                    useTooltip={false}
+                    value={category.action}
                   />
                 );
               })}
@@ -184,12 +186,12 @@ export function CategoriesSetup({
         )}
       </LoadingContent>
 
-      <div className="flex w-full max-w-xs mx-auto mt-8">
+      <div className="mx-auto mt-8 flex w-full max-w-xs">
         <ContinueButton
-          type="submit"
+          className="w-full"
           onClick={onSubmit}
           size="default"
-          className="w-full"
+          type="submit"
         />
       </div>
     </div>
@@ -220,16 +222,16 @@ function CategoryCard({
   return (
     <Card>
       <CardContent className="flex items-center gap-4 p-4">
-        <div className="flex flex-1 min-w-0 items-center gap-2">
-          <IconCircle size="sm" color={iconColor} Icon={Icon} />
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <IconCircle color={iconColor} Icon={Icon} size="sm" />
           <div>
             {useTooltip ? (
-              <div className="flex flex-1 min-w-0 items-center gap-2 text-sm sm:text-base">
+              <div className="flex min-w-0 flex-1 items-center gap-2 text-sm sm:text-base">
                 {label}
                 {description && (
                   <TooltipExplanation
+                    className="hidden text-muted-foreground sm:inline-flex"
                     text={description}
-                    className="text-muted-foreground hidden sm:inline-flex"
                   />
                 )}
               </div>
@@ -244,13 +246,13 @@ function CategoryCard({
 
         <div className="ml-auto flex shrink-0 items-center gap-4">
           <Select
-            value={value || undefined}
             onValueChange={(value) => {
               update(index, {
                 action:
                   value === "none" ? undefined : (value as CategoryAction),
               });
             }}
+            value={value || undefined}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select action" />
@@ -287,7 +289,7 @@ function CustomCategoryCard() {
   return (
     <Card>
       <CardContent className="flex items-center gap-2 p-4">
-        <IconCircle size="sm" color="purple" Icon={PencilLineIcon} />
+        <IconCircle color="purple" Icon={PencilLineIcon} size="sm" />
         <div>
           <div className="flex flex-1 items-center font-medium">Custom</div>
           <div className="ml-auto flex items-center gap-4 text-muted-foreground text-sm">
@@ -307,7 +309,7 @@ function SectionHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("text-sm font-medium mb-2", className)}>{children}</div>
+    <div className={cn("mb-2 font-medium text-sm", className)}>{children}</div>
   );
 }
 

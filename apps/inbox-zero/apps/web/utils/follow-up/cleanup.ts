@@ -1,7 +1,7 @@
 import { subDays } from "date-fns/subDays";
-import prisma from "@/utils/prisma";
 import type { EmailProvider } from "@/utils/email/types";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import { hasFollowUpLabel } from "./labels";
 
 const STALE_DRAFT_DAYS = 7;
@@ -44,7 +44,7 @@ export async function cleanupStaleDrafts({
   }
 
   const trackedDraftIds = new Set(
-    staleTrackers.map((t) => t.followUpDraftId).filter(Boolean),
+    staleTrackers.map((t) => t.followUpDraftId).filter(Boolean)
   );
 
   logger.info("Found tracked drafts in database", {
@@ -73,11 +73,11 @@ export async function cleanupStaleDrafts({
 
       // Only delete drafts that are tracked in our database (AI-generated)
       const threadDrafts = allDrafts.filter(
-        (draft) => draft.threadId === tracker.threadId,
+        (draft) => draft.threadId === tracker.threadId
       );
 
       const trackedThreadDrafts = threadDrafts.filter((draft) =>
-        trackedDraftIds.has(draft.id),
+        trackedDraftIds.has(draft.id)
       );
 
       const skippedCount = threadDrafts.length - trackedThreadDrafts.length;

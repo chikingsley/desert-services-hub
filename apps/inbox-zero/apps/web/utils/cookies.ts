@@ -27,13 +27,17 @@ export function parseLastEmailAccountCookieValue({
   userId: string;
   cookieValue: string | undefined;
 }): string | null {
-  if (!cookieValue) return null;
+  if (!cookieValue) {
+    return null;
+  }
 
   // Handle backward compatibility: old cookies stored just the emailAccountId as a plain string
   // New cookies store JSON with { userId, emailAccountId }
   try {
     const parsed = JSON.parse(cookieValue) as LastEmailAccountCookieValue;
-    if (parsed.userId !== userId) return null;
+    if (parsed.userId !== userId) {
+      return null;
+    }
     return parsed.emailAccountId;
   } catch {
     return cookieValue;

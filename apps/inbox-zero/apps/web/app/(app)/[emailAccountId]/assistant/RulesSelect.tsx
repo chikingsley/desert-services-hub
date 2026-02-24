@@ -1,5 +1,5 @@
-import { useRules } from "@/hooks/useRules";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronDown, Tag } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
 import { LoadingContent } from "@/components/LoadingContent";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,34 +8,38 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { parseAsString, useQueryState } from "nuqs";
-import { ChevronDown, Tag } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useRules } from "@/hooks/useRules";
 
 export function RulesSelect() {
   const { data, isLoading, error } = useRules();
   const [ruleId, setRuleId] = useQueryState(
     "ruleId",
-    parseAsString.withDefault("all"),
+    parseAsString.withDefault("all")
   );
 
   const getCurrentLabel = () => {
-    if (ruleId === "all") return "All rules";
-    if (ruleId === "skipped") return "No match";
+    if (ruleId === "all") {
+      return "All rules";
+    }
+    if (ruleId === "skipped") {
+      return "No match";
+    }
     return data?.find((rule) => rule.id === ruleId)?.name || "All rules";
   };
 
   return (
     <LoadingContent
-      loading={isLoading}
       error={error}
+      loading={isLoading}
       loadingComponent={<Skeleton className="h-10 w-[200px]" />}
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="outline"
-            size="sm"
             className="h-10 whitespace-nowrap"
+            size="sm"
+            variant="outline"
           >
             <Tag className="mr-2 h-4 w-4" />
             {getCurrentLabel()}

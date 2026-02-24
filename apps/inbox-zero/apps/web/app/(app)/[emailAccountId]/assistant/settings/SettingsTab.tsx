@@ -1,12 +1,12 @@
 import { AboutSetting } from "@/app/(app)/[emailAccountId]/assistant/settings/AboutSetting";
 import { DigestSetting } from "@/app/(app)/[emailAccountId]/assistant/settings/DigestSetting";
-import { DraftReplies } from "@/app/(app)/[emailAccountId]/assistant/settings/DraftReplies";
 import { DraftKnowledgeSetting } from "@/app/(app)/[emailAccountId]/assistant/settings/DraftKnowledgeSetting";
+import { DraftReplies } from "@/app/(app)/[emailAccountId]/assistant/settings/DraftReplies";
 import { FollowUpRemindersSetting } from "@/app/(app)/[emailAccountId]/assistant/settings/FollowUpRemindersSetting";
-import { ProactiveUpdatesSetting } from "@/app/(app)/[emailAccountId]/assistant/settings/ProactiveUpdatesSetting";
 import { LearnedPatternsSetting } from "@/app/(app)/[emailAccountId]/assistant/settings/LearnedPatternsSetting";
-import { PersonalSignatureSetting } from "@/app/(app)/[emailAccountId]/assistant/settings/PersonalSignatureSetting";
 import { MultiRuleSetting } from "@/app/(app)/[emailAccountId]/assistant/settings/MultiRuleSetting";
+import { PersonalSignatureSetting } from "@/app/(app)/[emailAccountId]/assistant/settings/PersonalSignatureSetting";
+import { ProactiveUpdatesSetting } from "@/app/(app)/[emailAccountId]/assistant/settings/ProactiveUpdatesSetting";
 import { WritingStyleSetting } from "@/app/(app)/[emailAccountId]/assistant/settings/WritingStyleSetting";
 import { SectionHeader } from "@/components/Typography";
 import { env } from "@/env";

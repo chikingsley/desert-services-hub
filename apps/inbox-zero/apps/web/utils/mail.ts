@@ -1,10 +1,10 @@
 import "server-only";
 import EmailReplyParser from "email-reply-parser";
 import { convert } from "html-to-text";
-import type { ParsedMessage } from "@/utils/types";
-import { removeExcessiveWhitespace, truncate } from "@/utils/string";
 import { env } from "@/env";
 import { SafeError } from "@/utils/error";
+import { removeExcessiveWhitespace, truncate } from "@/utils/string";
+import type { ParsedMessage } from "@/utils/types";
 
 export function parseReply(plainText: string) {
   const parser = new EmailReplyParser().read(plainText);
@@ -31,9 +31,15 @@ function htmlToText(html: string, removeLinks = true, removeImages = true) {
 }
 
 export function getEmailClient(messageId: string) {
-  if (messageId.includes("mail.gmail.com")) return "gmail";
-  if (messageId.includes("we.are.superhuman.com")) return "superhuman";
-  if (messageId.includes("mail.shortwave.com")) return "shortwave";
+  if (messageId.includes("mail.gmail.com")) {
+    return "gmail";
+  }
+  if (messageId.includes("we.are.superhuman.com")) {
+    return "superhuman";
+  }
+  if (messageId.includes("mail.shortwave.com")) {
+    return "shortwave";
+  }
 
   // take part after @ and remove final >
   const emailClient = messageId.split("@")[1].split(">")[0];
@@ -77,7 +83,7 @@ export function emailToContent(
     maxLength = 2000,
     extractReply = false,
     removeForwarded = false,
-  }: EmailToContentOptions = {},
+  }: EmailToContentOptions = {}
 ): string {
   let content = "";
 
@@ -132,7 +138,7 @@ export function convertEmailHtmlToText({
 export function ensureEmailSendingEnabled(): void {
   if (!env.NEXT_PUBLIC_EMAIL_SEND_ENABLED) {
     throw new SafeError(
-      "Email sending is disabled. Set NEXT_PUBLIC_EMAIL_SEND_ENABLED=true to enable.",
+      "Email sending is disabled. Set NEXT_PUBLIC_EMAIL_SEND_ENABLED=true to enable."
     );
   }
 }

@@ -1,7 +1,7 @@
+import { ArchiveIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 import { useMemo } from "react";
 import { ButtonGroup } from "@/components/ButtonGroup";
 import { LoadingMiniSpinner } from "@/components/Loading";
-import { ArchiveIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 
 export function ActionButtonsBulk(props: {
   isPlanning: boolean;
@@ -28,7 +28,7 @@ export function ActionButtonsBulk(props: {
         icon: isPlanning ? (
           <LoadingMiniSpinner />
         ) : (
-          <SparklesIcon className="size-4 text-foreground" aria-hidden="true" />
+          <SparklesIcon aria-hidden="true" className="size-4 text-foreground" />
         ),
       },
       {
@@ -37,7 +37,7 @@ export function ActionButtonsBulk(props: {
         icon: isArchiving ? (
           <LoadingMiniSpinner />
         ) : (
-          <ArchiveIcon className="size-4 text-foreground" aria-hidden="true" />
+          <ArchiveIcon aria-hidden="true" className="size-4 text-foreground" />
         ),
       },
       {
@@ -46,11 +46,11 @@ export function ActionButtonsBulk(props: {
         icon: isDeleting ? (
           <LoadingMiniSpinner />
         ) : (
-          <Trash2Icon className="size-4 text-foreground" aria-hidden="true" />
+          <Trash2Icon aria-hidden="true" className="size-4 text-foreground" />
         ),
       },
     ],
-    [isArchiving, isPlanning, isDeleting, onArchive, onPlanAiAction, onDelete],
+    [isArchiving, isPlanning, isDeleting, onArchive, onPlanAiAction, onDelete]
   );
 
   return <ButtonGroup buttons={buttons} />;

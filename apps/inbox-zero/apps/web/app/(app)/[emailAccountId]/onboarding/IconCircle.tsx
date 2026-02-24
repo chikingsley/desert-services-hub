@@ -1,5 +1,5 @@
-import { cn } from "@/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/utils";
 
 const iconVariants = cva("relative flex items-center justify-center", {
   variants: {
@@ -27,7 +27,7 @@ const innerVariants = cva(
     defaultVariants: {
       size: "md",
     },
-  },
+  }
 );
 
 export const textVariants = cva("font-semibold", {

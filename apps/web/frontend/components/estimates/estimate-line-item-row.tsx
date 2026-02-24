@@ -1,16 +1,16 @@
-import type { Catalog } from "@/packages/estimates/catalog/types";
 import type { EditorLineItem } from "@lib/db/types";
 import { ItemCombobox } from "@/apps/web/frontend/components/estimates/item-combobox";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import { Input } from "@/apps/web/frontend/components/ui/input";
 import type { CatalogItemInfo } from "@/apps/web/frontend/lib/catalog-item-info";
 import { formatCurrency } from "@/lib/utils";
+import type { Catalog } from "@/packages/estimates/catalog/types";
 
 interface EstimateLineItemRowProps {
-  item: EditorLineItem;
-  catalogCategoryId?: string;
   catalog: Catalog;
+  catalogCategoryId?: string;
   compactRows: boolean;
+  item: EditorLineItem;
   onRemove: (id: string) => void;
   onUpdate: (
     id: string,

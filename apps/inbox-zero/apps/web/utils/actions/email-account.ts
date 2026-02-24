@@ -1,15 +1,15 @@
 "use server";
 
+import { updateContactRole } from "@inboxzero/loops";
 import { after } from "next/server";
+import { z } from "zod";
 import { actionClient } from "@/utils/actions/safe-action";
-import prisma from "@/utils/prisma";
 import { aiAnalyzePersona } from "@/utils/ai/knowledge/persona";
 import { createEmailProvider } from "@/utils/email/provider";
-import { getEmailAccountWithAiAndTokens } from "@/utils/user/get";
 import { SafeError } from "@/utils/error";
 import { getEmailForLLM } from "@/utils/get-email-from-message";
-import { z } from "zod";
-import { updateContactRole } from "@inboxzero/loops";
+import prisma from "@/utils/prisma";
+import { getEmailAccountWithAiAndTokens } from "@/utils/user/get";
 
 export const updateEmailAccountRoleAction = actionClient
   .metadata({ name: "updateEmailAccountRole" })
@@ -32,7 +32,7 @@ export const updateEmailAccountRoleAction = actionClient
         where: { id: emailAccountId },
         data: { role },
       });
-    },
+    }
   );
 
 export const analyzePersonaAction = actionClient
@@ -72,7 +72,7 @@ export const analyzePersonaAction = actionClient
     const messages = messagesResponse.messages;
 
     const emails = messages.map((message) =>
-      getEmailForLLM(message, { removeForwarded: true, maxLength: 2000 }),
+      getEmailForLLM(message, { removeForwarded: true, maxLength: 2000 })
     );
 
     const personaAnalysis = await aiAnalyzePersona({ emails, emailAccount });

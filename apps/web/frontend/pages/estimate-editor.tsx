@@ -18,15 +18,15 @@ import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 // API response types
 interface ApiLineItem {
-  id: string;
-  item_name: string | null;
   description: string;
+  id: string;
+  is_excluded: number;
+  item_name: string | null;
   notes: string | null;
   quantity: number;
+  section_id: string | null;
   unit: string;
   unit_price: number;
-  is_excluded: number;
-  section_id: string | null;
 }
 
 interface ApiSection {
@@ -35,35 +35,35 @@ interface ApiSection {
 }
 
 interface ApiVersion {
-  id: string;
-  estimate_id: string;
-  version_number: number;
-  total: number;
-  is_current: number;
   created_at: string;
-  sections: ApiSection[];
+  estimate_id: string;
+  id: string;
+  is_current: number;
   line_items: ApiLineItem[];
+  sections: ApiSection[];
+  total: number;
+  version_number: number;
 }
 
 interface ApiEstimateResponse {
-  id: string;
   base_number: string;
-  takeoff_id: string | null;
-  job_name: string;
-  job_address: string | null;
-  client_name: string | null;
   client_address: string | null;
+  client_email: string | null;
+  client_name: string | null;
+  client_phone: string | null;
+  created_at: string;
+  current_version: ApiVersion;
   estimator: string | null;
   estimator_email: string | null;
-  client_email: string | null;
-  client_phone: string | null;
+  id: string;
+  is_locked: number;
+  job_address: string | null;
+  job_name: string;
+  linked_takeoff?: { id: string; name: string } | null;
   notes: string | null;
   status: string;
-  is_locked: number;
-  created_at: string;
+  takeoff_id: string | null;
   updated_at: string;
-  current_version: ApiVersion;
-  linked_takeoff?: { id: string; name: string } | null;
 }
 
 function getLineItemRateAndTotal(item: {

@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { withError } from "@/utils/middleware";
+import { NextResponse } from "next/server";
 import { handleBatchRequest } from "@/app/api/user/categorize/senders/batch/handle-batch";
 import { env } from "@/env";
 import { isValidInternalApiKey } from "@/utils/internal-api";
+import { withError } from "@/utils/middleware";
 
 export const maxDuration = 300;
 
@@ -17,9 +17,10 @@ export const POST = withError(
       });
     }
 
-    if (!isValidInternalApiKey(await headers(), request.logger))
+    if (!isValidInternalApiKey(await headers(), request.logger)) {
       return NextResponse.json({ error: "Invalid API key" });
+    }
 
     return handleBatchRequest(request);
-  },
+  }
 );

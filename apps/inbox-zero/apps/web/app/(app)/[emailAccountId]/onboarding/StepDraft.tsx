@@ -1,14 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import { CheckIcon, PenIcon, XIcon } from "lucide-react";
-import { PageHeading, TypographyP } from "@/components/Typography";
-import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
-import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
+import Image from "next/image";
 import { useCallback } from "react";
-import { enableDraftRepliesAction } from "@/utils/actions/rule";
-import { toastError } from "@/components/Toast";
+import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
 import { OnboardingButton } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingButton";
+import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
+import { toastError } from "@/components/Toast";
+import { PageHeading, TypographyP } from "@/components/Typography";
+import { enableDraftRepliesAction } from "@/utils/actions/rule";
 
 export function StepDraft({
   emailAccountId,
@@ -32,20 +32,20 @@ export function StepDraft({
 
       onNext();
     },
-    [onNext, emailAccountId],
+    [onNext, emailAccountId]
   );
 
   return (
     <div className="relative">
       <div className="xl:pr-[50%]">
         <OnboardingWrapper className="py-0">
-          <IconCircle size="lg" className="mx-auto">
+          <IconCircle className="mx-auto" size="lg">
             <PenIcon className="size-6" />
           </IconCircle>
 
-          <div className="text-center mt-4">
+          <div className="mt-4 text-center">
             <PageHeading>Should we draft replies for you?</PageHeading>
-            <TypographyP className="mt-2 max-w-lg mx-auto">
+            <TypographyP className="mx-auto mt-2 max-w-lg">
               The drafts will appear in your inbox, written in your tone.
               <br />
               Our AI learns from your previous conversations to draft the best
@@ -55,28 +55,28 @@ export function StepDraft({
 
           <div className="mt-4 grid gap-2">
             <OnboardingButton
-              text="Yes, please"
               icon={<CheckIcon className="size-4" />}
               onClick={() => onSetDraftReplies("yes")}
+              text="Yes, please"
             />
 
             <OnboardingButton
-              text="No, thanks"
               icon={<XIcon className="size-4" />}
               onClick={() => onSetDraftReplies("no")}
+              text="No, thanks"
             />
           </div>
         </OnboardingWrapper>
       </div>
 
-      <div className="fixed top-0 right-0 w-1/2 h-screen bg-white items-center justify-center hidden xl:flex px-10">
-        <div className="rounded-2xl p-4 bg-slate-50 border border-slate-200">
+      <div className="fixed top-0 right-0 hidden h-screen w-1/2 items-center justify-center bg-white px-10 xl:flex">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <Image
-            src="/images/onboarding/draft.png"
             alt="Draft replies"
-            width={1200}
-            height={800}
             className="rounded-xl border border-slate-200"
+            height={800}
+            src="/images/onboarding/draft.png"
+            width={1200}
           />
         </div>
       </div>

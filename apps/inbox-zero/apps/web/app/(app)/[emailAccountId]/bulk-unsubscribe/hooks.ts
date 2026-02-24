@@ -1,26 +1,26 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
-import { toast } from "sonner";
 import { useAction } from "next-safe-action/hooks";
 import type { PostHog } from "posthog-js/react";
-import { onAutoArchive, onDeleteFilter } from "@/utils/actions/client";
-import { setNewsletterStatusAction } from "@/utils/actions/unsubscriber";
-import { decrementUnsubscribeCreditAction } from "@/utils/actions/premium";
-import { NewsletterStatus } from "@/generated/prisma/enums";
-import { cleanUnsubscribeLink } from "@/utils/parse/parseHtml.client";
-import { captureException } from "@/utils/error";
-import { addToArchiveSenderQueue } from "@/store/archive-sender-queue";
-import { deleteEmails } from "@/store/archive-queue";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { Row } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/types";
 import type { GetThreadsResponse } from "@/app/api/threads/basic/route";
-import { isDefined } from "@/utils/types";
-import { fetchWithAccount } from "@/utils/fetch";
 import type { UserResponse } from "@/app/api/user/me/route";
+import { NewsletterStatus } from "@/generated/prisma/enums";
+import { deleteEmails } from "@/store/archive-queue";
+import { addToArchiveSenderQueue } from "@/store/archive-sender-queue";
+import { onAutoArchive, onDeleteFilter } from "@/utils/actions/client";
 import {
   bulkArchiveAction,
   bulkTrashAction,
 } from "@/utils/actions/mail-bulk-action";
+import { decrementUnsubscribeCreditAction } from "@/utils/actions/premium";
+import { setNewsletterStatusAction } from "@/utils/actions/unsubscriber";
+import { captureException } from "@/utils/error";
+import { fetchWithAccount } from "@/utils/fetch";
+import { cleanUnsubscribeLink } from "@/utils/parse/parseHtml.client";
+import { isDefined } from "@/utils/types";
 
 export type NewsletterFilterType =
   | "all"
@@ -33,7 +33,7 @@ export type NewsletterFilterType =
 type MutateFn = (
   // biome-ignore lint/suspicious/noExplicitAny: SWR mutate signature
   data?: any,
-  opts?: { revalidate?: boolean },
+  opts?: { revalidate?: boolean }
 ) => Promise<void>;
 
 function pluralize(count: number, singular: string): string {
@@ -49,7 +49,7 @@ function formatSenderNames<T extends Row>(items: T[]): string {
 
 function itemMatchesFilter(
   status: NewsletterStatus | null | undefined,
-  filter: NewsletterFilterType,
+  filter: NewsletterFilterType
 ): boolean {
   switch (filter) {
     case "all":
@@ -94,7 +94,7 @@ async function executeBulkOperation<T extends Row>({
   const total = items.length;
   const toastId = toast.loading(
     `${loadingMessage} ${total} ${pluralize(total, "sender")}...`,
-    { description: `0 of ${total} completed` },
+    { description: `0 of ${total} completed` }
   );
 
   let completed = 0;
@@ -104,19 +104,21 @@ async function executeBulkOperation<T extends Row>({
     mutate(
       // biome-ignore lint/suspicious/noExplicitAny: SWR data structure
       (currentData: any) => {
-        if (!currentData?.newsletters) return currentData;
+        if (!currentData?.newsletters) {
+          return currentData;
+        }
         return {
           ...currentData,
           newsletters: currentData.newsletters
             // biome-ignore lint/suspicious/noExplicitAny: newsletter type
             .map((n: any) =>
-              n.name === itemName ? { ...n, status: newStatus } : n,
+              n.name === itemName ? { ...n, status: newStatus } : n
             )
             // biome-ignore lint/suspicious/noExplicitAny: newsletter type
             .filter((n: any) => itemMatchesFilter(n.status, filter)),
         };
       },
-      { revalidate: false },
+      { revalidate: false }
     );
   };
 
@@ -136,7 +138,7 @@ async function executeBulkOperation<T extends Row>({
         {
           id: toastId,
           description: `${completed} of ${total} completed`,
-        },
+        }
       );
     }
   }
@@ -156,7 +158,7 @@ async function executeBulkOperation<T extends Row>({
       {
         id: toastId,
         description: `${total - failures.length} of ${total} succeeded`,
-      },
+      }
     );
   } else {
     toast.success(`${total} ${pluralize(total, "sender")} ${successMessage}`, {
@@ -208,7 +210,9 @@ export function useUnsubscribe<T extends Row>({
   const [unsubscribeLoading, setUnsubscribeLoading] = useState(false);
 
   const onUnsubscribe = useCallback(async () => {
-    if (!hasUnsubscribeAccess) return;
+    if (!hasUnsubscribeAccess) {
+      return;
+    }
 
     setUnsubscribeLoading(true);
 
@@ -273,7 +277,9 @@ export function useBulkUnsubscribe<T extends Row>({
 }) {
   const onBulkUnsubscribe = useCallback(
     async (items: T[]) => {
-      if (!hasUnsubscribeAccess) return;
+      if (!hasUnsubscribeAccess) {
+        return;
+      }
       posthog.capture("Clicked Bulk Unsubscribe");
 
       await executeBulkOperation({
@@ -307,7 +313,7 @@ export function useBulkUnsubscribe<T extends Row>({
       emailAccountId,
       onDeselectItem,
       filter,
-    ],
+    ]
   );
 
   return { onBulkUnsubscribe };
@@ -332,7 +338,7 @@ async function autoArchive({
     emailAccountId,
     from: name,
     gmailLabelId: labelId,
-    labelName: labelName,
+    labelName,
   });
   await setNewsletterStatusAction(emailAccountId, {
     newsletterEmail: name,
@@ -366,7 +372,9 @@ export function useAutoArchive<T extends Row>({
   const [autoArchiveLoading, setAutoArchiveLoading] = useState(false);
 
   const onAutoArchiveClick = useCallback(async () => {
-    if (!hasUnsubscribeAccess) return;
+    if (!hasUnsubscribeAccess) {
+      return;
+    }
 
     setAutoArchiveLoading(true);
 
@@ -411,7 +419,9 @@ export function useAutoArchive<T extends Row>({
 
   const onAutoArchiveAndLabel = useCallback(
     async (labelId: string, labelName: string) => {
-      if (!hasUnsubscribeAccess) return;
+      if (!hasUnsubscribeAccess) {
+        return;
+      }
 
       setAutoArchiveLoading(true);
 
@@ -426,7 +436,7 @@ export function useAutoArchive<T extends Row>({
 
       setAutoArchiveLoading(false);
     },
-    [item.name, mutate, refetchPremium, hasUnsubscribeAccess, emailAccountId],
+    [item.name, mutate, refetchPremium, hasUnsubscribeAccess, emailAccountId]
   );
 
   return {
@@ -454,7 +464,9 @@ export function useBulkAutoArchive<T extends Row>({
 }) {
   const onBulkAutoArchive = useCallback(
     async (items: T[]) => {
-      if (!hasUnsubscribeAccess) return;
+      if (!hasUnsubscribeAccess) {
+        return;
+      }
 
       await executeBulkOperation({
         items,
@@ -493,7 +505,7 @@ export function useBulkAutoArchive<T extends Row>({
       emailAccountId,
       onDeselectItem,
       filter,
-    ],
+    ]
   );
 
   return { onBulkAutoArchive };
@@ -515,7 +527,7 @@ export function useApproveButton<T extends Row>({
       // biome-ignore lint/suspicious/noExplicitAny: SWR optimisticData can be any shape
       optimisticData?: any;
       rollbackOnError?: boolean;
-    },
+    }
   ) => Promise<void>;
   posthog: PostHog;
   emailAccountId: string;
@@ -544,14 +556,15 @@ export function useApproveButton<T extends Row>({
     // Optimistically update status and filter out items that no longer match the current view
     // biome-ignore lint/suspicious/noExplicitAny: SWR data structure
     const optimisticUpdate = (currentData: any) => {
-      if (!currentData?.newsletters) return currentData;
+      if (!currentData?.newsletters) {
+        return currentData;
+      }
       return {
         ...currentData,
         newsletters: currentData.newsletters
           .map(
             // biome-ignore lint/suspicious/noExplicitAny: newsletter type
-            (n: any) =>
-              n.name === item.name ? { ...n, status: newStatus } : n,
+            (n: any) => (n.name === item.name ? { ...n, status: newStatus } : n)
           )
           // biome-ignore lint/suspicious/noExplicitAny: newsletter type
           .filter((n: any) => itemMatchesFilter(n.status, filter)),
@@ -623,7 +636,7 @@ export function useBulkApprove<T extends Row>({
 }) {
   const onBulkApprove = async (items: T[], unapprove?: boolean) => {
     posthog.capture(
-      unapprove ? "Clicked Bulk Unapprove" : "Clicked Bulk Approve",
+      unapprove ? "Clicked Bulk Unapprove" : "Clicked Bulk Approve"
     );
 
     const newStatus = unapprove ? null : NewsletterStatus.APPROVED;
@@ -665,7 +678,7 @@ export function useBulkArchive<T extends Row>({
       onSuccess: () => {
         mutate();
       },
-    },
+    }
   );
 
   const onBulkArchive = (items: T[]) => {
@@ -729,7 +742,7 @@ async function deleteAllFromSender({
           ? `Deleting ${data} emails from ${name}...`
           : `No emails to delete from ${name}`,
       error: `There was an error deleting the emails from ${name} :(`,
-    },
+    }
   );
 }
 
@@ -777,7 +790,7 @@ export function useBulkDelete<T extends Row>({
       onSuccess: () => {
         mutate();
       },
-    },
+    }
   );
 
   const onBulkDelete = (items: T[]) => {
@@ -826,18 +839,26 @@ export function useBulkUnsubscribeShortcuts<T extends Row>({
   useEffect(() => {
     const down = async (e: KeyboardEvent) => {
       const item = selectedRow;
-      if (!item) return;
+      if (!item) {
+        return;
+      }
 
       // to prevent when typing in an input such as Crisp support
-      if (document?.activeElement?.tagName !== "BODY") return;
+      if (document?.activeElement?.tagName !== "BODY") {
+        return;
+      }
 
       if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
         const index = newsletters?.findIndex((n) => n.name === item.name);
-        if (index === undefined) return;
+        if (index === undefined) {
+          return;
+        }
         const nextItem =
           newsletters?.[index + (e.key === "ArrowDown" ? 1 : -1)];
-        if (!nextItem) return;
+        if (!nextItem) {
+          return;
+        }
         setSelectedRow(nextItem);
         return;
       }
@@ -848,7 +869,9 @@ export function useBulkUnsubscribeShortcuts<T extends Row>({
         return;
       }
 
-      if (!hasUnsubscribeAccess) return;
+      if (!hasUnsubscribeAccess) {
+        return;
+      }
 
       if (e.key === "e") {
         // auto archive
@@ -869,7 +892,9 @@ export function useBulkUnsubscribeShortcuts<T extends Row>({
       if (e.key === "u") {
         // unsubscribe
         e.preventDefault();
-        if (!item.unsubscribeLink) return;
+        if (!item.unsubscribeLink) {
+          return;
+        }
         window.open(cleanUnsubscribeLink(item.unsubscribeLink), "_blank");
         await setNewsletterStatusAction(emailAccountId, {
           newsletterEmail: item.name,

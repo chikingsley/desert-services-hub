@@ -1,6 +1,6 @@
 import "server-only";
-import { redis } from "@/utils/redis";
 import prisma from "@/utils/prisma";
+import { redis } from "@/utils/redis";
 
 const EXPIRATION = 60 * 60; // 1 hour
 
@@ -30,7 +30,9 @@ export async function getEmailAccount({
   userId: string;
   emailAccountId: string;
 }): Promise<string | null> {
-  if (!userId || !emailAccountId) return null;
+  if (!(userId && emailAccountId)) {
+    return null;
+  }
 
   const key = getValidationKey({ userId, emailAccountId });
 

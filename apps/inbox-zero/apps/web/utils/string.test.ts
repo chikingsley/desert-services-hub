@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  removeExcessiveWhitespace,
-  truncate,
-  generalizeSubject,
   convertNewlinesToBr,
   escapeHtml,
+  generalizeSubject,
+  removeExcessiveWhitespace,
+  truncate,
 } from "./string";
 
 // Run with:
@@ -32,7 +32,7 @@ describe("string utils", () => {
 
     it("should collapse multiple newlines into double newlines", () => {
       expect(removeExcessiveWhitespace("hello\n\n\n\nworld")).toBe(
-        "hello\n\nworld",
+        "hello\n\nworld"
       );
     });
 
@@ -43,7 +43,7 @@ describe("string utils", () => {
     it("should handle complex cases with multiple types of whitespace", () => {
       const input = "hello   world\n\n\n\n  next    line\u200B\u200B  test";
       expect(removeExcessiveWhitespace(input)).toBe(
-        "hello world\n\nnext line test",
+        "hello world\n\nnext line test"
       );
     });
 
@@ -74,16 +74,16 @@ describe("string utils", () => {
       expect(generalizeSubject("Order #123")).toBe("Order");
       expect(generalizeSubject("Invoice 456")).toBe("Invoice");
       expect(generalizeSubject("[org/repo] PR #789: Fix bug (abc123)")).toBe(
-        "[org/repo] PR : Fix bug",
+        "[org/repo] PR : Fix bug"
       );
     });
 
     it("should preserve normal text", () => {
       expect(generalizeSubject("Welcome to our service")).toBe(
-        "Welcome to our service",
+        "Welcome to our service"
       );
       expect(generalizeSubject("Your account has been created")).toBe(
-        "Your account has been created",
+        "Your account has been created"
       );
     });
   });
@@ -91,25 +91,25 @@ describe("string utils", () => {
   describe("convertNewlinesToBr", () => {
     it("should convert LF to <br>", () => {
       expect(convertNewlinesToBr("line one\nline two")).toBe(
-        "line one<br>line two",
+        "line one<br>line two"
       );
     });
 
     it("should convert CRLF to <br>", () => {
       expect(convertNewlinesToBr("line one\r\nline two")).toBe(
-        "line one<br>line two",
+        "line one<br>line two"
       );
     });
 
     it("should handle mixed line endings", () => {
       expect(convertNewlinesToBr("line one\r\nline two\nline three")).toBe(
-        "line one<br>line two<br>line three",
+        "line one<br>line two<br>line three"
       );
     });
 
     it("should preserve multiple newlines for paragraph spacing", () => {
       expect(convertNewlinesToBr("para one\n\npara two")).toBe(
-        "para one<br><br>para two",
+        "para one<br><br>para two"
       );
     });
 
@@ -125,13 +125,13 @@ describe("string utils", () => {
   describe("escapeHtml", () => {
     it("should escape basic HTML characters", () => {
       expect(escapeHtml("<script>alert('xss')</script>")).toBe(
-        "&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;",
+        "&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;"
       );
     });
 
     it("should escape angle brackets in email addresses", () => {
       expect(escapeHtml("John <john@example.com>")).toBe(
-        "John &lt;john@example.com&gt;",
+        "John &lt;john@example.com&gt;"
       );
     });
 

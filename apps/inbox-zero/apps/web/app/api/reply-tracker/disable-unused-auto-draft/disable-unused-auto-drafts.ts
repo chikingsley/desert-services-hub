@@ -1,8 +1,8 @@
-import groupBy from "lodash/groupBy";
 import { subDays } from "date-fns/subDays";
-import prisma from "@/utils/prisma";
+import groupBy from "lodash/groupBy";
 import { ActionType } from "@/generated/prisma/enums";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 const MAX_DRAFTS_TO_CHECK = 10;
 
@@ -20,7 +20,7 @@ export async function disableUnusedAutoDrafts(logger: Logger) {
 
   const groupedByEmailAccount = groupBy(
     autoDraftActions,
-    (action) => action.rule.emailAccountId,
+    (action) => action.rule.emailAccountId
   );
 
   logger.info("Grouped by email account", {
@@ -56,7 +56,7 @@ export async function disableUnusedAutoDrafts(logger: Logger) {
       });
 
       const anyDraftsSent = executedDraftActions.some(
-        (action) => action.wasDraftSent === true,
+        (action) => action.wasDraftSent === true
       );
 
       if (anyDraftsSent) {

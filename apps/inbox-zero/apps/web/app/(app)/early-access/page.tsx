@@ -10,8 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { isGoogleProvider } from "@/utils/email/provider-types";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { isGoogleProvider } from "@/utils/email/provider-types";
 
 export default function RequestAccessPage() {
   const { provider } = useAccount();

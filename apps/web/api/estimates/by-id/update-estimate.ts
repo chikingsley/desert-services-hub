@@ -1,7 +1,3 @@
-import {
-  EstimatePayloadValidationError,
-  validateUpdateEstimatePayload,
-} from "@/packages/estimates/estimating/estimate-payload-validation";
 import { db } from "@lib/db/client";
 import type { EstimateRow, EstimateVersionRow } from "@lib/db/types";
 import {
@@ -9,6 +5,10 @@ import {
   getPreferredEstimateVersion,
   parseEstimateId,
 } from "@/api/estimates/by-id/shared";
+import {
+  EstimatePayloadValidationError,
+  validateUpdateEstimatePayload,
+} from "@/packages/estimates/estimating/estimate-payload-validation";
 
 type UpdateValue = string | number | null;
 type NormalizedUpdatePayload = ReturnType<typeof validateUpdateEstimatePayload>;
@@ -166,7 +166,9 @@ async function insertSections(
     validSectionIds.add(sectionId);
 
     const offset = sectionValues.length;
-    sectionPlaceholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`);
+    sectionPlaceholders.push(
+      `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`
+    );
     sectionValues.push(
       sectionId,
       versionId,
@@ -235,7 +237,9 @@ async function insertLineItems(
     );
 
     const offset = itemValues.length;
-    itemPlaceholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11})`);
+    itemPlaceholders.push(
+      `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11})`
+    );
     itemValues.push(
       lineItemId,
       versionId,

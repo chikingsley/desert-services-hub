@@ -7,14 +7,14 @@ import type { Root } from "react-dom/client";
  * @category Type
  */
 export interface LTWH {
+  /** Height of the rectangle, relative to top left of the viewport. */
+  height: number;
   /** The x coordinate of the top-left of the rectangle. */
   left: number;
   /** The y coordinate of the top-left of the rectangle. */
   top: number;
   /** Width of the rectangle, relative to top left of the viewport. */
   width: number;
-  /** Height of the rectangle, relative to top left of the viewport. */
-  height: number;
 }
 
 /** @category Type */
@@ -32,17 +32,17 @@ export type LTWHP = LTWH & {
  * @author Artem Tyurin <artem.tyurin@gmail.com>
  */
 export interface Scaled {
-  x1: number;
-  y1: number;
-
-  x2: number;
-  y2: number;
-
-  width: number;
   height: number;
 
   /** 1-Indexed page number */
   pageNumber: number;
+
+  width: number;
+  x1: number;
+
+  x2: number;
+  y1: number;
+  y2: number;
 }
 
 /**
@@ -87,8 +87,8 @@ export interface DrawingPoint {
  * @category Type
  */
 export interface DrawingStroke {
-  points: DrawingPoint[];
   color: string;
+  points: DrawingPoint[];
   width: number;
 }
 
@@ -105,13 +105,13 @@ export type ShapeType = "rectangle" | "circle" | "arrow";
  * @category Type
  */
 export interface ShapeData {
-  shapeType: ShapeType;
-  strokeColor: string;
-  strokeWidth: number;
-  /** For arrows: start point as percentage of bounding box (0-1) */
-  startPoint?: { x: number; y: number };
   /** For arrows: end point as percentage of bounding box (0-1) */
   endPoint?: { x: number; y: number };
+  shapeType: ShapeType;
+  /** For arrows: start point as percentage of bounding box (0-1) */
+  startPoint?: { x: number; y: number };
+  strokeColor: string;
+  strokeWidth: number;
 }
 
 /**
@@ -120,12 +120,12 @@ export interface ShapeData {
  * @category Type
  */
 export interface Content {
-  text?: string;
   image?: string;
-  /** For drawing highlights, store the stroke data for later editing */
-  strokes?: DrawingStroke[];
   /** For shape highlights, store the shape data */
   shape?: ShapeData;
+  /** For drawing highlights, store the stroke data for later editing */
+  strokes?: DrawingStroke[];
+  text?: string;
 }
 
 /**
@@ -149,11 +149,6 @@ export type HighlightType =
  * @category Type
  */
 export interface Highlight {
-  id: string;
-  /**
-   * This property is planned to be non-optional in future.
-   */
-  type?: HighlightType;
   /**
    * @deprecated If you want your highlight to store content after being a
    * GhostHighlight, you should create your own interface extended off this. If
@@ -161,7 +156,12 @@ export interface Highlight {
    * to render, please use {@link type}.
    */
   content?: Content;
+  id: string;
   position: ScaledPosition;
+  /**
+   * This property is planned to be non-optional in future.
+   */
+  type?: HighlightType;
 }
 
 /**
@@ -214,8 +214,8 @@ export interface Page {
  * @category Type
  */
 export interface HighlightBindings {
-  reactRoot: Root;
   container: Element;
+  reactRoot: Root;
   textLayer: HTMLElement;
 }
 
@@ -225,8 +225,8 @@ export interface HighlightBindings {
  * @category Type
  */
 export interface Tip {
-  position: ViewportPosition;
   content: ReactNode;
+  position: ViewportPosition;
 }
 
 /**
@@ -253,44 +253,44 @@ export type TakeoffToolType = "count" | "polyline" | "polygon";
  * A count marker annotation (single click point).
  */
 export interface CountMarker {
+  color: string;
   id: string;
-  type: "count";
-  position: ScaledPosition;
   itemId: string; // e.g., "curb_inlet", "rumble_grate"
   label: string;
-  color: string;
   number: number; // Sequential number for this item type
+  position: ScaledPosition;
+  type: "count";
 }
 
 /**
  * A polyline annotation (multiple connected points for linear measurements).
  */
 export interface PolylineAnnotation {
+  color: string;
   id: string;
-  type: "polyline";
-  points: Scaled[]; // Each point with its own scaled coordinates
   itemId: string; // e.g., "fence", "silt_fence"
   label: string;
-  color: string;
-  strokeWidth: number;
   /** Calculated length in scaled units (needs calibration for real units) */
   length?: number;
+  points: Scaled[]; // Each point with its own scaled coordinates
+  strokeWidth: number;
+  type: "polyline";
 }
 
 /**
  * A polygon annotation (closed shape for area measurements).
  */
 export interface PolygonAnnotation {
-  id: string;
-  type: "polygon";
-  points: Scaled[]; // Points forming closed polygon
-  itemId: string; // e.g., "area"
-  label: string;
-  color: string;
-  strokeWidth: number;
-  fillOpacity: number;
   /** Calculated area in scaled units (needs calibration for real units) */
   area?: number;
+  color: string;
+  fillOpacity: number;
+  id: string;
+  itemId: string; // e.g., "area"
+  label: string;
+  points: Scaled[]; // Points forming closed polygon
+  strokeWidth: number;
+  type: "polygon";
 }
 
 /**
@@ -305,21 +305,21 @@ export type TakeoffAnnotation =
  * Scale calibration data for converting pixel measurements to real-world units.
  */
 export interface ScaleCalibration {
+  /** Page number where calibration was set */
+  pageNumber: number;
+  /** Pixel distance on the PDF at base scale */
+  pixelDistance: number;
   /** Known distance in real-world units */
   realDistance: number;
   /** Unit of measurement (ft, m, etc.) */
   unit: string;
-  /** Pixel distance on the PDF at base scale */
-  pixelDistance: number;
-  /** Page number where calibration was set */
-  pageNumber: number;
 }
 
 /**
  * A point in viewport coordinates with page number.
  */
 export interface ViewportPoint {
+  pageNumber: number;
   x: number;
   y: number;
-  pageNumber: number;
 }

@@ -19,7 +19,7 @@ describe("convertTextToHtmlParagraphs", () => {
 
     // Verify the exact structure: paragraph, br (for empty line), paragraph
     expect(result).toBe(
-      "<html><body><p>First paragraph.</p><br><p>Second paragraph.</p><br><p>Third paragraph.</p></body></html>",
+      "<html><body><p>First paragraph.</p><br><p>Second paragraph.</p><br><p>Third paragraph.</p></body></html>"
     );
   });
 

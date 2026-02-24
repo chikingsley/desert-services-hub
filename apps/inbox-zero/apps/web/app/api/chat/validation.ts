@@ -26,7 +26,7 @@ export const messageContextSchema = z.object({
       ruleName: z.string().nullable(),
       systemType: z.nativeEnum(SystemType).nullable().optional(),
       reason: z.string(),
-    }),
+    })
   ),
   expected: z.union([
     z.literal("new"),

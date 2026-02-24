@@ -1,10 +1,10 @@
 export function Megaphone() {
   return (
     <svg
-      width="13"
+      fill="none"
       height="12"
       viewBox="0 0 13 12"
-      fill="none"
+      width="13"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path

@@ -3,7 +3,7 @@ import type { DriveProviderType } from "./types";
 
 export function getDriveFileUrl(
   fileId: string,
-  provider: DriveProviderType,
+  provider: DriveProviderType
 ): string {
   switch (provider) {
     case "google":

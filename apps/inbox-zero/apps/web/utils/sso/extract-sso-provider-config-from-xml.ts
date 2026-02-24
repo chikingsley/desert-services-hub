@@ -2,9 +2,9 @@ import { XMLParser } from "fast-xml-parser";
 import { env } from "@/env";
 
 export interface SSOProviderConfig {
-  issuer: string;
-  entryPoint: string;
   cert: string;
+  entryPoint: string;
+  issuer: string;
   spMetadata: string;
   // Security configuration options
   wantAssertionsSigned?: boolean; // Defaults to true for security; set false only if IdP doesn't support signed assertions
@@ -20,7 +20,7 @@ export interface SSOProviderConfig {
  */
 export function extractSSOProviderConfigFromXML(
   idpMetadata: string,
-  providerId: string,
+  providerId: string
 ): SSOProviderConfig {
   const parser = new XMLParser({
     ignoreAttributes: false,
@@ -38,7 +38,7 @@ export function extractSSOProviderConfigFromXML(
   const getValue = <T = unknown>(
     obj: Record<string, unknown>,
     prefixedKey: string,
-    unprefixedKey: string,
+    unprefixedKey: string
   ): T | undefined => {
     return (obj?.[prefixedKey] ?? obj?.[unprefixedKey]) as T | undefined;
   };
@@ -46,7 +46,7 @@ export function extractSSOProviderConfigFromXML(
   const getArrayValue = <T = unknown>(
     obj: Record<string, unknown>,
     prefixedKey: string,
-    unprefixedKey: string,
+    unprefixedKey: string
   ): T[] => {
     const value = getValue<T | T[]>(obj, prefixedKey, unprefixedKey);
     return Array.isArray(value) ? value : value ? [value] : [];
@@ -54,7 +54,7 @@ export function extractSSOProviderConfigFromXML(
 
   const getStringValue = (
     obj: Record<string, unknown>,
-    key: string,
+    key: string
   ): string | undefined => {
     const value = obj[key];
     return typeof value === "string" ? value : undefined;
@@ -63,7 +63,7 @@ export function extractSSOProviderConfigFromXML(
   const entityDescriptor = getValue<Record<string, unknown>>(
     metadata,
     "md:EntityDescriptor",
-    "EntityDescriptor",
+    "EntityDescriptor"
   );
   if (!entityDescriptor || typeof entityDescriptor !== "object") {
     throw new Error("Missing or invalid EntityDescriptor in SAML metadata");
@@ -77,7 +77,7 @@ export function extractSSOProviderConfigFromXML(
   const idpDescriptor = getValue<Record<string, unknown>>(
     entityDescriptor,
     "md:IDPSSODescriptor",
-    "IDPSSODescriptor",
+    "IDPSSODescriptor"
   );
   if (!idpDescriptor || typeof idpDescriptor !== "object") {
     throw new Error("Missing or invalid IDPSSODescriptor in EntityDescriptor");
@@ -86,7 +86,7 @@ export function extractSSOProviderConfigFromXML(
   const keyDescriptors = getArrayValue<Record<string, unknown>>(
     idpDescriptor,
     "md:KeyDescriptor",
-    "KeyDescriptor",
+    "KeyDescriptor"
   );
   if (keyDescriptors.length === 0) {
     throw new Error("No KeyDescriptor found in IDPSSODescriptor");
@@ -94,7 +94,7 @@ export function extractSSOProviderConfigFromXML(
 
   const selectedKeyDescriptor =
     keyDescriptors.find(
-      (desc: Record<string, unknown>) => desc && desc["@_use"] === "signing",
+      (desc: Record<string, unknown>) => desc && desc["@_use"] === "signing"
     ) || keyDescriptors[0];
 
   if (!selectedKeyDescriptor || typeof selectedKeyDescriptor !== "object") {
@@ -104,7 +104,7 @@ export function extractSSOProviderConfigFromXML(
   const keyInfo = getValue<Record<string, unknown>>(
     selectedKeyDescriptor,
     "ds:KeyInfo",
-    "KeyInfo",
+    "KeyInfo"
   );
   if (!keyInfo || typeof keyInfo !== "object") {
     throw new Error("Missing or invalid KeyInfo in KeyDescriptor");
@@ -113,7 +113,7 @@ export function extractSSOProviderConfigFromXML(
   const x509Data = getValue<Record<string, unknown>>(
     keyInfo,
     "ds:X509Data",
-    "X509Data",
+    "X509Data"
   );
   if (!x509Data || typeof x509Data !== "object") {
     throw new Error("Missing or invalid X509Data in KeyInfo");
@@ -122,7 +122,7 @@ export function extractSSOProviderConfigFromXML(
   const x509Certificate = getValue<string>(
     x509Data,
     "ds:X509Certificate",
-    "X509Certificate",
+    "X509Certificate"
   );
   if (!x509Certificate || typeof x509Certificate !== "string") {
     throw new Error("Missing or invalid X509Certificate in X509Data");
@@ -133,7 +133,7 @@ export function extractSSOProviderConfigFromXML(
   const singleSignOnServices = getArrayValue<Record<string, unknown>>(
     idpDescriptor,
     "md:SingleSignOnService",
-    "SingleSignOnService",
+    "SingleSignOnService"
   );
   if (singleSignOnServices.length === 0) {
     throw new Error("No SingleSignOnService found in IDPSSODescriptor");
@@ -142,7 +142,7 @@ export function extractSSOProviderConfigFromXML(
   const httpPostService = singleSignOnServices.find(
     (service: Record<string, unknown>) =>
       service &&
-      service["@_Binding"] === "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+      service["@_Binding"] === "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
   );
 
   let entryPoint: string | undefined;

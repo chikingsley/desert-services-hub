@@ -6,7 +6,7 @@ export function RulesTab() {
   return (
     <Tabs defaultValue="prompt" searchParam="view">
       <div className="flex items-center gap-2 pt-2">
-        <span className="text-sm font-medium">View as:</span>
+        <span className="font-medium text-sm">View as:</span>
         <TabsList>
           <TabsTrigger value="prompt">Prompt</TabsTrigger>
           <TabsTrigger value="rules">Rules</TabsTrigger>

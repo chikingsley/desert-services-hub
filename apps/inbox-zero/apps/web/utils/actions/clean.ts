@@ -1,33 +1,33 @@
 "use server";
 
 import { after } from "next/server";
+import type { CleanThreadBody } from "@/app/api/clean/route";
+import { CleanAction } from "@/generated/prisma/enums";
+import { getGmailClientForEmail } from "@/utils/account";
 import {
+  changeKeepToDoneSchema,
   cleanInboxSchema,
   undoCleanInboxSchema,
-  changeKeepToDoneSchema,
 } from "@/utils/actions/clean.validation";
-import { bulkPublishToQstash } from "@/utils/upstash";
-import {
-  getLabel,
-  getOrCreateInboxZeroLabel,
-  GmailLabel,
-  labelThread,
-} from "@/utils/gmail/label";
-import type { CleanThreadBody } from "@/app/api/clean/route";
-import { isDefined } from "@/utils/types";
-import { inboxZeroLabels } from "@/utils/label";
-import prisma from "@/utils/prisma";
-import { CleanAction } from "@/generated/prisma/enums";
-import { updateThread } from "@/utils/redis/clean";
-import { getUnhandledCount } from "@/utils/assess";
-import { getGmailClientForEmail } from "@/utils/account";
 import { actionClient } from "@/utils/actions/safe-action";
-import { SafeError } from "@/utils/error";
+import { getUnhandledCount } from "@/utils/assess";
+import { ONE_DAY_MS } from "@/utils/date";
 import { createEmailProvider } from "@/utils/email/provider";
 import { isGoogleProvider } from "@/utils/email/provider-types";
-import { getUserPremium } from "@/utils/user/get";
+import { SafeError } from "@/utils/error";
+import {
+  GmailLabel,
+  getLabel,
+  getOrCreateInboxZeroLabel,
+  labelThread,
+} from "@/utils/gmail/label";
+import { inboxZeroLabels } from "@/utils/label";
 import { isActivePremium } from "@/utils/premium";
-import { ONE_DAY_MS } from "@/utils/date";
+import prisma from "@/utils/prisma";
+import { updateThread } from "@/utils/redis/clean";
+import { isDefined } from "@/utils/types";
+import { bulkPublishToQstash } from "@/utils/upstash";
+import { getUserPremium } from "@/utils/user/get";
 
 export const cleanInboxAction = actionClient
   .metadata({ name: "cleanInbox" })
@@ -39,13 +39,17 @@ export const cleanInboxAction = actionClient
     }) => {
       if (!isGoogleProvider(provider)) {
         throw new SafeError(
-          "Clean inbox is only supported for Google accounts",
+          "Clean inbox is only supported for Google accounts"
         );
       }
 
       const premium = await getUserPremium({ userId });
-      if (!premium) throw new SafeError("User not premium");
-      if (!isActivePremium(premium)) throw new SafeError("Premium not active");
+      if (!premium) {
+        throw new SafeError("User not premium");
+      }
+      if (!isActivePremium(premium)) {
+        throw new SafeError("Premium not active");
+      }
 
       const emailProvider = await createEmailProvider({
         emailAccountId,
@@ -55,18 +59,20 @@ export const cleanInboxAction = actionClient
 
       const [markedDoneLabel, processedLabel] = await Promise.all([
         emailProvider.getOrCreateInboxZeroLabel(
-          action === CleanAction.ARCHIVE ? "archived" : "marked_read",
+          action === CleanAction.ARCHIVE ? "archived" : "marked_read"
         ),
         emailProvider.getOrCreateInboxZeroLabel("processed"),
       ]);
 
       const markedDoneLabelId = markedDoneLabel?.id;
-      if (!markedDoneLabelId)
+      if (!markedDoneLabelId) {
         throw new SafeError("Failed to create archived label");
+      }
 
       const processedLabelId = processedLabel?.id;
-      if (!processedLabelId)
+      if (!processedLabelId) {
         throw new SafeError("Failed to create processed label");
+      }
 
       // create a cleanup job
       const job = await prisma.cleanupJob.create({
@@ -136,7 +142,9 @@ export const cleanInboxAction = actionClient
 
           nextPageToken = pageToken;
 
-          if (threads.length === 0) break;
+          if (threads.length === 0) {
+            break;
+          }
 
           logger.info("Pushing to Qstash", {
             threadCount: threads.length,
@@ -145,7 +153,9 @@ export const cleanInboxAction = actionClient
 
           const items = threads
             .map((thread) => {
-              if (!thread.id) return;
+              if (!thread.id) {
+                return;
+              }
               return {
                 path: "/api/clean",
                 body: {
@@ -181,11 +191,13 @@ export const cleanInboxAction = actionClient
       after(() => process());
 
       return { jobId: job.id };
-    },
+    }
   );
 
 function isMaxEmailsReached(totalEmailsProcessed: number, maxEmails?: number) {
-  if (!maxEmails) return false;
+  if (!maxEmails) {
+    return false;
+  }
   return totalEmailsProcessed >= maxEmails;
 }
 
@@ -200,7 +212,9 @@ export const undoCleanInboxAction = actionClient
       const gmail = await getGmailClientForEmail({ emailAccountId, logger });
 
       // nothing to do atm if wasn't marked done
-      if (!markedDone) return { success: true };
+      if (!markedDone) {
+        return { success: true };
+      }
 
       // get the label to remove
       const markedDoneLabel = await getLabel({
@@ -251,7 +265,7 @@ export const undoCleanInboxAction = actionClient
       }
 
       return { success: true };
-    },
+    }
   );
 
 export const changeKeepToDoneAction = actionClient
@@ -316,5 +330,5 @@ export const changeKeepToDoneAction = actionClient
       }
 
       return { success: true };
-    },
+    }
   );

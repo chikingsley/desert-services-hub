@@ -1,10 +1,10 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
-  parseSubscriptionHistory,
-  createHistoryEntry,
-  cleanupOldHistoryEntries,
-  isSubscriptionInHistory,
   addCurrentSubscriptionToHistory,
+  cleanupOldHistoryEntries,
+  createHistoryEntry,
+  isSubscriptionInHistory,
+  parseSubscriptionHistory,
 } from "./subscription-history";
 
 describe("subscription-history", () => {
@@ -63,7 +63,7 @@ describe("subscription-history", () => {
       const entry = createHistoryEntry(
         "sub-123",
         "2024-01-01T00:00:00Z",
-        "2024-01-05T00:00:00Z",
+        "2024-01-05T00:00:00Z"
       );
 
       expect(entry).toEqual({
@@ -199,7 +199,7 @@ describe("subscription-history", () => {
         null,
         "sub-123",
         replacedAt,
-        fallbackCreatedAt,
+        fallbackCreatedAt
       );
 
       expect(result).toHaveLength(1);
@@ -226,7 +226,7 @@ describe("subscription-history", () => {
         existingHistory,
         "sub-2",
         replacedAt,
-        fallbackCreatedAt,
+        fallbackCreatedAt
       );
 
       expect(result).toHaveLength(2);
@@ -255,7 +255,7 @@ describe("subscription-history", () => {
         existingHistory,
         "sub-3",
         new Date("2024-01-10T00:00:00Z"),
-        new Date("2024-01-01T00:00:00Z"),
+        new Date("2024-01-01T00:00:00Z")
       );
 
       expect(result).toHaveLength(3);

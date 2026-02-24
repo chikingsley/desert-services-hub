@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
-import {
-  handlePreviousDraftDeletion,
-  extractDraftPlainText,
-  stripQuotedContent,
-  isDraftUnmodified,
-} from "@/utils/ai/choose-rule/draft-management";
-import prisma from "@/utils/prisma";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { ActionType } from "@/generated/prisma/enums";
-import { createScopedLogger } from "@/utils/logger";
-import type { ParsedMessage } from "@/utils/types";
+import {
+  extractDraftPlainText,
+  handlePreviousDraftDeletion,
+  isDraftUnmodified,
+  stripQuotedContent,
+} from "@/utils/ai/choose-rule/draft-management";
 import type { EmailProvider } from "@/utils/email/types";
+import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import type { ParsedMessage } from "@/utils/types";
 
 vi.mock("server-only", () => ({}));
 
@@ -192,7 +192,7 @@ describe("handlePreviousDraftDeletion", () => {
         client: mockClient,
         executedRule: mockExecutedRule,
         logger,
-      }),
+      })
     ).resolves.not.toThrow();
   });
 

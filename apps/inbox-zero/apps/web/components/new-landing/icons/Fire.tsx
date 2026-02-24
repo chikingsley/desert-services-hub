@@ -1,10 +1,10 @@
 export function Fire() {
   return (
     <svg
-      width="10"
+      fill="none"
       height="13"
       viewBox="0 0 10 13"
-      fill="none"
+      width="10"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path

@@ -1,6 +1,6 @@
+import { cva } from "class-variance-authority";
 import { Paragraph } from "@/components/new-landing/common/Typography";
 import { cn } from "@/utils";
-import { cva } from "class-variance-authority";
 
 interface CardContentProps {
   children: React.ReactNode;
@@ -12,11 +12,11 @@ export function CardContent({ children, className }: CardContentProps) {
 }
 
 interface CardHeaderProps {
-  title?: string;
-  icon?: React.ReactNode;
   addon?: React.ReactNode;
-  description?: string;
   className?: string;
+  description?: string;
+  icon?: React.ReactNode;
+  title?: string;
 }
 
 export function CardHeader({
@@ -38,14 +38,14 @@ export function CardHeader({
         <h2
           className={cn(
             "font-title text-xl leading-6",
-            title || addon ? "mt-5" : "",
+            title || addon ? "mt-5" : ""
           )}
         >
           {title}
         </h2>
       ) : null}
       {description ? (
-        <Paragraph size="sm" className="mt-3">
+        <Paragraph className="mt-3" size="sm">
           {description}
         </Paragraph>
       ) : null}
@@ -54,14 +54,14 @@ export function CardHeader({
 }
 
 interface CardProps {
-  children: React.ReactNode;
-  variant?: "default" | "extra-rounding" | "circle";
-  icon?: React.ReactNode;
   addon?: React.ReactNode;
-  title?: string;
-  description?: string;
-  className?: string;
   cardHeaderClassName?: string;
+  children: React.ReactNode;
+  className?: string;
+  description?: string;
+  icon?: React.ReactNode;
+  title?: string;
+  variant?: "default" | "extra-rounding" | "circle";
 }
 
 export function Card({
@@ -76,7 +76,7 @@ export function Card({
 }: CardProps) {
   const cardVariants = cva(
     [
-      "text-left flex flex-col border border-[#E7E7E780] bg-white shadow-[0px_3px_12.9px_0px_#97979714]",
+      "flex flex-col border border-[#E7E7E780] bg-white text-left shadow-[0px_3px_12.9px_0px_#97979714]",
     ],
     {
       variants: {
@@ -86,17 +86,17 @@ export function Card({
           default: "rounded-[20px]",
         },
       },
-    },
+    }
   );
   return (
     <div className={cardVariants({ variant, className })}>
       {title || icon || addon ? (
         <CardHeader
-          title={title}
-          icon={icon}
           addon={addon}
-          description={description}
           className={cardHeaderClassName}
+          description={description}
+          icon={icon}
+          title={title}
         />
       ) : null}
       {children}

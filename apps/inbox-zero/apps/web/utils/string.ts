@@ -15,7 +15,7 @@ export function removeExcessiveWhitespace(str: string) {
       // Handle each special character separately to avoid combining character issues
       .replace(
         /\u200B|\u200C|\u200D|\u200E|\u200F|\uFEFF|\u3164|\u00AD|\u034F/g,
-        " ",
+        " "
       )
       // Normalize all types of line breaks to \n
       .replace(/\r\n|\r/g, "\n")
@@ -46,7 +46,7 @@ export function generalizeSubject(subject = "") {
 export function pluralize(
   count: number,
   singular: string,
-  plural = `${singular}s`,
+  plural = `${singular}s`
 ) {
   return count === 1 ? singular : plural;
 }

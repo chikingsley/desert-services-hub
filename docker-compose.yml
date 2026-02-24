@@ -13,12 +13,13 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
+      DATABASE_URL: postgresql://postgres.pooler-dev:postgres@host.docker.internal:54329/postgres
       MONDAY_FILES_DIR: /app/data/monday-files
       BACKGROUND_JOBS_BASE_URL: ${BACKGROUND_JOBS_BASE_URL:-http://background-jobs:4747}
       BC_WORKER_BASE_URL: ${BC_WORKER_BASE_URL:-http://bc-worker:47824}
       BUILDINGCONNECTED_AUTH_VNC_PORT: ${BUILDINGCONNECTED_AUTH_VNC_PORT:-6081}
       BUILDINGCONNECTED_AUTH_VNC_URL: ${BUILDINGCONNECTED_AUTH_VNC_URL:-https://buildingconnected-vnc.desertservices.app/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true}
+      PERMIT_WORKER_URL: http://permit-worker:47822
       PERMIT_WORKER_VNC_WS_URL: ${PERMIT_WORKER_VNC_WS_URL:-wss://maricopa-vnc.desertservices.app}
       BUILDINGCONNECTED_AUTH_VNC_WS_URL: ${BUILDINGCONNECTED_AUTH_VNC_WS_URL:-wss://buildingconnected-vnc.desertservices.app}
     extra_hosts:
@@ -47,7 +48,7 @@ services:
       NODE_ENV: production
       WEBHOOK_PORT: 4747
       WEBHOOK_IDLE_TIMEOUT_S: ${WEBHOOK_IDLE_TIMEOUT_S:-255}
-      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
+      DATABASE_URL: postgresql://postgres.pooler-dev:postgres@host.docker.internal:54329/postgres
       MONDAY_FILES_DIR: /app/data/monday-files
       # LLM — two tiers: fast for classification, smart for routing/extraction
       GEMINI_FAST_MODEL: ${GEMINI_FAST_MODEL:-gemini-2.5-flash-lite}
@@ -141,7 +142,7 @@ services:
       DOCKER_CONTAINER: "true"
       VNC_RESOLUTION: 1920x1080
       DISPLAY: ":1"
-      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
+      DATABASE_URL: postgresql://postgres.pooler-dev:postgres@host.docker.internal:54329/postgres
       WEB_APP_URL: http://web:3000
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -176,7 +177,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 47823
-      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
+      DATABASE_URL: postgresql://postgres.pooler-dev:postgres@host.docker.internal:54329/postgres
       AQDATA_HTTP_IDLE_TIMEOUT_S: ${AQDATA_HTTP_IDLE_TIMEOUT_S:-255}
       AQDATA_OUTPUT_DIR: /app/data/aqdata
       AQDATA_SCRAPE_INTERVAL_MS: ${AQDATA_SCRAPE_INTERVAL_MS:-900000}

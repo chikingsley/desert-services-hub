@@ -1,15 +1,15 @@
 interface GmailProps {
-  width?: string | number;
   height?: string | number;
+  width?: string | number;
 }
 
 export function Gmail({ width = "26", height = "23" }: GmailProps) {
   return (
     <svg
-      width={width}
+      fill="none"
       height={height}
       viewBox="0 0 26 23"
-      fill="none"
+      width={width}
       xmlns="http://www.w3.org/2000/svg"
     >
       <g filter="url(#filter0_d_265_2047)">
@@ -26,10 +26,10 @@ export function Gmail({ width = "26", height = "23" }: GmailProps) {
           fill="#FBBC04"
         />
         <path
-          fillRule="evenodd"
           clipRule="evenodd"
           d="M7.97461 9.52557V4.2262L12.7431 7.89501L17.5116 4.2262V9.52557L12.7431 13.1944L7.97461 9.52557Z"
           fill="#EA4335"
+          fillRule="evenodd"
         />
         <path
           d="M4 4.8377V6.46826L7.97378 9.52559V4.22622L6.86112 3.37018C5.68187 2.46317 4 3.32635 4 4.83763V4.8377Z"
@@ -38,20 +38,20 @@ export function Gmail({ width = "26", height = "23" }: GmailProps) {
       </g>
       <defs>
         <filter
+          colorInterpolationFilters="sRGB"
+          filterUnits="userSpaceOnUse"
+          height="21.4556"
           id="filter0_d_265_2047"
+          width="25.4863"
           x="0"
           y="1"
-          width="25.4863"
-          height="21.4556"
-          filterUnits="userSpaceOnUse"
-          colorInterpolationFilters="sRGB"
         >
           <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feColorMatrix
             in="SourceAlpha"
+            result="hardAlpha"
             type="matrix"
             values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-            result="hardAlpha"
           />
           <feOffset dy="2" />
           <feGaussianBlur stdDeviation="2" />
@@ -61,14 +61,14 @@ export function Gmail({ width = "26", height = "23" }: GmailProps) {
             values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0"
           />
           <feBlend
-            mode="normal"
             in2="BackgroundImageFix"
+            mode="normal"
             result="effect1_dropShadow_265_2047"
           />
           <feBlend
-            mode="normal"
             in="SourceGraphic"
             in2="effect1_dropShadow_265_2047"
+            mode="normal"
             result="shape"
           />
         </filter>

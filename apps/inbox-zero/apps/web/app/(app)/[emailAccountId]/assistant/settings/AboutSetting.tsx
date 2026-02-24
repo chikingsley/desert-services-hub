@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { AboutSection } from "@/app/(app)/[emailAccountId]/settings/AboutSectionForm";
 import { SettingCard } from "@/components/SettingCard";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,19 +12,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { AboutSection } from "@/app/(app)/[emailAccountId]/settings/AboutSectionForm";
 
 export function AboutSetting() {
   const [open, setOpen] = useState(false);
 
   return (
     <SettingCard
-      title="Personal instructions"
       description="Tell the AI about yourself and how you'd like it to handle your emails."
       right={
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog onOpenChange={setOpen} open={open}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
+            <Button size="sm" variant="outline">
               Edit
             </Button>
           </DialogTrigger>
@@ -40,6 +39,7 @@ export function AboutSetting() {
           </DialogContent>
         </Dialog>
       }
+      title="Personal instructions"
     />
   );
 }

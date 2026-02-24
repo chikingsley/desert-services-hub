@@ -1,6 +1,6 @@
+import { z } from "zod";
 import { findItem, getAllItems } from "@/packages/estimates/catalog/catalog";
 import type { CatalogItem } from "@/packages/estimates/catalog/types";
-import { z } from "zod";
 
 const stringOrNullSchema = z.union([z.string(), z.null()]);
 
@@ -23,14 +23,14 @@ export const lineItemSchema = z
 export type RawCatalogLineItem = z.infer<typeof lineItemSchema>;
 
 export interface NormalizedEstimateLineItem {
-  section_id?: string | null;
-  item_name: string;
   description: string;
+  is_excluded?: boolean;
+  item_name: string;
+  notes?: string | null;
   quantity: number;
+  section_id?: string | null;
   unit: string;
   unit_price: number;
-  notes?: string | null;
-  is_excluded?: boolean;
 }
 
 const catalogByName = new Map(

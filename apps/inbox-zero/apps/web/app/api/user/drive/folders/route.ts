@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
-import { withEmailAccount } from "@/utils/middleware";
 import { createDriveProviderWithRefresh } from "@/utils/drive/provider";
 import { SafeError } from "@/utils/error";
 import type { Logger } from "@/utils/logger";
+import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export type GetDriveFoldersResponse = Awaited<ReturnType<typeof getData>>;
 export type FolderItem = GetDriveFoldersResponse["availableFolders"][number] & {
@@ -92,7 +92,7 @@ async function getData({
     connectionErrors.length === driveConnections.length
   ) {
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 

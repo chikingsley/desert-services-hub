@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { isDefined } from "@/utils/types";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { Category } from "@/generated/prisma/client";
 import { formatCategoriesForPrompt } from "@/utils/ai/categorize-sender/format-categories";
 import { extractEmailAddress } from "@/utils/email";
-import { getModel } from "@/utils/llms/model";
 import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { isDefined } from "@/utils/types";
 
 export const REQUEST_MORE_INFORMATION_CATEGORY = "RequestMoreInformation";
 export const UNKNOWN_CATEGORY = "Other";
@@ -16,7 +16,7 @@ const categorizeSendersSchema = z.object({
       rationale: z.string().describe("Keep it short."),
       sender: z.string(),
       category: z.string(), // not using enum, because sometimes the ai creates new categories, which throws an error. we prefer to handle this ourselves
-    }),
+    })
   ),
 });
 
@@ -37,7 +37,9 @@ export async function aiCategorizeSenders({
     sender: string;
   }[]
 > {
-  if (senders.length === 0) return [];
+  if (senders.length === 0) {
+    return [];
+  }
 
   const system = `You are an AI assistant specializing in email management and organization.
 Your task is to categorize email accounts based on their names, email addresses, and emails they've sent us.
@@ -58,13 +60,13 @@ Provide accurate categorizations to help users efficiently manage their inbox.`;
             <email>
               <subject>${s.subject}</subject>
               <snippet>${s.snippet}</snippet>
-            </email>`,
+            </email>`
             )
             .join("")}
           </recent_emails>`
       : "<recent_emails>No emails available</recent_emails>"
   }
-</sender>`,
+</sender>`
     )
     .join("\n")}
 
@@ -103,7 +105,7 @@ ${formatCategoriesForPrompt(categories)}
 
   const matchedSenders = matchSendersWithFullEmail(
     aiResponse.object.senders,
-    senders.map((s) => s.emailAddress),
+    senders.map((s) => s.emailAddress)
   );
 
   // filter out any senders that don't have a valid category
@@ -127,7 +129,7 @@ ${formatCategoriesForPrompt(categories)}
 // NOTE: if there are two senders with the same email address (but different names), it will only return one of them
 function matchSendersWithFullEmail(
   aiResponseSenders: z.infer<typeof categorizeSendersSchema>["senders"],
-  originalSenders: string[],
+  originalSenders: string[]
 ) {
   const normalizedOriginalSenders: Record<string, string> = {};
   for (const sender of originalSenders) {
@@ -138,10 +140,12 @@ function matchSendersWithFullEmail(
     .map((r) => {
       const normalizedResponseSender = extractEmailAddress(r.sender);
       const sender = originalSenders.find(
-        (s) => normalizedOriginalSenders[s] === normalizedResponseSender,
+        (s) => normalizedOriginalSenders[s] === normalizedResponseSender
       );
 
-      if (!sender) return;
+      if (!sender) {
+        return;
+      }
 
       return { sender, category: r.category };
     })

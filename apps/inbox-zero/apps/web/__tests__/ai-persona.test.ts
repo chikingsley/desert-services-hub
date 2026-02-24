@@ -1,7 +1,7 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { aiAnalyzePersona } from "@/utils/ai/knowledge/persona";
-import type { EmailForLLM } from "@/utils/types";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { EmailForLLM } from "@/utils/types";
 
 const TIMEOUT = 30_000;
 
@@ -20,7 +20,7 @@ describe.runIf(isAiTest)(
     });
 
     function getEmailAccount(
-      overrides: Partial<EmailAccountWithAI> = {},
+      overrides: Partial<EmailAccountWithAI> = {}
     ): EmailAccountWithAI {
       return {
         id: "test-account-id",
@@ -139,7 +139,7 @@ describe.runIf(isAiTest)(
 
         console.debug(
           "Founder analysis result:\n",
-          JSON.stringify(result, null, 2),
+          JSON.stringify(result, null, 2)
         );
 
         expect(result).toBeDefined();
@@ -151,7 +151,7 @@ describe.runIf(isAiTest)(
         expect(result?.confidence).toMatch(/medium|high/);
         expect(result?.reasoning).toBeDefined();
       },
-      TIMEOUT,
+      TIMEOUT
     );
 
     test(
@@ -164,18 +164,18 @@ describe.runIf(isAiTest)(
 
         console.debug(
           "Software Engineer analysis result:\n",
-          JSON.stringify(result, null, 2),
+          JSON.stringify(result, null, 2)
         );
 
         expect(result).toBeDefined();
         expect(result?.persona).toMatch(
-          /Software Engineer|Developer|Engineer/i,
+          /Software Engineer|Developer|Engineer/i
         );
         expect(result?.positionLevel).toMatch(/mid|senior/);
         expect(result?.responsibilities).toBeInstanceOf(Array);
         expect(result?.confidence).toMatch(/medium|high/);
       },
-      TIMEOUT,
+      TIMEOUT
     );
 
     test(
@@ -188,7 +188,7 @@ describe.runIf(isAiTest)(
 
         console.debug(
           "Personal use analysis result:\n",
-          JSON.stringify(result, null, 2),
+          JSON.stringify(result, null, 2)
         );
 
         expect(result).toBeDefined();
@@ -196,7 +196,7 @@ describe.runIf(isAiTest)(
         expect(result?.confidence).toBeDefined();
         expect(result?.reasoning).toContain("personal");
       },
-      TIMEOUT,
+      TIMEOUT
     );
 
     test("handles empty email list", async () => {
@@ -218,14 +218,14 @@ describe.runIf(isAiTest)(
 
         console.debug(
           "Analysis with user context:\n",
-          JSON.stringify(result, null, 2),
+          JSON.stringify(result, null, 2)
         );
 
         expect(result).toBeDefined();
         expect(result?.industry.toLowerCase()).toContain("hr");
         expect(result?.confidence).toBe("high");
       },
-      TIMEOUT,
+      TIMEOUT
     );
 
     test(
@@ -251,15 +251,15 @@ describe.runIf(isAiTest)(
 
         console.debug(
           "Mixed role analysis result:\n",
-          JSON.stringify(result, null, 2),
+          JSON.stringify(result, null, 2)
         );
 
         expect(result).toBeDefined();
         expect(result?.reasoning).toBeDefined();
         // Should identify the dominant pattern or a hybrid role
       },
-      TIMEOUT,
+      TIMEOUT
     );
   },
-  30_000,
+  30_000
 );

@@ -23,7 +23,7 @@ function setRequiredTestEnv() {
   setEnvDefault("NODE_ENV", "test");
   setEnvDefault(
     "DATABASE_URL",
-    "postgresql://postgres:password@localhost:5432/inboxzero",
+    "postgresql://postgres:password@localhost:5432/inboxzero"
   );
   setEnvDefault("GOOGLE_CLIENT_ID", "test-google-client-id");
   setEnvDefault("GOOGLE_CLIENT_SECRET", "test-google-client-secret");

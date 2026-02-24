@@ -1,17 +1,11 @@
 import type { EditorEstimate } from "@lib/db/types";
 
 export interface ApiEstimateResponse {
-  id: string;
   base_number: string;
-  job_name: string;
-  job_address: string | null;
-  client_name: string | null;
-  estimator: string | null;
-  estimator_email: string | null;
   client_address: string | null;
   client_email: string | null;
+  client_name: string | null;
   client_phone: string | null;
-  updated_at: string;
   current_version?: {
     id: string;
     total: number;
@@ -34,6 +28,12 @@ export interface ApiEstimateResponse {
       sort_order: number;
     }>;
   };
+  estimator: string | null;
+  estimator_email: string | null;
+  id: string;
+  job_address: string | null;
+  job_name: string;
+  updated_at: string;
 }
 
 function getLineItemRateAndTotal(item: {

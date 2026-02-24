@@ -5,10 +5,10 @@ import { parseOAuthState } from "@/utils/oauth/state";
 
 interface ValidateCallbackParams {
   code: string | null;
-  receivedState: string | null;
-  storedState: string | undefined;
-  stateCookieName: string;
   logger: Logger;
+  receivedState: string | null;
+  stateCookieName: string;
+  storedState: string | undefined;
 }
 
 type ValidationResult =
@@ -32,7 +32,7 @@ export function validateOAuthCallback({
   const redirectUrl = new URL("/accounts", env.NEXT_PUBLIC_BASE_URL);
   const response = NextResponse.redirect(redirectUrl);
 
-  if (!storedState || !receivedState || storedState !== receivedState) {
+  if (!(storedState && receivedState) || storedState !== receivedState) {
     logger.warn("Invalid state during OAuth callback", {
       receivedState,
       hasStoredState: !!storedState,

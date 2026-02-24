@@ -1,10 +1,10 @@
-import { z } from "zod";
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
-import { withEmailAccount } from "@/utils/middleware";
+import { z } from "zod";
 import { createDriveProviderWithRefresh } from "@/utils/drive/provider";
 import { SafeError } from "@/utils/error";
 import type { Logger } from "@/utils/logger";
+import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 const querySchema = z.object({ driveConnectionId: z.string() });
 export type GetSubfoldersQuery = z.infer<typeof querySchema>;
@@ -50,11 +50,13 @@ async function getData({
     },
   });
 
-  if (!driveConnection) throw new SafeError("Drive connection not found");
+  if (!driveConnection) {
+    throw new SafeError("Drive connection not found");
+  }
 
   const provider = await createDriveProviderWithRefresh(
     driveConnection,
-    logger,
+    logger
   );
   const subfolders = await provider.listFolders(folderId);
 

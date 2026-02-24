@@ -1,14 +1,14 @@
 import { TagIcon } from "lucide-react";
-import type { CreateRuleBody } from "@/utils/actions/rule.validation";
-import { ActionType } from "@/generated/prisma/enums";
-import { CardBasic } from "@/components/ui/card";
 import {
-  ACTION_TYPE_TEXT_COLORS,
   ACTION_TYPE_ICONS,
+  ACTION_TYPE_TEXT_COLORS,
 } from "@/app/(app)/[emailAccountId]/assistant/constants";
 import { TooltipExplanation } from "@/components/TooltipExplanation";
-import { getEmailTerminology } from "@/utils/terminology";
+import { CardBasic } from "@/components/ui/card";
+import { ActionType } from "@/generated/prisma/enums";
 import type { EmailLabel } from "@/providers/EmailProvider";
+import type { CreateRuleBody } from "@/utils/actions/rule.validation";
+import { getEmailTerminology } from "@/utils/terminology";
 
 export function ActionSummaryCard({
   action,
@@ -73,8 +73,8 @@ export function ActionSummaryCard({
               </>
             )}
             <OptionalEmailFields
-              cc={action.cc?.value}
               bcc={action.bcc?.value}
+              cc={action.cc?.value}
             />
           </>
         );
@@ -97,8 +97,8 @@ export function ActionSummaryCard({
               />
             </div>
             <OptionalEmailFields
-              cc={action.cc?.value}
               bcc={action.bcc?.value}
+              cc={action.cc?.value}
             />
           </>
         );
@@ -127,8 +127,8 @@ export function ActionSummaryCard({
               </>
             )}
             <OptionalEmailFields
-              cc={action.cc?.value}
               bcc={action.bcc?.value}
+              cc={action.cc?.value}
             />
           </>
         );
@@ -143,8 +143,8 @@ export function ActionSummaryCard({
               </span>
             )}
             <OptionalEmailFields
-              cc={action.cc?.value}
               bcc={action.bcc?.value}
+              cc={action.cc?.value}
             />
           </>
         );
@@ -161,7 +161,7 @@ export function ActionSummaryCard({
               {action.content.value}
             </span>
           )}
-          <OptionalEmailFields cc={action.cc?.value} bcc={action.bcc?.value} />
+          <OptionalEmailFields bcc={action.bcc?.value} cc={action.cc?.value} />
         </>
       );
       break;
@@ -176,7 +176,7 @@ export function ActionSummaryCard({
               - "{action.subject.value}"
             </span>
           )}
-          <OptionalEmailFields cc={action.cc?.value} bcc={action.bcc?.value} />
+          <OptionalEmailFields bcc={action.bcc?.value} cc={action.cc?.value} />
         </>
       );
       break;
@@ -257,7 +257,9 @@ function OptionalEmailFields({
   cc?: string | null;
   bcc?: string | null;
 }) {
-  if (!cc && !bcc) return null;
+  if (!(cc || bcc)) {
+    return null;
+  }
 
   return (
     <div className="mt-3 flex flex-col gap-1">
@@ -268,15 +270,17 @@ function OptionalEmailFields({
 }
 
 function formatDelay(delayInMinutes: number | null | undefined): string {
-  if (!delayInMinutes) return "";
+  if (!delayInMinutes) {
+    return "";
+  }
 
   if (delayInMinutes < 60) {
     return ` after ${delayInMinutes} minute${delayInMinutes === 1 ? "" : "s"}`;
-  } else if (delayInMinutes < 1440) {
+  }
+  if (delayInMinutes < 1440) {
     const hours = Math.floor(delayInMinutes / 60);
     return ` after ${hours} hour${hours === 1 ? "" : "s"}`;
-  } else {
-    const days = Math.floor(delayInMinutes / 1440);
-    return ` after ${days} day${days === 1 ? "" : "s"}`;
   }
+  const days = Math.floor(delayInMinutes / 1440);
+  return ` after ${days} day${days === 1 ? "" : "s"}`;
 }

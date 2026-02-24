@@ -12,11 +12,11 @@ export function FormSection(props: {
 }) {
   return (
     <div
-      id={props.id}
       className={cn(
-        "content-container grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 py-16 md:grid-cols-3",
-        props.className,
+        "grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 py-16 content-container md:grid-cols-3",
+        props.className
       )}
+      id={props.id}
     >
       {props.children}
     </div>

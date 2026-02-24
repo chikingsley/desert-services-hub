@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getEmail, getEmailAccount } from "@/__tests__/helpers";
+import { stringifyEmail } from "@/utils/stringify-email";
 import {
+  getEmailListPrompt,
   getUserInfoPrompt,
   getUserRulesPrompt,
-  getEmailListPrompt,
 } from "./helpers";
-import { getEmailAccount, getEmail } from "@/__tests__/helpers";
-import { stringifyEmail } from "@/utils/stringify-email";
 
 vi.mock("@/utils/stringify-email", () => ({
   stringifyEmail: vi.fn(),
@@ -168,7 +168,7 @@ describe("getEmailListPrompt", () => {
     expect(result).toBe("<email>Stringified email content</email>");
     expect(mockStringifyEmail).toHaveBeenCalledWith(
       messages[0],
-      messageMaxLength,
+      messageMaxLength
     );
   });
 
@@ -183,18 +183,18 @@ describe("getEmailListPrompt", () => {
     const result = getEmailListPrompt({ messages, messageMaxLength });
 
     expect(result).toBe(
-      "<email>First email content</email>\n<email>Second email content</email>",
+      "<email>First email content</email>\n<email>Second email content</email>"
     );
     expect(mockStringifyEmail).toHaveBeenCalledTimes(2);
     expect(mockStringifyEmail).toHaveBeenNthCalledWith(
       1,
       messages[0],
-      messageMaxLength,
+      messageMaxLength
     );
     expect(mockStringifyEmail).toHaveBeenNthCalledWith(
       2,
       messages[1],
-      messageMaxLength,
+      messageMaxLength
     );
   });
 
@@ -231,7 +231,7 @@ describe("getEmailListPrompt", () => {
     const result = getEmailListPrompt({ messages, messageMaxLength });
 
     expect(result).toBe(
-      "<email>Email 1</email>\n<email>Email 2</email>\n<email>Email 3</email>",
+      "<email>Email 1</email>\n<email>Email 2</email>\n<email>Email 3</email>"
     );
     expect(mockStringifyEmail).toHaveBeenCalledTimes(3);
   });
@@ -259,24 +259,24 @@ describe("getEmailListPrompt", () => {
     });
 
     expect(result).toBe(
-      "<email>Email 3</email>\n<email>Email 4</email>\n<email>Email 5</email>",
+      "<email>Email 3</email>\n<email>Email 4</email>\n<email>Email 5</email>"
     );
     expect(mockStringifyEmail).toHaveBeenCalledTimes(3);
     // Verify it called with the last 3 messages (indices 2, 3, 4)
     expect(mockStringifyEmail).toHaveBeenNthCalledWith(
       1,
       messages[2],
-      messageMaxLength,
+      messageMaxLength
     );
     expect(mockStringifyEmail).toHaveBeenNthCalledWith(
       2,
       messages[3],
-      messageMaxLength,
+      messageMaxLength
     );
     expect(mockStringifyEmail).toHaveBeenNthCalledWith(
       3,
       messages[4],
-      messageMaxLength,
+      messageMaxLength
     );
   });
 
@@ -300,12 +300,12 @@ describe("getEmailListPrompt", () => {
     expect(mockStringifyEmail).toHaveBeenNthCalledWith(
       1,
       messages[0],
-      messageMaxLength,
+      messageMaxLength
     );
     expect(mockStringifyEmail).toHaveBeenNthCalledWith(
       2,
       messages[1],
-      messageMaxLength,
+      messageMaxLength
     );
   });
 
@@ -326,7 +326,7 @@ describe("getEmailListPrompt", () => {
     expect(mockStringifyEmail).toHaveBeenCalledTimes(1);
     expect(mockStringifyEmail).toHaveBeenCalledWith(
       messages[2],
-      messageMaxLength,
+      messageMaxLength
     );
   });
 });

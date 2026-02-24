@@ -1,17 +1,17 @@
 "use client";
 
-import { LoaderIcon, InfoIcon } from "lucide-react";
+import { InfoIcon, LoaderIcon } from "lucide-react";
 import { Tooltip } from "@/components/Tooltip";
 import { cn } from "@/utils";
 
 export type FilingStatus = "filing" | "pending" | "skipped" | "error" | "filed";
 
 interface FilingStatusCellProps {
-  status: FilingStatus;
-  skipReason?: string | null;
+  className?: string;
   error?: string | null;
   folderPath?: string | null;
-  className?: string;
+  skipReason?: string | null;
+  status: FilingStatus;
 }
 
 export function FilingStatusCell({
@@ -59,8 +59,8 @@ export function FilingStatusCell({
   return (
     <span
       className={cn(
-        "flex items-center text-muted-foreground truncate",
-        className,
+        "flex items-center truncate text-muted-foreground",
+        className
       )}
     >
       <span className="truncate">{displayPath}</span>

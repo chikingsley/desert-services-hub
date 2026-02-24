@@ -1,14 +1,14 @@
 import pRetry from "p-retry";
 import { createScopedLogger } from "@/utils/logger";
-import { sleep } from "@/utils/sleep";
 import { isFetchError } from "@/utils/retry/is-fetch-error";
+import { sleep } from "@/utils/sleep";
 
 const logger = createScopedLogger("gmail-retry");
 
 interface ErrorInfo {
-  status?: number;
-  reason?: string;
   errorMessage: string;
+  reason?: string;
+  status?: number;
 }
 
 /**
@@ -18,7 +18,7 @@ interface ErrorInfo {
  */
 export async function withGmailRetry<T>(
   operation: () => Promise<T>,
-  maxRetries = 5,
+  maxRetries = 5
 ): Promise<T> {
   return pRetry(operation, {
     retries: maxRetries,
@@ -51,7 +51,7 @@ export async function withGmailRetry<T>(
         isFailedPrecondition,
         error.attemptNumber,
         retryAfterHeader,
-        errorInfo.errorMessage,
+        errorInfo.errorMessage
       );
 
       logger.warn("Gmail error. Will retry", {
@@ -77,7 +77,7 @@ export async function withGmailRetry<T>(
  * Extracts error information from various error shapes
  */
 export function extractErrorInfo(
-  error: unknown,
+  error: unknown
 ): ErrorInfo & { code?: string } {
   const err = error as Record<string, unknown>;
   const cause = (err?.cause ?? err) as Record<string, unknown>;
@@ -145,7 +145,7 @@ export function isRetryableError(errorInfo: ErrorInfo & { code?: string }): {
     status === 429 ||
     (status === 403 &&
       ["rateLimitExceeded", "userRateLimitExceeded", "quotaExceeded"].includes(
-        String(reason),
+        String(reason)
       )) ||
     /(^|[\s-])rate limit exceeded/i.test(errorMessage) ||
     /quota exceeded/i.test(errorMessage);
@@ -157,7 +157,7 @@ export function isRetryableError(errorInfo: ErrorInfo & { code?: string }): {
     status === 503 ||
     status === 504 ||
     /500|502|503|504|internal error|server error|temporarily unavailable/i.test(
-      errorMessage,
+      errorMessage
     );
 
   const isFailedPrecondition =
@@ -186,7 +186,7 @@ export function calculateRetryDelay(
   isFailedPrecondition: boolean,
   attemptNumber: number,
   retryAfterHeader?: string,
-  errorMessage?: string,
+  errorMessage?: string
 ): number {
   // Try to parse retry time from error message
   const retryTime = parseRetryTime(errorMessage || "");

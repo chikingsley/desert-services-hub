@@ -1,5 +1,7 @@
 "use client";
 
+import { Copy } from "lucide-react";
+import { toastSuccess } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,8 +11,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Copy } from "lucide-react";
-import { toastSuccess } from "@/components/Toast";
 import { env } from "@/env";
 
 interface RequestAccessDialogProps {
@@ -65,32 +65,32 @@ export function RequestAccessDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <div className="text-sm font-medium">Email</div>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="font-medium text-sm">Email</div>
+            <div className="mt-1 flex items-center gap-2">
               <code className="flex-1 rounded bg-muted px-3 py-2 text-sm">
                 {env.NEXT_PUBLIC_SUPPORT_EMAIL}
               </code>
-              <Button size="sm" variant="outline" onClick={handleCopyEmail}>
+              <Button onClick={handleCopyEmail} size="sm" variant="outline">
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
           </div>
           <div>
-            <div className="text-sm font-medium">Message</div>
-            <div className="flex flex-col gap-2 mt-1">
+            <div className="font-medium text-sm">Message</div>
+            <div className="mt-1 flex flex-col gap-2">
               <div className="rounded bg-muted px-3 py-2 text-sm">
-                <div className="font-medium mb-2">Subject: {subject}</div>
+                <div className="mb-2 font-medium">Subject: {subject}</div>
                 <div className="whitespace-pre-wrap text-muted-foreground">
                   {messageBody}
                 </div>
               </div>
               <Button
+                className="self-end"
+                onClick={handleCopyMessage}
                 size="sm"
                 variant="outline"
-                onClick={handleCopyMessage}
-                className="self-end"
               >
-                <Copy className="h-4 w-4 mr-2" />
+                <Copy className="mr-2 h-4 w-4" />
                 Copy Message
               </Button>
             </div>

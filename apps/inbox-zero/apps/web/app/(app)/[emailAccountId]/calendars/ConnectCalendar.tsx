@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
+import { useState } from "react";
+import type { GetCalendarAuthUrlResponse } from "@/app/api/google/calendar/auth-url/route";
+import { toastError } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "@/providers/EmailAccountProvider";
-import { toastError } from "@/components/Toast";
-import { captureException } from "@/utils/error";
-import type { GetCalendarAuthUrlResponse } from "@/app/api/google/calendar/auth-url/route";
-import { fetchWithAccount } from "@/utils/fetch";
 import { CALENDAR_ONBOARDING_RETURN_COOKIE } from "@/utils/calendar/constants";
+import { captureException } from "@/utils/error";
+import { fetchWithAccount } from "@/utils/fetch";
 
 export function ConnectCalendar({
   onboardingReturnPath,
@@ -82,35 +82,35 @@ export function ConnectCalendar({
   };
 
   return (
-    <div className="flex gap-2 flex-wrap md:flex-nowrap">
+    <div className="flex flex-wrap gap-2 md:flex-nowrap">
       <Button
-        onClick={handleConnectGoogle}
+        className="flex w-full items-center gap-2 md:w-auto"
         disabled={isConnectingGoogle || isConnectingMicrosoft}
+        onClick={handleConnectGoogle}
         variant="outline"
-        className="flex items-center gap-2 w-full md:w-auto"
       >
         <Image
-          src="/images/google.svg"
           alt="Google"
-          width={16}
           height={16}
+          src="/images/google.svg"
           unoptimized
+          width={16}
         />
         {isConnectingGoogle ? "Connecting..." : "Add Google Calendar"}
       </Button>
 
       <Button
-        onClick={handleConnectMicrosoft}
+        className="flex w-full items-center gap-2 md:w-auto"
         disabled={isConnectingGoogle || isConnectingMicrosoft}
+        onClick={handleConnectMicrosoft}
         variant="outline"
-        className="flex items-center gap-2 w-full md:w-auto"
       >
         <Image
-          src="/images/microsoft.svg"
           alt="Microsoft"
-          width={16}
           height={16}
+          src="/images/microsoft.svg"
           unoptimized
+          width={16}
         />
         {isConnectingMicrosoft ? "Connecting..." : "Add Outlook Calendar"}
       </Button>

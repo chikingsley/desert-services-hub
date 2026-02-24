@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
 import { hasCronSecret, hasPostCronSecret } from "@/utils/cron";
-import { withError } from "@/utils/middleware";
 import { captureException } from "@/utils/error";
-import { hasAiAccess, getPremiumUserFilter } from "@/utils/premium";
-import { createManagedOutlookSubscription } from "@/utils/outlook/subscription-manager";
 import type { Logger } from "@/utils/logger";
+import { withError } from "@/utils/middleware";
+import { createManagedOutlookSubscription } from "@/utils/outlook/subscription-manager";
+import { getPremiumUserFilter, hasAiAccess } from "@/utils/premium";
+import prisma from "@/utils/prisma";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -13,7 +13,7 @@ export const maxDuration = 300;
 export const GET = withError("outlook/watch/all", async (request) => {
   if (!hasCronSecret(request)) {
     captureException(
-      new Error("Unauthorized cron request: api/outlook/watch/all"),
+      new Error("Unauthorized cron request: api/outlook/watch/all")
     );
     return new Response("Unauthorized", { status: 401 });
   }
@@ -24,7 +24,7 @@ export const GET = withError("outlook/watch/all", async (request) => {
 export const POST = withError("outlook/watch/all", async (request) => {
   if (!(await hasPostCronSecret(request))) {
     captureException(
-      new Error("Unauthorized cron request: api/outlook/watch/all"),
+      new Error("Unauthorized cron request: api/outlook/watch/all")
     );
     return new Response("Unauthorized", { status: 401 });
   }
@@ -74,7 +74,7 @@ async function watchAllEmails(logger: Logger) {
 
       const userHasAiAccess = hasAiAccess(
         emailAccount.user.premium?.tier || null,
-        emailAccount.user.aiApiKey,
+        emailAccount.user.aiApiKey
       );
 
       if (!userHasAiAccess) {
@@ -98,8 +98,10 @@ async function watchAllEmails(logger: Logger) {
       }
 
       if (
-        !emailAccount.account?.access_token ||
-        !emailAccount.account?.refresh_token
+        !(
+          emailAccount.account?.access_token &&
+          emailAccount.account?.refresh_token
+        )
       ) {
         logger.info("User has no access token or refresh token", {
           email: emailAccount.email,

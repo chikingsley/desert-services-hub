@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { createGenerateObject } from "@/utils/llms";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailForLLM, RuleWithActions } from "@/utils/types";
-import { getModel, type ModelType } from "@/utils/llms/model";
-import { getUserInfoPrompt, getEmailListPrompt } from "@/utils/ai/helpers";
-import type { ConversationStatus } from "@/utils/reply-tracker/conversation-status-config";
 import { SystemType } from "@/generated/prisma/enums";
+import { getEmailListPrompt, getUserInfoPrompt } from "@/utils/ai/helpers";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel, type ModelType } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { ConversationStatus } from "@/utils/reply-tracker/conversation-status-config";
 import { getRuleConfig } from "@/utils/rule/consts";
+import type { EmailForLLM, RuleWithActions } from "@/utils/types";
 
 export async function aiDetermineThreadStatus({
   emailAccount,
@@ -96,7 +96,9 @@ Respond with a JSON object with:
 
   // Only include custom preferences when user has edited the default instructions
   const customizedRules = conversationRules.filter((r) => {
-    if (!r.enabled || !r.instructions || !r.systemType) return false;
+    if (!(r.enabled && r.instructions && r.systemType)) {
+      return false;
+    }
     const defaultInstructions = getRuleConfig(r.systemType).instructions;
     return r.instructions !== defaultInstructions;
   });

@@ -1,9 +1,9 @@
 import {
-  DropdownMenuSubContent,
   DropdownMenuItem,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
-import type { EmailLabel } from "@/providers/EmailProvider";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import type { EmailLabel } from "@/providers/EmailProvider";
 import { getEmailTerminology } from "@/utils/terminology";
 
 export function LabelsSubMenu({

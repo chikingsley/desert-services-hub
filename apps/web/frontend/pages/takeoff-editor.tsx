@@ -48,11 +48,11 @@ import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 type SaveStatus = "saved" | "saving" | "unsaved";
 
 interface TakeoffData {
+  annotations: TakeoffAnnotation[];
   id: string;
   name: string;
-  pdf_url: string | null;
-  annotations: TakeoffAnnotation[];
   page_scales: Record<number, string>;
+  pdf_url: string | null;
   status: string;
 }
 

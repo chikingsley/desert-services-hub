@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  validateApiKey,
-  getUserFromApiKey,
-  validateApiKeyAndGetEmailProvider,
-} from "./api-auth";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import prisma from "@/utils/__mocks__/prisma";
 import { hashApiKey } from "@/utils/api-key";
 import { SafeError } from "@/utils/error";
 import { createScopedLogger } from "@/utils/logger";
 import type { RequestWithLogger } from "@/utils/middleware";
+import {
+  getUserFromApiKey,
+  validateApiKey,
+  validateApiKeyAndGetEmailProvider,
+} from "./api-auth";
 
 // Mock dependencies
 vi.mock("@/utils/prisma");
@@ -111,10 +111,10 @@ describe("api-auth", () => {
       const request = createMockRequest(null);
 
       await expect(validateApiKeyAndGetEmailProvider(request)).rejects.toThrow(
-        SafeError,
+        SafeError
       );
       await expect(validateApiKeyAndGetEmailProvider(request)).rejects.toThrow(
-        "Missing API key",
+        "Missing API key"
       );
     });
 
@@ -133,10 +133,10 @@ describe("api-auth", () => {
       } as MockApiKeyResult);
 
       await expect(validateApiKeyAndGetEmailProvider(request)).rejects.toThrow(
-        SafeError,
+        SafeError
       );
       await expect(validateApiKeyAndGetEmailProvider(request)).rejects.toThrow(
-        "Missing account",
+        "Missing account"
       );
     });
 
@@ -160,10 +160,10 @@ describe("api-auth", () => {
       } as MockApiKeyResult);
 
       await expect(validateApiKeyAndGetEmailProvider(request)).rejects.toThrow(
-        SafeError,
+        SafeError
       );
       await expect(validateApiKeyAndGetEmailProvider(request)).rejects.toThrow(
-        "Missing access token",
+        "Missing access token"
       );
     });
   });

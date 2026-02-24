@@ -9,7 +9,9 @@ export async function checkUserOwnsEmailAccount({
 }) {
   const session = await auth();
   const userId = session?.user.id;
-  if (!userId) throw new Error("Not authenticated");
+  if (!userId) {
+    throw new Error("Not authenticated");
+  }
 
   const emailAccount = await prisma.emailAccount.findUnique({
     where: { id: emailAccountId, userId },

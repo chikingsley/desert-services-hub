@@ -95,15 +95,15 @@ function normalizeCompany(
 // ============================================================================
 
 interface EnrichmentParams {
-  name?: string;
-  website?: string;
-  profile?: string; // LinkedIn URL
-  ticker?: string;
-  location?: string; // Hint for disambiguation
   locality?: string; // City
-  region?: string; // State
+  location?: string; // Hint for disambiguation
   minLikelihood?: number; // 1-10, default 3
+  name?: string;
+  profile?: string; // LinkedIn URL
+  region?: string; // State
   sandbox?: boolean;
+  ticker?: string;
+  website?: string;
 }
 
 /**
@@ -215,8 +215,8 @@ export function enrichCompanyByWebsite(
 
 interface SearchParams {
   query: string; // SQL query string
-  size?: number; // Max results (default 10)
   sandbox?: boolean;
+  size?: number; // Max results (default 10)
 }
 
 /**
@@ -330,10 +330,10 @@ export async function searchCompaniesElastic(params: {
 interface CleanParams {
   /** Company name - accepts messy input like "GOOGLE INC" or "amazon.com inc" */
   name?: string;
-  /** Company website/domain - e.g. "google.com" */
-  website?: string;
   /** LinkedIn company URL - e.g. "linkedin.com/company/google" */
   profile?: string;
+  /** Company website/domain - e.g. "google.com" */
+  website?: string;
 }
 
 /**

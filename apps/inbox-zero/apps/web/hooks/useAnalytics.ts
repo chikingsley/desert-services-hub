@@ -1,6 +1,6 @@
+import type { PostHog } from "posthog-js";
 import { usePostHog } from "posthog-js/react";
 import { useMemo } from "react";
-import type { PostHog } from "posthog-js";
 
 export function useOnboardingAnalytics(variant: "onboarding" | "welcome") {
   const posthog = usePostHog();

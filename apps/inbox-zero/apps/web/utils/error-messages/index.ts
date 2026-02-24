@@ -1,8 +1,8 @@
-import prisma from "@/utils/prisma";
-import type { Logger } from "@/utils/logger";
-import { captureException } from "@/utils/error";
 import { sendActionRequiredEmail } from "@inboxzero/resend";
 import { env } from "@/env";
+import { captureException } from "@/utils/error";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import { createUnsubscribeToken } from "@/utils/unsubscribe";
 
 // Used to store error messages for a user which we display in the UI
@@ -16,7 +16,7 @@ type ErrorMessageEntry = {
 type ErrorMessages = Record<string, ErrorMessageEntry>;
 
 export async function getUserErrorMessages(
-  userId: string,
+  userId: string
 ): Promise<ErrorMessages | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -29,7 +29,7 @@ export async function addUserErrorMessage(
   userId: string,
   errorType: (typeof ErrorType)[keyof typeof ErrorType],
   errorMessage: string,
-  logger: Logger,
+  logger: Logger
 ): Promise<void> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
@@ -86,7 +86,9 @@ export async function clearSpecificErrorMessages({
       select: { errorMessages: true },
     });
 
-    if (!user) return;
+    if (!user) {
+      return;
+    }
 
     const currentErrorMessages = (user.errorMessages as ErrorMessages) || {};
     const updatedErrorMessages = { ...currentErrorMessages };

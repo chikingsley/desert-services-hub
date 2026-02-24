@@ -1,6 +1,6 @@
+import crypto from "node:crypto";
 import { env } from "@/env";
 import type { IntegrationKey } from "@/utils/mcp/integrations";
-import crypto from "node:crypto";
 
 const OAUTH_STATE_DEFAULT_MAX_AGE_MS = 10 * 60 * 1000;
 
@@ -10,7 +10,7 @@ const OAUTH_STATE_DEFAULT_MAX_AGE_MS = 10 * 60 * 1000;
  * @returns Base64URL encoded state string
  */
 export function generateOAuthState<T extends Record<string, unknown>>(
-  data: T & { nonce?: string },
+  data: T & { nonce?: string }
 ): string {
   const stateObject = {
     ...data,
@@ -25,13 +25,13 @@ export function generateOAuthState<T extends Record<string, unknown>>(
  * @returns The decoded state object
  */
 export function parseOAuthState<T extends Record<string, unknown>>(
-  state: string,
+  state: string
 ): T & { nonce: string } {
   return JSON.parse(Buffer.from(state, "base64url").toString("utf8"));
 }
 
 export function generateSignedOAuthState<T extends Record<string, unknown>>(
-  data: T & { nonce?: string; issuedAt?: number },
+  data: T & { nonce?: string; issuedAt?: number }
 ): string {
   const payload = {
     ...data,
@@ -39,7 +39,7 @@ export function generateSignedOAuthState<T extends Record<string, unknown>>(
     issuedAt: data.issuedAt ?? Date.now(),
   };
   const payloadEncoded = Buffer.from(JSON.stringify(payload)).toString(
-    "base64url",
+    "base64url"
   );
   const signature = signOAuthStatePayload(payloadEncoded);
   return `${payloadEncoded}.${signature}`;
@@ -47,11 +47,11 @@ export function generateSignedOAuthState<T extends Record<string, unknown>>(
 
 export function parseSignedOAuthState<T extends Record<string, unknown>>(
   state: string,
-  options?: { maxAgeMs?: number },
+  options?: { maxAgeMs?: number }
 ): T & { nonce: string; issuedAt: number } {
   const [payloadEncoded, signature] = state.split(".");
 
-  if (!payloadEncoded || !signature) {
+  if (!(payloadEncoded && signature)) {
     throw new Error("Invalid signed OAuth state format");
   }
 
@@ -68,7 +68,7 @@ export function parseSignedOAuthState<T extends Record<string, unknown>>(
   }
 
   const payload = JSON.parse(
-    Buffer.from(payloadEncoded, "base64url").toString("utf8"),
+    Buffer.from(payloadEncoded, "base64url").toString("utf8")
   ) as T & { nonce?: unknown; issuedAt?: unknown };
 
   if (typeof payload.nonce !== "string" || payload.nonce.length < 8) {

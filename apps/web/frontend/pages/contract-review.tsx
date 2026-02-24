@@ -25,29 +25,29 @@ import { Button } from "@/apps/web/frontend/components/ui/button";
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 interface Entity {
-  class: string;
-  text: string;
   attributes: {
     severity?: "critical" | "warning" | "info";
     recommended_action?: string;
   };
-  start: number | null;
+  class: string;
   end: number | null;
+  start: number | null;
+  text: string;
 }
 
 interface ReviewDoc {
-  id: number;
-  file_name: string | null;
-  document_type: string | null;
-  project_id: number | null;
-  project_name: string | null;
-  entity_count: number;
   critical_count: number;
-  warning_count: number;
+  document_type: string | null;
+  entities: Entity[];
+  entity_count: number;
+  file_name: string | null;
+  id: number;
   info_count: number;
   model: string | null;
-  entities: Entity[];
+  project_id: number | null;
+  project_name: string | null;
   updated_at: string;
+  warning_count: number;
 }
 
 interface ReviewApiResponse {

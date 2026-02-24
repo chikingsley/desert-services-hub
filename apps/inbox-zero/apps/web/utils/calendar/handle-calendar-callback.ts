@@ -1,26 +1,26 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
 import type { Logger } from "@/utils/logger";
-import type { CalendarOAuthProvider } from "./oauth-types";
-import {
-  validateOAuthCallback,
-  buildCalendarRedirectUrl,
-  checkExistingConnection,
-  createCalendarConnection,
-} from "./oauth-callback-helpers";
 import {
   RedirectError,
-  redirectWithMessage,
   redirectWithError,
+  redirectWithMessage,
 } from "@/utils/oauth/redirect";
 import { verifyEmailAccountAccess } from "@/utils/oauth/verify";
 import {
   acquireOAuthCodeLock,
+  clearOAuthCode,
   getOAuthCodeResult,
   setOAuthCodeResult,
-  clearOAuthCode,
 } from "@/utils/redis/oauth-code";
 import { CALENDAR_STATE_COOKIE_NAME } from "./constants";
+import {
+  buildCalendarRedirectUrl,
+  checkExistingConnection,
+  createCalendarConnection,
+  validateOAuthCallback,
+} from "./oauth-callback-helpers";
+import type { CalendarOAuthProvider } from "./oauth-types";
 
 /**
  * Unified handler for calendar OAuth callbacks
@@ -28,7 +28,7 @@ import { CALENDAR_STATE_COOKIE_NAME } from "./constants";
 export async function handleCalendarCallback(
   request: NextRequest,
   provider: CalendarOAuthProvider,
-  logger: Logger,
+  logger: Logger
 ): Promise<NextResponse> {
   let redirectHeaders = new Headers();
 
@@ -36,7 +36,7 @@ export async function handleCalendarCallback(
     // Step 1: Validate OAuth callback parameters
     const { code, response, calendarState } = await validateOAuthCallback(
       request,
-      logger,
+      logger
     );
     redirectHeaders = response.headers;
 
@@ -52,7 +52,7 @@ export async function handleCalendarCallback(
       return redirectWithMessage(
         cachedRedirectUrl,
         cachedResult.params.message || "calendar_connected",
-        redirectHeaders,
+        redirectHeaders
       );
     }
 
@@ -64,7 +64,7 @@ export async function handleCalendarCallback(
       return redirectWithMessage(
         lockRedirectUrl,
         "processing",
-        redirectHeaders,
+        redirectHeaders
       );
     }
 
@@ -78,7 +78,7 @@ export async function handleCalendarCallback(
       emailAccountId,
       logger,
       finalRedirectUrl,
-      response.headers,
+      response.headers
     );
 
     // Step 5: Exchange code for tokens and get email
@@ -89,7 +89,7 @@ export async function handleCalendarCallback(
     const existingConnection = await checkExistingConnection(
       emailAccountId,
       provider.name,
-      email,
+      email
     );
 
     if (existingConnection) {
@@ -103,7 +103,7 @@ export async function handleCalendarCallback(
       return redirectWithMessage(
         finalRedirectUrl,
         "calendar_already_connected",
-        redirectHeaders,
+        redirectHeaders
       );
     }
 
@@ -123,7 +123,7 @@ export async function handleCalendarCallback(
       accessToken,
       refreshToken,
       emailAccountId,
-      expiresAt,
+      expiresAt
     );
 
     logger.info("Calendar connected successfully", {
@@ -139,7 +139,7 @@ export async function handleCalendarCallback(
     return redirectWithMessage(
       finalRedirectUrl,
       "calendar_connected",
-      redirectHeaders,
+      redirectHeaders
     );
   } catch (error) {
     // Clear the OAuth code lock on error
@@ -159,7 +159,7 @@ export async function handleCalendarCallback(
       return redirectWithError(
         error.redirectUrl,
         "connection_failed",
-        error.responseHeaders,
+        error.responseHeaders
       );
     }
 
@@ -171,7 +171,7 @@ export async function handleCalendarCallback(
     return redirectWithError(
       errorRedirectUrl,
       "connection_failed",
-      redirectHeaders,
+      redirectHeaders
     );
   }
 }

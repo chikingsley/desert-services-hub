@@ -1,24 +1,24 @@
 import { convertToModelMessages, type UIMessage } from "ai";
-import { z } from "zod";
-import { withEmailAccount } from "@/utils/middleware";
-import { getEmailAccountWithAi } from "@/utils/user/get";
 import { NextResponse } from "next/server";
-import { aiProcessAssistantChat } from "@/utils/ai/assistant/chat";
-import type { Logger } from "@/utils/logger";
-import prisma from "@/utils/prisma";
-import type { Prisma } from "@/generated/prisma/client";
-import { convertToUIMessages } from "@/components/assistant-chat/helpers";
-import { captureException } from "@/utils/error";
+import { z } from "zod";
 import { messageContextSchema } from "@/app/api/chat/validation";
+import { convertToUIMessages } from "@/components/assistant-chat/helpers";
+import type { Prisma } from "@/generated/prisma/client";
+import { aiProcessAssistantChat } from "@/utils/ai/assistant/chat";
 import {
-  shouldCompact,
   compactMessages,
   extractMemories,
   RECENT_MESSAGES_TO_KEEP,
+  shouldCompact,
 } from "@/utils/ai/assistant/compact";
-import { getModel } from "@/utils/llms/model";
 import { getInboxStatsForChatContext } from "@/utils/ai/assistant/get-inbox-stats-for-chat-context";
 import { formatUtcDate } from "@/utils/date";
+import { captureException } from "@/utils/error";
+import { getModel } from "@/utils/llms/model";
+import type { Logger } from "@/utils/logger";
+import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
+import { getEmailAccountWithAi } from "@/utils/user/get";
 
 export const maxDuration = 120;
 
@@ -42,7 +42,9 @@ export const POST = withEmailAccount("chat", async (request) => {
 
   const user = await getEmailAccountWithAi({ emailAccountId });
 
-  if (!user) return NextResponse.json({ error: "Not authenticated" });
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" });
+  }
 
   const inboxStatsPromise = getInboxStatsForChatContext({
     emailAccountId,
@@ -53,7 +55,9 @@ export const POST = withEmailAccount("chat", async (request) => {
   const json = await request.json();
   const { data, error } = assistantInputSchema.safeParse(json);
 
-  if (error) return NextResponse.json({ error: error.errors }, { status: 400 });
+  if (error) {
+    return NextResponse.json({ error: error.errors }, { status: 400 });
+  }
 
   const chat =
     (await getChatWithCompactions(data.id)) ||
@@ -66,14 +70,14 @@ export const POST = withEmailAccount("chat", async (request) => {
   if (!chat) {
     return NextResponse.json(
       { error: "Failed to get or create chat" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 
   if (chat.emailAccountId !== emailAccountId) {
     return NextResponse.json(
       { error: "You are not authorized to access this chat" },
-      { status: 403 },
+      { status: 403 }
     );
   }
 
@@ -90,7 +94,7 @@ export const POST = withEmailAccount("chat", async (request) => {
 
   const messagesForModel = latestCompaction
     ? chat.messages.filter(
-        (m) => m.createdAt >= latestCompaction.compactedBeforeCreatedAt,
+        (m) => m.createdAt >= latestCompaction.compactedBeforeCreatedAt
       )
     : chat.messages;
 
@@ -132,7 +136,7 @@ export const POST = withEmailAccount("chat", async (request) => {
         // so we keep RECENT_MESSAGES_TO_KEEP from the existing set.
         const keepFromIndex = Math.max(
           0,
-          messagesForModel.length - RECENT_MESSAGES_TO_KEEP,
+          messagesForModel.length - RECENT_MESSAGES_TO_KEEP
         );
         const compactedBeforeCreatedAt =
           messagesForModel[keepFromIndex]?.createdAt ?? new Date();
@@ -179,7 +183,7 @@ export const POST = withEmailAccount("chat", async (request) => {
         "Chat compaction failed, continuing with full history",
         {
           error: compactionError,
-        },
+        }
       );
     }
   }
@@ -223,7 +227,7 @@ export const POST = withEmailAccount("chat", async (request) => {
     request.logger.error("Error in assistant chat", { error });
     return NextResponse.json(
       { error: "Error in assistant chat" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 });
@@ -270,7 +274,7 @@ async function saveChatMessage(message: Prisma.ChatMessageCreateInput) {
 async function saveChatMessages(
   messages: UIMessage[],
   chatId: string,
-  logger: Logger,
+  logger: Logger
 ) {
   try {
     return prisma.chatMessage.createMany({

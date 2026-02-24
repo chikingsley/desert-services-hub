@@ -2,42 +2,42 @@ import { createUserContent, GoogleGenAI } from "@google/genai";
 import type { LatLng } from "./types";
 
 export interface GeminiDocumentClueOptions {
-  enabled: boolean;
-  model: string;
-  maxDocs: number;
-  maxDocBytes: number;
   container?: string;
+  enabled: boolean;
+  maxDocBytes: number;
+  maxDocs: number;
+  model: string;
 }
 
 export interface GeminiDocumentClueResult {
-  coordinates: LatLng[];
   apnCandidates: string[];
-  docsTried: number;
-  docsProcessed: number;
+  coordinates: LatLng[];
   debug: string[];
+  docsProcessed: number;
+  docsTried: number;
 }
 
 interface DocumentRow {
-  id: number;
-  fileName: string | null;
-  filePath: string | null;
+  attachmentId: number | null;
   documentType: string | null;
   emailId: number | null;
-  attachmentId: number | null;
+  fileName: string | null;
+  filePath: string | null;
+  id: number;
 }
 
 interface GeminiExtraction {
   apn_candidates?: string[];
-  coordinates?: Array<{ lat?: number; lng?: number; context?: string | null }>;
   apn_coordinate_pairs?: Array<{
     apn?: string;
     lat?: number;
     lng?: number;
     context?: string | null;
   }>;
+  coordinates?: Array<{ lat?: number; lng?: number; context?: string | null }>;
   disturbed_acres?: number | null;
-  site_address?: string | null;
   notes?: string[];
+  site_address?: string | null;
 }
 
 const DEFAULT_CONTAINER = "supabase_db_desert-services-hub";

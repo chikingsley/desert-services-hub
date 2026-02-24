@@ -1,19 +1,19 @@
-import { NextResponse, after } from "next/server";
 import { headers } from "next/headers";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
-import { withError } from "@/utils/middleware";
-import prisma from "@/utils/prisma";
-import type { Logger } from "@/utils/logger";
-import type { ParsedMessage } from "@/utils/types";
-import { aiDetectRecurringPattern } from "@/utils/ai/choose-rule/ai-detect-recurring-pattern";
-import { isValidInternalApiKey } from "@/utils/internal-api";
-import { extractEmailAddress } from "@/utils/email";
-import { getEmailForLLM } from "@/utils/get-email-from-message";
-import { saveLearnedPattern } from "@/utils/rule/learned-patterns";
 import { GroupItemSource } from "@/generated/prisma/enums";
-import { checkSenderRuleHistory } from "@/utils/rule/check-sender-rule-history";
+import { aiDetectRecurringPattern } from "@/utils/ai/choose-rule/ai-detect-recurring-pattern";
+import { extractEmailAddress } from "@/utils/email";
 import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
+import { getEmailForLLM } from "@/utils/get-email-from-message";
+import { isValidInternalApiKey } from "@/utils/internal-api";
+import type { Logger } from "@/utils/logger";
+import { withError } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
+import { checkSenderRuleHistory } from "@/utils/rule/check-sender-rule-history";
+import { saveLearnedPattern } from "@/utils/rule/learned-patterns";
+import type { ParsedMessage } from "@/utils/types";
 
 export const maxDuration = 60;
 
@@ -49,7 +49,7 @@ export const POST = withError(
     // return immediately and process in background
     after(() => process({ emailAccountId, from, logger }));
     return NextResponse.json({ processing: true });
-  },
+  }
 );
 
 /**
@@ -134,7 +134,7 @@ async function process({
     }
 
     const allMessages = threadsWithMessages.flatMap(
-      (thread) => thread.messages,
+      (thread) => thread.messages
     );
 
     const senderHistory = await checkSenderRuleHistory({
@@ -179,7 +179,7 @@ async function process({
       // Verify the AI matched the same rule as the historical data
       if (patternResult.matchedRule === senderHistory.consistentRuleName) {
         const matchedRule = emailAccount.rules.find(
-          (rule) => rule.name === patternResult.matchedRule,
+          (rule) => rule.name === patternResult.matchedRule
         );
 
         if (matchedRule) {
@@ -212,7 +212,7 @@ async function process({
 
     return NextResponse.json(
       { error: "Failed to detect pattern" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -257,7 +257,7 @@ async function getThreadsFromSender(
   provider: EmailProvider,
   sender: string,
   maxResults: number,
-  logger: Logger,
+  logger: Logger
 ): Promise<{
   threads: Array<{
     threadId: string;
@@ -288,14 +288,18 @@ async function getThreadsFromSender(
   // Check for conversation threads
   for (const thread of threads) {
     const messages = await provider.getThreadMessages(thread.id);
-    if (messages.length === 0) continue;
+    if (messages.length === 0) {
+      continue;
+    }
 
     // Check if this is a conversation (multiple senders)
     const otherSenders = new Set<string>();
 
     for (const message of messages) {
       const senderEmail = extractEmailAddress(message.headers.from);
-      if (!senderEmail) continue;
+      if (!senderEmail) {
+        continue;
+      }
 
       const normalizedSender = senderEmail.toLowerCase();
       if (normalizedSender !== normalizedFrom) {

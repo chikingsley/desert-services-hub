@@ -1,14 +1,14 @@
 import { memo } from "react";
-import { convertLabelsToDisplay } from "@/utils/mention";
-import { SectionHeader } from "@/components/Typography";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
 import { getExamplePrompts } from "@/app/(app)/[emailAccountId]/assistant/examples";
-import { getActionIcon } from "@/utils/action-display";
-import { getActionColor } from "@/components/PlanBadge";
-import { ActionType } from "@/generated/prisma/enums";
 import type { Color } from "@/components/Badge";
+import { getActionColor } from "@/components/PlanBadge";
+import { SectionHeader } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ActionType } from "@/generated/prisma/enums";
 import { cn } from "@/utils";
+import { getActionIcon } from "@/utils/action-display";
+import { convertLabelsToDisplay } from "@/utils/mention";
 
 function PureExamples({
   examples,
@@ -36,17 +36,17 @@ function PureExamples({
 
             return (
               <Button
-                key={example}
-                variant="outline"
-                onClick={() => onSelect(example)}
                 className="h-auto w-full justify-start text-wrap py-2 text-left"
+                key={example}
+                onClick={() => onSelect(example)}
+                variant="outline"
               >
                 <div className="flex w-full items-start gap-2">
                   {Icon && (
                     <Icon
                       className={cn(
-                        "h-4 w-4 mt-0.5 flex-shrink-0",
-                        getIconColorClass(color),
+                        "mt-0.5 h-4 w-4 flex-shrink-0",
+                        getIconColorClass(color)
                       )}
                     />
                   )}
@@ -86,17 +86,17 @@ function PureExamplesGrid({
 
         return (
           <Button
-            key={example}
-            variant="outline"
-            onClick={() => onSelect(example)}
             className="h-auto w-full justify-start text-wrap py-2 text-left"
+            key={example}
+            onClick={() => onSelect(example)}
+            variant="outline"
           >
             <div className="flex w-full items-start gap-2">
               {Icon && (
                 <Icon
                   className={cn(
-                    "h-4 w-4 mt-0.5 flex-shrink-0",
-                    getIconColorClass(color),
+                    "mt-0.5 h-4 w-4 flex-shrink-0",
+                    getIconColorClass(color)
                   )}
                 />
               )}

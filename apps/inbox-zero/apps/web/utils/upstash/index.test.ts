@@ -76,7 +76,7 @@ describe("publishToQstash", () => {
     expect(mockPublishJSON).toHaveBeenCalledWith(
       expect.objectContaining({
         url: "http://web:3000/api/process",
-      }),
+      })
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -91,7 +91,7 @@ describe("publishToQstash", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://web:3000/api/process",
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({ method: "POST" })
     );
   });
 
@@ -107,7 +107,7 @@ describe("publishToQstash", () => {
     expect(mockPublishJSON).toHaveBeenCalledWith(
       expect.objectContaining({
         url: "http://web:3000/api/process",
-      }),
+      })
     );
   });
 });
@@ -152,11 +152,11 @@ describe("bulkPublishToQstash", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://web:3000/api/task-one",
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({ method: "POST" })
     );
     expect(fetchMock).toHaveBeenCalledWith(
       "http://web:3000/api/task-two",
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({ method: "POST" })
     );
   });
 });
@@ -178,7 +178,7 @@ describe("publishToQstashQueue", () => {
     });
 
     expect(mockQueueEnqueueJSON).toHaveBeenCalledWith(
-      expect.objectContaining({ url: "http://web:3000/api/task" }),
+      expect.objectContaining({ url: "http://web:3000/api/task" })
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -199,7 +199,7 @@ describe("publishToQstashQueue", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://web:3000/api/task",
-      expect.objectContaining({ method: "POST" }),
+      expect.objectContaining({ method: "POST" })
     );
   });
 });

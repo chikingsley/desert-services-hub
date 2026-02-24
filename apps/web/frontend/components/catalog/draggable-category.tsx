@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
 interface DraggableCategoryProps {
   categoryId: string;
   categoryName: string;
-  index: number;
   children: React.ReactNode;
+  index: number;
   onDrop: (sourceIndex: number, targetIndex: number) => void;
 }
 

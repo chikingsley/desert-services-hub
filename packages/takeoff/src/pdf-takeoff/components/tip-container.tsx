@@ -21,15 +21,14 @@ const VERTICAL_PADDING = 5;
  */
 export interface TipContainerProps {
   /**
-   * The PDFViewer instance containing the HighlightLayer
-   */
-  viewer: PDFViewer;
-
-  /**
    * Reference to the callback to update the tip's position.This should be
    * managed by the PdfHighlighter.
    */
   updateTipPositionRef: RefObject<(() => void) | null>;
+  /**
+   * The PDFViewer instance containing the HighlightLayer
+   */
+  viewer: PDFViewer;
 }
 
 /**

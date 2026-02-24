@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getModel } from "./model";
-import { Provider } from "./config";
-import { env } from "@/env";
-import type { UserAIFields } from "./types";
 import { createAzure } from "@ai-sdk/azure";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { env } from "@/env";
+import { Provider } from "./config";
+import { getModel } from "./model";
+import type { UserAIFields } from "./types";
 
 // Mock AI provider imports
 vi.mock("@ai-sdk/openai", () => ({
@@ -223,7 +223,7 @@ describe("Models", () => {
       const result = getModel(userAi);
       expect(result.provider).toBe(Provider.BEDROCK);
       expect(result.modelName).toBe(
-        "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+        "us.anthropic.claude-3-7-sonnet-20250219-v1:0"
       );
       expect(result.model).toBeDefined();
     });
@@ -260,7 +260,7 @@ describe("Models", () => {
       vi.mocked(env).AZURE_RESOURCE_NAME = undefined;
 
       expect(() => getModel(userAi)).toThrow(
-        "AZURE_RESOURCE_NAME environment variable is not set",
+        "AZURE_RESOURCE_NAME environment variable is not set"
       );
     });
 
@@ -345,7 +345,7 @@ describe("Models", () => {
       expect(result.provider).toBe(Provider.AZURE);
       expect(result.modelName).toBe("gpt-5-mini");
       expect(createAzure).toHaveBeenCalledWith(
-        expect.objectContaining({ apiKey: "test-azure-key" }),
+        expect.objectContaining({ apiKey: "test-azure-key" })
       );
     });
 

@@ -5,7 +5,9 @@ import {
 } from "@/utils/parse/unsubscribe";
 
 export function findUnsubscribeLink(html?: string | null) {
-  if (!html) return;
+  if (!html) {
+    return;
+  }
 
   const $ = cheerio.load(html);
   let unsubscribeLink: string | undefined;
@@ -30,7 +32,9 @@ export function findUnsubscribeLink(html?: string | null) {
     }
   });
 
-  if (unsubscribeLink) return unsubscribeLink;
+  if (unsubscribeLink) {
+    return unsubscribeLink;
+  }
 
   // if we didn't find a link yet, try looking for lines that include the word unsubscribe
   // with a link in the same line.

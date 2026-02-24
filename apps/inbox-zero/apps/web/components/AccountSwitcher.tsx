@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
-import { useParams, usePathname, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { ChevronsUpDown, Plus } from "lucide-react";
+import Link from "next/link";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
+import { useCallback } from "react";
+import type { GetEmailAccountsResponse } from "@/app/api/user/email-accounts/route";
+import { ProfileImage } from "@/components/ProfileImage";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,14 +21,14 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAccounts } from "@/hooks/useAccounts";
-import type { GetEmailAccountsResponse } from "@/app/api/user/email-accounts/route";
 import { useAccount } from "@/providers/EmailAccountProvider";
 import { setLastEmailAccountAction } from "@/utils/actions/email-account-cookie";
-import { ProfileImage } from "@/components/ProfileImage";
 export function AccountSwitcher() {
   const { data: accountsData } = useAccounts();
 
-  if (!accountsData) return null;
+  if (!accountsData) {
+    return null;
+  }
 
   return <AccountSwitcherInternal emailAccounts={accountsData.emailAccounts} />;
 }
@@ -50,7 +52,9 @@ export function AccountSwitcherInternal({
 
   const getHref = useCallback(
     (emailAccountId: string) => {
-      if (!activeEmailAccountId) return `/${emailAccountId}/setup`;
+      if (!activeEmailAccountId) {
+        return `/${emailAccountId}/setup`;
+      }
 
       const basePath = pathname.split("?")[0] || "/";
       const tab = searchParams.get("tab");
@@ -66,7 +70,7 @@ export function AccountSwitcherInternal({
 
       return `${basePath}${tab ? `?tab=${tab}` : ""}`;
     },
-    [pathname, activeEmailAccountId, params.emailAccountId, searchParams],
+    [pathname, activeEmailAccountId, params.emailAccountId, searchParams]
   );
 
   const handleSelect = useCallback(
@@ -81,10 +85,12 @@ export function AccountSwitcherInternal({
       // I tried to fix with resetting the SWR cache but it didn't seem to work. This is much more reliable anyway.
       window.location.href = getHref(emailAccountId);
     },
-    [getHref],
+    [getHref]
   );
 
-  if (isLoading) return null;
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <SidebarMenu>
@@ -92,9 +98,9 @@ export function AccountSwitcherInternal({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
-              size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               sidebarName="left-sidebar"
+              size="lg"
             >
               {activeEmailAccount ? (
                 <>
@@ -111,7 +117,7 @@ export function AccountSwitcherInternal({
                       {activeEmailAccount.name || activeEmailAccount.email}
                     </span>
                     {activeEmailAccount.name && (
-                      <span className="truncate text-xs text-muted-foreground">
+                      <span className="truncate text-muted-foreground text-xs">
                         {activeEmailAccount.email}
                       </span>
                     )}
@@ -124,18 +130,18 @@ export function AccountSwitcherInternal({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-80 rounded-lg"
             align="start"
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-80 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
+            <DropdownMenuLabel className="text-muted-foreground text-xs">
               Accounts
             </DropdownMenuLabel>
             {emailAccounts.map((emailAccount) => (
               <DropdownMenuItem
-                key={emailAccount.id}
                 className="gap-2 p-2"
+                key={emailAccount.id}
                 onSelect={() => {
                   handleSelect(emailAccount.id);
                 }}
@@ -149,7 +155,7 @@ export function AccountSwitcherInternal({
                     {emailAccount.name || emailAccount.email}
                   </span>
                   {emailAccount.name && (
-                    <span className="truncate text-xs text-muted-foreground">
+                    <span className="truncate text-muted-foreground text-xs">
                       {emailAccount.email}
                     </span>
                   )}

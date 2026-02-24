@@ -1,9 +1,9 @@
 import { Suspense } from "react";
-import { PermissionsCheck } from "@/app/(app)/[emailAccountId]/PermissionsCheck";
-import { GmailProvider } from "@/providers/GmailProvider";
 import { ColdEmailContent } from "@/app/(app)/[emailAccountId]/cold-email-blocker/ColdEmailContent";
-import { PageWrapper } from "@/components/PageWrapper";
+import { PermissionsCheck } from "@/app/(app)/[emailAccountId]/PermissionsCheck";
 import { PageHeader } from "@/components/PageHeader";
+import { PageWrapper } from "@/components/PageWrapper";
+import { GmailProvider } from "@/providers/GmailProvider";
 
 export default function ColdEmailBlockerPage() {
   return (

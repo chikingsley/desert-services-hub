@@ -1,13 +1,13 @@
 import { XIcon } from "lucide-react";
 import { ActionButtons } from "@/components/ActionButtons";
-import { Tooltip } from "@/components/Tooltip";
-import type { Thread } from "@/components/email-list/types";
-import { Button } from "@/components/ui/button";
-import { PlanExplanation } from "@/components/email-list/PlanExplanation";
-import { useIsInAiQueue } from "@/store/ai-queue";
 import { EmailThread } from "@/components/email-list/EmailThread";
-import { useAccount } from "@/providers/EmailAccountProvider";
+import { PlanExplanation } from "@/components/email-list/PlanExplanation";
+import type { Thread } from "@/components/email-list/types";
+import { Tooltip } from "@/components/Tooltip";
 import { MutedText } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { useIsInAiQueue } from "@/store/ai-queue";
 
 export function EmailPanel({
   row,
@@ -32,12 +32,12 @@ export function EmailPanel({
   const plan = row.plan;
 
   return (
-    <div className="flex h-full flex-col overflow-y-hidden border-l border-border">
-      <div className="sticky border-b border-border p-4 md:flex md:items-center md:justify-between">
+    <div className="flex h-full flex-col overflow-y-hidden border-border border-l">
+      <div className="sticky border-border border-b p-4 md:flex md:items-center md:justify-between">
         <div className="md:w-0 md:flex-1">
           <h1
+            className="font-medium text-foreground text-lg"
             id="message-heading"
-            className="text-lg font-medium text-foreground"
           >
             {lastMessage.headers.subject}
           </h1>
@@ -46,27 +46,27 @@ export function EmailPanel({
           </MutedText>
         </div>
 
-        <div className="mt-3 flex items-center md:ml-2 md:mt-0">
+        <div className="mt-3 flex items-center md:mt-0 md:ml-2">
           <ActionButtons
-            threadId={row.id!}
             isPlanning={isPlanning}
-            onPlanAiAction={() => onPlanAiAction(row)}
             onArchive={() => {
               onArchive(row);
               advanceToAdjacentThread();
             }}
+            onPlanAiAction={() => onPlanAiAction(row)}
             refetch={refetch}
+            threadId={row.id!}
           />
           <Tooltip content="Close">
             <Button onClick={close} size="icon" variant="ghost">
               <span className="sr-only">Close</span>
-              <XIcon className="h-4 w-4" aria-hidden="true" />
+              <XIcon aria-hidden="true" className="h-4 w-4" />
             </Button>
           </Tooltip>
         </div>
       </div>
       <div className="flex flex-1 flex-col overflow-y-auto">
-        {plan?.rule && <PlanExplanation thread={row} provider={provider} />}
+        {plan?.rule && <PlanExplanation provider={provider} thread={row} />}
         <EmailThread
           key={row.id}
           messages={row.messages}

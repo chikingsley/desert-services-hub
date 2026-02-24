@@ -1,20 +1,20 @@
-import { ActionType } from "@/generated/prisma/enums";
-import { getEmailTerminology } from "@/utils/terminology";
 import {
   ArchiveIcon,
   BellIcon,
+  FileTextIcon,
   FolderInputIcon,
   ForwardIcon,
-  ReplyIcon,
-  ShieldCheckIcon,
-  SendIcon,
-  TagIcon,
-  WebhookIcon,
-  FileTextIcon,
   MailIcon,
   NewspaperIcon,
+  ReplyIcon,
+  SendIcon,
+  ShieldCheckIcon,
+  TagIcon,
+  WebhookIcon,
 } from "lucide-react";
+import { ActionType } from "@/generated/prisma/enums";
 import { truncate } from "@/utils/string";
+import { getEmailTerminology } from "@/utils/terminology";
 
 export function getActionDisplay(
   action: {
@@ -26,7 +26,7 @@ export function getActionDisplay(
     to?: string | null;
   },
   provider: string,
-  labels: Array<{ id: string; name: string }>,
+  labels: Array<{ id: string; name: string }>
 ): string {
   const terminology = getEmailTerminology(provider);
   switch (action.type) {

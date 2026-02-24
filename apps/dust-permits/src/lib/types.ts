@@ -22,37 +22,37 @@ export type VersionType = "new" | "renewal" | "revision";
 
 // A single permit application (one version of a permit)
 export interface PermitApplication {
-  id: string;
-  applicationNumber: string; // D0XXXXXX (e.g., D0062940)
-  permitNumber?: string; // Assigned when active, shared across versions
-  version: number; // 1, 2, 3...
-  versionType: VersionType;
-  projectName: string;
-  company: string;
   address?: string; // Project address + city
-  requestStatus: RequestStatus;
-  permitStatus: PermitStatus;
-  submittedAt?: string; // When application was submitted
-  effectiveAt?: string; // When permit became active/effective
-  expiresAt?: string; // When permit expires
-  createdAt: string;
-  updatedAt: string;
-  error?: string;
+  applicationNumber: string; // D0XXXXXX (e.g., D0062940)
+  company: string;
   // Billing fields
   cost?: number; // Permit application cost in dollars
+  createdAt: string;
+  effectiveAt?: string; // When permit became active/effective
+  error?: string;
+  expiresAt?: string; // When permit expires
+  id: string;
   invoiceNumber?: string; // Invoice reference number
+  permitNumber?: string; // Assigned when active, shared across versions
+  permitStatus: PermitStatus;
+  projectName: string;
+  requestStatus: RequestStatus;
+  submittedAt?: string; // When application was submitted
+  updatedAt: string;
+  version: number; // 1, 2, 3...
+  versionType: VersionType;
 }
 
 // A permit with all its versions (for hierarchical display)
 export interface Permit {
-  permitNumber: string;
-  company: string;
-  projectName: string;
   address?: string; // Project address for display
+  company: string;
   // The active/current version
   current: PermitApplication;
   // Previous versions (superseded)
   history: PermitApplication[];
+  permitNumber: string;
+  projectName: string;
 }
 
 export type DisplayStatusVariant =

@@ -1,4 +1,4 @@
-import type { KnownBlock, Block } from "@slack/types";
+import type { Block, KnownBlock } from "@slack/types";
 
 export type DocumentFiledBlocksParams = {
   filename: string;

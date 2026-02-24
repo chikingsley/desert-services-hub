@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getMessagesBatch } from "./message";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getBatch } from "@/utils/gmail/batch";
+import { getMessagesBatch } from "./message";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/utils/gmail/batch");

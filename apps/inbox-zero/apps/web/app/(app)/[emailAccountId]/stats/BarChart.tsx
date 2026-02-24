@@ -1,27 +1,27 @@
 import {
+  Bar,
+  CartesianGrid,
+  BarChart as RechartsBarChart,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
 } from "@/components/ui/chart";
-import {
-  Bar,
-  BarChart as RechartsBarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 interface BarChartProps {
-  data: { [key: string]: string | number }[];
+  activeCharts?: string[];
   config: ChartConfig;
+  data: { [key: string]: string | number }[];
   dataKeys?: string[];
-  xAxisKey?: string;
-  xAxisFormatter?: (value: string) => string;
-  yAxisFormatter?: (value: number) => string;
+  period?: "day" | "week" | "month" | "year";
   tooltipLabelFormatter?: (value: string | number) => string;
   tooltipValueFormatter?: (value: number) => string;
-  activeCharts?: string[];
-  period?: "day" | "week" | "month" | "year";
+  xAxisFormatter?: (value: string) => string;
+  xAxisKey?: string;
+  yAxisFormatter?: (value: number) => string;
 }
 
 export function BarChart({
@@ -69,7 +69,7 @@ export function BarChart({
   const keys = dataKeys || Object.keys(config);
 
   return (
-    <ChartContainer config={config} className="aspect-auto h-[250px] w-full">
+    <ChartContainer className="aspect-auto h-[250px] w-full" config={config}>
       <RechartsBarChart
         accessibilityLayer
         data={data}
@@ -78,11 +78,11 @@ export function BarChart({
         <defs>
           {keys.map((key) => (
             <linearGradient
-              key={key}
               id={`${key}Gradient`}
+              key={key}
               x1="0"
-              y1="0"
               x2="0"
+              y1="0"
               y2="1"
             >
               <stop
@@ -100,22 +100,24 @@ export function BarChart({
         </defs>
         <CartesianGrid vertical={false} />
         <XAxis
-          dataKey={xAxisKey}
-          tickLine={false}
           axisLine={false}
-          tickMargin={8}
+          dataKey={xAxisKey}
           minTickGap={32}
           tickFormatter={formatter}
+          tickLine={false}
+          tickMargin={8}
         />
         <YAxis
-          tickLine={false}
           axisLine={false}
-          tickMargin={8}
           tickFormatter={yAxisFormatter}
+          tickLine={false}
+          tickMargin={8}
         />
         <ChartTooltip
           content={({ active, payload }) => {
-            if (!active || !payload?.length) return null;
+            if (!(active && payload?.length)) {
+              return null;
+            }
             const data = payload[0];
             const xValue = data.payload[xAxisKey];
 
@@ -150,8 +152,8 @@ export function BarChart({
                 <p className="mb-2 font-medium">{label}</p>
                 {payload.map((entry) => (
                   <div
-                    key={entry.dataKey}
                     className="flex items-center gap-2 py-0.5"
+                    key={entry.dataKey}
                   >
                     <span
                       className="h-2.5 w-2.5 rounded-full"
@@ -176,14 +178,14 @@ export function BarChart({
         />
         {keys.map((key) => (
           <Bar
-            key={key}
+            animationBegin={0}
+            animationDuration={750}
+            color={config[key].color}
             dataKey={key}
             fill={`url(#${key}Gradient)`}
-            color={config[key].color}
-            radius={[4, 4, 0, 0]}
-            animationDuration={750}
-            animationBegin={0}
             hide={activeCharts ? !activeCharts.includes(key) : false}
+            key={key}
+            radius={[4, 4, 0, 0]}
           />
         ))}
       </RechartsBarChart>

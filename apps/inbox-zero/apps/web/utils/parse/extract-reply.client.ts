@@ -18,7 +18,7 @@ export function extractEmailReply(html: string): {
 
     // Find the first gmail_quote container
     const quoteContainer = doc.querySelector(
-      ".gmail_quote_container, .gmail_quote",
+      ".gmail_quote_container, .gmail_quote"
     );
 
     if (quoteContainer) {

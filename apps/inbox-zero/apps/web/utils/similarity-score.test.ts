@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { calculateSimilarity } from "./similarity-score";
 
 vi.mock("server-only", () => ({}));
@@ -33,7 +33,7 @@ describe("calculateSimilarity - basic tests", () => {
   it("should return partial score for similar texts", () => {
     const score = calculateSimilarity(
       "This is the first sentence.",
-      "This is the second sentence.",
+      "This is the second sentence."
     );
     expect(score).toBeGreaterThan(0.5);
     expect(score).toBeLessThan(1.0);
@@ -42,7 +42,7 @@ describe("calculateSimilarity - basic tests", () => {
   it("should handle special characters", () => {
     const score = calculateSimilarity(
       "Text with $pecial chars!",
-      "text with $pecial chars!",
+      "text with $pecial chars!"
     );
     expect(score).toBe(1.0);
   });
@@ -88,7 +88,7 @@ Bob`;
   it("should detect small word changes", () => {
     const score = calculateSimilarity(
       "I will review this tomorrow",
-      "I will review this today",
+      "I will review this today"
     );
     // Should be similar but not identical
     expect(score).toBeGreaterThan(0.7);
@@ -114,7 +114,7 @@ describe("calculateSimilarity - integration tests with ParsedMessage", () => {
 
   const createParsedMessage = (
     textPlain: string,
-    bodyContentType?: "html" | "text",
+    bodyContentType?: "html" | "text"
   ) => ({
     id: "msg-123",
     threadId: "thread-456",
@@ -141,7 +141,7 @@ describe("calculateSimilarity - integration tests with ParsedMessage", () => {
       const storedContent = "Hello, this is a test draft";
       const outlookMessage = createParsedMessage(
         '<html><body><div dir="ltr">Hello, this is a test draft</div></body></html>',
-        "html",
+        "html"
       );
 
       const score = realCalculateSimilarity(storedContent, outlookMessage);
@@ -153,7 +153,7 @@ describe("calculateSimilarity - integration tests with ParsedMessage", () => {
         'Hello, this is a test draft\n\nDrafted by <a href="http://localhost:3000/?ref=ABC">Inbox Zero</a>.';
       const outlookMessage = createParsedMessage(
         '<html><body><div dir="ltr">Hello, this is a test draft<br><br>Drafted by <a href="http://localhost:3000/?ref=ABC">Inbox Zero</a>.</div></body></html>',
-        "html",
+        "html"
       );
 
       const score = realCalculateSimilarity(storedContent, outlookMessage);
@@ -165,7 +165,7 @@ describe("calculateSimilarity - integration tests with ParsedMessage", () => {
       const outlookMessage = createParsedMessage(
         `<html><head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body><div dir="ltr">Thanks for the update!</div><br><div class="gmail_quote gmail_quote_container"><div dir="ltr" class="gmail_attr">On Tue, 11 Nov 2025 at 2:18, John wrote:<br></div><blockquote class="gmail_quote" style="margin:0px 0px 0px 0.8ex; border-left:1px solid rgb(204,204,204); padding-left:1ex"><div dir="ltr">Previous message</div></blockquote></div></body></html>`,
-        "html",
+        "html"
       );
 
       const score = realCalculateSimilarity(storedContent, outlookMessage);
@@ -180,7 +180,7 @@ describe("calculateSimilarity - integration tests with ParsedMessage", () => {
         `Thanks for reaching out! I'll get back to you.
 
 On Mon, Jan 1, 2024 at 10:00 AM Sender <sender@example.com> wrote:
-> Original message content here`,
+> Original message content here`
       );
 
       const score = realCalculateSimilarity(storedContent, gmailMessage);
@@ -206,21 +206,21 @@ On Mon, Jan 1, 2024 at 10:00 AM Sender <sender@example.com> wrote:
       { emoji: "👍", hex: "&#x1F44D;", name: "thumbs up" },
       { emoji: "💡", hex: "&#x1F4A1;", name: "light bulb" },
       { emoji: "📧", hex: "&#x1F4E7;", name: "email" },
-    ])(
-      "should return 1.0 when stored content has HTML entity $name ($hex) and Gmail has actual emoji",
-      ({ emoji, hex }) => {
-        const storedContent = `hey, 10am works for me! see you then ${hex}`;
-        const gmailMessage = createParsedMessage(
-          `hey, 10am works for me! see you then ${emoji}
+    ])("should return 1.0 when stored content has HTML entity $name ($hex) and Gmail has actual emoji", ({
+      emoji,
+      hex,
+    }) => {
+      const storedContent = `hey, 10am works for me! see you then ${hex}`;
+      const gmailMessage = createParsedMessage(
+        `hey, 10am works for me! see you then ${emoji}
 
 On Tue, 27 Jan 2026 at 2:59, Test User <test@example.com> wrote:
-> Previous message`,
-        );
+> Previous message`
+      );
 
-        const score = realCalculateSimilarity(storedContent, gmailMessage);
-        expect(score).toBe(1.0);
-      },
-    );
+      const score = realCalculateSimilarity(storedContent, gmailMessage);
+      expect(score).toBe(1.0);
+    });
 
     it.each([
       { emoji: "👋", decimal: "128075", name: "waving hand" },
@@ -233,21 +233,21 @@ On Tue, 27 Jan 2026 at 2:59, Test User <test@example.com> wrote:
       { emoji: "👍", decimal: "128077", name: "thumbs up" },
       { emoji: "💡", decimal: "128161", name: "light bulb" },
       { emoji: "📧", decimal: "128231", name: "email" },
-    ])(
-      "should decode decimal HTML entity for $name (&#$decimal;) to $emoji",
-      ({ emoji, decimal }) => {
-        const storedContent = `Hello &#${decimal}; world`;
-        const gmailMessage = createParsedMessage(`Hello ${emoji} world`);
+    ])("should decode decimal HTML entity for $name (&#$decimal;) to $emoji", ({
+      emoji,
+      decimal,
+    }) => {
+      const storedContent = `Hello &#${decimal}; world`;
+      const gmailMessage = createParsedMessage(`Hello ${emoji} world`);
 
-        const score = realCalculateSimilarity(storedContent, gmailMessage);
-        expect(score).toBe(1.0);
-      },
-    );
+      const score = realCalculateSimilarity(storedContent, gmailMessage);
+      expect(score).toBe(1.0);
+    });
 
     it("should not throw on invalid code points and leave them unchanged", () => {
       const storedContent = "Hello &#1114112; and &#xFFFFFFFF; world";
       const gmailMessage = createParsedMessage(
-        "Hello &#1114112; and &#xFFFFFFFF; world",
+        "Hello &#1114112; and &#xFFFFFFFF; world"
       );
 
       const score = realCalculateSimilarity(storedContent, gmailMessage);
@@ -271,7 +271,7 @@ Thanks for your email. I'll review this and get back to you shortly.
 Best regards
 
 On Mon, Jan 1, 2024 at 9:00 AM <someone@example.com> wrote:
-> Their original question`,
+> Their original question`
       );
 
       const score = realCalculateSimilarity(originalDraft, sentMessage);

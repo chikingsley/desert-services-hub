@@ -8,29 +8,29 @@
 import { db } from "@lib/db/client";
 
 interface EntityRow {
-  class: string;
-  text: string;
   attributes: {
     severity?: "critical" | "warning" | "info";
     recommended_action?: string;
   };
-  start: number | null;
+  class: string;
   end: number | null;
+  start: number | null;
+  text: string;
 }
 
 interface ReviewDocRow {
-  id: number;
-  file_name: string | null;
-  document_type: string | null;
-  project_id: number | null;
-  project_name: string | null;
-  entity_count: number;
   critical_count: number;
-  warning_count: number;
+  document_type: string | null;
+  entities: string; // JSON string from Postgres
+  entity_count: number;
+  file_name: string | null;
+  id: number;
   info_count: number;
   model: string | null;
-  entities: string; // JSON string from Postgres
+  project_id: number | null;
+  project_name: string | null;
   updated_at: string;
+  warning_count: number;
 }
 
 const listReviewDocs = db.query<ReviewDocRow>(`

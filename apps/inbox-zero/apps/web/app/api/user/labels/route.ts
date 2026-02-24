@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
 import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export type UserLabelsResponse = Awaited<ReturnType<typeof getLabels>>;
 

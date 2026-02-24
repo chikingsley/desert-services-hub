@@ -1,23 +1,23 @@
+import {
+  BellIcon,
+  CalendarIcon,
+  MailIcon,
+  MegaphoneIcon,
+  NewspaperIcon,
+  ReceiptIcon,
+  UsersIcon,
+} from "lucide-react";
 import type { IconCircleColor } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
+import { SystemType } from "@/generated/prisma/enums";
 import type { CategoryAction } from "@/utils/actions/rule.validation";
 import {
   getCategoryAction,
   getRuleConfig,
   getRuleLabel,
 } from "@/utils/rule/consts";
-import { SystemType } from "@/generated/prisma/enums";
-import {
-  MailIcon,
-  NewspaperIcon,
-  MegaphoneIcon,
-  CalendarIcon,
-  ReceiptIcon,
-  BellIcon,
-  UsersIcon,
-} from "lucide-react";
 
 export const categoryConfig = (
-  provider: string,
+  provider: string
 ): {
   key: SystemType;
   label: string;

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { toastError, toastSuccess } from "@/components/Toast";
 import { ArchiveIcon, RotateCcwIcon, TagsIcon } from "lucide-react";
-import { SetupDialog } from "@/components/SetupCard";
-import { Button } from "@/components/ui/button";
-import { bulkCategorizeSendersAction } from "@/utils/actions/categorize";
-import { useAccount } from "@/providers/EmailAccountProvider";
+import { useCallback, useState } from "react";
 import { useCategorizeProgress } from "@/app/(app)/[emailAccountId]/smart-categories/CategorizeProgress";
+import { SetupDialog } from "@/components/SetupCard";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { bulkCategorizeSendersAction } from "@/utils/actions/categorize";
 
 const features = [
   {
@@ -72,15 +72,15 @@ export function AutoCategorizationSetup({
 
   return (
     <SetupDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      imageSrc="/images/illustrations/working-vacation.svg"
-      imageAlt="Bulk Archive"
-      title="Bulk Archive"
       description="Archive thousands of emails in a few clicks."
       features={features}
+      imageAlt="Bulk Archive"
+      imageSrc="/images/illustrations/working-vacation.svg"
+      onOpenChange={onOpenChange}
+      open={open}
+      title="Bulk Archive"
     >
-      <Button onClick={enableFeature} loading={isEnabling}>
+      <Button loading={isEnabling} onClick={enableFeature}>
         Get Started
       </Button>
     </SetupDialog>

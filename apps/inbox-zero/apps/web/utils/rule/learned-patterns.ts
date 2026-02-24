@@ -1,6 +1,6 @@
-import prisma from "@/utils/prisma";
+import { type GroupItemSource, GroupItemType } from "@/generated/prisma/enums";
 import type { Logger } from "@/utils/logger";
-import { GroupItemType, type GroupItemSource } from "@/generated/prisma/enums";
+import prisma from "@/utils/prisma";
 import { isDuplicateError } from "@/utils/prisma-helpers";
 
 /**
@@ -114,7 +114,7 @@ export async function saveLearnedPatterns({
     groupId = await getOrCreateGroupForRule({
       emailAccountId,
       ruleId: rule.id,
-      ruleName: ruleName,
+      ruleName,
       existingGroupId: rule.groupId,
       logger,
     });
@@ -137,13 +137,13 @@ export async function saveLearnedPatterns({
           },
         },
         update: {
-          exclude: pattern.exclude || false,
+          exclude: pattern.exclude,
         },
         create: {
           groupId,
           type: pattern.type,
           value: pattern.value,
-          exclude: pattern.exclude || false,
+          exclude: pattern.exclude,
         },
       });
     } catch (error) {
@@ -179,7 +179,9 @@ async function getOrCreateGroupForRule({
   existingGroupId: string | null;
   logger: Logger;
 }): Promise<string> {
-  if (existingGroupId) return existingGroupId;
+  if (existingGroupId) {
+    return existingGroupId;
+  }
 
   // Try to create the group
   try {
@@ -192,7 +194,9 @@ async function getOrCreateGroupForRule({
     });
     return newGroup.id;
   } catch (error) {
-    if (!isDuplicateError(error)) throw error;
+    if (!isDuplicateError(error)) {
+      throw error;
+    }
   }
 
   // Handle duplicate: check if rule was concurrently updated with a group
@@ -200,7 +204,9 @@ async function getOrCreateGroupForRule({
     where: { id: ruleId },
     select: { groupId: true },
   });
-  if (updatedRule?.groupId) return updatedRule.groupId;
+  if (updatedRule?.groupId) {
+    return updatedRule.groupId;
+  }
 
   // Check if a group with the same name exists
   const existingGroup = await prisma.group.findUnique({
@@ -219,7 +225,7 @@ async function getOrCreateGroupForRule({
             ruleId,
             groupId: existingGroup.id,
             error,
-          },
+          }
         );
       });
     return existingGroup.id;

@@ -14,8 +14,8 @@
  *   const result = await enrichProvider("DX", "roll-off dumpster");
  */
 
-import { read, searchJson } from "@/packages/enrichment/jina/client";
 import { GoogleGenAI } from "@google/genai";
+import { read, searchJson } from "@/packages/enrichment/jina/client";
 
 const { GEMINI_API_KEY } = process.env;
 
@@ -24,28 +24,28 @@ const { GEMINI_API_KEY } = process.env;
 // ============================================================================
 
 export interface CompanyInfo {
-  name: string;
-  fullName: string | null;
-  website: string | null;
-  phone: string | null;
-  email: string | null;
   address: string | null;
   city: string | null;
-  state: string | null;
-  zip: string | null;
   description: string | null;
-  services: string[] | null;
+  email: string | null;
+  fullName: string | null;
   industry: string | null;
+  name: string;
+  phone: string | null;
+  services: string[] | null;
+  state: string | null;
+  website: string | null;
+  zip: string | null;
 }
 
 export interface EnrichResult {
-  success: boolean;
-  query: string;
   company: CompanyInfo | null;
   confidence: number;
-  sources: string[];
-  timeMs: number;
   error?: string;
+  query: string;
+  sources: string[];
+  success: boolean;
+  timeMs: number;
 }
 
 // ============================================================================
@@ -119,19 +119,19 @@ Extract the most likely matching company. If there are multiple matches, pick th
 }
 
 interface GeminiExtractionResult {
-  name?: string;
-  fullName?: string;
-  website?: string;
-  phone?: string;
-  email?: string;
   address?: string;
   city?: string;
-  state?: string;
-  zip?: string;
-  description?: string;
-  services?: string[];
-  industry?: string;
   confidence?: number;
+  description?: string;
+  email?: string;
+  fullName?: string;
+  industry?: string;
+  name?: string;
+  phone?: string;
+  services?: string[];
+  state?: string;
+  website?: string;
+  zip?: string;
 }
 
 function mapToCompanyInfo(

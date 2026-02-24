@@ -7,11 +7,11 @@ import type { ValidationHelpers } from "./helpers";
 
 export interface CategoryAState {
   hasAnswer: boolean;
+  hasOther: boolean;
+  hasOtherDescription: boolean;
   hasSoilCrust: boolean;
   hasTfv: boolean;
   hasVegetative: boolean;
-  hasOther: boolean;
-  hasOtherDescription: boolean;
 }
 
 export function getCategoryAState(

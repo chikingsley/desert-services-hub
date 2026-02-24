@@ -1,9 +1,9 @@
 import { createMCPClient } from "@ai-sdk/mcp";
-import { getIntegration } from "@/utils/mcp/integrations";
-import prisma from "@/utils/prisma";
 import { createScopedLogger } from "@/utils/logger";
+import { getIntegration } from "@/utils/mcp/integrations";
 import { getAuthToken } from "@/utils/mcp/oauth";
 import { createMcpTransport } from "@/utils/mcp/transport";
+import prisma from "@/utils/prisma";
 
 type MCPClient = Awaited<ReturnType<typeof createMCPClient>>;
 
@@ -13,7 +13,7 @@ export type MCPToolsResult = {
 };
 
 export async function createMcpToolsForAgent(
-  emailAccountId: string,
+  emailAccountId: string
 ): Promise<MCPToolsResult> {
   const logger = createScopedLogger("ai-mcp-tools").with({ emailAccountId });
 
@@ -98,8 +98,8 @@ export async function createMcpToolsForAgent(
         const enabledToolNames = connection.tools.map((tool) => tool.name);
         const filteredTools = Object.fromEntries(
           Object.entries(mcpTools).filter(([toolName]) =>
-            enabledToolNames.includes(toolName),
-          ),
+            enabledToolNames.includes(toolName)
+          )
         );
 
         toolsByIntegration.set(integration.id, {
@@ -127,7 +127,7 @@ export async function createMcpToolsForAgent(
             } catch (error) {
               logger.warn("Error closing MCP client", { error });
             }
-          }),
+          })
         );
       },
     };
@@ -150,7 +150,7 @@ function mergeToolsWithConflictResolution(
   toolsByIntegration: Map<
     string,
     { integrationName: string; tools: Record<string, unknown> }
-  >,
+  >
 ): Record<string, unknown> {
   const allTools: Record<string, unknown> = {};
   const toolNameToIntegrations = new Map<string, string[]>();

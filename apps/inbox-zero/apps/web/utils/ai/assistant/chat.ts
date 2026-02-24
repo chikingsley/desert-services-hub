@@ -1,26 +1,15 @@
 import type { JSONValue, ModelMessage } from "ai";
-import type { Logger } from "@/utils/logger";
 import type { MessageContext } from "@/app/api/chat/validation";
-import { stringifyEmail } from "@/utils/stringify-email";
-import { getEmailForLLM } from "@/utils/get-email-from-message";
-import type { ParsedMessage } from "@/utils/types";
 import { env } from "@/env";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { toolCallAgentStream } from "@/utils/llms";
-import { isConversationStatusType } from "@/utils/reply-tracker/conversation-status-config";
-import prisma from "@/utils/prisma";
 import type { SystemType } from "@/generated/prisma/enums";
-import {
-  addToKnowledgeBaseTool,
-  createRuleTool,
-  getLearnedPatternsTool,
-  getUserRulesAndSettingsTool,
-  type RuleReadState,
-  updateAboutTool,
-  updateLearnedPatternsTool,
-  updateRuleActionsTool,
-  updateRuleConditionsTool,
-} from "./chat-rule-tools";
+import { getEmailForLLM } from "@/utils/get-email-from-message";
+import { toolCallAgentStream } from "@/utils/llms";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import { isConversationStatusType } from "@/utils/reply-tracker/conversation-status-config";
+import { stringifyEmail } from "@/utils/stringify-email";
+import type { ParsedMessage } from "@/utils/types";
 import {
   forwardEmailTool,
   getAccountOverviewTool,
@@ -32,9 +21,31 @@ import {
   updateInboxFeaturesTool,
 } from "./chat-inbox-tools";
 import { saveMemoryTool, searchMemoriesTool } from "./chat-memory-tools";
+import {
+  addToKnowledgeBaseTool,
+  createRuleTool,
+  getLearnedPatternsTool,
+  getUserRulesAndSettingsTool,
+  type RuleReadState,
+  updateAboutTool,
+  updateLearnedPatternsTool,
+  updateRuleActionsTool,
+  updateRuleConditionsTool,
+} from "./chat-rule-tools";
 
 export const maxDuration = 120;
 
+export type {
+  ForwardEmailTool,
+  GetAccountOverviewTool,
+  ManageInboxTool,
+  ReadEmailTool,
+  ReplyEmailTool,
+  SearchInboxTool,
+  SendEmailTool,
+  UpdateInboxFeaturesTool,
+} from "./chat-inbox-tools";
+export type { SaveMemoryTool, SearchMemoriesTool } from "./chat-memory-tools";
 export type {
   AddToKnowledgeBaseTool,
   CreateRuleTool,
@@ -48,17 +59,6 @@ export type {
   UpdateRuleConditionsOutput,
   UpdateRuleConditionsTool,
 } from "./chat-rule-tools";
-export type {
-  ForwardEmailTool,
-  GetAccountOverviewTool,
-  ManageInboxTool,
-  ReadEmailTool,
-  ReplyEmailTool,
-  SearchInboxTool,
-  SendEmailTool,
-  UpdateInboxFeaturesTool,
-} from "./chat-inbox-tools";
-export type { SaveMemoryTool, SearchMemoriesTool } from "./chat-memory-tools";
 
 export async function aiProcessAssistantChat({
   messages,
@@ -233,7 +233,7 @@ Behavior anchors (minimal examples):
   const hasConversationStatusInResults =
     context?.type === "fix-rule"
       ? context.results.some((result) =>
-          isConversationStatusType(result.systemType),
+          isConversationStatusType(result.systemType)
         )
       : false;
 
@@ -266,7 +266,7 @@ Behavior anchors (minimal examples):
                 getEmailForLLM(context.message as ParsedMessage, {
                   maxLength: 3000,
                 }),
-                3000,
+                3000
               )}\n</email>\n\n` +
               `Rules that were applied:\n${context.results
                 .map((r) => `- ${r.ruleName ?? "None"}: ${r.reason}`)
@@ -307,7 +307,7 @@ Behavior anchors (minimal examples):
 
   const messagesWithCacheControl = addAnthropicCacheControl(
     cacheOptimizedMessages,
-    stablePrefixEndIndex,
+    stablePrefixEndIndex
   );
 
   const result = toolCallAgentStream({
@@ -387,7 +387,7 @@ function buildCacheOptimizedMessages({
 
 function addAnthropicCacheControl(
   messages: ModelMessage[],
-  stablePrefixEndIndex: number,
+  stablePrefixEndIndex: number
 ) {
   const cacheControl: Record<string, JSONValue> = {
     cacheControl: { type: "ephemeral" },
@@ -399,7 +399,9 @@ function addAnthropicCacheControl(
   ]);
 
   return messages.map((message, index) => {
-    if (!cacheBreakpointIndexes.has(index)) return message;
+    if (!cacheBreakpointIndexes.has(index)) {
+      return message;
+    }
 
     const messageWithOptions = message as ModelMessage & {
       providerOptions?: Record<string, Record<string, JSONValue>>;
@@ -422,7 +424,9 @@ function addAnthropicCacheControl(
 }
 
 function getChatProviderOptionsForCaching({ chatId }: { chatId?: string }) {
-  if (!chatId) return undefined;
+  if (!chatId) {
+    return undefined;
+  }
 
   return {
     openai: {
@@ -433,11 +437,11 @@ function getChatProviderOptionsForCaching({ chatId }: { chatId?: string }) {
 
 function isConversationStatusFixContext(
   context: MessageContext,
-  expectedSystemType: SystemType | null,
+  expectedSystemType: SystemType | null
 ) {
   return (
     context.results.some((result) =>
-      isConversationStatusType(result.systemType),
+      isConversationStatusType(result.systemType)
     ) || isConversationStatusType(expectedSystemType)
   );
 }
@@ -471,7 +475,9 @@ async function getExpectedFixContextSystemType({
   context: MessageContext;
   emailAccountId: string;
 }): Promise<SystemType | null> {
-  if (context.expected === "new" || context.expected === "none") return null;
+  if (context.expected === "new" || context.expected === "none") {
+    return null;
+  }
 
   if ("id" in context.expected) {
     const expectedRule = await prisma.rule.findUnique({

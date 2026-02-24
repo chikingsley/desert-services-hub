@@ -1,9 +1,9 @@
-import prisma from "@/utils/prisma";
-import type { Logger } from "@/utils/logger";
 import type { CalendarEventProvider } from "@/utils/calendar/event-types";
 import { GoogleCalendarEventProvider } from "@/utils/calendar/providers/google-events";
 import { MicrosoftCalendarEventProvider } from "@/utils/calendar/providers/microsoft-events";
 import { isGoogleProvider } from "@/utils/email/provider-types";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 /**
  * Create calendar event providers for all connected calendars.
@@ -11,7 +11,7 @@ import { isGoogleProvider } from "@/utils/email/provider-types";
  */
 export async function createCalendarEventProviders(
   emailAccountId: string,
-  logger: Logger,
+  logger: Logger
 ): Promise<CalendarEventProvider[]> {
   const connections = await prisma.calendarConnection.findMany({
     where: {
@@ -35,7 +35,9 @@ export async function createCalendarEventProviders(
   const providers: CalendarEventProvider[] = [];
 
   for (const connection of connections) {
-    if (!connection.refreshToken) continue;
+    if (!connection.refreshToken) {
+      continue;
+    }
 
     try {
       if (isGoogleProvider(connection.provider)) {
@@ -47,8 +49,8 @@ export async function createCalendarEventProviders(
               expiresAt: connection.expiresAt?.getTime() ?? null,
               emailAccountId,
             },
-            logger,
-          ),
+            logger
+          )
         );
       } else if (connection.provider === "microsoft") {
         providers.push(
@@ -59,8 +61,8 @@ export async function createCalendarEventProviders(
               expiresAt: connection.expiresAt?.getTime() ?? null,
               emailAccountId,
             },
-            logger,
-          ),
+            logger
+          )
         );
       }
     } catch (error) {

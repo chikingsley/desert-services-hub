@@ -28,15 +28,15 @@ type DocuSignEmailType =
   | "unknown";
 
 interface ParsedDocuSignEmail {
-  isDocuSign: boolean;
-  type: DocuSignEmailType;
-  envelopeId: string | null;
   documentName: string | null;
-  senderName: string | null;
-  senderEmail: string | null;
-  reviewLink: string | null;
   downloadLink: string | null;
+  envelopeId: string | null;
+  isDocuSign: boolean;
   rawLinks: string[];
+  reviewLink: string | null;
+  senderEmail: string | null;
+  senderName: string | null;
+  type: DocuSignEmailType;
 }
 
 /**

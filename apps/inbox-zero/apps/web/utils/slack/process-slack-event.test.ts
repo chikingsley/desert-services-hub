@@ -25,20 +25,20 @@ vi.mock("@inboxzero/slack", () => ({
       client: MockClient,
       channel: string,
       timestamp: string,
-      name: string,
+      name: string
     ) => {
       await client.reactions.add({ channel, timestamp, name });
-    },
+    }
   ),
   removeReaction: vi.fn(
     async (
       client: MockClient,
       channel: string,
       timestamp: string,
-      name: string,
+      name: string
     ) => {
       await client.reactions.remove({ channel, timestamp, name });
-    },
+    }
   ),
 }));
 
@@ -127,7 +127,7 @@ describe("processSlackEvent", () => {
     it("ignores bot messages", async () => {
       await processSlackEvent(
         makePayload({ bot_id: "B-BOT", user: undefined }),
-        logger,
+        logger
       );
 
       expect(prisma.messagingChannel.findMany).not.toHaveBeenCalled();
@@ -136,7 +136,7 @@ describe("processSlackEvent", () => {
     it("ignores non-DM messages (channel messages without @mention)", async () => {
       await processSlackEvent(
         makePayload({ type: "message", channel_type: "channel" }),
-        logger,
+        logger
       );
 
       expect(prisma.messagingChannel.findMany).not.toHaveBeenCalled();
@@ -161,7 +161,7 @@ describe("processSlackEvent", () => {
           where: expect.objectContaining({
             providerUserId: "U-AUTH-USER",
           }),
-        }),
+        })
       );
     });
 
@@ -176,7 +176,7 @@ describe("processSlackEvent", () => {
       expect(mockPostMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           text: expect.stringContaining("connect your Inbox Zero account"),
-        }),
+        })
       );
     });
 
@@ -215,7 +215,7 @@ describe("processSlackEvent", () => {
           channel: "D-DM-CHANNEL",
           text: "AI response",
           mrkdwn: true,
-        }),
+        })
       );
     });
 
@@ -241,7 +241,7 @@ describe("processSlackEvent", () => {
       await processSlackEvent(makePayload({}), logger);
 
       expect(aiProcessAssistantChat).toHaveBeenCalledWith(
-        expect.objectContaining({ emailAccountId: "email-2" }),
+        expect.objectContaining({ emailAccountId: "email-2" })
       );
     });
 
@@ -265,7 +265,7 @@ describe("processSlackEvent", () => {
       await processSlackEvent(makePayload({}), logger);
 
       expect(aiProcessAssistantChat).toHaveBeenCalledWith(
-        expect.objectContaining({ emailAccountId: "email-1" }),
+        expect.objectContaining({ emailAccountId: "email-1" })
       );
     });
 
@@ -288,7 +288,7 @@ describe("processSlackEvent", () => {
               take: 12,
             }),
           }),
-        }),
+        })
       );
     });
 
@@ -323,14 +323,14 @@ describe("processSlackEvent", () => {
 
       await processSlackEvent(
         makePayload({ text: "new user message" }),
-        logger,
+        logger
       );
 
       const callArgs = vi.mocked(aiProcessAssistantChat).mock.calls[0]?.[0];
       expect(
         callArgs?.messages.map(
-          (message) => (message as unknown as { id: string }).id,
-        ),
+          (message) => (message as unknown as { id: string }).id
+        )
       ).toEqual([
         "assistant-1",
         "user-1",
@@ -392,11 +392,11 @@ describe("processSlackEvent", () => {
           channel_type: "channel",
           text: "<@U-BOT> check my emails",
         }),
-        logger,
+        logger
       );
 
       expect(aiProcessAssistantChat).toHaveBeenCalledWith(
-        expect.objectContaining({ emailAccountId: "email-2" }),
+        expect.objectContaining({ emailAccountId: "email-2" })
       );
     });
 
@@ -413,14 +413,14 @@ describe("processSlackEvent", () => {
           channel_type: "channel",
           text: "<@U-BOT> check my emails",
         }),
-        logger,
+        logger
       );
 
       expect(aiProcessAssistantChat).not.toHaveBeenCalled();
       expect(mockPostMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           text: expect.stringContaining("isn't linked to an email account"),
-        }),
+        })
       );
     });
 
@@ -440,7 +440,7 @@ describe("processSlackEvent", () => {
           channel_type: "channel",
           text: "<@U-BOT> check my emails",
         }),
-        logger,
+        logger
       );
 
       expect(aiProcessAssistantChat).not.toHaveBeenCalled();
@@ -463,7 +463,7 @@ describe("processSlackEvent", () => {
           ts: "1234567890.100000",
           text: "<@U-BOT> first message",
         }),
-        logger,
+        logger
       );
 
       expect(prisma.chat.upsert).toHaveBeenCalledWith(
@@ -472,7 +472,7 @@ describe("processSlackEvent", () => {
           create: expect.objectContaining({
             id: "slack-C-PRIVATE-1-1234567890.100000",
           }),
-        }),
+        })
       );
     });
 
@@ -494,7 +494,7 @@ describe("processSlackEvent", () => {
           thread_ts: "1234567890.100000",
           text: "<@U-BOT> follow up",
         }),
-        logger,
+        logger
       );
 
       expect(prisma.chat.upsert).toHaveBeenCalledWith(
@@ -503,7 +503,7 @@ describe("processSlackEvent", () => {
           create: expect.objectContaining({
             id: "slack-C-PRIVATE-1-1234567890.100000",
           }),
-        }),
+        })
       );
     });
   });
@@ -526,7 +526,7 @@ describe("processSlackEvent", () => {
           channel_type: "channel",
           text: "<@U-BOT> check my emails",
         }),
-        logger,
+        logger
       );
 
       expect(prisma.chatMessage.upsert).toHaveBeenCalledWith(
@@ -534,7 +534,7 @@ describe("processSlackEvent", () => {
           create: expect.objectContaining({
             parts: [{ type: "text", text: "check my emails" }],
           }),
-        }),
+        })
       );
     });
 
@@ -551,7 +551,7 @@ describe("processSlackEvent", () => {
           channel_type: "channel",
           text: "<@U-BOT>",
         }),
-        logger,
+        logger
       );
 
       expect(aiProcessAssistantChat).not.toHaveBeenCalled();
@@ -588,7 +588,7 @@ describe("processSlackEvent", () => {
         "@/utils/ai/assistant/chat"
       );
       vi.mocked(aiProcessAssistantChat).mockRejectedValueOnce(
-        new Error("AI failed"),
+        new Error("AI failed")
       );
       prisma.messagingChannel.findMany.mockResolvedValue([CANDIDATE_1]);
       prisma.chat.upsert.mockResolvedValue({

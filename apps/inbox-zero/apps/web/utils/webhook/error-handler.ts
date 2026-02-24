@@ -1,6 +1,6 @@
 import { checkCommonErrors } from "@/utils/error";
-import { trackError } from "@/utils/posthog";
 import type { Logger } from "@/utils/logger";
+import { trackError } from "@/utils/posthog";
 
 /**
  * Handles errors from async webhook processing in the same way as withError middleware
@@ -13,7 +13,7 @@ export async function handleWebhookError(
     emailAccountId: string;
     url: string;
     logger: Logger;
-  },
+  }
 ) {
   const { email, emailAccountId, url, logger } = options;
 

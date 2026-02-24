@@ -7,7 +7,7 @@ export async function getHistory(
     startHistoryId: string;
     historyTypes?: string[];
     maxResults?: number;
-  },
+  }
 ) {
   const history = await withGmailRetry(() =>
     gmail.users.history.list({
@@ -15,7 +15,7 @@ export async function getHistory(
       startHistoryId: options.startHistoryId,
       historyTypes: options.historyTypes,
       maxResults: options.maxResults,
-    }),
+    })
   );
 
   return history.data;

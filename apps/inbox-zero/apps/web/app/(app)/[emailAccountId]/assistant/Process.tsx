@@ -22,10 +22,10 @@ export function Process() {
 
         <div className="flex pt-1">
           <Toggle
-            name="test-mode"
+            enabled={isApplyMode}
             label="Test"
             labelRight="Apply"
-            enabled={isApplyMode}
+            name="test-mode"
             onChange={(enabled) => setMode(enabled ? "apply" : "test")}
           />
         </div>

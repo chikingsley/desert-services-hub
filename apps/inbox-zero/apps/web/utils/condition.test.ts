@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ConditionType } from "@/utils/config";
-import { flattenConditions } from "./condition";
 import type { Logger } from "@/utils/logger";
+import { flattenConditions } from "./condition";
 
 describe("flattenConditions", () => {
   const logger = {

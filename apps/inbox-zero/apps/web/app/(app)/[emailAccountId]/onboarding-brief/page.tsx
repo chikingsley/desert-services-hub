@@ -1,9 +1,9 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { MeetingBriefsOnboardingContent } from "./MeetingBriefsOnboardingContent";
+import { Suspense } from "react";
 import { registerUtmTracking } from "@/app/(landing)/welcome/utms";
 import { auth } from "@/utils/auth";
+import { MeetingBriefsOnboardingContent } from "./MeetingBriefsOnboardingContent";
 
 export const metadata: Metadata = {
   title: "Meeting Briefs Setup | Inbox Zero",

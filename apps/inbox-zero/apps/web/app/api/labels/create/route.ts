@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { withEmailProvider } from "@/utils/middleware";
 import { z } from "zod";
+import { withEmailProvider } from "@/utils/middleware";
 
 const createLabelBody = z.object({
   name: z.string(),
@@ -14,7 +14,7 @@ export const POST = withEmailProvider(async (request) => {
 
   const label = await emailProvider.createLabel(
     name,
-    description ? description : undefined,
+    description ? description : undefined
   );
 
   return NextResponse.json({ label });

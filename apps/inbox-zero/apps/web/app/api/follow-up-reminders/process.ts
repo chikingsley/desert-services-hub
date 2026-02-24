@@ -1,25 +1,25 @@
-import { subHours } from "date-fns/subHours";
 import { addMinutes } from "date-fns/addMinutes";
-import prisma from "@/utils/prisma";
-import { getPremiumUserFilter } from "@/utils/premium";
+import { subHours } from "date-fns/subHours";
+import { SystemType, ThreadTrackerType } from "@/generated/prisma/enums";
+import { internalDateToDate } from "@/utils/date";
 import { createEmailProvider } from "@/utils/email/provider";
+import type { EmailLabel, EmailProvider } from "@/utils/email/types";
+import { captureException } from "@/utils/error";
+import { generateFollowUpDraft } from "@/utils/follow-up/generate-draft";
 import {
   applyFollowUpLabel,
   getOrCreateFollowUpLabel,
 } from "@/utils/follow-up/labels";
-import { generateFollowUpDraft } from "@/utils/follow-up/generate-draft";
-import { ThreadTrackerType, SystemType } from "@/generated/prisma/enums";
-import type { EmailProvider, EmailLabel } from "@/utils/email/types";
-import type { Logger } from "@/utils/logger";
-import { captureException } from "@/utils/error";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import { getPremiumUserFilter } from "@/utils/premium";
+import prisma from "@/utils/prisma";
+import { isDuplicateError } from "@/utils/prisma-helpers";
 import {
   getLabelsFromDb,
   type LabelIds,
 } from "@/utils/reply-tracker/label-helpers";
 import { getRuleLabel } from "@/utils/rule/consts";
-import { internalDateToDate } from "@/utils/date";
-import { isDuplicateError } from "@/utils/prisma-helpers";
 
 const FOLLOW_UP_ELIGIBILITY_WINDOW_MINUTES = 15;
 
@@ -196,7 +196,9 @@ async function processFollowUpsForType({
   now: Date;
   logger: Logger;
 }) {
-  if (thresholdDays === null) return;
+  if (thresholdDays === null) {
+    return;
+  }
 
   const dbLabelInfo = dbLabels[systemType as keyof LabelIds];
   const providerLabelIds = new Set(providerLabels.map((l) => l.id));
@@ -207,7 +209,7 @@ async function processFollowUpsForType({
     labelId = dbLabelInfo.labelId;
   } else {
     const found = providerLabels.find(
-      (l) => l.name === getRuleLabel(systemType),
+      (l) => l.name === getRuleLabel(systemType)
     );
     if (!found) {
       logger.info("Label not found, skipping", { systemType });
@@ -229,7 +231,7 @@ async function processFollowUpsForType({
   const threshold = subHours(now, thresholdDays * 24);
   const thresholdWithWindow = getThresholdWithWindow(
     threshold,
-    FOLLOW_UP_ELIGIBILITY_WINDOW_MINUTES,
+    FOLLOW_UP_ELIGIBILITY_WINDOW_MINUTES
   );
   const trackerType =
     systemType === SystemType.AWAITING_REPLY
@@ -433,7 +435,9 @@ async function getProcessedFollowUpLedger({
   emailAccountId: string;
   threadIds: string[];
 }): Promise<Map<string, Set<string>>> {
-  if (threadIds.length === 0) return new Map();
+  if (threadIds.length === 0) {
+    return new Map();
+  }
 
   const existingTrackers = await prisma.threadTracker.findMany({
     where: {
@@ -450,7 +454,8 @@ async function getProcessedFollowUpLedger({
   const processedLedger = new Map<string, Set<string>>();
 
   for (const tracker of existingTrackers) {
-    const messageIds = processedLedger.get(tracker.threadId) ?? new Set<string>();
+    const messageIds =
+      processedLedger.get(tracker.threadId) ?? new Set<string>();
     messageIds.add(tracker.messageId);
     processedLedger.set(tracker.threadId, messageIds);
   }

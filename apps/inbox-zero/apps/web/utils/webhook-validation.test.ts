@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { validateWebhookUrl } from "./webhook-validation";
 import * as dns from "node:dns/promises";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { validateWebhookUrl } from "./webhook-validation";
 
 // Mock dns.resolve and dns.resolve6
 vi.mock("node:dns/promises", () => ({
@@ -82,7 +82,7 @@ describe("validateWebhookUrl", () => {
         expect(result.valid).toBe(false);
         if (!result.valid) {
           expect(result.error).toBe(
-            "Only HTTP and HTTPS URLs are allowed for webhooks",
+            "Only HTTP and HTTPS URLs are allowed for webhooks"
           );
         }
       });
@@ -100,7 +100,7 @@ describe("validateWebhookUrl", () => {
 
     it("rejects localhost.localdomain", async () => {
       const result = await validateWebhookUrl(
-        "https://localhost.localdomain/webhook",
+        "https://localhost.localdomain/webhook"
       );
       expect(result.valid).toBe(false);
       if (!result.valid) {
@@ -110,7 +110,7 @@ describe("validateWebhookUrl", () => {
 
     it("rejects cloud metadata endpoints", async () => {
       const result = await validateWebhookUrl(
-        "https://metadata.google.internal/computeMetadata/v1/",
+        "https://metadata.google.internal/computeMetadata/v1/"
       );
       expect(result.valid).toBe(false);
       if (!result.valid) {
@@ -125,7 +125,7 @@ describe("validateWebhookUrl", () => {
       expect(result.valid).toBe(false);
       if (!result.valid) {
         expect(result.error).toBe(
-          "Webhook URL cannot point to private IP addresses",
+          "Webhook URL cannot point to private IP addresses"
         );
       }
     });
@@ -135,7 +135,7 @@ describe("validateWebhookUrl", () => {
       expect(result.valid).toBe(false);
       if (!result.valid) {
         expect(result.error).toBe(
-          "Webhook URL cannot point to private IP addresses",
+          "Webhook URL cannot point to private IP addresses"
         );
       }
     });
@@ -145,7 +145,7 @@ describe("validateWebhookUrl", () => {
       expect(result.valid).toBe(false);
       if (!result.valid) {
         expect(result.error).toBe(
-          "Webhook URL cannot point to private IP addresses",
+          "Webhook URL cannot point to private IP addresses"
         );
       }
     });
@@ -155,19 +155,19 @@ describe("validateWebhookUrl", () => {
       expect(result.valid).toBe(false);
       if (!result.valid) {
         expect(result.error).toBe(
-          "Webhook URL cannot point to private IP addresses",
+          "Webhook URL cannot point to private IP addresses"
         );
       }
     });
 
     it("rejects 169.254.169.254 (cloud metadata)", async () => {
       const result = await validateWebhookUrl(
-        "https://169.254.169.254/latest/meta-data/",
+        "https://169.254.169.254/latest/meta-data/"
       );
       expect(result.valid).toBe(false);
       if (!result.valid) {
         expect(result.error).toBe(
-          "Webhook URL cannot point to private IP addresses",
+          "Webhook URL cannot point to private IP addresses"
         );
       }
     });
@@ -179,12 +179,12 @@ describe("validateWebhookUrl", () => {
       vi.mocked(dns.resolve6).mockRejectedValue(new Error("ENODATA"));
 
       const result = await validateWebhookUrl(
-        "https://evil-rebind.example.com/webhook",
+        "https://evil-rebind.example.com/webhook"
       );
       expect(result.valid).toBe(false);
       if (!result.valid) {
         expect(result.error).toBe(
-          "Webhook URL cannot resolve to private IP addresses",
+          "Webhook URL cannot resolve to private IP addresses"
         );
       }
     });
@@ -194,12 +194,12 @@ describe("validateWebhookUrl", () => {
       vi.mocked(dns.resolve6).mockRejectedValue(new Error("ENODATA"));
 
       const result = await validateWebhookUrl(
-        "https://my-local-alias.com/webhook",
+        "https://my-local-alias.com/webhook"
       );
       expect(result.valid).toBe(false);
       if (!result.valid) {
         expect(result.error).toBe(
-          "Webhook URL cannot resolve to private IP addresses",
+          "Webhook URL cannot resolve to private IP addresses"
         );
       }
     });
@@ -209,12 +209,12 @@ describe("validateWebhookUrl", () => {
       vi.mocked(dns.resolve6).mockRejectedValue(new Error("ENODATA"));
 
       const result = await validateWebhookUrl(
-        "https://sneaky-metadata.com/webhook",
+        "https://sneaky-metadata.com/webhook"
       );
       expect(result.valid).toBe(false);
       if (!result.valid) {
         expect(result.error).toBe(
-          "Webhook URL cannot resolve to private IP addresses",
+          "Webhook URL cannot resolve to private IP addresses"
         );
       }
     });
@@ -226,12 +226,12 @@ describe("validateWebhookUrl", () => {
       vi.mocked(dns.resolve6).mockResolvedValue(["::1"]);
 
       const result = await validateWebhookUrl(
-        "https://ipv6-only-internal.example.com/webhook",
+        "https://ipv6-only-internal.example.com/webhook"
       );
       expect(result.valid).toBe(false);
       if (!result.valid) {
         expect(result.error).toBe(
-          "Webhook URL cannot resolve to private IP addresses",
+          "Webhook URL cannot resolve to private IP addresses"
         );
       }
     });
@@ -243,12 +243,12 @@ describe("validateWebhookUrl", () => {
       vi.mocked(dns.resolve6).mockResolvedValue(["fe80::1"]);
 
       const result = await validateWebhookUrl(
-        "https://link-local-ipv6.example.com/webhook",
+        "https://link-local-ipv6.example.com/webhook"
       );
       expect(result.valid).toBe(false);
       if (!result.valid) {
         expect(result.error).toBe(
-          "Webhook URL cannot resolve to private IP addresses",
+          "Webhook URL cannot resolve to private IP addresses"
         );
       }
     });
@@ -259,7 +259,7 @@ describe("validateWebhookUrl", () => {
       vi.mocked(dns.resolve).mockRejectedValue(error);
 
       const result = await validateWebhookUrl(
-        "https://nonexistent-domain-12345.com/webhook",
+        "https://nonexistent-domain-12345.com/webhook"
       );
       expect(result.valid).toBe(false);
       if (!result.valid) {
@@ -282,7 +282,7 @@ describe("validateWebhookUrl", () => {
       vi.mocked(dns.resolve6).mockRejectedValue(new Error("ENODATA"));
 
       const result = await validateWebhookUrl(
-        "https://example.com:8443/webhook",
+        "https://example.com:8443/webhook"
       );
       expect(result.valid).toBe(true);
     });
@@ -292,7 +292,7 @@ describe("validateWebhookUrl", () => {
       vi.mocked(dns.resolve6).mockRejectedValue(new Error("ENODATA"));
 
       const result = await validateWebhookUrl(
-        "https://api.example.com/v1/webhook?token=abc123",
+        "https://api.example.com/v1/webhook?token=abc123"
       );
       expect(result.valid).toBe(true);
     });

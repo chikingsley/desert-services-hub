@@ -1,24 +1,24 @@
 import "../../styles/globals.css";
-import type React from "react";
+import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
-import { Inter } from "next/font/google";
-import { SideNavWithTopNav } from "@/components/SideNavWithTopNav";
-import { auth } from "@/utils/auth";
-import { PostHogIdentify } from "@/providers/PostHogProvider";
-import { CommandK } from "@/components/CommandK";
-import { AppProviders } from "@/providers/AppProviders";
+import type React from "react";
 import { AssessUser } from "@/app/(app)/[emailAccountId]/assess";
-import { SentryIdentify } from "@/app/(app)/sentry-identify";
 import { ErrorMessages } from "@/app/(app)/ErrorMessages";
-import { QueueInitializer } from "@/store/QueueInitializer";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SentryIdentify } from "@/app/(app)/sentry-identify";
+import { CommandK } from "@/components/CommandK";
 import { EmailViewer } from "@/components/EmailViewer";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AnnouncementDialog } from "@/components/feature-announcements/AnnouncementDialog";
+import { SideNavWithTopNav } from "@/components/SideNavWithTopNav";
+import { AppProviders } from "@/providers/AppProviders";
+import { PostHogIdentify } from "@/providers/PostHogProvider";
+import { QueueInitializer } from "@/store/QueueInitializer";
+import { auth } from "@/utils/auth";
 import { captureException } from "@/utils/error";
-import prisma from "@/utils/prisma";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("AppLayout");
 
@@ -49,7 +49,9 @@ export default async function AppLayout({
 }) {
   const session = await auth();
 
-  if (!session?.user.email) redirect("/login");
+  if (!session?.user.email) {
+    redirect("/login");
+  }
 
   const cookieStore = await cookies();
   const isClosed = cookieStore.get("left-sidebar:state")?.value === "false";

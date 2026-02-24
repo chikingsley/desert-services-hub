@@ -1,10 +1,10 @@
 export function AutoOrganize() {
   return (
     <svg
-      width="10"
+      fill="none"
       height="8"
       viewBox="0 0 10 8"
-      fill="none"
+      width="10"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
@@ -41,12 +41,12 @@ export function AutoOrganize() {
       />
       <defs>
         <linearGradient
+          gradientUnits="userSpaceOnUse"
           id="paint_linear_267_16415"
           x1="5"
-          y1="0"
           x2="5"
+          y1="0"
           y2="8"
-          gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="#2563EB" />
           <stop offset="1" stopColor="#6595FF" />

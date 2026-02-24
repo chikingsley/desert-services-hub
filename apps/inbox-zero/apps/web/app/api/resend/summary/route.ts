@@ -1,16 +1,16 @@
-import { NextResponse } from "next/server";
-import { subHours } from "date-fns/subHours";
 import { sendSummaryEmail } from "@inboxzero/resend";
-import { withEmailAccount, withError } from "@/utils/middleware";
+import { subHours } from "date-fns/subHours";
+import { NextResponse } from "next/server";
 import { env } from "@/env";
-import { hasCronSecret } from "@/utils/cron";
-import { isValidInternalApiKey } from "@/utils/internal-api";
-import { captureException } from "@/utils/error";
-import prisma from "@/utils/prisma";
 import { SystemType, ThreadTrackerType } from "@/generated/prisma/enums";
-import type { Logger } from "@/utils/logger";
-import { getMessagesBatch } from "@/utils/gmail/message";
+import { hasCronSecret } from "@/utils/cron";
+import { captureException } from "@/utils/error";
 import { decodeSnippet } from "@/utils/gmail/decode";
+import { getMessagesBatch } from "@/utils/gmail/message";
+import { isValidInternalApiKey } from "@/utils/internal-api";
+import type { Logger } from "@/utils/logger";
+import { withEmailAccount, withError } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 import { createUnsubscribeToken } from "@/utils/unsubscribe";
 import { sendSummaryEmailBody } from "./validation";
 
@@ -34,8 +34,7 @@ export const GET = withEmailAccount("resend/summary", async (request) => {
 export const POST = withError("resend/summary", async (request) => {
   const logger = request.logger;
   if (
-    !hasCronSecret(request) &&
-    !isValidInternalApiKey(request.headers, logger)
+    !(hasCronSecret(request) || isValidInternalApiKey(request.headers, logger))
   ) {
     logger.error("Unauthorized cron request");
     captureException(new Error("Unauthorized cron request: resend"));
@@ -49,7 +48,7 @@ export const POST = withError("resend/summary", async (request) => {
     logger.error("Invalid request body", { error });
     return NextResponse.json(
       { error: "Invalid request body" },
-      { status: 400 },
+      { status: 400 }
     );
   }
   const { emailAccountId } = data;
@@ -64,7 +63,7 @@ export const POST = withError("resend/summary", async (request) => {
     captureException(error);
     return NextResponse.json(
       { success: false, error: "Error sending summary email" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 });
@@ -189,7 +188,7 @@ async function sendEmail({
     ]);
 
   const typeCounts = Object.fromEntries(
-    counts.map((count) => [count.type, count._count]),
+    counts.map((count) => [count.type, count._count])
   );
 
   // get messages
@@ -211,7 +210,7 @@ async function sendEmail({
     : [];
 
   const messageMap = Object.fromEntries(
-    messages.map((message) => [message.id, message]),
+    messages.map((message) => [message.id, message])
   );
 
   const recentNeedsReply = needsReply.map((t) => {

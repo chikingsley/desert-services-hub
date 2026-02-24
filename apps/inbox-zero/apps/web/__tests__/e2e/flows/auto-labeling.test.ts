@@ -10,14 +10,14 @@
  * RUN_E2E_FLOW_TESTS=true pnpm test-e2e auto-labeling
  */
 
-import { describe, test, expect, beforeAll, afterEach } from "vitest";
+import { afterEach, beforeAll, describe, expect, test } from "vitest";
 import { shouldRunFlowTests, TIMEOUTS } from "./config";
+import type { TestAccount } from "./helpers/accounts";
+import { sendTestEmail, TEST_EMAIL_SCENARIOS } from "./helpers/email";
+import { clearLogs, logStep, setTestStartTime } from "./helpers/logging";
+import { waitForExecutedRule, waitForMessageInInbox } from "./helpers/polling";
 import { initializeFlowTests, setupFlowTest } from "./setup";
 import { generateTestSummary } from "./teardown";
-import { sendTestEmail, TEST_EMAIL_SCENARIOS } from "./helpers/email";
-import { waitForExecutedRule, waitForMessageInInbox } from "./helpers/polling";
-import { logStep, clearLogs, setTestStartTime } from "./helpers/logging";
-import type { TestAccount } from "./helpers/accounts";
 
 describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
   let gmail: TestAccount;
@@ -98,7 +98,7 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
       logStep("Verifying draft action");
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL",
+        (a) => a.type === "DRAFT_EMAIL"
       );
 
       // For a "needs reply" email, we expect a draft to be created
@@ -115,7 +115,7 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
       logStep("Verifying labels in provider");
 
       const message = await outlook.emailProvider.getMessage(
-        outlookMessage.messageId,
+        outlookMessage.messageId
       );
 
       logStep("Message labels", { labels: message.labelIds });
@@ -124,7 +124,7 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
       // At minimum, we verify the message was processed
       expect(executedRule.actionItems.length).toBeGreaterThan(0);
     },
-    TIMEOUTS.TEST_DEFAULT,
+    TIMEOUTS.TEST_DEFAULT
   );
 
   test(
@@ -188,7 +188,7 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
       logStep("Verifying no draft for FYI email");
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       // FYI emails should NOT create drafts
@@ -204,12 +204,12 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
       logStep("Verifying labels");
 
       const message = await outlook.emailProvider.getMessage(
-        outlookMessage.messageId,
+        outlookMessage.messageId
       );
 
       logStep("Message labels", { labels: message.labelIds });
     },
-    TIMEOUTS.TEST_DEFAULT,
+    TIMEOUTS.TEST_DEFAULT
   );
 
   test(
@@ -274,7 +274,7 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
 
       // Thank you emails typically don't need replies
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       // Thank you emails should NOT create drafts
@@ -285,7 +285,7 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
         actionsCount: executedRule.actionItems.length,
       });
     },
-    TIMEOUTS.TEST_DEFAULT,
+    TIMEOUTS.TEST_DEFAULT
   );
 
   test(
@@ -349,7 +349,7 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
       logStep("Verifying question email processing");
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL",
+        (a) => a.type === "DRAFT_EMAIL"
       );
 
       // Questions should typically create drafts
@@ -360,7 +360,7 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
         actionsCount: executedRule.actionItems.length,
       });
     },
-    TIMEOUTS.TEST_DEFAULT,
+    TIMEOUTS.TEST_DEFAULT
   );
 
   // ============================================================
@@ -429,7 +429,7 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
       logStep("Verifying draft action");
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL",
+        (a) => a.type === "DRAFT_EMAIL"
       );
 
       expect(draftAction).toBeDefined();
@@ -445,14 +445,14 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
       logStep("Verifying labels in provider");
 
       const message = await gmail.emailProvider.getMessage(
-        gmailMessage.messageId,
+        gmailMessage.messageId
       );
 
       logStep("Message labels", { labels: message.labelIds });
 
       expect(executedRule.actionItems.length).toBeGreaterThan(0);
     },
-    TIMEOUTS.TEST_DEFAULT,
+    TIMEOUTS.TEST_DEFAULT
   );
 
   test(
@@ -516,7 +516,7 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
       logStep("Verifying no draft for FYI email");
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       expect(draftAction).toBeUndefined();
@@ -531,11 +531,11 @@ describe.skipIf(!shouldRunFlowTests())("Auto-Labeling", () => {
       logStep("Verifying labels");
 
       const message = await gmail.emailProvider.getMessage(
-        gmailMessage.messageId,
+        gmailMessage.messageId
       );
 
       logStep("Message labels", { labels: message.labelIds });
     },
-    TIMEOUTS.TEST_DEFAULT,
+    TIMEOUTS.TEST_DEFAULT
   );
 });

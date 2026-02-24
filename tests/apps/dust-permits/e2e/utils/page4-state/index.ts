@@ -72,16 +72,16 @@ let page4BenchWarmSampleLogged = false;
 
 interface EnsureEvaluatorMetrics {
   coldPageInjection: boolean;
-  scriptMs: number;
   injectMs: number;
+  scriptMs: number;
 }
 
 interface Page4BenchSummary {
-  iterations: number;
-  minMs: number;
-  medianMs: number;
-  p95Ms: number;
   avgMs: number;
+  iterations: number;
+  medianMs: number;
+  minMs: number;
+  p95Ms: number;
 }
 
 function formatBuildLog(log: unknown): string {

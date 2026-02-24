@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+import type { ParsedMessageHeaders } from "@/utils/types";
 import {
   buildReplyAllRecipients,
   formatCcList,
   mergeAndDedupeRecipients,
 } from "./reply-all";
-import type { ParsedMessageHeaders } from "@/utils/types";
 
 describe("buildReplyAllRecipients", () => {
   it("should handle simple reply-all with TO and CC", () => {
@@ -19,7 +19,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe("sender@example.com");
@@ -41,7 +41,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe("noreply@example.com");
@@ -60,7 +60,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe("sender@example.com");
@@ -80,7 +80,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe("sender@example.com");
@@ -99,7 +99,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe("sender@example.com");
@@ -121,7 +121,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       "override@example.com",
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe("override@example.com");
@@ -142,7 +142,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe("sender@example.com");
@@ -164,7 +164,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe("sender@example.com");
@@ -186,7 +186,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe("sender@example.com");
@@ -208,7 +208,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe('"John Doe" <john@example.com>');
@@ -230,7 +230,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe('"John Doe" <john@example.com>');
@@ -250,7 +250,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe('"John Doe" <john@example.com>');
@@ -272,7 +272,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe("sender@example.com");
@@ -295,7 +295,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       '"Override User" <override@example.com>',
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe('"Override User" <override@example.com>');
@@ -317,7 +317,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe("sender@example.com");
@@ -339,7 +339,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "me@mycompany.com",
+      "me@mycompany.com"
     );
 
     expect(result.to).toBe("sender@example.com");
@@ -361,7 +361,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      '"My Name" <me@mycompany.com>',
+      '"My Name" <me@mycompany.com>'
     );
 
     expect(result.to).toBe('"Alice" <alice@example.com>');
@@ -383,7 +383,7 @@ describe("buildReplyAllRecipients", () => {
     const result = buildReplyAllRecipients(
       headers,
       undefined,
-      "myemail@example.com",
+      "myemail@example.com"
     );
 
     expect(result.to).toBe('"Smith, John" <john@example.com>');

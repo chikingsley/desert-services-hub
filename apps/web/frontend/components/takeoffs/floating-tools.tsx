@@ -22,9 +22,6 @@ import {
 } from "@/apps/web/frontend/components/ui/tooltip";
 
 interface FloatingToolsProps {
-  items: PresetItem[];
-  selectedItem: PresetItem | null;
-  onSelectItem: (item: PresetItem | null) => void;
   counts: Array<{
     id: string;
     label: string;
@@ -32,11 +29,14 @@ interface FloatingToolsProps {
     value: number | string;
     count: number;
   }>;
-  onClearAll: () => void;
-  currentScaleId: string;
-  scalePresets: readonly ScalePreset[];
-  onScaleChange: (scaleId: string) => void;
   currentPage: number;
+  currentScaleId: string;
+  items: PresetItem[];
+  onClearAll: () => void;
+  onScaleChange: (scaleId: string) => void;
+  onSelectItem: (item: PresetItem | null) => void;
+  scalePresets: readonly ScalePreset[];
+  selectedItem: PresetItem | null;
   totalPages: number;
 }
 

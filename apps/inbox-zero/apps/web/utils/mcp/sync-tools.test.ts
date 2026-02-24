@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { isReadOnlyTool } from "./sync-tools";
 
 describe("isReadOnlyTool", () => {
@@ -76,7 +76,7 @@ describe("isReadOnlyTool", () => {
     it("handles tools with multiple hyphens", () => {
       expect(isReadOnlyTool("slack_v2-list-group-members")).toBe(true);
       expect(isReadOnlyTool("slack_v2-send-message-to-user-or-group")).toBe(
-        false,
+        false
       );
     });
   });

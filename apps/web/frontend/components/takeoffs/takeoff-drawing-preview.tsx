@@ -2,12 +2,12 @@ import type { PdfHighlighterUtils } from "@takeoff/pdf-takeoff/contexts/pdf-high
 import type { Scaled, TakeoffToolType } from "@takeoff/pdf-takeoff/types";
 
 interface TakeoffDrawingPreviewProps {
+  activeColor: string;
+  activeTool: TakeoffToolType | null;
+  currentPageNumber: number | null;
+  cursorPosition: { x: number; y: number } | null;
   drawingPoints: Scaled[];
   getViewer: () => ReturnType<PdfHighlighterUtils["getViewer"]> | null;
-  currentPageNumber: number | null;
-  activeTool: TakeoffToolType | null;
-  activeColor: string;
-  cursorPosition: { x: number; y: number } | null;
 }
 
 export function TakeoffDrawingPreview({

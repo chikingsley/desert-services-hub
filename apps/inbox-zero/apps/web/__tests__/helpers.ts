@@ -1,9 +1,9 @@
+import type { Action, Prisma } from "@/generated/prisma/client";
+import { ActionType, LogicalOperator } from "@/generated/prisma/enums";
+import { isGoogleProvider } from "@/utils/email/provider-types";
+import type { EmailProvider } from "@/utils/email/types";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { EmailForLLM } from "@/utils/types";
-import type { EmailProvider } from "@/utils/email/types";
-import { ActionType, LogicalOperator } from "@/generated/prisma/enums";
-import type { Action, Prisma } from "@/generated/prisma/client";
-import { isGoogleProvider } from "@/utils/email/provider-types";
 
 type EmailAccountSelect = {
   id: string;
@@ -29,7 +29,7 @@ export function getEmailAccount(
   overrides: Partial<EmailAccountWithAI> & {
     filingEnabled?: boolean;
     filingPrompt?: string | null;
-  } = {},
+  } = {}
 ): EmailAccountWithAI & {
   filingEnabled: boolean;
   filingPrompt: string | null;
@@ -65,7 +65,7 @@ export function getEmailAccount(
 export function generateSequentialDates(
   count: number,
   hoursApart = 1,
-  startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+  startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 ): Date[] {
   return Array.from({ length: count }, (_, i) => {
     const date = new Date(startDate);
@@ -116,7 +116,7 @@ export function getMockEmailProvider({
 export function getRule(
   instructions: string,
   actions: Action[] = [],
-  name?: string,
+  name?: string
 ) {
   return {
     instructions,
@@ -240,7 +240,7 @@ export function getMockExecutedRule({
 }
 
 export function getMockEmailAccountSelect(
-  overrides: Partial<EmailAccountSelect> = {},
+  overrides: Partial<EmailAccountSelect> = {}
 ): EmailAccountSelect {
   return {
     id: overrides.id || "email-account-id",
@@ -252,7 +252,7 @@ export function getMockEmailAccountSelect(
 }
 
 export function getMockUserSelect(
-  overrides: Partial<UserSelect> = {},
+  overrides: Partial<UserSelect> = {}
 ): UserSelect {
   return {
     email: overrides.email || "test@example.com",
@@ -262,7 +262,7 @@ export function getMockUserSelect(
 }
 
 export function getMockAccountWithEmailAccount(
-  overrides: Partial<AccountWithEmailAccount> = {},
+  overrides: Partial<AccountWithEmailAccount> = {}
 ): AccountWithEmailAccount {
   return {
     id: overrides.id || "account-id",

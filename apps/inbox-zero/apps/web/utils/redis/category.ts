@@ -23,7 +23,9 @@ export async function getCategory({
   const key = getKey({ emailAccountId });
   const categoryKey = getCategoryKey({ threadId });
   const category = await redis.hget<RedisCategory>(key, categoryKey);
-  if (!category) return null;
+  if (!category) {
+    return null;
+  }
   return { ...category, id: categoryKey };
 }
 

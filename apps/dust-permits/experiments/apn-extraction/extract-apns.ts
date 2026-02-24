@@ -14,23 +14,23 @@ import { createUserContent, GoogleGenAI } from "@google/genai";
 
 interface APNResult {
   apn: string;
-  owner: string | null;
   location: string | null;
+  owner: string | null;
 }
 
 interface ExtractionResult {
-  file: string;
-  success: boolean;
   apns: APNResult[];
   error?: string;
+  file: string;
+  success: boolean;
 }
 
 interface AggregatedResult {
-  totalFiles: number;
-  successfulFiles: number;
-  failedFiles: number;
-  uniqueApns: APNResult[];
   byFile: ExtractionResult[];
+  failedFiles: number;
+  successfulFiles: number;
+  totalFiles: number;
+  uniqueApns: APNResult[];
 }
 
 const EXTRACTION_PROMPT = `This is an engineering/construction drawing PDF. Extract ALL APN (Assessor Parcel Numbers) visible anywhere on this drawing.

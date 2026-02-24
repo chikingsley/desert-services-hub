@@ -1,8 +1,5 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
-import Link from "next/link";
 import {
   ArchiveIcon,
   ChevronDownIcon,
@@ -15,10 +12,26 @@ import {
   ThumbsUpIcon,
   TrashIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { type PostHog, usePostHog } from "posthog-js/react";
+import type React from "react";
+import { useState } from "react";
+import {
+  type NewsletterFilterType,
+  useApproveButton,
+  useBulkArchive,
+  useBulkDelete,
+  useUnsubscribe,
+} from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/hooks";
+import { ResubscribeDialog } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/ResubscribeDialog";
+import type { Row } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/types";
 import type { UserResponse } from "@/app/api/user/me/route";
-import { Button } from "@/components/ui/button";
+import { LabelsSubMenu } from "@/components/LabelsSubMenu";
 import { ButtonLoader } from "@/components/Loading";
+import { PremiumTooltip } from "@/components/PremiumAlert";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,27 +42,14 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PremiumTooltip } from "@/components/PremiumAlert";
 import { NewsletterStatus } from "@/generated/prisma/enums";
-import { toastError, toastSuccess } from "@/components/Toast";
-import { createFilterAction } from "@/utils/actions/mail";
-import { getGmailSearchUrl } from "@/utils/url";
-import { extractNameFromEmail } from "@/utils/email";
-import { Badge } from "@/components/ui/badge";
-import type { Row } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/types";
-import {
-  useUnsubscribe,
-  useApproveButton,
-  useBulkArchive,
-  useBulkDelete,
-  type NewsletterFilterType,
-} from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/hooks";
-import { ResubscribeDialog } from "@/app/(app)/[emailAccountId]/bulk-unsubscribe/ResubscribeDialog";
-import { LabelsSubMenu } from "@/components/LabelsSubMenu";
-import type { EmailLabel } from "@/providers/EmailProvider";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import type { EmailLabel } from "@/providers/EmailProvider";
+import { createFilterAction } from "@/utils/actions/mail";
+import { extractNameFromEmail } from "@/utils/email";
 import { isGoogleProvider } from "@/utils/email/provider-types";
 import { getEmailTerminology } from "@/utils/terminology";
+import { getGmailSearchUrl } from "@/utils/url";
 
 export function ActionCell<T extends Row>({
   item,
@@ -82,41 +82,41 @@ export function ActionCell<T extends Row>({
   return (
     <>
       {isUnsubscribed ? (
-        <Badge variant="red" className="gap-1">
+        <Badge className="gap-1" variant="red">
           <MailXIcon className="size-3" />
           Unsubscribed
         </Badge>
       ) : (
         <ApproveButton
-          item={item}
-          hasUnsubscribeAccess={hasUnsubscribeAccess}
-          mutate={mutate}
-          posthog={posthog}
           emailAccountId={emailAccountId}
           filter={filter}
+          hasUnsubscribeAccess={hasUnsubscribeAccess}
+          item={item}
+          mutate={mutate}
+          posthog={posthog}
         />
       )}
       <PremiumTooltip
-        showTooltip={!hasUnsubscribeAccess}
         openModal={openPremiumModal}
+        showTooltip={!hasUnsubscribeAccess}
       >
         <UnsubscribeButton
-          item={item}
+          emailAccountId={emailAccountId}
           hasUnsubscribeAccess={hasUnsubscribeAccess}
+          item={item}
           mutate={mutate}
           posthog={posthog}
           refetchPremium={refetchPremium}
-          emailAccountId={emailAccountId}
         />
       </PremiumTooltip>
       <MoreDropdown
-        onOpenNewsletter={onOpenNewsletter}
-        item={item}
-        userEmail={userEmail}
         emailAccountId={emailAccountId}
+        item={item}
         labels={labels}
-        posthog={posthog}
         mutate={mutate}
+        onOpenNewsletter={onOpenNewsletter}
+        posthog={posthog}
+        userEmail={userEmail}
       />
     </>
   );
@@ -147,7 +147,7 @@ function UnsubscribeButton<T extends Row>({
       posthog,
       refetchPremium,
       emailAccountId,
-    },
+    }
   );
 
   const hasUnsubscribeLink = unsubscribeLink !== "#";
@@ -165,26 +165,26 @@ function UnsubscribeButton<T extends Row>({
   const button =
     isUnsubscribed || resubscribeDialogOpen ? (
       <Button
-        size="sm"
-        variant="outline"
         className="w-[110px] justify-center"
         onClick={() => setResubscribeDialogOpen(true)}
+        size="sm"
+        variant="outline"
       >
         {unsubscribeLoading && <ButtonLoader />}
         Resubscribe
       </Button>
     ) : (
       <Button
+        asChild
+        className="w-[110px] justify-center"
         size="sm"
         variant="outline"
-        className="w-[110px] justify-center"
-        asChild
       >
         <Link
           href={unsubscribeLink}
-          target={hasUnsubscribeLink ? "_blank" : undefined}
           onClick={onUnsubscribe}
           rel="noreferrer"
+          target={hasUnsubscribeLink ? "_blank" : undefined}
         >
           {unsubscribeLoading && <ButtonLoader />}
           {buttonText}
@@ -197,12 +197,12 @@ function UnsubscribeButton<T extends Row>({
       {button}
 
       <ResubscribeDialog
-        open={resubscribeDialogOpen}
-        onOpenChange={setResubscribeDialogOpen}
-        senderName={senderName}
-        newsletterEmail={item.name}
         emailAccountId={emailAccountId}
         mutate={mutate}
+        newsletterEmail={item.name}
+        onOpenChange={setResubscribeDialogOpen}
+        open={resubscribeDialogOpen}
+        senderName={senderName}
       />
     </>
   );
@@ -233,10 +233,10 @@ function ApproveButton<T extends Row>({
 
   return (
     <Button
+      disabled={!hasUnsubscribeAccess}
+      onClick={onApprove}
       size="sm"
       variant={isApproved ? "green" : "ghost"}
-      onClick={onApprove}
-      disabled={!hasUnsubscribeAccess}
     >
       <ThumbsUpIcon className={`size-5 ${isApproved ? "" : "text-gray-400"}`} />
     </Button>
@@ -347,9 +347,11 @@ export function MoreDropdown<T extends Row>({
         <DropdownMenuItem
           onClick={() => {
             const yes = confirm(
-              `Are you sure you want to delete all emails from ${item.name}?`,
+              `Are you sure you want to delete all emails from ${item.name}?`
             );
-            if (!yes) return;
+            if (!yes) {
+              return;
+            }
 
             onBulkDelete([item]);
           }}
@@ -374,10 +376,10 @@ export function HeaderButton(props: {
 }) {
   return (
     <Button
-      variant="ghost"
-      size="sm"
       className="-ml-3 h-8 data-[state=open]:bg-accent"
       onClick={props.onClick}
+      size="sm"
+      variant="ghost"
     >
       <span className="text-muted-foreground">{props.children}</span>
       {props.sorted ? (

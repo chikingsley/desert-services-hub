@@ -1,21 +1,21 @@
+import { env } from "@/env";
 import type { DriveConnection } from "@/generated/prisma/client";
+import { GoogleDriveProvider } from "@/utils/drive/providers/google";
+import { OneDriveProvider } from "@/utils/drive/providers/microsoft";
+import { MICROSOFT_DRIVE_SCOPES } from "@/utils/drive/scopes";
+import type { DriveProvider } from "@/utils/drive/types";
 import {
   isGoogleProvider,
   isMicrosoftProvider,
 } from "@/utils/email/provider-types";
-import type { DriveProvider } from "@/utils/drive/types";
-import type { Logger } from "@/utils/logger";
-import { OneDriveProvider } from "@/utils/drive/providers/microsoft";
-import { GoogleDriveProvider } from "@/utils/drive/providers/google";
-import { MICROSOFT_DRIVE_SCOPES } from "@/utils/drive/scopes";
 import { SafeError } from "@/utils/error";
-import { env } from "@/env";
-import prisma from "@/utils/prisma";
+import type { Logger } from "@/utils/logger";
 import {
   getConfiguredAppOnlyMailbox,
   getMicrosoftAppOnlyAccessToken,
   isOutlookAppOnlyModeEnabled,
 } from "@/utils/outlook/client";
+import prisma from "@/utils/prisma";
 
 type OAuthTokenResponse = {
   access_token?: string;
@@ -31,7 +31,7 @@ type OAuthTokenResponse = {
  */
 function createDriveProvider(
   connection: Pick<DriveConnection, "provider" | "accessToken">,
-  logger: Logger,
+  logger: Logger
 ): DriveProvider {
   const { provider, accessToken } = connection;
 
@@ -59,7 +59,7 @@ export async function createDriveProviderWithRefresh(
     DriveConnection,
     "id" | "provider" | "email" | "accessToken" | "refreshToken" | "expiresAt"
   >,
-  logger: Logger,
+  logger: Logger
 ): Promise<DriveProvider> {
   const { provider, email, accessToken, refreshToken, expiresAt } = connection;
 
@@ -76,7 +76,7 @@ export async function createDriveProviderWithRefresh(
     }
 
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 
@@ -103,17 +103,17 @@ export async function createDriveProviderWithRefresh(
 
 async function refreshMicrosoftDriveToken(
   connection: Pick<DriveConnection, "id" | "refreshToken">,
-  logger: Logger,
+  logger: Logger
 ): Promise<string> {
   const { id: connectionId, refreshToken } = connection;
 
   if (!refreshToken) {
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 
-  if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET) {
+  if (!(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET)) {
     throw new Error("Microsoft login not enabled - missing credentials");
   }
 
@@ -131,7 +131,7 @@ async function refreshMicrosoftDriveToken(
         grant_type: "refresh_token",
         scope: MICROSOFT_DRIVE_SCOPES.join(" "),
       }),
-    },
+    }
   );
 
   let tokens: OAuthTokenResponse;
@@ -144,7 +144,7 @@ async function refreshMicrosoftDriveToken(
     });
     await markDriveConnectionAsDisconnected(connectionId);
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 
@@ -156,7 +156,7 @@ async function refreshMicrosoftDriveToken(
     });
     await markDriveConnectionAsDisconnected(connectionId);
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 
@@ -166,7 +166,7 @@ async function refreshMicrosoftDriveToken(
     });
     await markDriveConnectionAsDisconnected(connectionId);
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 
@@ -189,17 +189,17 @@ async function refreshMicrosoftDriveToken(
 
 async function refreshGoogleDriveToken(
   connection: Pick<DriveConnection, "id" | "refreshToken">,
-  logger: Logger,
+  logger: Logger
 ): Promise<string> {
   const { id: connectionId, refreshToken } = connection;
 
   if (!refreshToken) {
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 
-  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+  if (!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)) {
     throw new Error("Google login not enabled - missing credentials");
   }
 
@@ -226,7 +226,7 @@ async function refreshGoogleDriveToken(
     });
     await markDriveConnectionAsDisconnected(connectionId);
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 
@@ -238,7 +238,7 @@ async function refreshGoogleDriveToken(
     });
     await markDriveConnectionAsDisconnected(connectionId);
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 
@@ -248,7 +248,7 @@ async function refreshGoogleDriveToken(
     });
     await markDriveConnectionAsDisconnected(connectionId);
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 

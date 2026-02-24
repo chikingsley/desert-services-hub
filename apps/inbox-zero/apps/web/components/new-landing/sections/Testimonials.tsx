@@ -2,11 +2,11 @@
 
 import clsx from "clsx";
 import Image from "next/image";
+import { Card, CardContent } from "@/components/new-landing/common/Card";
 import {
   Section,
   SectionContent,
 } from "@/components/new-landing/common/Section";
-import { Card, CardContent } from "@/components/new-landing/common/Card";
 import {
   Paragraph,
   SectionHeading,
@@ -168,43 +168,43 @@ export function Testimonials() {
       </SectionSubtitle>
       <SectionContent>
         {/* Mobile */}
-        <div className="grid gap-4 text-sm leading-6 text-gray-900 sm:hidden">
+        <div className="grid gap-4 text-gray-900 text-sm leading-6 sm:hidden">
           {mobileTestimonials.map((testimonial) => (
             <TestimonialCard
-              testimonial={testimonial}
               key={testimonial.author.name}
+              testimonial={testimonial}
             />
           ))}
         </div>
 
         {/* Desktop */}
-        <div className="hidden grid-cols-1 grid-rows-1 gap-8 text-sm leading-6 text-gray-900 sm:grid sm:grid-cols-2 xl:grid-flow-col xl:grid-cols-4">
+        <div className="hidden grid-cols-1 grid-rows-1 gap-8 text-gray-900 text-sm leading-6 sm:grid sm:grid-cols-2 xl:grid-flow-col xl:grid-cols-4">
           <TestimonialCard
-            testimonial={featuredTestimonial}
             className="sm:col-span-2 xl:col-start-2 xl:row-end-1"
+            testimonial={featuredTestimonial}
             variant="featured"
           />
           {desktopTestimonials.map((columnGroup, columnGroupIdx) => (
             <div
-              key={columnGroupIdx}
               className="space-y-8 xl:contents xl:space-y-0"
+              key={columnGroupIdx}
             >
               {columnGroup.map((column, columnIdx) => (
                 <div
-                  key={columnIdx}
                   className={clsx(
                     (columnGroupIdx === 0 && columnIdx === 0) ||
                       (columnGroupIdx === desktopTestimonials.length - 1 &&
                         columnIdx === columnGroup.length - 1)
                       ? "xl:row-span-2"
                       : "xl:row-start-1",
-                    "space-y-8",
+                    "space-y-8"
                   )}
+                  key={columnIdx}
                 >
                   {column.map((testimonial) => (
                     <TestimonialCard
-                      testimonial={testimonial}
                       key={testimonial.author.handle}
+                      testimonial={testimonial}
                     />
                   ))}
                 </div>
@@ -227,33 +227,33 @@ function TestimonialCard({
   variant?: "default" | "featured";
 }) {
   return (
-    <Card key={testimonial.author.handle} className={className}>
+    <Card className={className} key={testimonial.author.handle}>
       <CardContent>
         {variant === "featured" ? (
           <Paragraph
+            className="font-semibold leading-7 tracking-tight"
             color="gray-700"
             size="lg"
-            className="font-semibold leading-7 tracking-tight"
           >
             {testimonial.body}
           </Paragraph>
         ) : (
-          <Paragraph size="md" color="gray-500">
+          <Paragraph color="gray-500" size="md">
             {testimonial.body}
           </Paragraph>
         )}
       </CardContent>
-      <CardContent className="border-t border-[#F3F3F3] flex items-center justify-between">
+      <CardContent className="flex items-center justify-between border-[#F3F3F3] border-t">
         <div className="flex items-center gap-4">
           <Image
-            className="size-14 md:size-10 rounded-full bg-gray-50 border-2 border-[#E3E3E3]"
-            src={testimonial.author.imageUrl}
             alt=""
-            width={100}
+            className="size-14 rounded-full border-2 border-[#E3E3E3] bg-gray-50 md:size-10"
             height={100}
+            src={testimonial.author.imageUrl}
+            width={100}
           />
           <div className="text-left">
-            <Paragraph size="md" color="dark" className="font-semibold">
+            <Paragraph className="font-semibold" color="dark" size="md">
               {testimonial.author.name}
             </Paragraph>
             {testimonial.author.handle ? (
@@ -263,12 +263,12 @@ function TestimonialCard({
         </div>
         {variant === "featured" && testimonial.author.logoUrl ? (
           <Image
-            className="h-8 w-auto flex-none"
-            src={testimonial.author.logoUrl}
             alt=""
+            className="h-8 w-auto flex-none"
             height={32}
-            width={98}
+            src={testimonial.author.logoUrl}
             unoptimized
+            width={98}
           />
         ) : null}
       </CardContent>

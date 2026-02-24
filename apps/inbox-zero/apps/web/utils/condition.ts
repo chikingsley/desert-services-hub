@@ -1,10 +1,10 @@
-import { LogicalOperator } from "@/generated/prisma/enums";
 import type { Rule } from "@/generated/prisma/client";
-import { ConditionType, type CoreConditionType } from "@/utils/config";
+import { LogicalOperator } from "@/generated/prisma/enums";
 import type {
   CreateRuleBody,
   ZodCondition,
 } from "@/utils/actions/rule.validation";
+import { ConditionType, type CoreConditionType } from "@/utils/config";
 import type { Logger } from "@/utils/logger";
 
 export type RuleConditions = Partial<
@@ -23,13 +23,13 @@ export type RuleConditions = Partial<
 >;
 
 export function isAIRule<T extends RuleConditions>(
-  rule: T,
+  rule: T
 ): rule is T & { instructions: string } {
   return !!rule.instructions;
 }
 
 export function isGroupRule<T extends RuleConditions>(
-  rule: T,
+  rule: T
 ): rule is T & { groupId: string } {
   return !!rule.groupId;
 }
@@ -101,14 +101,14 @@ export function getConditions(rule: RuleConditions) {
 }
 
 export function getConditionTypes(
-  rule: RuleConditions,
+  rule: RuleConditions
 ): Record<CoreConditionType, boolean> {
   return getConditions(rule).reduce(
     (acc, condition) => {
       acc[condition.type] = true;
       return acc;
     },
-    {} as Record<CoreConditionType, boolean>,
+    {} as Record<CoreConditionType, boolean>
   );
 }
 
@@ -146,7 +146,7 @@ type FlattenedConditions = {
 
 export const flattenConditions = (
   conditions: ZodCondition[],
-  logger: Logger,
+  logger: Logger
 ): FlattenedConditions => {
   return conditions.reduce((acc, condition) => {
     switch (condition.type) {
@@ -154,10 +154,18 @@ export const flattenConditions = (
         acc.instructions = condition.instructions;
         break;
       case ConditionType.STATIC:
-        if (condition.to) acc.to = condition.to;
-        if (condition.from) acc.from = condition.from;
-        if (condition.subject) acc.subject = condition.subject;
-        if (condition.body) acc.body = condition.body;
+        if (condition.to) {
+          acc.to = condition.to;
+        }
+        if (condition.from) {
+          acc.from = condition.from;
+        }
+        if (condition.subject) {
+          acc.subject = condition.subject;
+        }
+        if (condition.body) {
+          acc.body = condition.body;
+        }
         break;
       default:
         logger.warn("Unknown condition type", { condition });
@@ -203,14 +211,26 @@ export function conditionsToString(rule: RuleConditions) {
 
   // Static conditions - grouped with commas
   const staticConditions: string[] = [];
-  if (rule.from) staticConditions.push(`From: ${rule.from}`);
-  if (rule.subject) staticConditions.push(`Subject: "${rule.subject}"`);
-  if (rule.to) staticConditions.push(`To: ${rule.to}`);
-  if (rule.body) staticConditions.push(`Body: "${rule.body}"`);
-  if (staticConditions.length) conditions.push(staticConditions.join(", "));
+  if (rule.from) {
+    staticConditions.push(`From: ${rule.from}`);
+  }
+  if (rule.subject) {
+    staticConditions.push(`Subject: "${rule.subject}"`);
+  }
+  if (rule.to) {
+    staticConditions.push(`To: ${rule.to}`);
+  }
+  if (rule.body) {
+    staticConditions.push(`Body: "${rule.body}"`);
+  }
+  if (staticConditions.length) {
+    conditions.push(staticConditions.join(", "));
+  }
 
   // AI condition
-  if (rule.instructions) conditions.push(rule.instructions);
+  if (rule.instructions) {
+    conditions.push(rule.instructions);
+  }
 
   return conditions.join(connector);
 }

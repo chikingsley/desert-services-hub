@@ -22,11 +22,11 @@ const INVOICE_SEARCH_URL = "https://dm.maricopa.gov/inv/invSearch.jsf";
 const INVOICE_ID_LINK_RE = /^IV\d+$/i;
 
 export interface DownloadInvoicePdfResult {
-  success: boolean;
+  error?: string;
   invoiceNumber: string;
   pdfPath?: string;
   pdfUrl?: string;
-  error?: string;
+  success: boolean;
 }
 
 function ensureDir(dir: string): void {

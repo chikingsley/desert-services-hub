@@ -9,13 +9,6 @@ import type { GhostHighlight, Highlight, PdfSelection, Tip } from "../types";
  */
 export interface PdfHighlighterUtils {
   /**
-   * Checks whether a selection is progress, a ghost highlight, or an edit.
-   *
-   * @returns - `true` if editing, ghost highlighting, or selecting.
-   */
-  isEditingOrHighlighting(): boolean;
-
-  /**
    * Get currently selected area or text selection.
    *
    * @returns - current selection or `null` if no selection is being made.
@@ -30,15 +23,18 @@ export interface PdfHighlighterUtils {
   getGhostHighlight(): GhostHighlight | null;
 
   /**
-   * Cancel any ghost highlight.
-   * The selected area will stay selected until the user clicks away.
+   * Get the currently active tip, if any.
+   *
+   * @returns - the currently active tip or `null` if inactive.
    */
-  removeGhostHighlight(): void;
+  getTip(): Tip | null;
+
   /**
-   * If enabled, automatic tips/popups inside of a PdfHighlighter will be disabled.
-   * Additional niceties will also be provided to prevent new highlights being made.
+   * Get a reference to the currently used instance of a PDF Viewer.
+   *
+   * @returns - The currently active PDF Viewer.
    */
-  toggleEditInProgress(flag?: boolean): void;
+  getViewer(): PDFViewer | null;
 
   /**
    * Whether an AreaHighlight is being moved/resized, or a manual highlight edit has
@@ -47,6 +43,12 @@ export interface PdfHighlighterUtils {
    * @returns - `true` if AreaHighlight is being edited or edit mode was set.
    */
   isEditInProgress(): boolean;
+  /**
+   * Checks whether a selection is progress, a ghost highlight, or an edit.
+   *
+   * @returns - `true` if editing, ghost highlighting, or selecting.
+   */
+  isEditingOrHighlighting(): boolean;
 
   /**
    * Whether a mouse selection or text selection is currently being performed.
@@ -54,6 +56,12 @@ export interface PdfHighlighterUtils {
    * @returns - `true` if mouse selection or text selection is being performed.
    */
   isSelectionInProgress(): boolean;
+
+  /**
+   * Cancel any ghost highlight.
+   * The selected area will stay selected until the user clicks away.
+   */
+  removeGhostHighlight(): void;
 
   /**
    * Scroll to a highlight in this viewer.
@@ -64,25 +72,16 @@ export interface PdfHighlighterUtils {
   scrollToHighlight(highlight: Highlight): void;
 
   /**
-   * Get a reference to the currently used instance of a PDF Viewer.
-   *
-   * @returns - The currently active PDF Viewer.
-   */
-  getViewer(): PDFViewer | null;
-
-  /**
-   * Get the currently active tip, if any.
-   *
-   * @returns - the currently active tip or `null` if inactive.
-   */
-  getTip(): Tip | null;
-
-  /**
    * Set a tip to be displayed in the current PDF Viewer.
    *
    * @param tip - tip to be displayed, or `null` to hide any tip.
    */
   setTip(tip: Tip | null): void;
+  /**
+   * If enabled, automatic tips/popups inside of a PdfHighlighter will be disabled.
+   * Additional niceties will also be provided to prevent new highlights being made.
+   */
+  toggleEditInProgress(flag?: boolean): void;
 
   /**
    * Callback to update any currently active tip's position. This will make sure

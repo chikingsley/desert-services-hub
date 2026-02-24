@@ -24,7 +24,9 @@ export function generateEnvFile(config: {
 
   // Helper to set a value (handles both commented and uncommented lines)
   const setValue = (key: string, value: string | undefined) => {
-    if (value === undefined) return;
+    if (value === undefined) {
+      return;
+    }
     // Match both commented (# KEY=) and uncommented (KEY=) forms
     const patterns = [
       new RegExp(`^${key}=.*$`, "m"),
@@ -68,7 +70,7 @@ export function generateEnvFile(config: {
   setValue("NEXT_PUBLIC_BASE_URL", env.NEXT_PUBLIC_BASE_URL);
   setValue(
     "NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS",
-    env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS,
+    env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS
   );
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -91,7 +93,7 @@ export function generateEnvFile(config: {
   setValue("GOOGLE_PUBSUB_TOPIC_NAME", env.GOOGLE_PUBSUB_TOPIC_NAME);
   setValue(
     "GOOGLE_PUBSUB_VERIFICATION_TOKEN",
-    env.GOOGLE_PUBSUB_VERIFICATION_TOKEN,
+    env.GOOGLE_PUBSUB_VERIFICATION_TOKEN
   );
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -103,7 +105,7 @@ export function generateEnvFile(config: {
   setValue("MICROSOFT_TENANT_ID", env.MICROSOFT_TENANT_ID);
   setValue(
     "MICROSOFT_WEBHOOK_CLIENT_STATE",
-    env.MICROSOFT_WEBHOOK_CLIENT_STATE,
+    env.MICROSOFT_WEBHOOK_CLIENT_STATE
   );
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -178,9 +180,13 @@ export function parseEnvFile(content: string): Record<string, string> {
   const env: Record<string, string> = {};
   for (const line of content.split("\n")) {
     const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
     const eqIndex = trimmed.indexOf("=");
-    if (eqIndex === -1) continue;
+    if (eqIndex === -1) {
+      continue;
+    }
     const key = trimmed.slice(0, eqIndex).trim();
     let value = trimmed.slice(eqIndex + 1).trim();
     if (
@@ -197,7 +203,7 @@ export function parseEnvFile(content: string): Record<string, string> {
 export function updateEnvValue(
   content: string,
   key: string,
-  value: string,
+  value: string
 ): string {
   const needsQuotes = /[\s"'#]/.test(value) || value.includes("://");
   const escaped = needsQuotes
@@ -228,7 +234,9 @@ export function redactValue(key: string, value: string): string {
   }
 
   if (isSensitiveKey(key)) {
-    if (value.length <= 4) return "****";
+    if (value.length <= 4) {
+      return "****";
+    }
     return `${value.slice(0, 4)}****`;
   }
 
@@ -237,7 +245,7 @@ export function redactValue(key: string, value: string): string {
 
 export function parsePortConflict(stderr: string): string | null {
   const match = stderr.match(
-    /Bind for \S+:(\d+) failed: port is already allocated/,
+    /Bind for \S+:(\d+) failed: port is already allocated/
   );
   if (match) {
     return `Port ${match[1]} is already in use by another process.`;

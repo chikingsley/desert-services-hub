@@ -32,7 +32,9 @@ async function createProject(name: string): Promise<number> {
     [`_test_cascade_${RUN}_${name}`]
   )) as Array<{ id: number }>;
   const id = rows[0]?.id;
-  if (!id) throw new Error("Failed to create project");
+  if (!id) {
+    throw new Error("Failed to create project");
+  }
   ids.projects.push(id);
   return id;
 }
@@ -48,21 +50,27 @@ async function createEstimate(num: string): Promise<number> {
     ]
   )) as Array<{ id: number }>;
   const id = rows[0]?.id;
-  if (!id) throw new Error("Failed to create estimate");
+  if (!id) {
+    throw new Error("Failed to create estimate");
+  }
   ids.estimates.push(id);
   return id;
 }
 
 let mailboxId: number | undefined;
 async function ensureMailbox(): Promise<number> {
-  if (mailboxId) return mailboxId;
+  if (mailboxId) {
+    return mailboxId;
+  }
   const rows = (await db.run(
     `INSERT INTO mailboxes (email, display_name)
      VALUES ($1, $2) RETURNING id`,
     [`_test_cascade_${RUN}@example.test`, `Test Cascade ${RUN}`]
   )) as Array<{ id: number }>;
   const id = rows[0]?.id;
-  if (!id) throw new Error("Failed to create mailbox");
+  if (!id) {
+    throw new Error("Failed to create mailbox");
+  }
   ids.mailboxes.push(id);
   mailboxId = id;
   return id;
@@ -85,7 +93,9 @@ async function createEmail(
     ]
   )) as Array<{ id: number }>;
   const id = rows[0]?.id;
-  if (!id) throw new Error("Failed to create email");
+  if (!id) {
+    throw new Error("Failed to create email");
+  }
   ids.emails.push(id);
   return id;
 }
@@ -97,7 +107,9 @@ async function createDocument(emailId: number): Promise<number> {
     [emailId, `_tc_${RUN}_${emailId}.pdf`]
   )) as Array<{ id: number }>;
   const id = rows[0]?.id;
-  if (!id) throw new Error("Failed to create document");
+  if (!id) {
+    throw new Error("Failed to create document");
+  }
   ids.documents.push(id);
   return id;
 }
@@ -112,7 +124,9 @@ async function linkEstimateEmail(
     [estimateId, emailId]
   )) as Array<{ id: number }>;
   const id = rows[0]?.id;
-  if (!id) throw new Error("Failed to link estimate to email");
+  if (!id) {
+    throw new Error("Failed to link estimate to email");
+  }
   ids.estimateEmails.push(id);
   return id;
 }
@@ -129,12 +143,11 @@ async function linkProjectEstimate(
   ids.projectEstimates.push({ projectId, estimateId });
 }
 
-async function getProjectId(
-  table: string,
-  id: number
-): Promise<number | null> {
+async function getProjectId(table: string, id: number): Promise<number | null> {
   const row = await db
-    .query<{ project_id: number | null }>(`SELECT project_id FROM ${table} WHERE id = $1`)
+    .query<{ project_id: number | null }>(
+      `SELECT project_id FROM ${table} WHERE id = $1`
+    )
     .get(id);
   return row?.project_id ?? null;
 }

@@ -10,20 +10,20 @@
  * RUN_E2E_FLOW_TESTS=true pnpm test-e2e outbound-tracking
  */
 
-import { describe, test, expect, beforeAll, afterEach } from "vitest";
+import { afterEach, beforeAll, describe, expect, test } from "vitest";
 import prisma from "@/utils/prisma";
 import { shouldRunFlowTests, TIMEOUTS } from "./config";
-import { initializeFlowTests, setupFlowTest } from "./setup";
-import { generateTestSummary } from "./teardown";
+import type { TestAccount } from "./helpers/accounts";
+import { ensureConversationRules } from "./helpers/accounts";
 import {
   sendTestEmail,
   sendTestReply,
   TEST_EMAIL_SCENARIOS,
 } from "./helpers/email";
-import { waitForMessageInInbox, waitForExecutedRule } from "./helpers/polling";
-import { logStep, clearLogs } from "./helpers/logging";
-import type { TestAccount } from "./helpers/accounts";
-import { ensureConversationRules } from "./helpers/accounts";
+import { clearLogs, logStep } from "./helpers/logging";
+import { waitForExecutedRule, waitForMessageInInbox } from "./helpers/polling";
+import { initializeFlowTests, setupFlowTest } from "./setup";
+import { generateTestSummary } from "./teardown";
 
 describe.skipIf(!shouldRunFlowTests())("Outbound Message Tracking", () => {
   let gmail: TestAccount;
@@ -118,7 +118,7 @@ describe.skipIf(!shouldRunFlowTests())("Outbound Message Tracking", () => {
 
       logStep("Reply received in Gmail, thread continuity verified");
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   test(
@@ -179,7 +179,7 @@ describe.skipIf(!shouldRunFlowTests())("Outbound Message Tracking", () => {
         count: executedRulesForSent.length,
       });
     },
-    TIMEOUTS.TEST_DEFAULT,
+    TIMEOUTS.TEST_DEFAULT
   );
 
   test(
@@ -287,7 +287,7 @@ describe.skipIf(!shouldRunFlowTests())("Outbound Message Tracking", () => {
         type: resolvedTracker?.type,
       });
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   // ============================================================
@@ -362,7 +362,7 @@ describe.skipIf(!shouldRunFlowTests())("Outbound Message Tracking", () => {
 
       logStep("Reply received in Outlook, thread continuity verified");
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   test(
@@ -440,7 +440,7 @@ describe.skipIf(!shouldRunFlowTests())("Outbound Message Tracking", () => {
       // Filter to only rules created AFTER the reply was sent
       // (rules created before the reply are expected - from inbound processing)
       const rulesAfterReply = executedRulesForThread.filter(
-        (rule) => rule.createdAt > new Date(replySentAt),
+        (rule) => rule.createdAt > new Date(replySentAt)
       );
 
       // Outbound messages should not trigger rule execution
@@ -451,7 +451,7 @@ describe.skipIf(!shouldRunFlowTests())("Outbound Message Tracking", () => {
         afterReply: rulesAfterReply.length,
       });
     },
-    TIMEOUTS.TEST_DEFAULT,
+    TIMEOUTS.TEST_DEFAULT
   );
 
   test(
@@ -552,6 +552,6 @@ describe.skipIf(!shouldRunFlowTests())("Outbound Message Tracking", () => {
         type: resolvedTracker?.type,
       });
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 });

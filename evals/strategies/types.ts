@@ -1,5 +1,7 @@
 /** A retrieval strategy returns ranked project IDs for a query. */
 export interface RetrievalStrategy {
+  /** Optional cleanup (close connections, etc.) */
+  cleanup?(): Promise<void>;
   /** Optional setup (DB connections, index loading, etc.) */
   init?(): Promise<void>;
 
@@ -15,7 +17,4 @@ export interface RetrievalStrategy {
       email_id?: number;
     };
   }): Promise<number[]>;
-
-  /** Optional cleanup (close connections, etc.) */
-  cleanup?(): Promise<void>;
 }

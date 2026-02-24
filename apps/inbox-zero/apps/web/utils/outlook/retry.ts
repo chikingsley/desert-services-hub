@@ -1,13 +1,13 @@
 import pRetry from "p-retry";
 import type { Logger } from "@/utils/logger";
-import { sleep } from "@/utils/sleep";
 import { isFetchError } from "@/utils/retry/is-fetch-error";
+import { sleep } from "@/utils/sleep";
 
 interface ErrorInfo {
-  status?: number;
   code?: string;
   errorMessage: string;
   responseBody?: string;
+  status?: number;
 }
 
 /**
@@ -18,7 +18,7 @@ interface ErrorInfo {
 export async function withOutlookRetry<T>(
   operation: () => Promise<T>,
   logger: Logger,
-  maxRetries = 5,
+  maxRetries = 5
 ): Promise<T> {
   return pRetry(operation, {
     retries: maxRetries,
@@ -57,7 +57,7 @@ export async function withOutlookRetry<T>(
         isServerError,
         isConflictError,
         error.attemptNumber,
-        retryAfterHeader,
+        retryAfterHeader
       );
 
       logger.warn("Microsoft Graph error. Will retry", {
@@ -139,7 +139,7 @@ export function isRetryableError(errorInfo: ErrorInfo): {
     code === "ServiceNotAvailable" ||
     code === "ServerBusy" ||
     /502|503|504|server error|temporarily unavailable|service unavailable/i.test(
-      errorMessage,
+      errorMessage
     );
 
   // Conflict errors from stale change keys (412)
@@ -168,7 +168,7 @@ export function calculateRetryDelay(
   isServerError: boolean,
   isConflictError: boolean,
   attemptNumber: number,
-  retryAfterHeader?: string,
+  retryAfterHeader?: string
 ): number {
   // Handle Retry-After header
   if (retryAfterHeader) {

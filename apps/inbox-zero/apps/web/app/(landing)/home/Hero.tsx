@@ -2,8 +2,12 @@
 
 import Image from "next/image";
 import { usePostHog } from "posthog-js/react";
-import { Gmail } from "@/components/new-landing/icons/Gmail";
-import { Outlook } from "@/components/new-landing/icons/Outlook";
+import { CallToAction } from "@/components/new-landing/CallToAction";
+import {
+  Badge,
+  type BadgeVariant,
+} from "@/components/new-landing/common/Badge";
+import { BlurFade } from "@/components/new-landing/common/BlurFade";
 import {
   Section,
   SectionContent,
@@ -12,29 +16,25 @@ import {
   PageHeading,
   Paragraph,
 } from "@/components/new-landing/common/Typography";
-import { CallToAction } from "@/components/new-landing/CallToAction";
-import { LiquidGlassButton } from "@/components/new-landing/LiquidGlassButton";
+import { Gmail } from "@/components/new-landing/icons/Gmail";
+import { Outlook } from "@/components/new-landing/icons/Outlook";
 import { Play } from "@/components/new-landing/icons/Play";
+import { LiquidGlassButton } from "@/components/new-landing/LiquidGlassButton";
+import { UnicornScene } from "@/components/new-landing/UnicornScene";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { BlurFade } from "@/components/new-landing/common/BlurFade";
-import { UnicornScene } from "@/components/new-landing/UnicornScene";
 import { landingPageAnalytics } from "@/hooks/useAnalytics";
-import {
-  Badge,
-  type BadgeVariant,
-} from "@/components/new-landing/common/Badge";
 
 interface HeroProps {
-  title?: React.ReactNode;
-  subtitle?: React.ReactNode;
   badge?: React.ReactNode;
   badgeVariant?: BadgeVariant;
   children?: React.ReactNode;
+  subtitle?: React.ReactNode;
+  title?: React.ReactNode;
 }
 
 export function Hero({
@@ -47,25 +47,25 @@ export function Hero({
   return (
     <Section className={badge ? "mt-7 md:mt-7" : "mt-10 md:mt-20"}>
       {badge ? (
-        <BlurFade duration={0.4} delay={0}>
-          <div className="flex justify-center mb-7">
+        <BlurFade delay={0} duration={0.4}>
+          <div className="mb-7 flex justify-center">
             <Badge variant={badgeVariant}>{badge}</Badge>
           </div>
         </BlurFade>
       ) : null}
       <PageHeading>{title}</PageHeading>
-      <BlurFade duration={0.4} delay={0.125 * 5}>
-        <Paragraph size="lg" className={"max-w-[640px] mx-auto mt-6"}>
+      <BlurFade delay={0.125 * 5} duration={0.4}>
+        <Paragraph className={"mx-auto mt-6 max-w-[640px]"} size="lg">
           {subtitle}
         </Paragraph>
       </BlurFade>
-      <SectionContent noMarginTop className="mt-6 md:mt-8">
-        <div className="space-y-3 mb-8">
-          <BlurFade duration={0.4} delay={0.125 * 7}>
+      <SectionContent className="mt-6 md:mt-8" noMarginTop>
+        <div className="mb-8 space-y-3">
+          <BlurFade delay={0.125 * 7} duration={0.4}>
             <CallToAction />
           </BlurFade>
-          <BlurFade duration={0.4} delay={0.125 * 8}>
-            <div className="mb-12 flex items-center gap-2 justify-center">
+          <BlurFade delay={0.125 * 8} duration={0.4}>
+            <div className="mb-12 flex items-center justify-center gap-2">
               <Paragraph color="light" size="sm">
                 Works with
               </Paragraph>
@@ -86,7 +86,7 @@ export function HeroVideoPlayer() {
   return (
     <BlurFade delay={0.125 * 9}>
       <div className="relative w-full">
-        <div className="relative border border-[#EFEFEF] rounded-3xl md:rounded-[43px] overflow-hidden block">
+        <div className="relative block overflow-hidden rounded-3xl border border-[#EFEFEF] md:rounded-[43px]">
           <Dialog>
             <DialogTrigger
               asChild
@@ -102,21 +102,21 @@ export function HeroVideoPlayer() {
               <DialogTitle className="sr-only">Video player</DialogTitle>
               <div className="relative aspect-video w-full">
                 <iframe
-                  src="https://www.youtube.com/embed/hfvKvTHBjG0?autoplay=1&rel=0"
-                  className="size-full rounded-lg"
-                  title="Video content"
-                  allowFullScreen
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="size-full rounded-lg"
+                  src="https://www.youtube.com/embed/hfvKvTHBjG0?autoplay=1&rel=0"
+                  title="Video content"
                 />
               </div>
             </DialogContent>
           </Dialog>
           <Image
-            src="/images/new-landing/video-thumbnail.png"
             alt="an organized inbox"
-            width={2000}
-            height={1000}
             className="w-full"
+            height={1000}
+            src="/images/new-landing/video-thumbnail.png"
+            width={2000}
           />
           <UnicornScene className="h-[calc(100%+5px)] opacity-30" />
         </div>

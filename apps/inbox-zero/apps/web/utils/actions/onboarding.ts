@@ -1,5 +1,6 @@
 "use server";
 
+import { updateContactCompanySize, updateContactRole } from "@inboxzero/loops";
 import { after } from "next/server";
 import {
   saveOnboardingAnswersBody,
@@ -7,7 +8,6 @@ import {
 } from "@/utils/actions/onboarding.validation";
 import { actionClientUser } from "@/utils/actions/safe-action";
 import prisma from "@/utils/prisma";
-import { updateContactCompanySize, updateContactRole } from "@inboxzero/loops";
 
 export const completedOnboardingAction = actionClientUser
   .metadata({ name: "completedOnboarding" })
@@ -36,12 +36,16 @@ export const saveOnboardingAnswersAction = actionClientUser
           surveyImprovements?: string;
         } = {};
 
-        if (!questions || !answers) return result;
+        if (!(questions && answers)) {
+          return result;
+        }
 
         // Helper to get answer by question key
         const getAnswerByKey = (key: string) => {
           const questionIndex = questions.findIndex((q) => q.key === key);
-          if (questionIndex === -1) return null;
+          if (questionIndex === -1) {
+            return null;
+          }
 
           const answerKey =
             questionIndex === 0
@@ -66,7 +70,7 @@ export const saveOnboardingAnswersAction = actionClientUser
             }
           } else if (Array.isArray(featuresAnswer)) {
             const features = featuresAnswer.filter(
-              (f) => f && f !== "undefined",
+              (f) => f && f !== "undefined"
             );
             if (features.length > 0) {
               result.surveyFeatures = features;
@@ -140,7 +144,7 @@ export const saveOnboardingAnswersAction = actionClientUser
           surveyImprovements: extractedAnswers.surveyImprovements,
         },
       });
-    },
+    }
   );
 
 export const saveOnboardingFeaturesAction = actionClientUser

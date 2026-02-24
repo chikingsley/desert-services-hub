@@ -1,12 +1,13 @@
 import { z } from "zod";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailForLLM } from "@/utils/types";
-import { stringifyEmailSimple } from "@/utils/stringify-email";
-import { formatDateForLLM, formatRelativeTimeForLLM } from "@/utils/date";
-import { preprocessBooleanLike } from "@/utils/zod";
-import { getModel } from "@/utils/llms/model";
-import { createGenerateObject } from "@/utils/llms";
 import { PROMPT_SECURITY_INSTRUCTIONS } from "@/utils/ai/security";
+import { formatDateForLLM, formatRelativeTimeForLLM } from "@/utils/date";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { stringifyEmailSimple } from "@/utils/stringify-email";
+import type { EmailForLLM } from "@/utils/types";
+import { preprocessBooleanLike } from "@/utils/zod";
+
 // import { Braintrust } from "@/utils/braintrust";
 
 // TODO: allow specific labels
@@ -37,7 +38,9 @@ export async function aiClean({
 }): Promise<{ archive: boolean }> {
   const lastMessage = messages.at(-1);
 
-  if (!lastMessage) throw new Error("No messages");
+  if (!lastMessage) {
+    throw new Error("No messages");
+  }
 
   const system =
     `You are an AI assistant designed to help users achieve inbox zero by analyzing emails and deciding whether they should be archived or not.

@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
+  calculateRetryDelay,
   extractErrorInfo,
   isRetryableError,
-  calculateRetryDelay,
 } from "./retry";
 
 describe("extractErrorInfo", () => {
@@ -180,7 +180,7 @@ describe("calculateRetryDelay", () => {
       false,
       false,
       1,
-      futureDate.toUTCString(),
+      futureDate.toUTCString()
     );
     expect(delay).toBeGreaterThanOrEqual(4000);
     expect(delay).toBeLessThanOrEqual(5000);

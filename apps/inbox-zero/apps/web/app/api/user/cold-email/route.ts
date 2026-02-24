@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
-import { withEmailAccount } from "@/utils/middleware";
 import {
   ColdEmailStatus,
   GroupItemType,
   SystemType,
 } from "@/generated/prisma/enums";
+import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 const LIMIT = 50;
 
@@ -16,7 +16,7 @@ async function getColdEmails(
     emailAccountId,
     status,
   }: { emailAccountId: string; status: ColdEmailStatus },
-  page: number,
+  page: number
 ) {
   const coldEmailRule = await prisma.rule.findUnique({
     where: {
@@ -59,7 +59,7 @@ async function getColdEmails(
   const coldEmails = groupItems.map((item) => ({
     id: item.id,
     fromEmail: item.value,
-    status: status,
+    status,
     createdAt: item.createdAt,
     reason: item.reason,
     threadId: item.threadId,

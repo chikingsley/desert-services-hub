@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getCategorizationProgress } from "@/utils/redis/categorization-progress";
 import { withEmailAccount } from "@/utils/middleware";
+import { getCategorizationProgress } from "@/utils/redis/categorization-progress";
 
 export type CategorizeProgress = Awaited<
   ReturnType<typeof getCategorizeProgress>
@@ -21,5 +21,5 @@ export const GET = withEmailAccount(
     const emailAccountId = request.auth.emailAccountId;
     const result = await getCategorizeProgress({ emailAccountId });
     return NextResponse.json(result);
-  },
+  }
 );

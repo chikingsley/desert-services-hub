@@ -1,5 +1,7 @@
 "use client";
 
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -8,8 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 const SKELETON_ROW_COUNT = 10;
 
@@ -39,7 +39,7 @@ function SkeletonDesktopRow() {
         <Skeleton className="h-4 w-10" />
       </TableCell>
       <TableCell className="p-1">
-        <div className="flex justify-end items-center gap-2">
+        <div className="flex items-center justify-end gap-2">
           <Skeleton className="h-8 w-8 rounded-lg" />
           <Skeleton className="h-8 w-24 rounded-lg" />
           <Skeleton className="h-8 w-8 rounded-lg" />
@@ -58,13 +58,13 @@ export function BulkUnsubscribeDesktopSkeleton() {
             <SkeletonCheckbox />
           </TableHead>
           <TableHead>
-            <span className="text-sm font-medium">From</span>
+            <span className="font-medium text-sm">From</span>
           </TableHead>
           <TableHead>
-            <span className="text-sm font-medium">Emails</span>
+            <span className="font-medium text-sm">Emails</span>
           </TableHead>
           <TableHead>
-            <span className="text-sm font-medium">Read</span>
+            <span className="font-medium text-sm">Read</span>
           </TableHead>
           <TableHead />
         </TableRow>
@@ -83,7 +83,7 @@ function SkeletonMobileCard() {
     <Card className="overflow-hidden">
       <CardHeader>
         <Skeleton className="h-5 w-40" />
-        <Skeleton className="h-4 w-48 mt-1" />
+        <Skeleton className="mt-1 h-4 w-48" />
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="grid grid-cols-3 gap-2">

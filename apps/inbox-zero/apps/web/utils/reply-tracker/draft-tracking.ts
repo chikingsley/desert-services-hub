@@ -1,10 +1,10 @@
 import { ActionType } from "@/generated/prisma/enums";
-import type { ParsedMessage } from "@/utils/types";
+import type { EmailProvider } from "@/utils/email/types";
+import type { Logger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
 import { withPrismaRetry } from "@/utils/prisma-retry";
 import { calculateSimilarity } from "@/utils/similarity-score";
-import type { EmailProvider } from "@/utils/email/types";
-import type { Logger } from "@/utils/logger";
+import type { ParsedMessage } from "@/utils/types";
 
 /**
  * Checks if a sent message originated from an AI draft and logs its similarity.
@@ -34,7 +34,7 @@ export async function trackSentDraftStatus({
     where: {
       executedRule: {
         emailAccountId,
-        threadId: threadId,
+        threadId,
       },
       type: ActionType.DRAFT_EMAIL,
       draftId: { not: null },
@@ -82,9 +82,9 @@ export async function trackSentDraftStatus({
         prisma.$transaction([
           prisma.draftSendLog.create({
             data: {
-              executedActionId: executedActionId,
-              sentMessageId: sentMessageId,
-              similarityScore: similarityScore,
+              executedActionId,
+              sentMessageId,
+              similarityScore,
             },
           }),
           prisma.executedAction.update({
@@ -92,12 +92,12 @@ export async function trackSentDraftStatus({
             data: { wasDraftSent: false },
           }),
         ]),
-      { logger },
+      { logger }
     );
 
     logger.info(
       "Created draft send log and marked action as not sent (draft still exists)",
-      { executedActionId },
+      { executedActionId }
     );
     return;
   }
@@ -108,7 +108,7 @@ export async function trackSentDraftStatus({
       executedActionId,
       draftId: executedAction.draftId,
       similarityScore,
-    },
+    }
   );
 
   await withPrismaRetry(
@@ -116,9 +116,9 @@ export async function trackSentDraftStatus({
       prisma.$transaction([
         prisma.draftSendLog.create({
           data: {
-            executedActionId: executedActionId,
-            sentMessageId: sentMessageId,
-            similarityScore: similarityScore,
+            executedActionId,
+            sentMessageId,
+            similarityScore,
           },
         }),
         // Mark that the draft was sent
@@ -127,12 +127,12 @@ export async function trackSentDraftStatus({
           data: { wasDraftSent: true },
         }),
       ]),
-    { logger },
+    { logger }
   );
 
   logger.info(
     "Successfully created draft send log and updated action status via transaction",
-    { executedActionId },
+    { executedActionId }
   );
 }
 
@@ -166,7 +166,7 @@ export async function cleanupThreadAIDrafts({
       where: {
         executedRule: {
           emailAccountId,
-          threadId: threadId,
+          threadId,
           messageId: { not: excludeMessageId },
         },
         type: ActionType.DRAFT_EMAIL,
@@ -190,7 +190,9 @@ export async function cleanupThreadAIDrafts({
     });
 
     for (const action of potentialDraftsToClean) {
-      if (!action.draftId) continue; // Not expected to happen, but to fix TS error
+      if (!action.draftId) {
+        continue; // Not expected to happen, but to fix TS error
+      }
 
       const actionLoggerOptions = {
         executedActionId: action.id,
@@ -219,7 +221,7 @@ export async function cleanupThreadAIDrafts({
           // Pass full draftDetails to properly handle Outlook HTML content
           const similarityScore = calculateSimilarity(
             action.content,
-            draftDetails,
+            draftDetails
           );
           const isUnmodified = similarityScore === 1.0;
 
@@ -249,23 +251,23 @@ export async function cleanupThreadAIDrafts({
                     where: { id: action.id },
                     data: { wasDraftSent: false },
                   }),
-                { logger },
+                { logger }
               ),
             ]);
             logger.info(
               "Deleted unmodified draft and updated action status.",
-              actionLoggerOptions,
+              actionLoggerOptions
             );
           } else {
             logger.info(
               "Draft has been modified, skipping deletion.",
-              actionLoggerOptions,
+              actionLoggerOptions
             );
           }
         } else {
           logger.info(
             "Draft no longer exists, marking as not sent.",
-            actionLoggerOptions,
+            actionLoggerOptions
           );
           // Draft doesn't exist anymore, mark as not sent
           await withPrismaRetry(
@@ -274,7 +276,7 @@ export async function cleanupThreadAIDrafts({
                 where: { id: action.id },
                 data: { wasDraftSent: false },
               }),
-            { logger },
+            { logger }
           );
         }
       } catch (error) {
@@ -306,7 +308,9 @@ export async function cleanupThreadAIDrafts({
       });
 
       for (const tracker of followUpTrackers) {
-        if (!tracker.followUpDraftId) continue;
+        if (!tracker.followUpDraftId) {
+          continue;
+        }
 
         try {
           await provider.deleteDraft(tracker.followUpDraftId);

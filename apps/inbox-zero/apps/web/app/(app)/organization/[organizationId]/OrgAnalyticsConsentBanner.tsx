@@ -1,15 +1,15 @@
 "use client";
 
-import { useCallback } from "react";
-import { useAction } from "next-safe-action/hooks";
 import { ShieldCheckIcon } from "lucide-react";
-import { ActionCard } from "@/components/ui/card";
+import { useAction } from "next-safe-action/hooks";
+import { useCallback } from "react";
+import { toastError, toastSuccess } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
-import { toastSuccess, toastError } from "@/components/Toast";
-import { getActionErrorMessage } from "@/utils/error";
-import { updateAnalyticsConsentAction } from "@/utils/actions/organization";
+import { ActionCard } from "@/components/ui/card";
 import { useOrganizationMembership } from "@/hooks/useOrganizationMembership";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { updateAnalyticsConsentAction } from "@/utils/actions/organization";
+import { getActionErrorMessage } from "@/utils/error";
 import { hasOrganizationAdminRole } from "@/utils/organizations/roles";
 
 export function OrgAnalyticsConsentBanner() {
@@ -30,7 +30,7 @@ export function OrgAnalyticsConsentBanner() {
           }),
         });
       },
-    },
+    }
   );
 
   const handleAllow = useCallback(() => {
@@ -51,16 +51,16 @@ export function OrgAnalyticsConsentBanner() {
 
   return (
     <ActionCard
-      variant="blue"
-      className="mt-6 max-w-full"
-      icon={<ShieldCheckIcon className="h-4 w-4" />}
-      title={title}
-      description={description}
       action={
-        <Button onClick={handleAllow} loading={isPending}>
+        <Button loading={isPending} onClick={handleAllow}>
           Allow Access
         </Button>
       }
+      className="mt-6 max-w-full"
+      description={description}
+      icon={<ShieldCheckIcon className="h-4 w-4" />}
+      title={title}
+      variant="blue"
     />
   );
 }

@@ -1,15 +1,15 @@
-import type { CreateOrUpdateRuleSchema } from "@/utils/ai/rule/create-rule-schema";
-import prisma from "@/utils/prisma";
-import type { Logger } from "@/utils/logger";
-import { ActionType } from "@/generated/prisma/enums";
-import type { SystemType } from "@/generated/prisma/enums";
-import type { Prisma, Rule } from "@/generated/prisma/client";
-import { getActionRiskLevel, type RiskAction } from "@/utils/risk";
 import { hasExampleParams } from "@/app/(app)/[emailAccountId]/assistant/examples";
-import { createRuleHistory } from "@/utils/rule/rule-history";
-import { isMicrosoftProvider } from "@/utils/email/provider-types";
+import type { Prisma, Rule } from "@/generated/prisma/client";
+import type { SystemType } from "@/generated/prisma/enums";
+import { ActionType } from "@/generated/prisma/enums";
+import type { CreateOrUpdateRuleSchema } from "@/utils/ai/rule/create-rule-schema";
 import { createEmailProvider } from "@/utils/email/provider";
+import { isMicrosoftProvider } from "@/utils/email/provider-types";
 import { resolveLabelNameAndId } from "@/utils/label/resolve-label";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import { getActionRiskLevel, type RiskAction } from "@/utils/risk";
+import { createRuleHistory } from "@/utils/rule/rule-history";
 
 export function partialUpdateRule({
   ruleId,
@@ -50,7 +50,7 @@ export async function createRule({
       result.actions,
       provider,
       emailAccountId,
-      logger,
+      logger
     );
 
     const rule = await prisma.rule.create({
@@ -68,7 +68,7 @@ export async function createRule({
             to: a.to ?? null,
             cc: a.cc ?? null,
             bcc: a.bcc ?? null,
-          })),
+          }))
         ),
         runOnThreads,
         conditionalOperator: result.condition.conditionalOperator ?? undefined,
@@ -124,7 +124,7 @@ export async function updateRule({
               result.actions,
               provider,
               emailAccountId,
-              logger,
+              logger
             ),
           },
         },
@@ -204,21 +204,20 @@ export async function upsertSystemRule({
 
     await createRuleHistory({ rule, triggerType: "updated" });
     return rule;
-  } else {
-    logger.info("Creating new system rule");
-
-    const rule = await prisma.rule.create({
-      data: {
-        ...data,
-        emailAccountId,
-        actions: { createMany: { data: actions } },
-      },
-      include: { actions: true, group: true },
-    });
-
-    await createRuleHistory({ rule, triggerType: "created" });
-    return rule;
   }
+  logger.info("Creating new system rule");
+
+  const rule = await prisma.rule.create({
+    data: {
+      ...data,
+      emailAccountId,
+      actions: { createMany: { data: actions } },
+    },
+    include: { actions: true, group: true },
+  });
+
+  await createRuleHistory({ rule, triggerType: "created" });
+  return rule;
 }
 
 export async function updateRuleActions({
@@ -244,7 +243,7 @@ export async function updateRuleActions({
             actions,
             provider,
             emailAccountId,
-            logger,
+            logger
           ),
         },
       },
@@ -277,19 +276,21 @@ function shouldEnable(rule: CreateOrUpdateRuleSchema, actions: RiskAction[]) {
       condition: rule.condition,
       actions: rule.actions.map((a) => ({ content: a.fields?.content })),
     })
-  )
+  ) {
     return false;
+  }
 
   // Don't automate sending or replying to emails
   if (
     rule.actions.find(
-      (a) => a.type === ActionType.REPLY || a.type === ActionType.SEND_EMAIL,
+      (a) => a.type === ActionType.REPLY || a.type === ActionType.SEND_EMAIL
     )
-  )
+  ) {
     return false;
+  }
 
   const riskLevels = actions.map(
-    (action) => getActionRiskLevel(action, {}).level,
+    (action) => getActionRiskLevel(action, {}).level
   );
   // Only enable if all actions are low risk
   return riskLevels.every((level) => level === "low");
@@ -302,7 +303,7 @@ async function mapActionFields(
   })[],
   provider: string,
   emailAccountId: string,
-  logger: Logger,
+  logger: Logger
 ) {
   const actionPromises = actions.map(
     async (a): Promise<Prisma.ActionCreateManyRuleInput> => {
@@ -359,7 +360,7 @@ async function mapActionFields(
         }),
         delayInMinutes: a.delayInMinutes,
       };
-    },
+    }
   );
 
   return Promise.all(actionPromises);

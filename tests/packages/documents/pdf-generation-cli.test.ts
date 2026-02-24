@@ -9,8 +9,8 @@ const CLI_PATH = "packages/documents/pdf-generation/cli/cli.ts";
 
 interface CliResult {
   code: number;
-  stdout: string;
   stderr: string;
+  stdout: string;
 }
 
 async function runCli(args: string[]): Promise<CliResult> {

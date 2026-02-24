@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { processHistoryForUser } from "./process-history";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getMockParsedMessage } from "@/__tests__/mocks/email-provider.mock";
+import { createEmailProvider } from "@/utils/email/provider";
+import { captureException } from "@/utils/error";
+import { createScopedLogger } from "@/utils/logger";
+import { markMessageAsProcessing } from "@/utils/redis/message-processing";
+import { processHistoryItem } from "@/utils/webhook/process-history-item";
 import {
   getWebhookEmailAccount,
   validateWebhookAccount,
 } from "@/utils/webhook/validate-webhook-account";
-import { createEmailProvider } from "@/utils/email/provider";
-import { markMessageAsProcessing } from "@/utils/redis/message-processing";
-import { processHistoryItem } from "@/utils/webhook/process-history-item";
-import { captureException } from "@/utils/error";
-import { createScopedLogger } from "@/utils/logger";
-import { getMockParsedMessage } from "@/__tests__/mocks/email-provider.mock";
+import { processHistoryForUser } from "./process-history";
 
 const logger = createScopedLogger("test");
 vi.spyOn(logger, "with").mockReturnValue(logger);
@@ -34,8 +34,7 @@ vi.mock("@/utils/webhook/process-history-item", () => ({
 }));
 
 vi.mock("@/utils/error", async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import("@/utils/error")>();
+  const actual = await importOriginal<typeof import("@/utils/error")>();
   return {
     ...actual,
     captureException: vi.fn(),
@@ -60,7 +59,7 @@ describe("Outlook processHistoryForUser - Folder Filtering", () => {
     vi.clearAllMocks();
 
     vi.mocked(getWebhookEmailAccount).mockResolvedValue(
-      mockEmailAccount as any,
+      mockEmailAccount as any
     );
     vi.mocked(validateWebhookAccount).mockResolvedValue({
       success: true,
@@ -95,7 +94,7 @@ describe("Outlook processHistoryForUser - Folder Filtering", () => {
     });
     expect(processHistoryItem).toHaveBeenCalledWith(
       { messageId: "message-123", message: inboxMessage },
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
@@ -137,7 +136,7 @@ describe("Outlook processHistoryForUser - Folder Filtering", () => {
     expect(processHistoryItem).not.toHaveBeenCalled();
     expect(infoSpy).toHaveBeenCalledWith(
       "Skipping message not in inbox or sent items",
-      expect.objectContaining({ labelIds: ["DRAFT"] }),
+      expect.objectContaining({ labelIds: ["DRAFT"] })
     );
   });
 
@@ -200,7 +199,7 @@ describe("Outlook processHistoryForUser - Folder Filtering", () => {
     expect(markMessageAsProcessing).toHaveBeenCalled();
     expect(processHistoryItem).not.toHaveBeenCalled();
     expect(infoSpy).toHaveBeenCalledWith(
-      "Skipping. Message already being processed.",
+      "Skipping. Message already being processed."
     );
   });
 
@@ -224,7 +223,7 @@ describe("Outlook processHistoryForUser - Folder Filtering", () => {
       { messageId: "message-123", message: inboxMessage },
       expect.objectContaining({
         provider: mockProvider,
-      }),
+      })
     );
   });
 
@@ -249,9 +248,12 @@ describe("Outlook processHistoryForUser - Folder Filtering", () => {
     });
 
     it("handles Outlook access denied errors gracefully without Sentry", async () => {
-      const error = Object.assign(new Error("Access is denied. Check credentials and try again."), {
-        code: "ErrorAccessDenied",
-      });
+      const error = Object.assign(
+        new Error("Access is denied. Check credentials and try again."),
+        {
+          code: "ErrorAccessDenied",
+        }
+      );
       const mockProvider = { getMessage: vi.fn().mockRejectedValue(error) };
       vi.mocked(createEmailProvider).mockResolvedValue(mockProvider as any);
 
@@ -267,9 +269,12 @@ describe("Outlook processHistoryForUser - Folder Filtering", () => {
     });
 
     it("handles Outlook item not found errors gracefully without Sentry", async () => {
-      const error = Object.assign(new Error("The store ID provided isn't an ID of an item."), {
-        code: "ErrorItemNotFound",
-      });
+      const error = Object.assign(
+        new Error("The store ID provided isn't an ID of an item."),
+        {
+          code: "ErrorItemNotFound",
+        }
+      );
       const mockProvider = { getMessage: vi.fn().mockRejectedValue(error) };
       vi.mocked(createEmailProvider).mockResolvedValue(mockProvider as any);
 

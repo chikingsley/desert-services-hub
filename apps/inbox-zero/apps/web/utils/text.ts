@@ -9,12 +9,12 @@ export const slugify = (text: string) => {
 };
 
 export const extractTextFromPortableTextBlock = (
-  block: PortableTextBlock,
+  block: PortableTextBlock
 ): string => {
   return block.children
     .filter(
       (child): child is PortableTextSpan =>
-        typeof child === "object" && "_type" in child && "text" in child,
+        typeof child === "object" && "_type" in child && "text" in child
     )
     .map((child) => child.text)
     .join("");

@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createFolderPath } from "./folder-utils";
-import type { DriveProvider, DriveFolder } from "./types";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createScopedLogger } from "@/utils/logger";
+import { createFolderPath } from "./folder-utils";
+import type { DriveFolder, DriveProvider } from "./types";
 
 vi.mock("server-only", () => ({}));
 
@@ -15,7 +15,7 @@ function createMockFolder(id: string, name: string): DriveFolder {
 }
 
 function createMockProvider(
-  existingFolders: Map<string | undefined, DriveFolder[]> = new Map(),
+  existingFolders: Map<string | undefined, DriveFolder[]> = new Map()
 ): DriveProvider {
   const createdFolders: DriveFolder[] = [];
   let folderId = 1;
@@ -27,7 +27,9 @@ function createMockProvider(
     listFolders: vi.fn(async (parentId?: string) => {
       const existing = existingFolders.get(parentId) || [];
       const created = createdFolders.filter((f) => {
-        if (parentId === undefined) return !f.path?.includes("/");
+        if (parentId === undefined) {
+          return !f.path?.includes("/");
+        }
         return f.path?.startsWith(parentId);
       });
       return [...existing, ...created];
@@ -78,7 +80,7 @@ describe("createFolderPath", () => {
     const result = await createFolderPath(
       provider,
       "Receipts/2024/December",
-      logger,
+      logger
     );
 
     expect(result.folder.name).toBe("December");
@@ -90,7 +92,7 @@ describe("createFolderPath", () => {
     expect(provider.createFolder).toHaveBeenNthCalledWith(
       1,
       "Receipts",
-      undefined,
+      undefined
     );
   });
 
@@ -146,7 +148,7 @@ describe("createFolderPath", () => {
     const provider = createMockProvider();
 
     await expect(createFolderPath(provider, "", logger)).rejects.toThrow(
-      "Failed to create folder path",
+      "Failed to create folder path"
     );
   });
 });

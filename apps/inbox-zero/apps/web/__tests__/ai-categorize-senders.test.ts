@@ -1,11 +1,11 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { getEmailAccount } from "@/__tests__/helpers";
 import {
   aiCategorizeSenders,
   REQUEST_MORE_INFORMATION_CATEGORY,
 } from "@/utils/ai/categorize-sender/ai-categorize-senders";
-import { defaultCategory } from "@/utils/categories";
 import { aiCategorizeSender } from "@/utils/ai/categorize-sender/ai-categorize-single-sender";
-import { getEmailAccount } from "@/__tests__/helpers";
+import { defaultCategory } from "@/utils/categories";
 
 // pnpm test-ai ai-categorize-senders
 
@@ -64,23 +64,23 @@ describe.runIf(isAiTest)("AI Sender Categorization", () => {
 
         // Test newsletter categorization with snippet
         const newsletterResult = result.find(
-          (r) => r.sender === "newsletter@company.com",
+          (r) => r.sender === "newsletter@company.com"
         );
         expect(newsletterResult?.category).toBe("Newsletter");
 
         // Test support categorization with ticket snippet
         const supportResult = result.find(
-          (r) => r.sender === "support@service.com",
+          (r) => r.sender === "support@service.com"
         );
         expect(supportResult?.category).toBe("Support");
 
         // Test sales categorization with offer snippet
         const salesResult = result.find(
-          (r) => r.sender === "sales@business.com",
+          (r) => r.sender === "sales@business.com"
         );
         expect(salesResult?.category).toBe("Marketing");
       },
-      TIMEOUT,
+      TIMEOUT
     );
 
     it("should handle empty senders list", async () => {
@@ -118,7 +118,7 @@ describe.runIf(isAiTest)("AI Sender Categorization", () => {
           expect(senderResult?.category).toBe(category);
         }
       },
-      TIMEOUT,
+      TIMEOUT
     );
   });
 
@@ -136,23 +136,25 @@ describe.runIf(isAiTest)("AI Sender Categorization", () => {
 
           if (expectedCategory === "Unknown") {
             expect([REQUEST_MORE_INFORMATION_CATEGORY, "Unknown"]).toContain(
-              result?.category,
+              result?.category
             );
           } else {
             expect(result?.category).toBe(expectedCategory);
           }
         }
       },
-      TIMEOUT * 2,
+      TIMEOUT * 2
     );
 
     it(
       "should handle unknown sender appropriately",
       async () => {
         const unknownSender = testSenders.find(
-          (s) => s.expectedCategory === "Unknown",
+          (s) => s.expectedCategory === "Unknown"
         );
-        if (!unknownSender) throw new Error("No unknown sender in test data");
+        if (!unknownSender) {
+          throw new Error("No unknown sender in test data");
+        }
 
         const result = await aiCategorizeSender({
           emailAccount,
@@ -162,10 +164,10 @@ describe.runIf(isAiTest)("AI Sender Categorization", () => {
         });
 
         expect([REQUEST_MORE_INFORMATION_CATEGORY, "Unknown"]).toContain(
-          result?.category,
+          result?.category
         );
       },
-      TIMEOUT,
+      TIMEOUT
     );
   });
 
@@ -193,14 +195,14 @@ describe.runIf(isAiTest)("AI Sender Categorization", () => {
               sender: emailAddress,
               category: result?.category,
             };
-          }),
+          })
         );
 
         // Compare results for each sender
         for (const { emailAddress, expectedCategory } of testSenders) {
           const bulkResult = bulkResults.find((r) => r.sender === emailAddress);
           const singleResult = singleResults.find(
-            (r) => r.sender === emailAddress,
+            (r) => r.sender === emailAddress
           );
 
           // Both should either have a category or both be undefined
@@ -217,7 +219,7 @@ describe.runIf(isAiTest)("AI Sender Categorization", () => {
           }
         }
       },
-      TIMEOUT * 2,
+      TIMEOUT * 2
     );
   });
 });

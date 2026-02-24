@@ -1,11 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+import type { ThreadsResponse } from "@/app/api/threads/route";
 import {
+  type BulkRunState,
   bulkRunReducer,
   getProgressMessage,
   initialBulkRunState,
-  type BulkRunState,
 } from "./bulk-run-rules-reducer";
-import type { ThreadsResponse } from "@/app/api/threads/route";
 
 // Helper to create mock threads
 function createMockThread(id: string): ThreadsResponse["threads"][number] {

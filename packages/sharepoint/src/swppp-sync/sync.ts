@@ -16,17 +16,17 @@ import { WORKSHEETS, type WorksheetName } from "@sharepoint/swppp/config";
 // ============================================================================
 
 export interface SyncResult {
-  worksheet: WorksheetName;
-  rowsSynced: number;
   duration: number;
+  rowsSynced: number;
+  worksheet: WorksheetName;
 }
 
 export interface SyncSummary {
-  results: SyncResult[];
-  totalRows: number;
-  totalLinked: number;
-  totalUnlinked: number;
   duration: number;
+  results: SyncResult[];
+  totalLinked: number;
+  totalRows: number;
+  totalUnlinked: number;
 }
 
 // ============================================================================

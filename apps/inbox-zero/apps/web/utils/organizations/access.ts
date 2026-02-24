@@ -4,7 +4,7 @@ import prisma from "@/utils/prisma";
 
 export async function getMemberEmailAccount(
   callerEmailAccountId: string,
-  targetEmailAccountId: string,
+  targetEmailAccountId: string
 ) {
   const targetEmailAccount = await prisma.emailAccount.findFirst({
     where: {
@@ -30,7 +30,7 @@ export async function getMemberEmailAccount(
 
 export async function getCallerEmailAccount(
   userId: string,
-  targetEmailAccountId: string,
+  targetEmailAccountId: string
 ) {
   const callerEmailAccount = await prisma.emailAccount.findFirst({
     where: {
@@ -72,7 +72,7 @@ export async function fetchAndCheckIsAdmin({
 
   if (!member) {
     throw new SafeError(
-      "You are not a member of this organization or you do not have admin permissions",
+      "You are not a member of this organization or you do not have admin permissions"
     );
   }
 }

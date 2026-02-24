@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useCallback } from "react";
 import { ArrowRightIcon, UsersIcon } from "lucide-react";
-import { PageHeading, TypographyP } from "@/components/Typography";
+import { useCallback, useState } from "react";
 import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
 import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
-import { Button } from "@/components/ui/button";
 import { TagInput } from "@/components/TagInput";
-import { toastSuccess, toastError } from "@/components/Toast";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { PageHeading, TypographyP } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
 import {
-  inviteMemberAction,
   createOrganizationAndInviteAction,
+  inviteMemberAction,
 } from "@/utils/actions/organization";
 import { isValidEmail } from "@/utils/email";
 
@@ -56,7 +56,7 @@ export function StepInviteTeam({
 
       if (result?.data) {
         const successCount = result.data.results.filter(
-          (r) => r.success,
+          (r) => r.success
         ).length;
         const errorCount = result.data.results.filter((r) => !r.success).length;
 
@@ -114,46 +114,46 @@ export function StepInviteTeam({
 
   return (
     <OnboardingWrapper className="py-0">
-      <IconCircle size="lg" className="mx-auto">
+      <IconCircle className="mx-auto" size="lg">
         <UsersIcon className="size-6" />
       </IconCircle>
 
-      <div className="text-center mt-4">
+      <div className="mt-4 text-center">
         <PageHeading>Invite your team</PageHeading>
-        <TypographyP className="mt-2 max-w-lg mx-auto">
+        <TypographyP className="mx-auto mt-2 max-w-lg">
           Collaborate with your team on Inbox Zero. You can always add more
           members later.
         </TypographyP>
 
         <TagInput
-          value={emails}
+          className="mx-auto mt-6 max-w-md text-left"
+          id="email-input"
+          label="Email addresses"
           onChange={handleEmailsChange}
+          placeholder="Enter email addresses separated by commas"
           validate={(email) =>
             isValidEmail(email) ? null : "Please enter a valid email address"
           }
-          label="Email addresses"
-          id="email-input"
-          placeholder="Enter email addresses separated by commas"
-          className="mt-6 max-w-md mx-auto text-left"
+          value={emails}
         />
 
-        <div className="flex flex-col gap-2 w-full max-w-xs mx-auto mt-6">
+        <div className="mx-auto mt-6 flex w-full max-w-xs flex-col gap-2">
           <Button
-            type="button"
             className="w-full"
-            onClick={handleInviteAndContinue}
-            loading={isSubmitting}
             disabled={emails.length === 0}
+            loading={isSubmitting}
+            onClick={handleInviteAndContinue}
+            type="button"
           >
             Invite & Continue
-            <ArrowRightIcon className="size-4 ml-2" />
+            <ArrowRightIcon className="ml-2 size-4" />
           </Button>
           <Button
+            className="w-full"
+            disabled={isSubmitting}
+            onClick={onNext}
             type="button"
             variant="ghost"
-            className="w-full"
-            onClick={onNext}
-            disabled={isSubmitting}
           >
             Skip
           </Button>

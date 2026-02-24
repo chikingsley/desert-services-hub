@@ -1,6 +1,6 @@
-import prisma from "@/utils/prisma";
 import type { Logger } from "@/utils/logger";
 import { isOnHigherTier } from "@/utils/premium";
+import prisma from "@/utils/prisma";
 
 /**
  * Transfer premium subscription from source user to target user during account merge
@@ -89,7 +89,7 @@ export async function transferPremiumDuringMerge({
           targetTier,
           sourceUserId,
           targetUserId,
-        },
+        }
       );
 
       // If same premium or source has higher tier, use source premium
@@ -107,17 +107,17 @@ export async function transferPremiumDuringMerge({
           prisma.user.update({
             where: { id: targetUserId },
             data: { premiumId: sourceUser.premiumId },
-          }),
+          })
         );
 
         logger.info(
           "Target user's premium subscription replaced with source user's higher tier premium",
-          { chosenTier: sourceTier },
+          { chosenTier: sourceTier }
         );
       } else {
         logger.info(
           "Target user keeps their premium subscription (higher or equal tier)",
-          { chosenTier: targetTier },
+          { chosenTier: targetTier }
         );
       }
     } else if (sourceUser.premiumId && sourceUser.premium) {
@@ -133,7 +133,7 @@ export async function transferPremiumDuringMerge({
         prisma.user.update({
           where: { id: targetUserId },
           data: { premiumId: sourceUser.premiumId },
-        }),
+        })
       );
     } else if (targetUser.premiumId) {
       // Only target user has premium - no action needed, they keep their premium
@@ -163,7 +163,7 @@ export async function transferPremiumDuringMerge({
           {
             sourcePremiumAdminId: sourceUser.premiumAdminId,
             targetPremiumAdminId: targetUser.premiumAdminId,
-          },
+          }
         );
       }
 
@@ -176,7 +176,7 @@ export async function transferPremiumDuringMerge({
               connect: { id: targetUserId },
             },
           },
-        }),
+        })
       );
 
       // Update target user's premiumAdminId if they don't have one
@@ -185,7 +185,7 @@ export async function transferPremiumDuringMerge({
           prisma.user.update({
             where: { id: targetUserId },
             data: { premiumAdminId: sourceUser.premiumAdminId },
-          }),
+          })
         );
       }
     }

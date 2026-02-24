@@ -3,16 +3,16 @@ const TINYBIRD_TOKEN = process.env.TINYBIRD_TOKEN;
 
 async function deleteFromDatasource(
   datasource: string,
-  deleteCondition: string, // e.g. "userId='abc@example.com'"
+  deleteCondition: string // e.g. "userId='abc@example.com'"
 ): Promise<unknown> {
-  if (!TINYBIRD_BASE_URL || !TINYBIRD_TOKEN) {
+  if (!(TINYBIRD_BASE_URL && TINYBIRD_TOKEN)) {
     console.warn("TINYBIRD_BASE_URL or TINYBIRD_TOKEN missing");
     return;
   }
 
   const url = new URL(
     `/v0/datasources/${datasource}/delete`,
-    TINYBIRD_BASE_URL,
+    TINYBIRD_BASE_URL
   );
   const res = await fetch(url, {
     method: "POST",
@@ -27,7 +27,7 @@ async function deleteFromDatasource(
     throw new Error(
       `Unable to delete for datasource ${datasource}: [${
         res.status
-      }] ${await res.text()}`,
+      }] ${await res.text()}`
     );
   }
 

@@ -1,32 +1,32 @@
 "use client";
 
+import clsx from "clsx";
+import { ChevronDown, ChevronRight, MoreVertical } from "lucide-react";
 import { useState } from "react";
-import type { GetIntegrationsResponse } from "@/app/api/mcp/integrations/route";
 import type { GetMcpAuthUrlResponse } from "@/app/api/mcp/[integration]/auth-url/route";
+import type { GetIntegrationsResponse } from "@/app/api/mcp/integrations/route";
+import { DomainIcon } from "@/components/charts/DomainIcon";
+import { Notice } from "@/components/Notice";
+import { toastError, toastSuccess } from "@/components/Toast";
 import { Toggle } from "@/components/Toggle";
 import { MutedText, TypographyP } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
-import { TableRow, TableCell } from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, ChevronRight, MoreVertical } from "lucide-react";
-import clsx from "clsx";
-import { toastError, toastSuccess } from "@/components/Toast";
-import { DomainIcon } from "@/components/charts/DomainIcon";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import {
   disconnectMcpConnectionAction,
   toggleMcpConnectionAction,
   toggleMcpToolAction,
 } from "@/utils/actions/mcp";
-import { useAccount } from "@/providers/EmailAccountProvider";
 import { fetchWithAccount } from "@/utils/fetch";
-import { RequestAccessDialog } from "./RequestAccessDialog";
 import { truncate } from "@/utils/string";
-import { Notice } from "@/components/Notice";
+import { RequestAccessDialog } from "./RequestAccessDialog";
 
 interface IntegrationRowProps {
   integration: GetIntegrationsResponse["integrations"][number];
@@ -44,7 +44,7 @@ export function IntegrationRow({
   const conn = integration.connection;
 
   const connected = !!conn;
-  const isActive = conn?.isActive || false;
+  const isActive = conn?.isActive;
   const toolsCount = conn?.tools?.filter((t) => t.isEnabled).length || 0;
   const totalTools = conn?.tools?.length || 0;
   const connectionId = conn?.id;
@@ -74,7 +74,7 @@ export function IntegrationRow({
     } catch (error) {
       console.error(
         `Failed to initiate ${integration.name} connection:`,
-        error,
+        error
       );
       toastError({
         title: `Error connecting to ${integration.name}`,
@@ -85,7 +85,9 @@ export function IntegrationRow({
   };
 
   const handleToggle = async (enabled: boolean) => {
-    if (!connectionId) return;
+    if (!connectionId) {
+      return;
+    }
 
     try {
       const result = await toggleMcpConnectionAction(emailAccountId, {
@@ -139,13 +141,15 @@ export function IntegrationRow({
   const handleDisconnect = async () => {
     if (
       !confirm(
-        "Are you sure you want to disconnect this integration? This will remove all associated tools.",
+        "Are you sure you want to disconnect this integration? This will remove all associated tools."
       )
     ) {
       return;
     }
 
-    if (!connectionId) return;
+    if (!connectionId) {
+      return;
+    }
 
     setDisconnecting(true);
 
@@ -204,7 +208,7 @@ export function IntegrationRow({
                   </span>
                 </div>
               ) : (
-                <Button size="sm" variant="outline" onClick={handleConnect}>
+                <Button onClick={handleConnect} size="sm" variant="outline">
                   {integration.authType === "api-token"
                     ? "Connect with API Key"
                     : "Connect"}
@@ -212,7 +216,7 @@ export function IntegrationRow({
               )}
             </div>
           ) : (
-            <TypographyP className="text-sm text-gray-500">
+            <TypographyP className="text-gray-500 text-sm">
               No Auth Required
             </TypographyP>
           )}
@@ -222,10 +226,10 @@ export function IntegrationRow({
             <span className="text-gray-400 text-sm">Coming Soon</span>
           ) : connected && tools.length > 0 ? (
             <Button
-              variant="ghost"
-              size="sm"
               className="flex items-center gap-1"
               onClick={() => setExpandedTools(!expandedTools)}
+              size="sm"
+              variant="ghost"
             >
               {expandedTools ? (
                 <ChevronDown className="h-4 w-4" />
@@ -241,8 +245,8 @@ export function IntegrationRow({
         <TableCell>
           {!integration.comingSoon && (
             <Toggle
-              name={`integrations.${integration.name}.enabled`}
               enabled={isActive}
+              name={`integrations.${integration.name}.enabled`}
               onChange={handleToggle}
             />
           )}
@@ -252,10 +256,10 @@ export function IntegrationRow({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
                   aria-label="Integration actions"
+                  className="h-8 w-8 p-0"
+                  size="sm"
+                  variant="ghost"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
@@ -263,16 +267,16 @@ export function IntegrationRow({
               <DropdownMenuContent align="end">
                 {tools.length > 0 && (
                   <DropdownMenuItem
-                    onClick={() => setExpandedTools(!expandedTools)}
                     className="sm:hidden"
+                    onClick={() => setExpandedTools(!expandedTools)}
                   >
                     {expandedTools ? "Hide tools" : "Manage tools"}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem
-                  onClick={handleDisconnect}
-                  disabled={disconnecting}
                   className="text-red-600"
+                  disabled={disconnecting}
+                  onClick={handleDisconnect}
                 >
                   {disconnecting ? "Disconnecting..." : "Disconnect"}
                 </DropdownMenuItem>
@@ -284,8 +288,8 @@ export function IntegrationRow({
 
       {expandedTools && tools.length > 0 && (
         <ToolsList
-          tools={tools}
           onToggleTool={handleToggleTool}
+          tools={tools}
           toolsWarning={integration.toolsWarning}
         />
       )}
@@ -294,10 +298,10 @@ export function IntegrationRow({
 }
 
 interface ToolsListProps {
+  onToggleTool: (toolId: string, isEnabled: boolean) => void;
   tools: NonNullable<
     GetIntegrationsResponse["integrations"][number]["connection"]
   >["tools"];
-  onToggleTool: (toolId: string, isEnabled: boolean) => void;
   toolsWarning?: string;
 }
 
@@ -306,27 +310,27 @@ function ToolsList({ tools, onToggleTool, toolsWarning }: ToolsListProps) {
 
   return (
     <TableRow>
-      <TableCell colSpan={5} className="bg-muted/50">
+      <TableCell className="bg-muted/50" colSpan={5}>
         <div className="space-y-3">
           {toolsWarning && <Notice variant="warning">{toolsWarning}</Notice>}
           {sortedTools.map((tool) => (
             <div
-              key={tool.id}
               className={clsx(
-                "flex items-start gap-4 p-3 rounded-lg border",
+                "flex items-start gap-4 rounded-lg border p-3",
                 tool.isEnabled
-                  ? "bg-card border-border"
-                  : "bg-muted border-muted",
+                  ? "border-border bg-card"
+                  : "border-muted bg-muted"
               )}
+              key={tool.id}
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center gap-2">
                   <span
                     className={clsx(
-                      "font-mono text-sm font-medium",
+                      "font-medium font-mono text-sm",
                       tool.isEnabled
                         ? "text-foreground"
-                        : "text-muted-foreground",
+                        : "text-muted-foreground"
                     )}
                   >
                     {tool.name}
@@ -340,8 +344,8 @@ function ToolsList({ tools, onToggleTool, toolsWarning }: ToolsListProps) {
               </div>
               <div className="flex-shrink-0">
                 <Toggle
-                  name={`tool.${tool.id}.enabled`}
                   enabled={tool.isEnabled}
+                  name={`tool.${tool.id}.enabled`}
                   onChange={(enabled) => onToggleTool(tool.id, enabled)}
                 />
               </div>

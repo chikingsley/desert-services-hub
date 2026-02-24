@@ -1,11 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ExternalLinkIcon, FolderIcon, InfoIcon } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { GetDriveConnectionsResponse } from "@/app/api/user/drive/connections/route";
+import type { GetFilingsResponse } from "@/app/api/user/drive/filings/route";
+import { YesNoIndicator } from "@/components/drive/YesNoIndicator";
 import { LoadingContent } from "@/components/LoadingContent";
 import { toastError, toastSuccess } from "@/components/Toast";
+import { Tooltip } from "@/components/Tooltip";
 import { MutedText, SectionHeader } from "@/components/Typography";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -14,27 +25,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Tooltip } from "@/components/Tooltip";
-import { useFilingActivity } from "@/hooks/useFilingActivity";
-import { useDriveFolders } from "@/hooks/useDriveFolders";
-import { getDriveFileUrl } from "@/utils/drive/url";
-import type { GetFilingsResponse } from "@/app/api/user/drive/filings/route";
 import { useDriveConnections } from "@/hooks/useDriveConnections";
-import type { GetDriveConnectionsResponse } from "@/app/api/user/drive/connections/route";
-import { YesNoIndicator } from "@/components/drive/YesNoIndicator";
-import type { DriveProviderType } from "@/utils/drive/types";
-import {
-  submitPreviewFeedbackAction,
-  moveFilingAction,
-} from "@/utils/actions/drive";
+import { useDriveFolders } from "@/hooks/useDriveFolders";
+import { useFilingActivity } from "@/hooks/useFilingActivity";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import {
+  moveFilingAction,
+  submitPreviewFeedbackAction,
+} from "@/utils/actions/drive";
+import type { DriveProviderType } from "@/utils/drive/types";
+import { getDriveFileUrl } from "@/utils/drive/url";
 
 export function FilingActivity() {
   const { emailAccountId } = useAccount();
@@ -51,7 +51,7 @@ export function FilingActivity() {
   return (
     <div>
       <SectionHeader className="mb-3">Recent Activity</SectionHeader>
-      <LoadingContent loading={isLoading} error={error}>
+      <LoadingContent error={error} loading={isLoading}>
         {data?.filings.length === 0 ? (
           <MutedText className="italic">No recently filed documents.</MutedText>
         ) : (
@@ -71,18 +71,18 @@ export function FilingActivity() {
               <TableBody>
                 {data?.filings.map((filing) => (
                   <FilingRow
-                    key={filing.id}
+                    connections={connectionsData?.connections || []}
                     emailAccountId={emailAccountId}
                     filing={filing}
-                    connections={connectionsData?.connections || []}
-                    savedFolders={foldersData?.savedFolders || []}
+                    key={filing.id}
                     onFeedbackSaved={refreshFilings}
+                    savedFolders={foldersData?.savedFolders || []}
                   />
                 ))}
               </TableBody>
             </Table>
             {data && data.total > 10 && (
-              <MutedText className="p-3 border-t">
+              <MutedText className="border-t p-3">
                 Showing {data.filings.length} of {data.total} filings
               </MutedText>
             )}
@@ -107,7 +107,7 @@ function FilingRow({
   onFeedbackSaved: () => void;
 }) {
   const [vote, setVote] = useState<boolean | null>(
-    filing.feedbackPositive ?? null,
+    filing.feedbackPositive ?? null
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -127,7 +127,9 @@ function FilingRow({
   }, [filing.feedbackPositive]);
 
   const handleCorrectClick = useCallback(async () => {
-    if (!canGiveFeedback || isSubmitting) return;
+    if (!canGiveFeedback || isSubmitting) {
+      return;
+    }
 
     const previousValue = vote;
     setVote(true);
@@ -163,7 +165,9 @@ function FilingRow({
 
   const handleMoveToFolder = useCallback(
     async (folderId: string, folderName: string, folderPath: string) => {
-      if (!canGiveFeedback || isSubmitting) return;
+      if (!canGiveFeedback || isSubmitting) {
+        return;
+      }
 
       setIsSubmitting(true);
 
@@ -188,11 +192,13 @@ function FilingRow({
         setIsSubmitting(false);
       }
     },
-    [canGiveFeedback, emailAccountId, filing.id, isSubmitting],
+    [canGiveFeedback, emailAccountId, filing.id, isSubmitting]
   );
 
   const handleWrongClick = useCallback(async () => {
-    if (!canGiveFeedback || isSubmitting) return;
+    if (!canGiveFeedback || isSubmitting) {
+      return;
+    }
 
     const previousValue = vote;
     setVote(false);
@@ -234,21 +240,21 @@ function FilingRow({
         handleWrongClick();
       }
     },
-    [handleCorrectClick, handleWrongClick],
+    [handleCorrectClick, handleWrongClick]
   );
 
   const otherFolders = savedFolders.filter(
-    (f) => f.folderPath !== filing.folderPath,
+    (f) => f.folderPath !== filing.folderPath
   );
 
   return (
     <TableRow>
       <TableCell>
-        <span className="font-medium truncate max-w-[200px] block">
+        <span className="block max-w-[200px] truncate font-medium">
           {filing.filename}
         </span>
       </TableCell>
-      <TableCell className="break-words max-w-[200px]">
+      <TableCell className="max-w-[200px] break-words">
         <FolderCell filing={filing} />
       </TableCell>
       <TableCell>
@@ -271,9 +277,9 @@ function FilingRow({
               <DropdownMenuTrigger asChild>
                 <div>
                   <YesNoIndicator
-                    value={vote}
-                    onClick={handleFeedbackClick}
                     dropdownTrigger="wrong"
+                    onClick={handleFeedbackClick}
+                    value={vote}
                     wrongActive={dropdownOpen}
                   />
                 </div>
@@ -289,7 +295,7 @@ function FilingRow({
                       handleMoveToFolder(
                         folder.folderId,
                         folder.folderName,
-                        folder.folderPath,
+                        folder.folderPath
                       )
                     }
                   >
@@ -306,12 +312,12 @@ function FilingRow({
             </DropdownMenu>
           ) : (
             <YesNoIndicator
-              value={vote}
               onClick={
                 canGiveFeedback && !isSubmitting
                   ? handleFeedbackClick
                   : undefined
               }
+              value={vote}
             />
           )}
         </div>
@@ -319,11 +325,11 @@ function FilingRow({
       <TableCell>
         {driveUrl && (
           <a
-            href={driveUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground"
             aria-label={`Open ${filing.filename} in drive`}
+            className="text-muted-foreground hover:text-foreground"
+            href={driveUrl}
+            rel="noopener noreferrer"
+            target="_blank"
           >
             <ExternalLinkIcon className="size-4" />
           </a>
@@ -352,7 +358,7 @@ function FolderCell({
   }
 
   return (
-    <span className="text-muted-foreground truncate block">
+    <span className="block truncate text-muted-foreground">
       {filing.folderPath}
     </span>
   );

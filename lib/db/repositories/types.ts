@@ -1,31 +1,31 @@
 export interface EstimateMatchEmailRow {
-  id: number;
-  subject: string | null;
-  body_preview: string | null;
   attachment_names: string | null;
-  from_domain: string | null;
+  body_preview: string | null;
   contractor_name: string | null;
-  project_name: string | null;
+  from_domain: string | null;
+  id: number;
   monday_estimate_id: string | null;
+  project_name: string | null;
+  subject: string | null;
 }
 
 export interface DocumentExtractionRow {
+  file_name: string | null;
   raw_extraction: unknown;
   summary: string | null;
-  file_name: string | null;
 }
 
 export interface EstimateCandidateRow {
-  id: number;
-  name: string | null;
-  job_name: string | null;
+  account_domain: string | null;
+  bid_status: string | null;
   contractor: string | null;
   estimate_number: string | null;
-  monday_item_id: string | null;
-  account_domain: string | null;
+  id: number;
   job_address: string | null;
+  job_name: string | null;
   location: string | null;
-  bid_status: string | null;
+  monday_item_id: string | null;
+  name: string | null;
   updated_at: string;
 }
 
@@ -41,33 +41,33 @@ type MatchReasonCode =
 
 export interface EstimateMatchReason {
   code: MatchReasonCode;
-  points: number;
   detail: string;
+  points: number;
 }
 
 export interface EstimateMatchCandidate {
-  estimateId: number;
-  estimateNumber: string | null;
-  mondayItemId: string | null;
-  name: string | null;
-  jobName: string | null;
-  contractor: string | null;
-  jobAddress: string | null;
-  location: string | null;
   accountDomain: string | null;
   bidStatus: string | null;
-  updatedAt: string;
-  score: number;
   confidence: number;
+  contractor: string | null;
+  estimateId: number;
+  estimateNumber: string | null;
+  jobAddress: string | null;
+  jobName: string | null;
+  location: string | null;
+  mondayItemId: string | null;
+  name: string | null;
   reasons: EstimateMatchReason[];
+  score: number;
+  updatedAt: string;
 }
 
 export interface EstimateMatchDecision {
-  best: EstimateMatchCandidate | null;
-  runnerUp: EstimateMatchCandidate | null;
   autoLink: boolean;
+  best: EstimateMatchCandidate | null;
   gap: number;
   reason: string;
+  runnerUp: EstimateMatchCandidate | null;
   thresholds: {
     minScore: number;
     minGap: number;
@@ -75,33 +75,33 @@ export interface EstimateMatchDecision {
 }
 
 export interface EstimateMatchContext {
-  emailId: number;
-  subject: string;
-  bodyPreview: string;
-  attachmentNames: string[];
-  fromDomain: string | null;
-  contractorHints: string[];
-  projectHints: string[];
   addressHints: string[];
+  attachmentNames: string[];
+  bodyPreview: string;
+  contractorHints: string[];
+  emailId: number;
   estimateReferenceHints: string[];
+  fromDomain: string | null;
   mondayItemHints: string[];
+  projectHints: string[];
   queryHints: string[];
+  subject: string;
 }
 
 export interface EstimateMatchHintInput {
-  contractorHints?: string[];
-  projectHints?: string[];
   addressHints?: string[];
+  contractorHints?: string[];
   estimateReferenceHints?: string[];
+  limit?: number;
   mondayItemHints?: string[];
+  projectHints?: string[];
   queryHints?: string[];
   restrictEstimateIds?: number[];
-  limit?: number;
 }
 
 export interface EstimateCandidateResult {
-  context: EstimateMatchContext;
   candidates: EstimateMatchCandidate[];
+  context: EstimateMatchContext;
   decision: EstimateMatchDecision;
 }
 
@@ -115,29 +115,29 @@ export type ProjectMatchReasonCode =
 
 export interface ProjectMatchReason {
   code: ProjectMatchReasonCode;
-  points: number;
   detail: string;
+  points: number;
 }
 
 export interface ProjectMatchCandidate {
-  projectId: number;
-  name: string;
-  contractor: string | null;
-  address: string | null;
-  outlookFolder: string | null;
   accountId: number | null;
-  updatedAt: string;
-  score: number;
+  address: string | null;
   confidence: number;
+  contractor: string | null;
+  name: string;
+  outlookFolder: string | null;
+  projectId: number;
   reasons: ProjectMatchReason[];
+  score: number;
+  updatedAt: string;
 }
 
 export interface ProjectMatchDecision {
-  best: ProjectMatchCandidate | null;
-  runnerUp: ProjectMatchCandidate | null;
   autoLink: boolean;
+  best: ProjectMatchCandidate | null;
   gap: number;
   reason: string;
+  runnerUp: ProjectMatchCandidate | null;
   thresholds: {
     minScore: number;
     minGap: number;
@@ -145,31 +145,31 @@ export interface ProjectMatchDecision {
 }
 
 export interface ProjectMatchContext {
-  primaryText: string;
-  aliasHints: string[];
-  contractorHint: string | null;
-  addressHint: string | null;
   accountIdHint: number | null;
-  primaryNameKey: string;
-  nameKeys: string[];
-  aliasKeys: string[];
-  primaryTokens: string[];
-  contractorTokens: string[];
+  addressHint: string | null;
   addressTokens: string[];
+  aliasHints: string[];
+  aliasKeys: string[];
+  contractorHint: string | null;
+  contractorTokens: string[];
+  nameKeys: string[];
+  primaryNameKey: string;
+  primaryText: string;
+  primaryTokens: string[];
 }
 
 export interface ProjectMatchInput {
-  primaryText: string;
+  accountIdHint?: number | null;
+  addressHint?: string | null;
   aliasHints?: string[];
   contractorHint?: string | null;
-  addressHint?: string | null;
-  accountIdHint?: number | null;
   limit?: number;
+  primaryText: string;
 }
 
 export interface ProjectMatchResult {
-  context: ProjectMatchContext;
   candidates: ProjectMatchCandidate[];
+  context: ProjectMatchContext;
   decision: ProjectMatchDecision;
 }
 

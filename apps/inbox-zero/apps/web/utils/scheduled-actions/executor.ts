@@ -1,14 +1,14 @@
+import type { ScheduledAction } from "@/generated/prisma/client";
 import {
   ExecutedRuleStatus,
   ScheduledActionStatus,
 } from "@/generated/prisma/enums";
-import type { ScheduledAction } from "@/generated/prisma/client";
-import prisma from "@/utils/prisma";
-import type { Logger } from "@/utils/logger";
-import { getEmailAccountWithAiAndTokens } from "@/utils/user/get";
 import { runActionFunction } from "@/utils/ai/actions";
 import type { ActionItem, EmailForAction } from "@/utils/ai/types";
 import type { EmailProvider } from "@/utils/email/types";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import { getEmailAccountWithAiAndTokens } from "@/utils/user/get";
 
 const MODULE = "scheduled-actions-executor";
 
@@ -18,7 +18,7 @@ const MODULE = "scheduled-actions-executor";
 export async function executeScheduledAction(
   scheduledAction: ScheduledAction,
   client: EmailProvider,
-  logger: Logger,
+  logger: Logger
 ) {
   const log = logger.with({
     module: MODULE,
@@ -43,7 +43,7 @@ export async function executeScheduledAction(
         scheduledAction.id,
         null,
         log,
-        "Email no longer exists",
+        "Email no longer exists"
       );
       return { success: true, reason: "Email no longer exists" };
     }
@@ -99,7 +99,7 @@ export async function executeScheduledAction(
 async function validateEmailState(
   client: EmailProvider,
   scheduledAction: ScheduledAction,
-  log: Logger,
+  log: Logger
 ): Promise<EmailForAction | null> {
   try {
     const message = await client.getMessage(scheduledAction.messageId);
@@ -226,7 +226,7 @@ async function markActionCompleted(
   scheduledActionId: string,
   executedActionId: string | null | undefined,
   log: Logger,
-  reason?: string,
+  reason?: string
 ) {
   await prisma.scheduledAction.update({
     where: { id: scheduledActionId },
@@ -250,7 +250,7 @@ async function markActionCompleted(
 async function markActionFailed(
   scheduledActionId: string,
   error: unknown,
-  log: Logger,
+  log: Logger
 ) {
   await prisma.scheduledAction.update({
     where: { id: scheduledActionId },
@@ -271,7 +271,7 @@ async function markActionFailed(
  */
 async function checkAndCompleteExecutedRule(
   executedRuleId: string,
-  log: Logger,
+  log: Logger
 ) {
   const pendingActions = await prisma.scheduledAction.count({
     where: {

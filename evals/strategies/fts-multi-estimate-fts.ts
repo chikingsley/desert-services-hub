@@ -9,11 +9,11 @@ import { db } from "@lib/db/client";
 import type { RetrievalStrategy } from "./types";
 
 interface ScoredProject {
-  projectId: number;
-  emailRank: number;
   emailCount: number;
-  psiRank: number;
+  emailRank: number;
   estimateScore: number;
+  projectId: number;
+  psiRank: number;
 }
 
 const strategy: RetrievalStrategy = {
@@ -53,7 +53,7 @@ const strategy: RetrievalStrategy = {
            AND e.project_id IS NOT NULL
          GROUP BY e.project_id
          ORDER BY max_rank DESC, email_count DESC
-         LIMIT 30`,
+         LIMIT 30`
       )
       .all(subject);
 
@@ -73,7 +73,7 @@ const strategy: RetrievalStrategy = {
               plainto_tsquery('english', $1) q(query)
          WHERE psi.search_vector @@ q.query
          ORDER BY rank DESC
-         LIMIT 30`,
+         LIMIT 30`
       )
       .all(subject);
 
@@ -96,7 +96,7 @@ const strategy: RetrievalStrategy = {
          WHERE to_tsvector('english', concat_ws(' ', e.name, e.job_name, e.contractor, e.job_address)) @@ q.query
          GROUP BY pe.project_id
          ORDER BY rank DESC
-         LIMIT 20`,
+         LIMIT 20`
       )
       .all(subject);
 

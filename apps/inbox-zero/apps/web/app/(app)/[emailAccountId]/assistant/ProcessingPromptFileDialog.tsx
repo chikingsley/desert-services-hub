@@ -1,5 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
+import { CreatedRulesContent } from "@/app/(app)/[emailAccountId]/assistant/CreatedRulesModal";
+import { Loading } from "@/components/Loading";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,10 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Loading } from "@/components/Loading";
 import type { CreateRuleResult } from "@/utils/rule/types";
-import { CreatedRulesContent } from "@/app/(app)/[emailAccountId]/assistant/CreatedRulesModal";
 
 type StepProps = {
   back?: () => void;
@@ -52,7 +52,7 @@ export function ProcessingPromptFileDialog({
   }, [currentStep, setViewedProcessingPromptFileDialog]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="max-w-xl">
         {currentStep === 0 && <IntroStep next={next} />}
         {currentStep === 1 && <Step1 back={back} next={next} />}
@@ -67,7 +67,7 @@ export function ProcessingPromptFileDialog({
             //   result={result}
             // />
 
-            <CreatedRulesContent rules={result} onOpenChange={onOpenChange} />
+            <CreatedRulesContent onOpenChange={onOpenChange} rules={result} />
           ) : (
             <FinalStepWaiting back={back} />
           ))}
@@ -80,7 +80,7 @@ function StepNavigation({ back, next }: StepProps) {
   return (
     <div className="flex gap-2">
       {back && (
-        <Button variant="outline" onClick={back}>
+        <Button onClick={back} variant="outline">
           Back
         </Button>
       )}
@@ -92,7 +92,7 @@ function StepNavigation({ back, next }: StepProps) {
 function Step({ back, next, title, children }: StepContentProps) {
   return (
     <>
-      <DialogHeader className="flex flex-col justify-center mx-auto">
+      <DialogHeader className="mx-auto flex flex-col justify-center">
         <DialogTitle>{title}</DialogTitle>
         <DialogDescription className="max-w-lg space-y-1.5 text-left">
           {children}
@@ -133,11 +133,11 @@ function Step1({ back, next }: StepProps) {
       </p>
 
       <Image
-        src="/images/assistant/rules.png"
         alt="Analyzing prompt file"
-        width={800}
-        height={600}
         className="rounded-lg shadow"
+        height={600}
+        src="/images/assistant/rules.png"
+        width={800}
       />
     </Step>
   );
@@ -148,11 +148,11 @@ function Step2({ back, next }: StepProps) {
     <Step back={back} next={next} title="Customize Your Rules">
       <p>Once created, you can fine-tune each rule to your needs.</p>
       <Image
-        src="/images/assistant/rule-edit.png"
         alt="Editing a rule"
-        width={500}
-        height={300}
         className="rounded-lg shadow"
+        height={300}
+        src="/images/assistant/rule-edit.png"
+        width={500}
       />
     </Step>
   );
@@ -167,11 +167,11 @@ function Step3({ back, next }: StepProps) {
       </p>
 
       <Image
-        src="/images/assistant/process.png"
         alt="Test Rules"
-        width={500}
-        height={300}
         className="rounded-lg shadow"
+        height={300}
+        src="/images/assistant/process.png"
+        width={500}
       />
     </Step>
   );
@@ -186,11 +186,11 @@ function Step4({ back, next }: StepProps) {
       </p>
 
       <Image
-        src="/images/assistant/fix.png"
         alt="Fix rule"
-        width={500}
-        height={300}
         className="rounded-lg shadow"
+        height={300}
+        src="/images/assistant/fix.png"
+        width={500}
       />
     </Step>
   );

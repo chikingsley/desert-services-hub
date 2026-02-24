@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { actionClient } from "@/utils/actions/safe-action";
+import { prefixPath } from "@/utils/path";
 import prisma from "@/utils/prisma";
 import {
   startAnalyzingReplyTracker,
   stopAnalyzingReplyTracker,
 } from "@/utils/redis/reply-tracker-analyzing";
-import { actionClient } from "@/utils/actions/safe-action";
-import { prefixPath } from "@/utils/path";
 
 const resolveThreadTrackerSchema = z.object({
   threadId: z.string(),
@@ -42,5 +42,5 @@ export const resolveThreadTrackerAction = actionClient
       revalidatePath(prefixPath(emailAccountId, "/reply-zero"));
 
       return { success: true };
-    },
+    }
   );

@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ZodError, type ZodIssue } from "zod";
+import { EMAIL_ACCOUNT_HEADER } from "@/utils/config";
 import {
-  withError,
+  type NextHandler,
+  type RequestWithAuth,
   withAuth,
   withEmailAccount,
-  type RequestWithAuth,
-  type NextHandler,
+  withError,
 } from "./middleware";
-import { EMAIL_ACCOUNT_HEADER } from "@/utils/config";
 
 // --- Mocks ---
 
@@ -51,8 +51,8 @@ vi.mock("@/utils/error.server");
 
 // Import from the local path as before
 import { auth } from "@/utils/auth";
-import { getEmailAccount } from "@/utils/redis/account-validation";
 import { captureException, checkCommonErrors, SafeError } from "@/utils/error";
+import { getEmailAccount } from "@/utils/redis/account-validation";
 
 // This should now correctly reference mockAuthFn
 const mockAuth = vi.mocked(auth);
@@ -65,7 +65,7 @@ const mockCaptureException = vi.mocked(captureException);
 const createMockRequest = (
   method = "GET",
   url = "http://localhost/test",
-  headers?: Record<string, string>,
+  headers?: Record<string, string>
 ): NextRequest => {
   const request = new NextRequest(url, {
     method,
@@ -177,7 +177,7 @@ describe("Middleware", () => {
       mockAuth.mockResolvedValue({ user: { id: mockUserId } } as any);
       // Adjust handler mock signature
       const handler = vi.fn(async (_req: RequestWithAuth, _ctx: any) =>
-        NextResponse.json({ ok: true }),
+        NextResponse.json({ ok: true })
       );
       const wrappedHandler = withAuth(handler);
 
@@ -188,7 +188,7 @@ describe("Middleware", () => {
         expect.objectContaining({
           auth: { userId: mockUserId },
         }),
-        mockContext,
+        mockContext
       );
     });
 
@@ -232,7 +232,7 @@ describe("Middleware", () => {
       mockGetEmailAccount.mockResolvedValue(mockEmail);
 
       const handler = vi.fn(async (_req: RequestWithAuthAndEmail, _ctx: any) =>
-        NextResponse.json({ success: true }),
+        NextResponse.json({ success: true })
       );
       const wrappedHandler = withEmailAccount(handler);
 
@@ -250,7 +250,7 @@ describe("Middleware", () => {
             email: mockEmail,
           },
         }),
-        mockContext,
+        mockContext
       );
     });
 
@@ -260,11 +260,11 @@ describe("Middleware", () => {
       const handler = vi.fn(
         async (
           _req: RequestWithAuthAndEmail,
-          _ctx: { params: Promise<Record<string, string>> },
+          _ctx: { params: Promise<Record<string, string>> }
         ): Promise<NextResponse> => {
           // Implementation won't run, just for types
           return NextResponse.json({});
-        },
+        }
       );
       const wrappedHandler = withEmailAccount(handler);
 
@@ -291,11 +291,11 @@ describe("Middleware", () => {
       const handler = vi.fn(
         async (
           _req: RequestWithAuthAndEmail,
-          _ctx: { params: Promise<Record<string, string>> },
+          _ctx: { params: Promise<Record<string, string>> }
         ): Promise<NextResponse> => {
           // Implementation won't run, just for types
           return NextResponse.json({});
-        },
+        }
       );
       const wrappedHandler = withEmailAccount(handler);
 

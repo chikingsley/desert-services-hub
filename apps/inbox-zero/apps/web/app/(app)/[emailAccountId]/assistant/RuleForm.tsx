@@ -1,23 +1,44 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { type SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { usePostHog } from "posthog-js/react";
-import { env } from "@/env";
 import {
-  PencilIcon,
-  TrashIcon,
-  MailIcon,
   BotIcon,
+  MailIcon,
+  PencilIcon,
   SettingsIcon,
+  TrashIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { usePostHog } from "posthog-js/react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { type SubmitHandler, useFieldArray, useForm } from "react-hook-form";
+import { ActionSteps } from "@/app/(app)/[emailAccountId]/assistant/ActionSteps";
+import { ConditionSteps } from "@/app/(app)/[emailAccountId]/assistant/ConditionSteps";
+import { LearnedPatternsDialog } from "@/app/(app)/[emailAccountId]/assistant/group/LearnedPatterns";
+import { RuleSectionCard } from "@/app/(app)/[emailAccountId]/assistant/RuleSectionCard";
+import { AlertError } from "@/components/Alert";
 import { Input } from "@/components/Input";
+import { LoadingContent } from "@/components/LoadingContent";
 import { toastError, toastSuccess } from "@/components/Toast";
+import { Toggle } from "@/components/Toggle";
+import { TooltipExplanation } from "@/components/TooltipExplanation";
 import { TypographyH3 } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Form } from "@/components/ui/form";
+import { env } from "@/env";
 import { ActionType, SystemType } from "@/generated/prisma/enums";
+import { useFolders } from "@/hooks/useFolders";
+import { useLabels } from "@/hooks/useLabels";
+import { useRule } from "@/hooks/useRule";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { getActionIcon } from "@/utils/action-display";
 import {
   createRuleAction,
   deleteRuleAction,
@@ -27,31 +48,10 @@ import {
   type CreateRuleBody,
   createRuleBody,
 } from "@/utils/actions/rule.validation";
-import { Toggle } from "@/components/Toggle";
-import { LoadingContent } from "@/components/LoadingContent";
-import { TooltipExplanation } from "@/components/TooltipExplanation";
-import { useLabels } from "@/hooks/useLabels";
-import { AlertError } from "@/components/Alert";
-import { LearnedPatternsDialog } from "@/app/(app)/[emailAccountId]/assistant/group/LearnedPatterns";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { prefixPath } from "@/utils/path";
-import { useRule } from "@/hooks/useRule";
 import { isMicrosoftProvider } from "@/utils/email/provider-types";
-import { getEmailTerminology } from "@/utils/terminology";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
-import { getActionIcon } from "@/utils/action-display";
-import { useFolders } from "@/hooks/useFolders";
+import { prefixPath } from "@/utils/path";
 import { isConversationStatusType } from "@/utils/reply-tracker/conversation-status-config";
-import { RuleSectionCard } from "@/app/(app)/[emailAccountId]/assistant/RuleSectionCard";
-import { ConditionSteps } from "@/app/(app)/[emailAccountId]/assistant/ConditionSteps";
-import { ActionSteps } from "@/app/(app)/[emailAccountId]/assistant/ActionSteps";
+import { getEmailTerminology } from "@/utils/terminology";
 
 export function Rule({
   ruleId,
@@ -63,12 +63,12 @@ export function Rule({
   const { data, isLoading, error, mutate } = useRule(ruleId);
 
   return (
-    <LoadingContent loading={isLoading} error={error}>
+    <LoadingContent error={error} loading={isLoading}>
       {data && (
         <RuleForm
-          rule={data.rule}
           alwaysEditMode={alwaysEditMode}
           mutate={mutate}
+          rule={data.rule}
         />
       )}
     </LoadingContent>
@@ -99,7 +99,7 @@ export function RuleForm({
       ? {
           ...rule,
           digest: rule.actions.some(
-            (action) => action.type === ActionType.DIGEST,
+            (action) => action.type === ActionType.DIGEST
           ),
           actions: [
             ...rule.actions
@@ -155,10 +155,11 @@ export function RuleForm({
     async (data) => {
       // set content to empty string if it's not set manually
       for (const action of data.actions) {
-        if (action.type === ActionType.DRAFT_EMAIL) {
-          if (!action.content?.setManually) {
-            action.content = { value: "", ai: false };
-          }
+        if (
+          action.type === ActionType.DRAFT_EMAIL &&
+          !action.content?.setManually
+        ) {
+          action.content = { value: "", ai: false };
         }
       }
 
@@ -193,16 +194,15 @@ export function RuleForm({
         if (res?.serverError) {
           console.error(res);
           toastError({ description: res.serverError });
-          if (mutate) mutate();
-        } else if (!res?.data?.rule) {
-          toastError({
-            description: "There was an error updating the rule.",
-          });
-          if (mutate) mutate();
-        } else {
+          if (mutate) {
+            mutate();
+          }
+        } else if (res?.data?.rule) {
           toastSuccess({ description: "Saved!" });
           // Revalidate to get the real data from server
-          if (mutate) mutate();
+          if (mutate) {
+            mutate();
+          }
           posthog.capture("User updated AI rule", {
             conditions: data.conditions.map((condition) => condition.type),
             actions: actionsToSubmit.map((action) => action.type),
@@ -214,6 +214,13 @@ export function RuleForm({
           } else {
             router.push(prefixPath(emailAccountId, "/automation?tab=rules"));
           }
+        } else {
+          toastError({
+            description: "There was an error updating the rule.",
+          });
+          if (mutate) {
+            mutate();
+          }
         }
       } else {
         const res = await createRuleAction(emailAccountId, {
@@ -224,11 +231,7 @@ export function RuleForm({
         if (res?.serverError) {
           console.error(res);
           toastError({ description: res.serverError });
-        } else if (!res?.data?.rule) {
-          toastError({
-            description: "There was an error creating the rule.",
-          });
-        } else {
+        } else if (res?.data?.rule) {
           toastSuccess({ description: "Created!" });
           posthog.capture("User created AI rule", {
             conditions: data.conditions.map((condition) => condition.type),
@@ -240,14 +243,18 @@ export function RuleForm({
             onSuccess();
           } else {
             router.replace(
-              prefixPath(emailAccountId, `/assistant/rule/${res.data.rule.id}`),
+              prefixPath(emailAccountId, `/assistant/rule/${res.data.rule.id}`)
             );
             router.push(prefixPath(emailAccountId, "/automation?tab=rules"));
           }
+        } else {
+          toastError({
+            description: "There was an error creating the rule.",
+          });
         }
       }
     },
-    [router, posthog, emailAccountId, isDialog, onSuccess, mutate, rule],
+    [router, posthog, emailAccountId, isDialog, onSuccess, mutate, rule]
   );
 
   const conditions = watch("conditions");
@@ -264,7 +271,9 @@ export function RuleForm({
         formState.errors?.actions?.[index]?.url?.root?.message ||
         formState.errors?.actions?.[index]?.labelId?.root?.message ||
         formState.errors?.actions?.[index]?.to?.root?.message;
-      if (actionError) actionErrors.push(actionError);
+      if (actionError) {
+        actionErrors.push(actionError);
+      }
     });
     return actionErrors;
   }, [formState, watch]);
@@ -369,11 +378,10 @@ export function RuleForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
         {isSubmitted && formErrors.length > 0 && (
           <div className="mt-4">
             <AlertError
-              title="Error"
               description={
                 <ul className="list-disc">
                   {formErrors.map((message) => (
@@ -381,6 +389,7 @@ export function RuleForm({
                   ))}
                 </ul>
               }
+              title="Error"
             />
           </div>
         )}
@@ -388,17 +397,17 @@ export function RuleForm({
         <div>
           {isNameEditMode ? (
             <Input
-              type="text"
-              name="name"
-              label="Rule name"
-              registerProps={register("name")}
               error={errors.name}
+              label="Rule name"
+              name="name"
               placeholder="e.g. Label receipts"
+              registerProps={register("name")}
+              type="text"
             />
           ) : (
             <TypographyH3
-              onClick={toggleNameEditMode}
               className="group flex cursor-pointer items-center"
+              onClick={toggleNameEditMode}
             >
               {watch("name")}
               <PencilIcon className="ml-2 size-4 opacity-0 transition-opacity group-hover:opacity-100" />
@@ -407,41 +416,38 @@ export function RuleForm({
         </div>
 
         <RuleSectionCard
-          icon={MailIcon}
           color="blue"
-          title="When you get an email"
           errors={
             errors.conditions?.root?.message ? (
               <AlertError
-                title="Error"
                 description={errors.conditions.root.message}
+                title="Error"
               />
             ) : undefined
           }
+          icon={MailIcon}
+          title="When you get an email"
         >
           <ConditionSteps
-            conditionFields={conditionFields}
-            conditionalOperator={conditionalOperator}
-            removeCondition={removeCondition}
-            control={control}
-            watch={watch}
-            setValue={setValue}
-            register={register}
-            errors={errors}
-            conditions={conditions}
-            ruleSystemType={rule.systemType}
             appendCondition={appendCondition}
+            conditionalOperator={conditionalOperator}
+            conditionFields={conditionFields}
+            conditions={conditions}
+            control={control}
+            errors={errors}
+            register={register}
+            removeCondition={removeCondition}
+            ruleSystemType={rule.systemType}
+            setValue={setValue}
+            watch={watch}
           />
         </RuleSectionCard>
 
         <RuleSectionCard
-          icon={BotIcon}
           color="green"
-          title="Then:"
           errors={
             actionErrors.length > 0 ? (
               <AlertError
-                title="Error"
                 description={
                   <ul className="list-inside list-disc">
                     {actionErrors.map((error, index) => (
@@ -449,33 +455,36 @@ export function RuleForm({
                     ))}
                   </ul>
                 }
+                title="Error"
               />
             ) : undefined
           }
+          icon={BotIcon}
+          title="Then:"
         >
           <ActionSteps
             actionFields={actionFields}
-            register={register}
-            watch={watch}
-            setValue={setValue}
             append={append}
-            remove={remove}
             control={control}
-            errors={errors}
-            userLabels={userLabels}
-            isLoading={isLoading}
-            mutate={mutateLabels}
             emailAccountId={emailAccountId}
-            typeOptions={typeOptions}
+            errors={errors}
             folders={folders}
             foldersLoading={foldersLoading}
+            isLoading={isLoading}
+            mutate={mutateLabels}
+            register={register}
+            remove={remove}
+            setValue={setValue}
+            typeOptions={typeOptions}
+            userLabels={userLabels}
+            watch={watch}
           />
         </RuleSectionCard>
 
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" Icon={SettingsIcon}>
+              <Button Icon={SettingsIcon} size="sm" variant="outline">
                 Advanced Settings
               </Button>
             </DialogTrigger>
@@ -486,13 +495,13 @@ export function RuleForm({
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <Toggle
-                    name="runOnThreads"
+                    disabled={!allowMultipleConditions(rule.systemType)}
+                    enabled={watch("runOnThreads")}
                     labelRight="Apply to threads"
-                    enabled={watch("runOnThreads") || false}
+                    name="runOnThreads"
                     onChange={(enabled) => {
                       setValue("runOnThreads", enabled);
                     }}
-                    disabled={!allowMultipleConditions(rule.systemType)}
                   />
 
                   <ThreadsExplanation size="md" />
@@ -501,17 +510,17 @@ export function RuleForm({
                 {env.NEXT_PUBLIC_DIGEST_ENABLED && (
                   <div className="flex items-center space-x-2">
                     <Toggle
-                      name="digest"
+                      enabled={watch("digest")}
                       labelRight="Include in daily digest"
-                      enabled={watch("digest") || false}
+                      name="digest"
                       onChange={(enabled) => {
                         setValue("digest", enabled);
                       }}
                     />
 
                     <TooltipExplanation
-                      size="md"
                       side="right"
+                      size="md"
                       text="When enabled you will receive a summary of the emails that match this rule in your digest email."
                     />
                   </div>
@@ -520,23 +529,21 @@ export function RuleForm({
                 {!!rule.id && (
                   <div className="flex">
                     <LearnedPatternsDialog
-                      ruleId={rule.id}
-                      groupId={rule.groupId || null}
                       disabled={isConversationStatusType(rule.systemType)}
+                      groupId={rule.groupId || null}
+                      ruleId={rule.id}
                     />
                   </div>
                 )}
 
                 {rule.id && (
                   <Button
-                    size="sm"
-                    variant="outline"
+                    disabled={isSubmitting}
                     Icon={TrashIcon}
                     loading={isDeleting}
-                    disabled={isSubmitting}
                     onClick={async () => {
                       const yes = confirm(
-                        "Are you sure you want to delete this rule?",
+                        "Are you sure you want to delete this rule?"
                       );
                       if (yes) {
                         try {
@@ -545,7 +552,7 @@ export function RuleForm({
                             emailAccountId,
                             {
                               id: rule.id!,
-                            },
+                            }
                           );
                           if (result?.serverError) {
                             toastError({
@@ -563,8 +570,8 @@ export function RuleForm({
                             router.push(
                               prefixPath(
                                 emailAccountId,
-                                "/automation?tab=rules",
-                              ),
+                                "/automation?tab=rules"
+                              )
                             );
                           }
                         } catch {
@@ -574,6 +581,8 @@ export function RuleForm({
                         }
                       }
                     }}
+                    size="sm"
+                    variant="outline"
                   >
                     Delete rule
                   </Button>
@@ -584,22 +593,22 @@ export function RuleForm({
 
           <div className="flex space-x-2">
             {onCancel && (
-              <Button variant="outline" size="sm" onClick={onCancel}>
+              <Button onClick={onCancel} size="sm" variant="outline">
                 Cancel
               </Button>
             )}
 
             {rule.id ? (
               <Button
-                type="submit"
-                size="sm"
-                loading={isSubmitting}
                 disabled={isDeleting}
+                loading={isSubmitting}
+                size="sm"
+                type="submit"
               >
                 Save
               </Button>
             ) : (
-              <Button type="submit" size="sm" loading={isSubmitting}>
+              <Button loading={isSubmitting} size="sm" type="submit">
                 Create
               </Button>
             )}
@@ -613,8 +622,8 @@ export function RuleForm({
 function ThreadsExplanation({ size }: { size: "sm" | "md" }) {
   return (
     <TooltipExplanation
-      size={size}
       side="right"
+      size={size}
       text="When enabled, this rule can apply to the first email and any subsequent replies in a conversation. When disabled, it can only apply to the first email."
     />
   );

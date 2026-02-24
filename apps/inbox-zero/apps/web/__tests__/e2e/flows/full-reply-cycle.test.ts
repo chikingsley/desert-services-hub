@@ -13,25 +13,25 @@
  * RUN_E2E_FLOW_TESTS=true pnpm test-e2e full-reply-cycle
  */
 
-import { describe, test, expect, beforeAll, afterAll, afterEach } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, test } from "vitest";
 import { shouldRunFlowTests, TIMEOUTS } from "./config";
-import { initializeFlowTests, setupFlowTest } from "./setup";
-import { generateTestSummary } from "./teardown";
+import type { TestAccount } from "./helpers/accounts";
 import {
+  assertDraftExists,
   sendTestEmail,
   sendTestReply,
   TEST_EMAIL_SCENARIOS,
-  assertDraftExists,
 } from "./helpers/email";
+import { clearLogs, logStep, setTestStartTime } from "./helpers/logging";
 import {
+  waitForDraftDeleted,
+  waitForDraftSendLog,
   waitForExecutedRule,
   waitForMessageInInbox,
   waitForReplyInInbox,
-  waitForDraftDeleted,
-  waitForDraftSendLog,
 } from "./helpers/polling";
-import { logStep, clearLogs, setTestStartTime } from "./helpers/logging";
-import type { TestAccount } from "./helpers/accounts";
+import { initializeFlowTests, setupFlowTest } from "./setup";
+import { generateTestSummary } from "./teardown";
 
 describe.skipIf(!shouldRunFlowTests())("Full Reply Cycle", () => {
   let gmail: TestAccount;
@@ -129,7 +129,7 @@ describe.skipIf(!shouldRunFlowTests())("Full Reply Cycle", () => {
       logStep("Step 4: Verifying draft creation");
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       expect(draftAction).toBeDefined();
@@ -153,12 +153,12 @@ describe.skipIf(!shouldRunFlowTests())("Full Reply Cycle", () => {
 
       // Check if any of the expected labels were applied
       const labelAction = executedRule.actionItems.find(
-        (a) => a.type === "LABEL" && a.labelId,
+        (a) => a.type === "LABEL" && a.labelId
       );
 
       if (labelAction?.labelId) {
         const message = await outlook.emailProvider.getMessage(
-          outlookMessage.messageId,
+          outlookMessage.messageId
         );
         expect(message.labelIds).toBeDefined();
         expect(message.labelIds).toContain(labelAction.labelId);
@@ -216,10 +216,10 @@ describe.skipIf(!shouldRunFlowTests())("Full Reply Cycle", () => {
       if (gmailReply.threadId !== sentEmail.threadId) {
         // Get the full message to inspect threading headers
         const replyMessage = await gmail.emailProvider.getMessage(
-          gmailReply.messageId,
+          gmailReply.messageId
         );
         const originalSentMessage = await gmail.emailProvider.getMessage(
-          sentEmail.messageId,
+          sentEmail.messageId
         );
 
         logStep("THREAD MISMATCH - Diagnostic info", {
@@ -278,7 +278,7 @@ describe.skipIf(!shouldRunFlowTests())("Full Reply Cycle", () => {
       // ========================================
       logStep("=== Full Reply Cycle Test PASSED ===");
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   test(
@@ -354,7 +354,7 @@ describe.skipIf(!shouldRunFlowTests())("Full Reply Cycle", () => {
 
       logStep("Thread continuity verified across 3 messages");
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 
   // ============================================================
@@ -434,7 +434,7 @@ describe.skipIf(!shouldRunFlowTests())("Full Reply Cycle", () => {
       logStep("Step 4: Verifying draft creation");
 
       const draftAction = executedRule.actionItems.find(
-        (a) => a.type === "DRAFT_EMAIL" && a.draftId,
+        (a) => a.type === "DRAFT_EMAIL" && a.draftId
       );
 
       expect(draftAction).toBeDefined();
@@ -457,12 +457,12 @@ describe.skipIf(!shouldRunFlowTests())("Full Reply Cycle", () => {
       logStep("Step 5: Verifying label applied");
 
       const labelAction = executedRule.actionItems.find(
-        (a) => a.type === "LABEL" && a.labelId,
+        (a) => a.type === "LABEL" && a.labelId
       );
 
       if (labelAction?.labelId) {
         const message = await gmail.emailProvider.getMessage(
-          gmailMessage.messageId,
+          gmailMessage.messageId
         );
         expect(message.labelIds).toBeDefined();
         expect(message.labelIds).toContain(labelAction.labelId);
@@ -516,10 +516,10 @@ describe.skipIf(!shouldRunFlowTests())("Full Reply Cycle", () => {
 
       if (outlookReply.threadId !== sentEmail.threadId) {
         const replyMessage = await outlook.emailProvider.getMessage(
-          outlookReply.messageId,
+          outlookReply.messageId
         );
         const originalSentMessage = await outlook.emailProvider.getMessage(
-          sentEmail.messageId,
+          sentEmail.messageId
         );
 
         logStep("THREAD MISMATCH - Diagnostic info", {
@@ -571,6 +571,6 @@ describe.skipIf(!shouldRunFlowTests())("Full Reply Cycle", () => {
       // ========================================
       logStep("=== Full Reply Cycle Test (Gmail receiver) PASSED ===");
     },
-    TIMEOUTS.FULL_CYCLE,
+    TIMEOUTS.FULL_CYCLE
   );
 });

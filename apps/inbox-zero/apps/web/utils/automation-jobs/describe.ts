@@ -5,7 +5,9 @@ export function describeCronSchedule(cronExpression: string): string {
 
   try {
     const parts = cronExpression.trim().split(/\s+/);
-    if (parts.length !== 5) return cronstrueFallback(cronExpression);
+    if (parts.length !== 5) {
+      return cronstrueFallback(cronExpression);
+    }
 
     const [minField, hourField, domField, monthField, dowField] = parts;
 
@@ -37,8 +39,8 @@ export function describeCronSchedule(cronExpression: string): string {
           now.getUTCMonth(),
           now.getUTCDate(),
           h,
-          minute,
-        ),
+          minute
+        )
       );
       return timeFormatter.format(utcDate);
     });
@@ -58,10 +60,18 @@ export function describeCronSchedule(cronExpression: string): string {
 }
 
 function describeWeekdays(dowField: string): string {
-  if (dowField === "*") return "Every day";
-  if (dowField === "1-5") return "Weekdays";
-  if (dowField === "0,6" || dowField === "6,0") return "Weekends";
-  if (dowField === "1-7" || dowField === "0-6") return "Every day";
+  if (dowField === "*") {
+    return "Every day";
+  }
+  if (dowField === "1-5") {
+    return "Weekdays";
+  }
+  if (dowField === "0,6" || dowField === "6,0") {
+    return "Weekends";
+  }
+  if (dowField === "1-7" || dowField === "0-6") {
+    return "Every day";
+  }
   return cronstrue.toString(`0 0 * * ${dowField}`).replace("At 12:00 AM, ", "");
 }
 

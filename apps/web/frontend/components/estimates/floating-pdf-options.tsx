@@ -10,8 +10,8 @@ import {
 } from "@/apps/web/frontend/components/ui/tooltip";
 
 interface FloatingPdfOptionsProps {
-  options: EstimatePDFOptions;
   onChange: (options: EstimatePDFOptions) => void;
+  options: EstimatePDFOptions;
 }
 
 export function FloatingPdfOptions({

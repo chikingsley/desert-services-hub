@@ -196,9 +196,9 @@
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "cv11", "ss01";
     font-variation-settings: "opsz" 32;
+    font-feature-settings: "cv11", "ss01";
+    @apply bg-background text-foreground;
   }
 
   /* Smooth scrolling */
@@ -264,13 +264,13 @@
   }
 
   .texture-noise::before {
-    content: "";
     position: absolute;
     inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    opacity: 0.025;
     pointer-events: none;
+    content: "";
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     mix-blend-mode: overlay;
+    opacity: 0.025;
   }
 
   /* Geometric pattern for decorative elements */
@@ -308,12 +308,12 @@
         oklch(0.62 0.18 35 / 0.05) 87.5%,
         oklch(0.62 0.18 35 / 0.05)
       );
-    background-size: 80px 140px;
     background-position:
       0 0,
       0 0,
       40px 70px,
       40px 70px;
+    background-size: 80px 140px;
   }
 
   /* Smooth page transitions */
@@ -375,8 +375,8 @@
   }
 
   .hover-lift:hover {
-    transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
   }
 
   /* Glow effect for primary elements */
@@ -402,8 +402,8 @@
   /* Glassmorphism card variant */
   .glass-card {
     background: oklch(1 0 0 / 0.7);
-    backdrop-filter: blur(12px);
     border: 1px solid oklch(0 0 0 / 0.05);
+    backdrop-filter: blur(12px);
   }
 
   .dark .glass-card {

@@ -1,5 +1,5 @@
-import { Card } from "@/components/ui/card";
 import { TypographyH3 } from "@/components/Typography";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/utils";
 
 export function RuleSectionCard({

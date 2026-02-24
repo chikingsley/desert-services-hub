@@ -1,15 +1,15 @@
-import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
-import { captureException, checkCommonErrors } from "@/utils/error";
-import { createEmailProvider } from "@/utils/email/provider";
+import { NextResponse } from "next/server";
 import type { OutlookResourceData } from "@/app/api/outlook/webhook/types";
-import { processHistoryItem } from "@/utils/webhook/process-history-item";
-import { markMessageAsProcessing } from "@/utils/redis/message-processing";
-import {
-  validateWebhookAccount,
-  getWebhookEmailAccount,
-} from "@/utils/webhook/validate-webhook-account";
+import { createEmailProvider } from "@/utils/email/provider";
+import { captureException, checkCommonErrors } from "@/utils/error";
 import type { Logger } from "@/utils/logger";
+import { markMessageAsProcessing } from "@/utils/redis/message-processing";
+import { processHistoryItem } from "@/utils/webhook/process-history-item";
+import {
+  getWebhookEmailAccount,
+  validateWebhookAccount,
+} from "@/utils/webhook/validate-webhook-account";
 
 export async function processHistoryForUser({
   subscriptionId,
@@ -24,7 +24,7 @@ export async function processHistoryForUser({
     {
       watchEmailsSubscriptionId: subscriptionId,
     },
-    logger,
+    logger
   );
 
   logger = logger.with({
@@ -66,10 +66,10 @@ export async function processHistoryForUser({
     const message = await provider.getMessage(resourceData.id);
 
     // Skip messages not in inbox or sent items folders (e.g., drafts, trash)
-    const isInInbox = message.labelIds?.includes("INBOX") || false;
-    const isInSentItems = message.labelIds?.includes("SENT") || false;
+    const isInInbox = message.labelIds?.includes("INBOX");
+    const isInSentItems = message.labelIds?.includes("SENT");
 
-    if (!isInInbox && !isInSentItems) {
+    if (!(isInInbox || isInSentItems)) {
       logger.info("Skipping message not in inbox or sent items", {
         labelIds: message.labelIds,
         from: message.headers.from,
@@ -102,7 +102,7 @@ export async function processHistoryForUser({
         hasAiAccess: userHasAiAccess,
         rules: validatedEmailAccount.rules,
         logger,
-      },
+      }
     );
 
     return NextResponse.json({ ok: true });

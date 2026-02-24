@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { handleWebhookError } from "@/utils/webhook/error-handler";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createScopedLogger } from "@/utils/logger";
 import { trackError } from "@/utils/posthog";
+import { handleWebhookError } from "@/utils/webhook/error-handler";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/utils/posthog", () => ({
@@ -50,7 +50,7 @@ describe("handleWebhookError", () => {
       expect(trackError).toHaveBeenCalledWith(
         expect.objectContaining({
           errorType: "Gmail Quota Exceeded",
-        }),
+        })
       );
     });
 
@@ -64,7 +64,7 @@ describe("handleWebhookError", () => {
       expect(trackError).toHaveBeenCalledWith(
         expect.objectContaining({
           errorType: "Gmail Insufficient Permissions",
-        }),
+        })
       );
     });
   });
@@ -85,7 +85,7 @@ describe("handleWebhookError", () => {
         expect.objectContaining({
           errorType: "Outlook Rate Limit",
           url: "/api/outlook/webhook",
-        }),
+        })
       );
     });
 
@@ -102,7 +102,7 @@ describe("handleWebhookError", () => {
       expect(trackError).toHaveBeenCalledWith(
         expect.objectContaining({
           errorType: "Outlook Rate Limit",
-        }),
+        })
       );
     });
 
@@ -117,7 +117,7 @@ describe("handleWebhookError", () => {
       expect(trackError).toHaveBeenCalledWith(
         expect.objectContaining({
           errorType: "Outlook Rate Limit",
-        }),
+        })
       );
     });
   });
@@ -142,7 +142,7 @@ describe("handleWebhookError", () => {
           emailAccountId: "unknown",
           url: "/api/google/webhook",
           logger,
-        }),
+        })
       ).resolves.toBeUndefined();
     });
   });
@@ -166,7 +166,7 @@ describe("handleWebhookError", () => {
       expect(trackError).toHaveBeenCalledWith(
         expect.objectContaining({
           errorType: "Gmail Rate Limit Exceeded",
-        }),
+        })
       );
     });
   });

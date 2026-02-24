@@ -28,29 +28,29 @@ const projectsQuerySchema = paginationSchema.extend({
 });
 
 interface ProjectRow {
-  id: number;
-  name: string;
-  project_number: string | null;
-  contractor: string | null;
-  awarded_value: number | null;
+  account_id: number | null;
+  account_name: string | null;
   address: string | null;
+  awarded_value: number | null;
+  contract_status: string;
+  contractor: string | null;
+  created_at: string;
+  document_count: number;
+  dust_permit_status: string;
+  email_count: number;
+  first_seen: string | null;
+  id: number;
+  last_seen: string | null;
   location_city: string | null;
   location_state: string | null;
   location_zip: string | null;
-  contract_status: string;
-  dust_permit_status: string;
-  noi_status: string;
-  swppp_status: string;
-  signs_status: string;
-  document_count: number;
-  email_count: number;
-  first_seen: string | null;
-  last_seen: string | null;
   monday_item_id: string | null;
+  name: string;
+  noi_status: string;
   notes: string | null;
-  account_id: number | null;
-  account_name: string | null;
-  created_at: string;
+  project_number: string | null;
+  signs_status: string;
+  swppp_status: string;
   updated_at: string;
 }
 

@@ -20,7 +20,7 @@ export function convertLabelsToDisplay(text: string): string {
  */
 function processMentions(
   text: string,
-  transformer: (match: string) => string,
+  transformer: (match: string) => string
 ): string {
   let result = "";
   let i = 0;

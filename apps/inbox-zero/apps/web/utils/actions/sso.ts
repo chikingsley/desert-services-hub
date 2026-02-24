@@ -1,12 +1,12 @@
 "use server";
 
 import { env } from "@/env";
-import { ssoRegistrationBody } from "@/utils/actions/sso.validation";
 import { adminActionClient } from "@/utils/actions/safe-action";
+import { ssoRegistrationBody } from "@/utils/actions/sso.validation";
 import { auth } from "@/utils/auth";
 import { SafeError } from "@/utils/error";
-import { extractSSOProviderConfigFromXML } from "@/utils/sso/extract-sso-provider-config-from-xml";
 import prisma from "@/utils/prisma";
+import { extractSSOProviderConfigFromXML } from "@/utils/sso/extract-sso-provider-config-from-xml";
 import { validateIdpMetadata } from "@/utils/sso/validate-idp-metadata";
 import { slugify } from "@/utils/string";
 
@@ -20,25 +20,28 @@ export const registerSSOProviderAction = adminActionClient
       const session = await auth();
       const userId = session?.user?.id;
 
-      if (!userId) throw new SafeError("Unauthorized");
+      if (!userId) {
+        throw new SafeError("Unauthorized");
+      }
 
-      if (!validateIdpMetadata(idpMetadata))
+      if (!validateIdpMetadata(idpMetadata)) {
         throw new SafeError("Invalid IDP metadata XML.");
+      }
 
       const ssoConfig = extractSSOProviderConfigFromXML(
         idpMetadata,
-        providerId,
+        providerId
       );
 
       const existingSSOProvider = await prisma.ssoProvider.findUnique({
         where: {
-          providerId: providerId,
+          providerId,
         },
       });
 
       if (existingSSOProvider) {
         throw new SafeError(
-          `SSO provider with ID "${providerId}" already exists`,
+          `SSO provider with ID "${providerId}" already exists`
         );
       }
 
@@ -52,7 +55,7 @@ export const registerSSOProviderAction = adminActionClient
 
       if (existingOrganization) {
         throw new SafeError(
-          "An organization with this name already exists. Please choose a different name.",
+          "An organization with this name already exists. Please choose a different name."
         );
       }
 
@@ -67,7 +70,7 @@ export const registerSSOProviderAction = adminActionClient
       // Compute callback URL to store with config (informational)
       const callbackUrl = new URL(
         `/api/auth/sso/saml2/callback/${encodeURIComponent(providerId)}`,
-        env.NEXT_PUBLIC_BASE_URL,
+        env.NEXT_PUBLIC_BASE_URL
       ).toString();
 
       const samlConfig = {
@@ -109,5 +112,5 @@ export const registerSSOProviderAction = adminActionClient
       });
 
       return created;
-    },
+    }
   );

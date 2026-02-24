@@ -12,14 +12,14 @@ type DigestScheduleForProgression = Pick<
 
 export function isDigestScheduleDue(
   schedule: Pick<Schedule, "nextOccurrenceAt"> | null | undefined,
-  now = new Date(),
+  now = new Date()
 ): boolean {
   return !!schedule?.nextOccurrenceAt && schedule.nextOccurrenceAt <= now;
 }
 
 export function getDigestScheduleProgression(
   schedule: DigestScheduleForProgression,
-  now = new Date(),
+  now = new Date()
 ) {
   const lastOccurrenceAt =
     schedule.nextOccurrenceAt && schedule.nextOccurrenceAt <= now

@@ -1,8 +1,12 @@
 "use client";
 
-import { useCallback } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
+import { Input } from "@/components/Input";
+import { LoadingContent } from "@/components/LoadingContent";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,16 +14,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/Input";
-import { toastSuccess, toastError } from "@/components/Toast";
+import { useEmailAccountFull } from "@/hooks/useEmailAccountFull";
 import { updateFilingPromptAction } from "@/utils/actions/drive";
 import {
-  updateFilingPromptBody,
   type UpdateFilingPromptBody,
+  updateFilingPromptBody,
 } from "@/utils/actions/drive.validation";
-import { LoadingContent } from "@/components/LoadingContent";
-import { useEmailAccountFull } from "@/hooks/useEmailAccountFull";
 
 export function FilingRulesForm({
   emailAccountId,
@@ -29,7 +29,7 @@ export function FilingRulesForm({
   const { data, isLoading, error, mutate } = useEmailAccountFull();
 
   return (
-    <LoadingContent loading={isLoading} error={error}>
+    <LoadingContent error={error} loading={isLoading}>
       {data && (
         <FilingRulesFormContent
           emailAccountId={emailAccountId}
@@ -75,7 +75,7 @@ function FilingRulesFormContent({
         mutateEmail();
       }
     },
-    [emailAccountId, mutateEmail],
+    [emailAccountId, mutateEmail]
   );
 
   return (
@@ -85,18 +85,18 @@ function FilingRulesFormContent({
         <CardDescription>How should we organize your files?</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+        <form className="space-y-3" onSubmit={handleSubmit(onSubmit)}>
           <Input
-            type="textarea"
+            autosizeTextarea
+            error={errors.filingPrompt}
             name="filingPrompt"
             placeholder="Receipts go to Expenses by month. Contracts go to Legal."
             registerProps={register("filingPrompt")}
-            error={errors.filingPrompt}
-            autosizeTextarea
             rows={3}
+            type="textarea"
           />
           <div className="flex justify-end">
-            <Button type="submit" size="sm" loading={isSubmitting}>
+            <Button loading={isSubmitting} size="sm" type="submit">
               Save
             </Button>
           </div>

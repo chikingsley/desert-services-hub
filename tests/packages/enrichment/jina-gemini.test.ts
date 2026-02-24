@@ -5,7 +5,10 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { enrichCompany, enrichProvider } from "@/packages/enrichment/jina/jina-gemini";
+import {
+  enrichCompany,
+  enrichProvider,
+} from "@/packages/enrichment/jina/jina-gemini";
 
 describe("Jina + Gemini Enrichment", () => {
   test("enrichCompany - known company", async () => {

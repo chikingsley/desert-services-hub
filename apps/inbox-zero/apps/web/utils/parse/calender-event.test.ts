@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ParsedMessage } from "@/utils/types";
 import {
   analyzeCalendarEvent,
   isCalendarEventInPast,
   isCalendarInvite,
 } from "./calender-event";
-import type { ParsedMessage } from "@/utils/types";
 
 vi.mock("server-only", () => ({}));
 
@@ -324,7 +324,7 @@ describe("Calendar Event Detection", () => {
 });
 
 const createTestEmail = (
-  overrides: Partial<ParsedMessage> = {},
+  overrides: Partial<ParsedMessage> = {}
 ): ParsedMessage => ({
   id: "test-id",
   threadId: "test-thread-id",

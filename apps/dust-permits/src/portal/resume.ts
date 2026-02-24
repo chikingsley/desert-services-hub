@@ -307,11 +307,11 @@ async function isOnPage5(page: Page): Promise<boolean> {
  * Result of the resume flow
  */
 export interface ResumeFlowResult {
-  success: boolean;
-  permitNumber: string;
   disturbedAcres: number | null;
-  reachedPage5: boolean;
   error?: string;
+  permitNumber: string;
+  reachedPage5: boolean;
+  success: boolean;
 }
 
 /**

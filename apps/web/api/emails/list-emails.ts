@@ -18,18 +18,18 @@ const LIST_COLUMNS = `
 `;
 
 interface EmailStatsRow {
-  total: number;
-  estimates: number;
   contracts: number;
-  dust_permits: number;
-  invoices: number;
-  payments: number;
-  hr: number;
-  it: number;
-  internal: number;
   docusign: number;
-  with_attachments: number;
+  dust_permits: number;
+  estimates: number;
   excluded: number;
+  hr: number;
+  internal: number;
+  invoices: number;
+  it: number;
+  payments: number;
+  total: number;
+  with_attachments: number;
 }
 
 const emailListQuerySchema = z.object({
@@ -46,17 +46,17 @@ const emailListQuerySchema = z.object({
 });
 
 interface EmailListParams {
-  page: number;
+  classification: string;
+  excludeClassifications: string[];
+  from: string;
+  hasAttachmentFilterOn: boolean;
+  includeExcluded: boolean;
   limit: number;
   offset: number;
-  search: string;
-  from: string;
-  classification: string;
-  senders: string[];
-  excludeClassifications: string[];
-  includeExcluded: boolean;
   onlyExcludedOn: boolean;
-  hasAttachmentFilterOn: boolean;
+  page: number;
+  search: string;
+  senders: string[];
 }
 
 const STATS_CACHE_TTL_MS = 30_000;
@@ -284,9 +284,7 @@ async function addSearchCondition(
   const hasSearchVector = await supportsSearchVector();
   if (hasSearchVector) {
     const p = values.length + 1;
-    conditions.push(
-      `search_vector @@ websearch_to_tsquery('english', $${p})`
-    );
+    conditions.push(`search_vector @@ websearch_to_tsquery('english', $${p})`);
     values.push(search);
     return;
   }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { withEmailAccount } from "@/utils/middleware";
 import { MCP_INTEGRATIONS } from "@/utils/mcp/integrations";
+import { withEmailAccount } from "@/utils/middleware";
 import prisma from "@/utils/prisma";
 
 export type GetIntegrationsResponse = Awaited<ReturnType<typeof getData>>;
@@ -33,7 +33,7 @@ async function getData(emailAccountId: string) {
     authType: integration.authType,
     toolsWarning: integration.toolsWarning,
     connection: connections.find(
-      (connection) => connection.integration.name === integration.name,
+      (connection) => connection.integration.name === integration.name
     ),
   }));
 

@@ -1,28 +1,28 @@
-import { Suspense } from "react";
 import { SparklesIcon } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import prisma from "@/utils/prisma";
-import { History } from "@/app/(app)/[emailAccountId]/assistant/History";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Process } from "@/app/(app)/[emailAccountId]/assistant/Process";
-import { PermissionsCheck } from "@/app/(app)/[emailAccountId]/PermissionsCheck";
-import { EmailProvider } from "@/providers/EmailProvider";
-import { ASSISTANT_ONBOARDING_COOKIE } from "@/utils/cookies";
-import { prefixPath } from "@/utils/path";
-import { checkUserOwnsEmailAccount } from "@/utils/email-account";
-import { SettingsTab } from "@/app/(app)/[emailAccountId]/assistant/settings/SettingsTab";
-import { TabSelect } from "@/components/TabSelect";
-import { RulesTab } from "@/app/(app)/[emailAccountId]/assistant/RulesTabNew";
+import { Suspense } from "react";
 import { AIChatButton } from "@/app/(app)/[emailAccountId]/assistant/AIChatButton";
 import { AllRulesDisabledBanner } from "@/app/(app)/[emailAccountId]/assistant/AllRulesDisabledBanner";
-import { PageWrapper } from "@/components/PageWrapper";
-import { PageHeader } from "@/components/PageHeader";
-import { DismissibleVideoCard } from "@/components/VideoCard";
+import { History } from "@/app/(app)/[emailAccountId]/assistant/History";
+import { Process } from "@/app/(app)/[emailAccountId]/assistant/Process";
+import { RulesTab } from "@/app/(app)/[emailAccountId]/assistant/RulesTabNew";
+import { SettingsTab } from "@/app/(app)/[emailAccountId]/assistant/settings/SettingsTab";
 import {
-  STEP_KEYS,
   getStepNumber,
+  STEP_KEYS,
 } from "@/app/(app)/[emailAccountId]/onboarding/steps";
+import { PermissionsCheck } from "@/app/(app)/[emailAccountId]/PermissionsCheck";
+import { PageHeader } from "@/components/PageHeader";
+import { PageWrapper } from "@/components/PageWrapper";
+import { TabSelect } from "@/components/TabSelect";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { DismissibleVideoCard } from "@/components/VideoCard";
+import { EmailProvider } from "@/providers/EmailProvider";
+import { ASSISTANT_ONBOARDING_COOKIE } from "@/utils/cookies";
+import { checkUserOwnsEmailAccount } from "@/utils/email-account";
+import { prefixPath } from "@/utils/path";
+import prisma from "@/utils/prisma";
 
 export const maxDuration = 300; // Applies to the actions
 
@@ -75,8 +75,8 @@ export default async function AutomationPage({
       redirect(
         prefixPath(
           emailAccountId,
-          `/onboarding?step=${getStepNumber(STEP_KEYS.LABELS)}`,
-        ),
+          `/onboarding?step=${getStepNumber(STEP_KEYS.LABELS)}`
+        )
       );
     }
   }
@@ -107,7 +107,7 @@ export default async function AutomationPage({
 
           <AllRulesDisabledBanner />
 
-          <div className="border-b border-neutral-200 pt-2">
+          <div className="border-neutral-200 border-b pt-2">
             <TabSelect
               options={tabOptions(emailAccountId)}
               selected={tab ?? "rules"}
@@ -116,26 +116,26 @@ export default async function AutomationPage({
 
           <DismissibleVideoCard
             className="my-4"
-            icon={<SparklesIcon className="h-5 w-5" />}
-            title="Getting started with AI Assistant"
             description={
               "Learn how to use the AI Assistant to automatically label, archive, and more."
             }
+            icon={<SparklesIcon className="h-5 w-5" />}
             muxPlaybackId="VwIP7UAw4MXDjkvmLjJzGsY00ee9jxIZVI952DoBBfp8"
             storageKey="ai-assistant-onboarding-video"
+            title="Getting started with AI Assistant"
           />
 
           <Tabs defaultValue="rules">
-            <TabsContent value="rules" className="mb-10">
+            <TabsContent className="mb-10" value="rules">
               <RulesTab />
             </TabsContent>
-            <TabsContent value="settings" className="mb-10">
+            <TabsContent className="mb-10" value="settings">
               <SettingsTab />
             </TabsContent>
-            <TabsContent value="test" className="mb-10">
+            <TabsContent className="mb-10" value="test">
               <Process />
             </TabsContent>
-            <TabsContent value="history" className="mb-10">
+            <TabsContent className="mb-10" value="history">
               <History />
             </TabsContent>
           </Tabs>

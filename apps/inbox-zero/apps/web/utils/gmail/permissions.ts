@@ -1,8 +1,8 @@
-import { SCOPES } from "@/utils/gmail/scopes";
 import {
   getAccessTokenFromClient,
   getGmailClientWithRefresh,
 } from "@/utils/gmail/client";
+import { SCOPES } from "@/utils/gmail/scopes";
 import { createScopedLogger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
 
@@ -31,7 +31,7 @@ async function checkGmailPermissions({
 
   try {
     const response = await fetch(
-      `https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${accessToken}`,
+      `https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${accessToken}`
     );
 
     const data = await response.json();
@@ -50,16 +50,17 @@ async function checkGmailPermissions({
 
     const grantedScopes = data.scope?.split(" ") || [];
     const missingScopes = SCOPES.filter(
-      (scope) => !grantedScopes.includes(scope),
+      (scope) => !grantedScopes.includes(scope)
     );
 
     const hasAllPermissions = missingScopes.length === 0;
 
-    if (!hasAllPermissions)
+    if (!hasAllPermissions) {
       logger.info("Missing Gmail permissions", {
         emailAccountId,
         missingScopes,
       });
+    }
 
     return { hasAllPermissions, missingScopes };
   } catch (error) {
@@ -123,11 +124,12 @@ export async function handleGmailPermissionsCheck({
             where: { id: emailAccountId },
             select: { accountId: true },
           });
-          if (!emailAccount)
+          if (!emailAccount) {
             return {
               hasAllPermissions: false,
               error: "Email account not found",
             };
+          }
 
           await prisma.account.update({
             where: { id: emailAccount.accountId },

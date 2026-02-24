@@ -2,21 +2,21 @@
 
 import { ExternalLinkIcon } from "lucide-react";
 import Link from "next/link";
-import { MessageText } from "@/components/Typography";
-import { getEmailUrlForMessage } from "@/utils/url";
-import { decodeSnippet } from "@/utils/gmail/decode";
-import { ViewEmailButton } from "@/components/ViewEmailButton";
-import { useThread } from "@/hooks/useThread";
-import { snippetRemoveReply } from "@/utils/gmail/snippet";
-import { extractNameFromEmail } from "@/utils/email";
-import { Badge } from "@/components/ui/badge";
-import { useEmail } from "@/providers/EmailProvider";
-import { useAccount } from "@/providers/EmailAccountProvider";
 import { useMemo } from "react";
-import { isDefined } from "@/utils/types";
-import { isGoogleProvider } from "@/utils/email/provider-types";
-import { getRuleLabel } from "@/utils/rule/consts";
+import { MessageText } from "@/components/Typography";
+import { Badge } from "@/components/ui/badge";
+import { ViewEmailButton } from "@/components/ViewEmailButton";
 import { SystemType } from "@/generated/prisma/enums";
+import { useThread } from "@/hooks/useThread";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { useEmail } from "@/providers/EmailProvider";
+import { extractNameFromEmail } from "@/utils/email";
+import { isGoogleProvider } from "@/utils/email/provider-types";
+import { decodeSnippet } from "@/utils/gmail/decode";
+import { snippetRemoveReply } from "@/utils/gmail/snippet";
+import { getRuleLabel } from "@/utils/rule/consts";
+import { isDefined } from "@/utils/types";
+import { getEmailUrlForMessage } from "@/utils/url";
 
 export function EmailMessageCell({
   sender,
@@ -51,25 +51,26 @@ export function EmailMessageCell({
         // If not found by ID, try to find by name
         if (!label) {
           const foundLabel = Object.values(userLabels).find(
-            (l) => l.name.toLowerCase() === idOrName.toLowerCase(),
+            (l) => l.name.toLowerCase() === idOrName.toLowerCase()
           );
           if (foundLabel) {
             label = foundLabel;
           }
         }
 
-        if (!label) return null;
+        if (!label) {
+          return null;
+        }
         return { id: label.id, name: label.name };
       })
       .filter(isDefined)
       .filter((label) => {
-        if (filterReplyTrackerLabels) {
-          if (
-            label.name === getRuleLabel(SystemType.TO_REPLY) ||
-            label.name === getRuleLabel(SystemType.AWAITING_REPLY)
-          ) {
-            return false;
-          }
+        if (
+          filterReplyTrackerLabels &&
+          (label.name === getRuleLabel(SystemType.TO_REPLY) ||
+            label.name === getRuleLabel(SystemType.AWAITING_REPLY))
+        ) {
+          return false;
         }
 
         if (label.name.includes("/")) {
@@ -99,24 +100,24 @@ export function EmailMessageCell({
                 messageId,
                 threadId,
                 userEmail,
-                provider,
+                provider
               )}
               target="_blank"
             >
               <ExternalLinkIcon className="h-4 w-4" />
             </Link>
             <ViewEmailButton
-              threadId={threadId}
+              className="ml-1.5"
               messageId={messageId}
               size="xs"
-              className="ml-1.5"
+              threadId={threadId}
             />
           </>
         )}
         {labelsToDisplay && labelsToDisplay.length > 0 && (
           <span className="ml-2 flex flex-wrap items-center gap-1">
             {labelsToDisplay.map((label) => (
-              <Badge variant="secondary" key={label.id}>
+              <Badge key={label.id} variant="secondary">
                 {label.name}
               </Badge>
             ))}
@@ -145,12 +146,21 @@ export function EmailMessageCellWithData({
   const { data, isLoading, error } = useThread({ id: threadId });
 
   const firstMessage = data?.thread?.messages?.[0];
-  const emailNotFound = !isLoading && !error && !firstMessage;
+  const emailNotFound = !(isLoading || error || firstMessage);
 
   return (
     <EmailMessageCell
+      hideViewEmailButton={emailNotFound || !!error}
+      labelIds={firstMessage?.labelIds}
+      messageId={messageId}
       sender={sender}
-      userEmail={userEmail}
+      snippet={
+        error || emailNotFound
+          ? ""
+          : isLoading
+            ? ""
+            : firstMessage?.snippet || ""
+      }
       subject={
         error
           ? "Error loading email"
@@ -160,17 +170,8 @@ export function EmailMessageCellWithData({
               ? "Email not found"
               : firstMessage?.headers.subject || ""
       }
-      snippet={
-        error || emailNotFound
-          ? ""
-          : isLoading
-            ? ""
-            : firstMessage?.snippet || ""
-      }
       threadId={threadId}
-      messageId={messageId}
-      labelIds={firstMessage?.labelIds}
-      hideViewEmailButton={emailNotFound || !!error}
+      userEmail={userEmail}
     />
   );
 }

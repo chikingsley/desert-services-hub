@@ -25,16 +25,16 @@ export interface SyncStats {
 }
 
 export interface SyncResult {
-  success: boolean;
   companyPermits: SyncStats;
-  marketingPermits: SyncStats;
   error?: string;
+  marketingPermits: SyncStats;
+  success: boolean;
 }
 
 export interface CompanySyncResult {
-  success: boolean;
   companyPermits: SyncStats;
   error?: string;
+  success: boolean;
 }
 
 /**

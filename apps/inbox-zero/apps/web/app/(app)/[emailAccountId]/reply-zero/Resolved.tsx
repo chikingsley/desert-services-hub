@@ -1,7 +1,7 @@
-import prisma from "@/utils/prisma";
-import { ReplyTrackerEmails } from "./ReplyTrackerEmails";
-import { getDateFilter, type TimeRange } from "./date-filter";
 import { Prisma } from "@/generated/prisma/client";
+import prisma from "@/utils/prisma";
+import { getDateFilter, type TimeRange } from "./date-filter";
+import { ReplyTrackerEmails } from "./ReplyTrackerEmails";
 
 const PAGE_SIZE = 20;
 
@@ -56,12 +56,12 @@ export async function Resolved({
 
   return (
     <ReplyTrackerEmails
-      trackers={trackers}
       emailAccountId={emailAccountId}
-      userEmail={userEmail}
-      totalPages={totalPages}
-      isResolved
       isAnalyzing={false}
+      isResolved
+      totalPages={totalPages}
+      trackers={trackers}
+      userEmail={userEmail}
     />
   );
 }

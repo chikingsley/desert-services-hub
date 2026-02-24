@@ -1,10 +1,10 @@
-import type { Logger } from "@/utils/logger";
-import type { OutlookClient } from "@/utils/outlook/client";
-import { escapeODataString } from "@/utils/outlook/odata-escape";
 import {
   publishBulkActionToTinybird,
   updateEmailMessagesForSender,
 } from "@/utils/email/bulk-action-tracking";
+import type { Logger } from "@/utils/logger";
+import type { OutlookClient } from "@/utils/outlook/client";
+import { escapeODataString } from "@/utils/outlook/odata-escape";
 
 const GRAPH_JSON_BATCH_LIMIT = 20; // Microsoft Graph JSON batching limit
 
@@ -45,7 +45,9 @@ async function batch<TRequestBody = unknown, TResponseBody = unknown>({
   context?: Record<string, unknown>;
   logger: Logger;
 }): Promise<GraphBatchResponseItem<TResponseBody>[]> {
-  if (requests.length === 0) return [];
+  if (requests.length === 0) {
+    return [];
+  }
 
   const graphClient = client.getClient();
   const aggregatedResponses: GraphBatchResponseItem<TResponseBody>[] = [];
@@ -64,7 +66,7 @@ async function batch<TRequestBody = unknown, TResponseBody = unknown>({
 
       const responses = response?.responses ?? [];
       const requestsById = new Map(
-        chunk.map((request) => [request.id, request]),
+        chunk.map((request) => [request.id, request])
       );
 
       responses.forEach((res) => {
@@ -114,7 +116,9 @@ async function moveMessagesInBatches({
   action: "archive" | "trash";
   logger: Logger;
 }): Promise<void> {
-  if (messageIds.length === 0) return;
+  if (messageIds.length === 0) {
+    return;
+  }
 
   const requestIdToMessageId = new Map<string, string>();
   const requests = messageIds.map((messageId, index) => {
@@ -181,10 +185,14 @@ export async function moveMessagesForSenders({
   emailAccountId: string;
   logger: Logger;
 }): Promise<void> {
-  if (senders.length === 0) return;
+  if (senders.length === 0) {
+    return;
+  }
 
   for (const sender of senders) {
-    if (!sender) continue;
+    if (!sender) {
+      continue;
+    }
 
     const processedMessageIds = new Set<string>();
     const publishedThreadIds = new Set<string>();
@@ -227,7 +235,7 @@ export async function moveMessagesForSenders({
           (message): message is { id: string; conversationId: string } =>
             !!message.id &&
             !!message.conversationId &&
-            !processedMessageIds.has(message.id),
+            !processedMessageIds.has(message.id)
         );
 
         const messageIds = allMessages.map((msg) => msg.id);
@@ -243,11 +251,11 @@ export async function moveMessagesForSenders({
             });
 
             const batchThreadIds = new Set(
-              allMessages.map((msg) => msg.conversationId),
+              allMessages.map((msg) => msg.conversationId)
             );
 
             const newThreadIds = Array.from(batchThreadIds).filter(
-              (threadId) => !publishedThreadIds.has(threadId),
+              (threadId) => !publishedThreadIds.has(threadId)
             );
 
             const promises = [
@@ -265,14 +273,14 @@ export async function moveMessagesForSenders({
                   threadIds: newThreadIds,
                   action,
                   ownerEmail,
-                }),
+                })
               );
             }
 
             await Promise.all(promises);
 
             newThreadIds.forEach((threadId) =>
-              publishedThreadIds.add(threadId),
+              publishedThreadIds.add(threadId)
             );
           } catch (error) {
             logger.error("Failed to move or track messages", {

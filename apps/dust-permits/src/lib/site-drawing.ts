@@ -12,9 +12,9 @@ import type { LatLng, MapFeature, PermitMapData } from "@/lib/dust-features";
 import { latLngToWebMercator } from "@/lib/dust-features";
 
 export interface SiteCoordinatesInput {
+  acresDisturbed?: number | null;
   latitude: number;
   longitude: number;
-  acresDisturbed?: number | null;
 }
 
 function parseBooleanEnv(value: string | undefined): boolean {

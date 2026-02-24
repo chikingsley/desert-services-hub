@@ -1,28 +1,28 @@
-import { NextResponse } from "next/server";
 import { sendDigestEmail } from "@inboxzero/resend";
-import { withEmailAccount, withError } from "@/utils/middleware";
+import { camelCase } from "lodash";
+import { NextResponse } from "next/server";
 import { env } from "@/env";
-import { captureException, SafeError } from "@/utils/error";
-import prisma from "@/utils/prisma";
-import type { Logger } from "@/utils/logger";
-import { createUnsubscribeToken } from "@/utils/unsubscribe";
+import { DigestStatus, SystemType } from "@/generated/prisma/enums";
 import {
   getDigestScheduleProgression,
   isDigestScheduleDue,
 } from "@/utils/digest/schedule";
+import { createEmailProvider } from "@/utils/email/provider";
+import { captureException, SafeError } from "@/utils/error";
+import type { Logger } from "@/utils/logger";
+import { withEmailAccount, withError } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
+import { withQstashOrInternal } from "@/utils/qstash";
+import { getRuleName } from "@/utils/rule/consts";
+import { sleep } from "@/utils/sleep";
 import type { ParsedMessage } from "@/utils/types";
+import { createUnsubscribeToken } from "@/utils/unsubscribe";
+import { extractNameFromEmail } from "../../../../utils/email";
 import {
+  type Digest,
   sendDigestEmailBody,
   storedDigestContentSchema,
-  type Digest,
 } from "./validation";
-import { DigestStatus, SystemType } from "@/generated/prisma/enums";
-import { extractNameFromEmail } from "../../../../utils/email";
-import { getRuleName } from "@/utils/rule/consts";
-import { camelCase } from "lodash";
-import { createEmailProvider } from "@/utils/email/provider";
-import { sleep } from "@/utils/sleep";
-import { withQstashOrInternal } from "@/utils/qstash";
 
 export const maxDuration = 60;
 
@@ -56,7 +56,7 @@ export const POST = withError(
       request.logger.error("Invalid request body", { error });
       return NextResponse.json(
         { error: "Invalid request body" },
-        { status: 400 },
+        { status: 400 }
       );
     }
     const { emailAccountId } = data;
@@ -73,10 +73,10 @@ export const POST = withError(
       captureException(error, { emailAccountId });
       return NextResponse.json(
         { success: false, error: "Error sending digest email" },
-        { status: 500 },
+        { status: 500 }
       );
     }
-  }),
+  })
 );
 
 async function getDigestSchedule({
@@ -214,7 +214,7 @@ async function sendEmail({
     const processedDigestIds = pendingDigests.map((d) => d.id);
 
     const messageIds = pendingDigests.flatMap((digest) =>
-      digest.items.map((item) => item.messageId),
+      digest.items.map((item) => item.messageId)
     );
 
     logger.info("Fetching batch of messages");

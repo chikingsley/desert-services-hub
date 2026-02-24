@@ -3,26 +3,26 @@
 import { json } from "../_shared/queue.ts";
 
 interface IncomingAttachment {
-  filename: string;
-  contentType: string;
-  size: number;
   content: string;
+  contentType: string;
+  filename: string;
+  size: number;
 }
 
 interface FileLink {
-  url: string;
   source: "onedrive" | "egnyte" | "dropbox";
+  url: string;
 }
 
 interface IncomingPayload {
-  forwarderEmail: string;
-  forwardedAt: string;
-  originalSubject: string;
-  originalFrom: string;
-  bodyText: string;
-  bodyHasContent?: boolean;
   attachments: IncomingAttachment[];
+  bodyHasContent?: boolean;
+  bodyText: string;
   fileLinks?: FileLink[];
+  forwardedAt: string;
+  forwarderEmail: string;
+  originalFrom: string;
+  originalSubject: string;
 }
 
 const BACKGROUND_JOBS_WEBHOOK_URL =

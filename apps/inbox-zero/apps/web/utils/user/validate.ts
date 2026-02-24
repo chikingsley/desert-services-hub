@@ -34,19 +34,25 @@ export async function validateUserAndAiAccess({
       account: { select: { provider: true } },
     },
   });
-  if (!emailAccount) throw new SafeError("User not found");
+  if (!emailAccount) {
+    throw new SafeError("User not found");
+  }
 
   const isUserPremium = isPremium(
     emailAccount.user.premium?.lemonSqueezyRenewsAt || null,
-    emailAccount.user.premium?.stripeSubscriptionStatus || null,
+    emailAccount.user.premium?.stripeSubscriptionStatus || null
   );
-  if (!isUserPremium) throw new SafeError("Please upgrade for AI access");
+  if (!isUserPremium) {
+    throw new SafeError("Please upgrade for AI access");
+  }
 
   const userHasAiAccess = hasAiAccess(
     emailAccount.user.premium?.tier || null,
-    emailAccount.user.aiApiKey,
+    emailAccount.user.aiApiKey
   );
-  if (!userHasAiAccess) throw new SafeError("Please upgrade for AI access");
+  if (!userHasAiAccess) {
+    throw new SafeError("Please upgrade for AI access");
+  }
 
   return { emailAccount };
 }

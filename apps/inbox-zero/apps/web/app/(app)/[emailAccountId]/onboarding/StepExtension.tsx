@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { ArrowRightIcon, ChromeIcon, MailsIcon } from "lucide-react";
-import { PageHeading, TypographyP } from "@/components/Typography";
+import { useState } from "react";
 import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
-import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
-import { Button } from "@/components/ui/button";
 import { OnboardingImagePreview } from "@/app/(app)/[emailAccountId]/onboarding/ImagePreview";
+import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
+import { PageHeading, TypographyP } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
 import { EXTENSION_URL } from "@/utils/config";
 
 export function StepExtension({ onNext }: { onNext: () => Promise<void> }) {
@@ -15,13 +15,13 @@ export function StepExtension({ onNext }: { onNext: () => Promise<void> }) {
   return (
     <div className="grid xl:grid-cols-2">
       <OnboardingWrapper className="py-0">
-        <IconCircle size="lg" className="mx-auto">
+        <IconCircle className="mx-auto" size="lg">
           <MailsIcon className="size-6" />
         </IconCircle>
 
-        <div className="text-center mt-4">
+        <div className="mt-4 text-center">
           <PageHeading>Install the Inbox Zero Tabs extension</PageHeading>
-          <TypographyP className="mt-2 max-w-lg mx-auto">
+          <TypographyP className="mx-auto mt-2 max-w-lg">
             Add tabs to Gmail that show only <strong>unhandled emails</strong>{" "}
             by label.
             <br />
@@ -30,38 +30,38 @@ export function StepExtension({ onNext }: { onNext: () => Promise<void> }) {
           </TypographyP>
         </div>
 
-        <div className="flex justify-center mt-8">
+        <div className="mt-8 flex justify-center">
           <Button asChild size="sm">
-            <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer">
-              <ChromeIcon className="size-4 mr-2" />
+            <a href={EXTENSION_URL} rel="noopener noreferrer" target="_blank">
+              <ChromeIcon className="mr-2 size-4" />
               Install Extension
             </a>
           </Button>
         </div>
 
-        <div className="flex justify-center mt-8">
+        <div className="mt-8 flex justify-center">
           <Button
-            size="sm"
-            variant="outline"
+            loading={isLoading}
             onClick={async () => {
               setIsLoading(true);
               onNext().finally(() => {
                 setIsLoading(false);
               });
             }}
-            loading={isLoading}
+            size="sm"
+            variant="outline"
           >
-            Skip for now <ArrowRightIcon className="size-4 ml-2" />
+            Skip for now <ArrowRightIcon className="ml-2 size-4" />
           </Button>
         </div>
       </OnboardingWrapper>
 
-      <div className="fixed top-0 right-0 w-1/2 bg-white h-screen items-center justify-center hidden xl:flex">
+      <div className="fixed top-0 right-0 hidden h-screen w-1/2 items-center justify-center bg-white xl:flex">
         <OnboardingImagePreview
-          src="/images/onboarding/extension.png"
           alt="Inbox Zero Tabs Extension"
-          width={672}
           height={1200}
+          src="/images/onboarding/extension.png"
+          width={672}
         />
       </div>
     </div>

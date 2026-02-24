@@ -1,10 +1,10 @@
 export function SnowFlake() {
   return (
     <svg
-      width="13"
+      fill="none"
       height="13"
       viewBox="0 0 13 13"
-      fill="none"
+      width="13"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
@@ -14,9 +14,9 @@ export function SnowFlake() {
       <path
         d="M9.83551 4.44002L3.10647 8.32502M9.83551 4.44002L10.4449 2.16559M9.83551 4.44002L12.1099 5.04945M3.10647 8.32502L0.832031 7.71557M3.10647 8.32502L2.49703 10.5995M9.83545 8.32496L3.10642 4.43994M9.83545 8.32496L12.1099 7.71552M9.83545 8.32496L10.4449 10.5994M3.10642 4.43994L2.49711 2.16565M3.10642 4.43994L0.832109 5.04952M6.47099 2.49752V10.2675M6.47099 2.49752L4.80598 0.83252M6.47099 2.49752L8.13599 0.83252M6.47099 10.2675L4.80598 11.9325M6.47099 10.2675L8.13599 11.9325"
         stroke="currentColor"
-        strokeWidth="1.665"
         strokeLinecap="round"
         strokeLinejoin="round"
+        strokeWidth="1.665"
       />
     </svg>
   );

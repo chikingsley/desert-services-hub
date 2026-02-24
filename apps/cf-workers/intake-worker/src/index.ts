@@ -18,13 +18,13 @@ import PostalMime from "postal-mime";
 // =============================================================================
 
 export interface Env {
-  SEND_EMAIL: SendEmail;
   HUB_WEBHOOK_URL: string;
+  SEND_EMAIL: SendEmail;
 }
 
 interface FileLink {
-  url: string;
   source: "onedrive" | "egnyte" | "dropbox";
+  url: string;
 }
 
 const HUB_PATH = "/api/webhooks/intake";

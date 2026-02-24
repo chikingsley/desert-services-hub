@@ -1,20 +1,20 @@
-import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { auth } from "@/utils/auth";
-import {
-  getGmailClientWithRefresh,
-  getAccessTokenFromClient,
-} from "@/utils/gmail/client";
-import {
-  getOutlookClientWithRefresh,
-  getAccessTokenFromClient as getOutlookAccessToken,
-} from "@/utils/outlook/client";
-import prisma from "@/utils/prisma";
 import {
   LAST_EMAIL_ACCOUNT_COOKIE,
   parseLastEmailAccountCookieValue,
 } from "@/utils/cookies";
+import {
+  getAccessTokenFromClient,
+  getGmailClientWithRefresh,
+} from "@/utils/gmail/client";
 import type { Logger } from "@/utils/logger";
+import {
+  getAccessTokenFromClient as getOutlookAccessToken,
+  getOutlookClientWithRefresh,
+} from "@/utils/outlook/client";
+import prisma from "@/utils/prisma";
 import { buildRedirectUrl } from "@/utils/redirect";
 
 export async function getGmailClientForEmail({
@@ -141,11 +141,13 @@ async function getTokens({ emailAccountId }: { emailAccountId: string }) {
 
 export async function redirectToEmailAccountPath(
   path: `/${string}`,
-  searchParams?: Record<string, string | string[] | undefined>,
+  searchParams?: Record<string, string | string[] | undefined>
 ) {
   const session = await auth();
   const userId = session?.user.id;
-  if (!userId) throw new Error("Not authenticated");
+  if (!userId) {
+    throw new Error("Not authenticated");
+  }
 
   const lastEmailAccountId = await getLastEmailAccountFromCookie(userId);
 
@@ -165,14 +167,14 @@ export async function redirectToEmailAccountPath(
 
   const redirectUrl = buildRedirectUrl(
     `/${emailAccountId}${path}`,
-    searchParams,
+    searchParams
   );
 
   redirect(redirectUrl);
 }
 
 async function getLastEmailAccountFromCookie(
-  userId: string,
+  userId: string
 ): Promise<string | null> {
   try {
     const cookieStore = await cookies();

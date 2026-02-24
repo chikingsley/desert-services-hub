@@ -19,50 +19,29 @@ import type {
  */
 export interface PdfHighlighterProps {
   /**
-   * Array of all highlights to be organised and fed through to the child
-   * highlight container.
+   * When true, shows crosshair cursor indicating area selection mode is active.
+   * Use this when area selection should be persistently enabled (not just on modifier key).
    */
-  highlights: Highlight[];
+  areaSelectionMode?: boolean;
 
   /**
-   * Event is called only once whenever the user changes scroll after
-   * the autoscroll function, scrollToHighlight, has been called.
+   * This should be a highlight container/renderer of some sorts. It will be
+   * given appropriate context for a single highlight which it can then use to
+   * render a TextHighlight, AreaHighlight, etc. in the correct place.
    */
-  onScrollAway?(): void;
+  children: ReactNode;
 
   /**
-   * What scale to render the PDF at inside the viewer.
+   * Stroke color for drawing mode.
+   * @default "#000000"
    */
-  pdfScaleValue?: PdfScaleValue;
+  drawingStrokeColor?: string;
 
   /**
-   * Callback triggered whenever a user finishes making a mouse selection or has
-   * selected text.
-   *
-   * @param PdfSelection - Content and positioning of the selection. NOTE:
-   * `makeGhostHighlight` will not work if the selection disappears.
+   * Stroke width for drawing mode.
+   * @default 3
    */
-  onSelection?(PdfSelection: PdfSelection): void;
-
-  /**
-   * Callback triggered whenever a ghost (non-permanent) highlight is created.
-   *
-   * @param ghostHighlight - Ghost Highlight that has been created.
-   */
-  onCreateGhostHighlight?(ghostHighlight: GhostHighlight): void;
-
-  /**
-   * Callback triggered whenever a ghost (non-permanent) highlight is removed.
-   *
-   * @param ghostHighlight - Ghost Highlight that has been removed.
-   */
-  onRemoveGhostHighlight?(ghostHighlight: GhostHighlight): void;
-
-  /**
-   * Optional element that can be displayed as a tip whenever a user makes a
-   * selection.
-   */
-  selectionTip?: ReactNode;
+  drawingStrokeWidth?: number;
 
   /**
    * Condition to check before any mouse selection starts.
@@ -73,47 +52,9 @@ export interface PdfHighlighterProps {
   enableAreaSelection?(event: MouseEvent): boolean;
 
   /**
-   * When true, shows crosshair cursor indicating area selection mode is active.
-   * Use this when area selection should be persistently enabled (not just on modifier key).
+   * Whether drawing mode is enabled.
    */
-  areaSelectionMode?: boolean;
-
-  /**
-   * Optional CSS styling for the rectangular mouse selection.
-   */
-  mouseSelectionStyle?: CSSProperties;
-
-  /**
-   * PDF document to view and overlay highlights.
-   */
-  pdfDocument: PDFDocumentProxy;
-
-  /**
-   * This should be a highlight container/renderer of some sorts. It will be
-   * given appropriate context for a single highlight which it can then use to
-   * render a TextHighlight, AreaHighlight, etc. in the correct place.
-   */
-  children: ReactNode;
-
-  /**
-   * Coloring for unhighlighted, selected text.
-   */
-  textSelectionColor?: string;
-
-  /**
-   * Creates a reference to the PdfHighlighterContext above the component.
-   *
-   * @param pdfHighlighterUtils - various useful tools with a PdfHighlighter.
-   * See {@link PdfHighlighterContext} for more description.
-   */
-  utilsRef(pdfHighlighterUtils: PdfHighlighterUtils): void;
-
-  /**
-   * Style properties for the PdfHighlighter (scrollbar, background, etc.), NOT
-   * the PDF.js viewer it encloses. If you want to edit the latter, use the
-   * other style props like `textSelectionColor` or overwrite pdf_viewer.css
-   */
-  style?: CSSProperties;
+  enableDrawingMode?: boolean;
 
   /**
    * Condition to check before freetext creation starts.
@@ -124,13 +65,6 @@ export interface PdfHighlighterProps {
   enableFreetextCreation?(event: MouseEvent): boolean;
 
   /**
-   * Callback triggered when user clicks to create a freetext annotation.
-   *
-   * @param position - Scaled position where the click occurred.
-   */
-  onFreetextClick?(position: ScaledPosition): void;
-
-  /**
    * Condition to check before image creation starts.
    *
    * @param event - mouse event associated with the click.
@@ -139,16 +73,31 @@ export interface PdfHighlighterProps {
   enableImageCreation?(event: MouseEvent): boolean;
 
   /**
-   * Callback triggered when user clicks to create an image annotation.
-   *
-   * @param position - Scaled position where the click occurred.
+   * The type of shape to create, or null if shape mode is not active.
    */
-  onImageClick?(position: ScaledPosition): void;
+  enableShapeMode?: ShapeType | null;
+  /**
+   * Array of all highlights to be organised and fed through to the child
+   * highlight container.
+   */
+  highlights: Highlight[];
 
   /**
-   * Whether drawing mode is enabled.
+   * Optional CSS styling for the rectangular mouse selection.
    */
-  enableDrawingMode?: boolean;
+  mouseSelectionStyle?: CSSProperties;
+
+  /**
+   * Callback triggered whenever a ghost (non-permanent) highlight is created.
+   *
+   * @param ghostHighlight - Ghost Highlight that has been created.
+   */
+  onCreateGhostHighlight?(ghostHighlight: GhostHighlight): void;
+
+  /**
+   * Callback triggered when drawing is cancelled.
+   */
+  onDrawingCancel?(): void;
 
   /**
    * Callback triggered when a drawing is completed.
@@ -164,26 +113,45 @@ export interface PdfHighlighterProps {
   ): void;
 
   /**
-   * Callback triggered when drawing is cancelled.
+   * Callback triggered when user clicks to create a freetext annotation.
+   *
+   * @param position - Scaled position where the click occurred.
    */
-  onDrawingCancel?(): void;
+  onFreetextClick?(position: ScaledPosition): void;
 
   /**
-   * Stroke color for drawing mode.
-   * @default "#000000"
+   * Callback triggered when user clicks to create an image annotation.
+   *
+   * @param position - Scaled position where the click occurred.
    */
-  drawingStrokeColor?: string;
+  onImageClick?(position: ScaledPosition): void;
 
   /**
-   * Stroke width for drawing mode.
-   * @default 3
+   * Callback triggered whenever a ghost (non-permanent) highlight is removed.
+   *
+   * @param ghostHighlight - Ghost Highlight that has been removed.
    */
-  drawingStrokeWidth?: number;
+  onRemoveGhostHighlight?(ghostHighlight: GhostHighlight): void;
 
   /**
-   * The type of shape to create, or null if shape mode is not active.
+   * Event is called only once whenever the user changes scroll after
+   * the autoscroll function, scrollToHighlight, has been called.
    */
-  enableShapeMode?: ShapeType | null;
+  onScrollAway?(): void;
+
+  /**
+   * Callback triggered whenever a user finishes making a mouse selection or has
+   * selected text.
+   *
+   * @param PdfSelection - Content and positioning of the selection. NOTE:
+   * `makeGhostHighlight` will not work if the selection disappears.
+   */
+  onSelection?(PdfSelection: PdfSelection): void;
+
+  /**
+   * Callback triggered when shape creation is cancelled.
+   */
+  onShapeCancel?(): void;
 
   /**
    * Callback triggered when a shape is completed.
@@ -194,9 +162,20 @@ export interface PdfHighlighterProps {
   onShapeComplete?(position: ScaledPosition, shape: ShapeData): void;
 
   /**
-   * Callback triggered when shape creation is cancelled.
+   * PDF document to view and overlay highlights.
    */
-  onShapeCancel?(): void;
+  pdfDocument: PDFDocumentProxy;
+
+  /**
+   * What scale to render the PDF at inside the viewer.
+   */
+  pdfScaleValue?: PdfScaleValue;
+
+  /**
+   * Optional element that can be displayed as a tip whenever a user makes a
+   * selection.
+   */
+  selectionTip?: ReactNode;
 
   /**
    * Stroke color for shape mode.
@@ -209,4 +188,24 @@ export interface PdfHighlighterProps {
    * @default 2
    */
   shapeStrokeWidth?: number;
+
+  /**
+   * Style properties for the PdfHighlighter (scrollbar, background, etc.), NOT
+   * the PDF.js viewer it encloses. If you want to edit the latter, use the
+   * other style props like `textSelectionColor` or overwrite pdf_viewer.css
+   */
+  style?: CSSProperties;
+
+  /**
+   * Coloring for unhighlighted, selected text.
+   */
+  textSelectionColor?: string;
+
+  /**
+   * Creates a reference to the PdfHighlighterContext above the component.
+   *
+   * @param pdfHighlighterUtils - various useful tools with a PdfHighlighter.
+   * See {@link PdfHighlighterContext} for more description.
+   */
+  utilsRef(pdfHighlighterUtils: PdfHighlighterUtils): void;
 }

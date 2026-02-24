@@ -1,8 +1,8 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { processAccountFollowUps } from "./process";
-import { createScopedLogger } from "@/utils/logger";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { EmailLabel, EmailProvider } from "@/utils/email/types";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailProvider, EmailLabel } from "@/utils/email/types";
+import { createScopedLogger } from "@/utils/logger";
+import { processAccountFollowUps } from "./process";
 
 vi.mock("server-only", () => ({}));
 
@@ -47,10 +47,10 @@ vi.mock("@/utils/error", () => ({
   captureException: vi.fn(),
 }));
 
-import prisma from "@/utils/prisma";
 import { createEmailProvider } from "@/utils/email/provider";
 import { generateFollowUpDraft } from "@/utils/follow-up/generate-draft";
 import { applyFollowUpLabel } from "@/utils/follow-up/labels";
+import prisma from "@/utils/prisma";
 import { getLabelsFromDb } from "@/utils/reply-tracker/label-helpers";
 
 const logger = createScopedLogger("test-follow-up");
@@ -66,7 +66,7 @@ function createMockAccount(
       followUpNeedsReplyDays: number | null;
       followUpAutoDraftEnabled: boolean;
     }
-  >,
+  >
 ) {
   return {
     id: "account-1",
@@ -86,7 +86,7 @@ function createMockAccount(
 }
 
 function createMockProvider(
-  overrides?: Partial<Record<string, unknown>>,
+  overrides?: Partial<Record<string, unknown>>
 ): EmailProvider {
   return {
     getLabels: vi
@@ -282,12 +282,16 @@ describe("processAccountFollowUps - dedup logic", () => {
     let findManyCallCount = 0;
     (prisma.threadTracker.findMany as any).mockImplementation((args: any) => {
       findManyCallCount += 1;
-      if (findManyCallCount === 1) return Promise.resolve([]);
+      if (findManyCallCount === 1) {
+        return Promise.resolve([]);
+      }
 
       // Simulate outbound replay side effect:
       // the prior tracker exists but is resolved=true.
       // If dedup query filters resolved=false, it will miss this row.
-      if (args?.where?.resolved === false) return Promise.resolve([]);
+      if (args?.where?.resolved === false) {
+        return Promise.resolve([]);
+      }
       return Promise.resolve([
         { threadId: "thread-replay", messageId: "msg-replay" } as any,
       ]);
@@ -432,7 +436,7 @@ describe("processAccountFollowUps - dedup logic", () => {
       expect.objectContaining({
         threadId: "thread-to-reply",
         messageId: "msg-to-reply",
-      }),
+      })
     );
     expect(generateFollowUpDraft).not.toHaveBeenCalled();
   });
@@ -466,13 +470,15 @@ describe("processAccountFollowUps - dedup logic", () => {
     const { Prisma } = await import("@/generated/prisma/client");
     const duplicateError = new Prisma.PrismaClientKnownRequestError(
       "Unique constraint failed",
-      { code: "P2002", clientVersion: "5.0.0" },
+      { code: "P2002", clientVersion: "5.0.0" }
     );
 
     let rowType: string | null = null;
     (prisma.threadTracker.findMany as any).mockImplementation((args: any) => {
       const requestedType = args?.where?.type;
-      if (!rowType) return Promise.resolve([]);
+      if (!rowType) {
+        return Promise.resolve([]);
+      }
       if (requestedType && rowType === requestedType) {
         return Promise.resolve([
           { threadId: "thread-shared", messageId: "msg-shared" } as any,
@@ -587,7 +593,7 @@ describe("processAccountFollowUps - dedup logic", () => {
           messageId: "msg-6-new",
           sentAt: expect.any(Date),
         }),
-      }),
+      })
     );
     expect(prisma.threadTracker.create).not.toHaveBeenCalled();
     expect(generateFollowUpDraft).toHaveBeenCalled();
@@ -614,7 +620,7 @@ describe("processAccountFollowUps - dedup logic", () => {
     const { Prisma } = await import("@/generated/prisma/client");
     const duplicateError = new Prisma.PrismaClientKnownRequestError(
       "Unique constraint failed",
-      { code: "P2002", clientVersion: "5.0.0" },
+      { code: "P2002", clientVersion: "5.0.0" }
     );
     vi.mocked(prisma.threadTracker.update)
       .mockRejectedValueOnce(duplicateError)
@@ -631,7 +637,7 @@ describe("processAccountFollowUps - dedup logic", () => {
       1,
       expect.objectContaining({
         where: { id: "existing-tracker" },
-      }),
+      })
     );
     expect(prisma.threadTracker.update).toHaveBeenNthCalledWith(
       2,
@@ -644,10 +650,10 @@ describe("processAccountFollowUps - dedup logic", () => {
           }),
         },
         data: expect.objectContaining({ resolved: false }),
-      }),
+      })
     );
     expect(generateFollowUpDraft).toHaveBeenCalledWith(
-      expect.objectContaining({ trackerId: "tracker-7-conflict-row" }),
+      expect.objectContaining({ trackerId: "tracker-7-conflict-row" })
     );
   });
 
@@ -669,7 +675,7 @@ describe("processAccountFollowUps - dedup logic", () => {
     const { Prisma } = await import("@/generated/prisma/client");
     const duplicateError = new Prisma.PrismaClientKnownRequestError(
       "Unique constraint failed",
-      { code: "P2002", clientVersion: "5.0.0" },
+      { code: "P2002", clientVersion: "5.0.0" }
     );
     vi.mocked(prisma.threadTracker.create).mockRejectedValue(duplicateError);
     vi.mocked(prisma.threadTracker.update).mockResolvedValue({
@@ -692,7 +698,7 @@ describe("processAccountFollowUps - dedup logic", () => {
           }),
         },
         data: expect.objectContaining({ resolved: false }),
-      }),
+      })
     );
     expect(generateFollowUpDraft).toHaveBeenCalled();
   });

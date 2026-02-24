@@ -7,19 +7,19 @@
 
 import { vi } from "vitest";
 import {
-  validateConfig,
-  E2E_RUN_ID,
   E2E_GMAIL_EMAIL,
   E2E_OUTLOOK_EMAIL,
+  E2E_RUN_ID,
+  validateConfig,
 } from "./config";
 import {
-  getGmailTestAccount,
-  getOutlookTestAccount,
   ensureTestPremium,
   ensureTestRules,
+  getGmailTestAccount,
+  getOutlookTestAccount,
 } from "./helpers/accounts";
-import { ensureWebhookSubscription } from "./helpers/webhook";
 import { logStep } from "./helpers/logging";
+import { ensureWebhookSubscription } from "./helpers/webhook";
 
 // Mock server-only module (Next.js specific)
 vi.mock("server-only", () => ({}));
@@ -56,7 +56,7 @@ export async function initializeFlowTests(): Promise<void> {
   const configValidation = validateConfig();
   if (!configValidation.valid) {
     throw new Error(
-      `Invalid E2E test configuration:\n${configValidation.errors.join("\n")}`,
+      `Invalid E2E test configuration:\n${configValidation.errors.join("\n")}`
     );
   }
 
@@ -67,7 +67,7 @@ export async function initializeFlowTests(): Promise<void> {
       console.log(`   - ${warning}`);
     }
     console.log(
-      "\n   See apps/web/__tests__/e2e/flows/README.md for configuration details.\n",
+      "\n   See apps/web/__tests__/e2e/flows/README.md for configuration details.\n"
     );
   }
 

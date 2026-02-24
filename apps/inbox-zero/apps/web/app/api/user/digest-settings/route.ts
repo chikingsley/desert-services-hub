@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { withEmailAccount } from "@/utils/middleware";
-import prisma from "@/utils/prisma";
 import { ActionType, SystemType } from "@/generated/prisma/enums";
 import { SafeError } from "@/utils/error";
+import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 // Define supported system types for digest settings
 const SUPPORTED_SYSTEM_TYPES = [
@@ -99,7 +99,7 @@ async function getDigestSettings({
   SUPPORTED_SYSTEM_TYPES.forEach((systemType) => {
     if (!(systemType in systemTypeToKey)) {
       throw new SafeError(
-        `Unsupported digest system type mapping: ${systemType}`,
+        `Unsupported digest system type mapping: ${systemType}`
       );
     }
   });

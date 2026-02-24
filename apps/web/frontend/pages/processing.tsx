@@ -32,37 +32,37 @@ import {
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 interface QueueStats {
+  deduped: number;
+  failed: number;
   pending: number;
   processing: number;
-  success: number;
-  failed: number;
   skipped: number;
-  deduped: number;
+  success: number;
   total: number;
 }
 
 interface RecentItem {
-  id: number;
-  name: string;
-  email_id: number;
-  content_type: string | null;
-  size: number | null;
-  extraction_status: string;
-  extraction_error: string | null;
-  extracted_at: string | null;
   content_hash: string | null;
-  mailbox_email: string;
-  subject: string | null;
+  content_type: string | null;
+  email_id: number;
+  extracted_at: string | null;
+  extraction_error: string | null;
+  extraction_status: string;
   from_email: string | null;
+  id: number;
+  mailbox_email: string;
+  name: string;
   project_id: number | null;
+  size: number | null;
+  subject: string | null;
 }
 
 interface DailyThroughput {
   date: string;
-  succeeded: number;
-  failed: number;
   deduped: number;
+  failed: number;
   skipped: number;
+  succeeded: number;
 }
 
 interface MonitoringData {

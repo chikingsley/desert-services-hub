@@ -26,10 +26,29 @@ const STROKE_WIDTHS = [
  */
 export interface DrawingHighlightProps {
   /**
+   * react-rnd bounds on the highlight area.
+   */
+  bounds?: string | Element;
+
+  /**
+   * Custom delete icon. Replaces the default trash icon.
+   */
+  deleteIcon?: ReactNode;
+
+  /**
+   * Custom drag icon. Replaces the default 6-dot grid icon.
+   */
+  dragIcon?: ReactNode;
+  /**
    * The highlight to be rendered as a {@link DrawingHighlight}.
    * The highlight.content.image should contain the drawing as a PNG data URL.
    */
   highlight: ViewportHighlight;
+
+  /**
+   * Has the highlight been auto-scrolled into view?
+   */
+  isScrolledTo?: boolean;
 
   /**
    * A callback triggered whenever the highlight position or size changes.
@@ -39,24 +58,14 @@ export interface DrawingHighlightProps {
   onChange?(rect: LTWHP): void;
 
   /**
-   * Has the highlight been auto-scrolled into view?
-   */
-  isScrolledTo?: boolean;
-
-  /**
-   * react-rnd bounds on the highlight area.
-   */
-  bounds?: string | Element;
-
-  /**
    * A callback triggered on context menu.
    */
   onContextMenu?(event: MouseEvent<HTMLDivElement>): void;
 
   /**
-   * Event called when editing begins (drag or resize).
+   * Callback triggered when the delete button is clicked.
    */
-  onEditStart?(): void;
+  onDelete?(): void;
 
   /**
    * Event called when editing ends.
@@ -64,14 +73,9 @@ export interface DrawingHighlightProps {
   onEditEnd?(): void;
 
   /**
-   * Custom styling for the container.
+   * Event called when editing begins (drag or resize).
    */
-  style?: CSSProperties;
-
-  /**
-   * Custom drag icon. Replaces the default 6-dot grid icon.
-   */
-  dragIcon?: ReactNode;
+  onEditStart?(): void;
 
   /**
    * Callback when drawing style changes (color or stroke width).
@@ -81,14 +85,9 @@ export interface DrawingHighlightProps {
   onStyleChange?(newImage: string, newStrokes: DrawingStroke[]): void;
 
   /**
-   * Callback triggered when the delete button is clicked.
+   * Custom styling for the container.
    */
-  onDelete?(): void;
-
-  /**
-   * Custom delete icon. Replaces the default trash icon.
-   */
-  deleteIcon?: ReactNode;
+  style?: CSSProperties;
 }
 
 /**

@@ -1,5 +1,5 @@
-import { cn } from "@/utils";
 import { cva } from "class-variance-authority";
+import { cn } from "@/utils";
 
 interface HeadingProps {
   children: React.ReactNode;
@@ -10,8 +10,8 @@ export function Heading({ children, className }: HeadingProps) {
   return (
     <h1
       className={cn(
-        "font-title text-[#242424] text-[34px] sm:text-5xl md:text-6xl leading-tight",
-        className,
+        "font-title text-[#242424] text-[34px] leading-tight sm:text-5xl md:text-6xl",
+        className
       )}
     >
       {children}
@@ -46,7 +46,7 @@ interface SectionSubtitleProps {
 
 export function SectionSubtitle({ children }: SectionSubtitleProps) {
   return (
-    <Paragraph className={cn("max-w-[650px] mx-auto mt-2.5")} size="lg">
+    <Paragraph className={cn("mx-auto mt-2.5 max-w-[650px]")} size="lg">
       {children}
     </Paragraph>
   );
@@ -61,8 +61,8 @@ export function Subheading({ children, className }: SubheadingProps) {
   return (
     <h2
       className={cn(
-        "font-title text-[#242424] text-[1.7rem] md:text-[2.5rem] leading-tight",
-        className,
+        "font-title text-[#242424] text-[1.7rem] leading-tight md:text-[2.5rem]",
+        className
       )}
     >
       {children}
@@ -71,11 +71,11 @@ export function Subheading({ children, className }: SubheadingProps) {
 }
 
 interface ParagraphProps {
+  as?: "p" | "h3" | "dt" | "dl";
   children: React.ReactNode;
   className?: string;
   color?: "default" | "light" | "dark" | "gray-700" | "gray-500" | "gray-900";
   size?: "default" | "xs" | "sm" | "md" | "lg";
-  as?: "p" | "h3" | "dt" | "dl";
 }
 
 export function Paragraph({

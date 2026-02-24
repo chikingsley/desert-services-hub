@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { hasVariables, TEMPLATE_VARIABLE_PATTERN } from "./template";
 
 describe("TEMPLATE_VARIABLE_PATTERN", () => {

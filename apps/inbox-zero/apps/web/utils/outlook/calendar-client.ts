@@ -1,12 +1,12 @@
+import {
+  type AuthenticationProvider,
+  Client,
+} from "@microsoft/microsoft-graph-client";
 import { env } from "@/env";
+import { SafeError } from "@/utils/error";
 import type { Logger } from "@/utils/logger";
 import { CALENDAR_SCOPES } from "@/utils/outlook/scopes";
-import { SafeError } from "@/utils/error";
 import prisma from "@/utils/prisma";
-import {
-  Client,
-  type AuthenticationProvider,
-} from "@microsoft/microsoft-graph-client";
 
 class CalendarAuthProvider implements AuthenticationProvider {
   private readonly accessToken: string;
@@ -50,7 +50,9 @@ export const getCalendarClientWithRefresh = async ({
   emailAccountId: string;
   logger: Logger;
 }): Promise<Client> => {
-  if (!refreshToken) throw new SafeError("No refresh token");
+  if (!refreshToken) {
+    throw new SafeError("No refresh token");
+  }
 
   // Check if token is still valid
   if (expiresAt && expiresAt > Date.now() && accessToken) {
@@ -60,7 +62,7 @@ export const getCalendarClientWithRefresh = async ({
 
   // Token is expired or missing, need to refresh
   try {
-    if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET) {
+    if (!(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET)) {
       throw new Error("Microsoft login not enabled - missing credentials");
     }
 
@@ -78,7 +80,7 @@ export const getCalendarClientWithRefresh = async ({
           grant_type: "refresh_token",
           scope: CALENDAR_SCOPES.join(" "),
         }),
-      },
+      }
     );
 
     const tokens = await response.json();
@@ -135,7 +137,7 @@ export const getCalendarClientWithRefresh = async ({
 
 export async function fetchMicrosoftCalendars(
   calendarClient: Client,
-  logger: Logger,
+  logger: Logger
 ): Promise<
   Array<{
     id?: string;

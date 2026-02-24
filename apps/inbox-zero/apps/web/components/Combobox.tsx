@@ -1,9 +1,8 @@
 "use client";
 
-import * as React from "react";
 import { CommandLoading } from "cmdk";
 import { Check, ChevronsUpDown, Loader2Icon } from "lucide-react";
-import { cn } from "@/utils";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -18,6 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn } from "@/utils";
 
 export function Combobox(props: {
   options: { value: string; label: string; keywords?: string[] }[];
@@ -33,13 +33,13 @@ export function Combobox(props: {
   const [open, setOpen] = React.useState(false);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
-          role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+          role="combobox"
+          variant="outline"
         >
           {(value &&
             props.options.find((option) => option.value === value)?.label) ||
@@ -51,9 +51,9 @@ export function Combobox(props: {
       <PopoverContent className="w-full p-0 sm:w-[500px]">
         <Command>
           <CommandInput
+            onValueChange={props.onSearch}
             placeholder="Search..."
             value={props.onSearch ? props.search : undefined}
-            onValueChange={props.onSearch}
           />
           <CommandList
             onWheelCapture={(e) => {
@@ -74,7 +74,6 @@ export function Combobox(props: {
                 {props.options.map((options) => (
                   <CommandItem
                     key={options.value}
-                    value={options.value}
                     keywords={
                       options.keywords
                         ? [...options.keywords, options.label]
@@ -84,11 +83,12 @@ export function Combobox(props: {
                       onChangeValue(currentValue === value ? "" : currentValue);
                       setOpen(false);
                     }}
+                    value={options.value}
                   >
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        value === options.value ? "opacity-100" : "opacity-0",
+                        value === options.value ? "opacity-100" : "opacity-0"
                       )}
                     />
                     {options.label}

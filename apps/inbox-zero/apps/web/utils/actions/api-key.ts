@@ -4,9 +4,9 @@ import {
   createApiKeyBody,
   deactivateApiKeyBody,
 } from "@/utils/actions/api-key.validation";
-import prisma from "@/utils/prisma";
-import { generateSecureToken, hashApiKey } from "@/utils/api-key";
 import { actionClientUser } from "@/utils/actions/safe-action";
+import { generateSecureToken, hashApiKey } from "@/utils/api-key";
+import prisma from "@/utils/prisma";
 
 export const createApiKeyAction = actionClientUser
   .metadata({ name: "createApiKey" })

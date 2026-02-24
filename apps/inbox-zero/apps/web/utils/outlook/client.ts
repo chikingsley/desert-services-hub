@@ -1,11 +1,11 @@
 import { Client } from "@microsoft/microsoft-graph-client";
 import type { User } from "@microsoft/microsoft-graph-types";
+import { env } from "@/env";
 import { saveTokens } from "@/utils/auth";
 import { cleanupInvalidTokens } from "@/utils/auth/cleanup-invalid-tokens";
-import { env } from "@/env";
+import { SafeError } from "@/utils/error";
 import type { Logger } from "@/utils/logger";
 import { SCOPES } from "@/utils/outlook/scopes";
-import { SafeError } from "@/utils/error";
 
 // Add buffer time to prevent token expiry during long-running operations
 const TOKEN_REFRESH_BUFFER_MS = 10 * 60 * 1000; // 10 minutes
@@ -29,7 +29,7 @@ export class OutlookClient {
   constructor(
     accessToken: string,
     logger: Logger,
-    options?: OutlookClientOptions,
+    options?: OutlookClientOptions
   ) {
     this.accessToken = accessToken;
     this.logger = logger;
@@ -113,9 +113,11 @@ export class OutlookClient {
 export const createOutlookClient = (
   accessToken: string,
   logger: Logger,
-  options?: OutlookClientOptions,
+  options?: OutlookClientOptions
 ) => {
-  if (!accessToken) throw new SafeError("No access token provided");
+  if (!accessToken) {
+    throw new SafeError("No access token provided");
+  }
   return new OutlookClient(accessToken, logger, options);
 };
 
@@ -162,7 +164,7 @@ export const getOutlookClientWithRefresh = async ({
 
   // Refresh token
   try {
-    if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET) {
+    if (!(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET)) {
       throw new Error("Microsoft login not enabled - missing credentials");
     }
 
@@ -179,7 +181,7 @@ export const getOutlookClientWithRefresh = async ({
           refresh_token: refreshToken,
           grant_type: "refresh_token",
         }),
-      },
+      }
     );
 
     const tokens = await response.json();
@@ -197,7 +199,7 @@ export const getOutlookClientWithRefresh = async ({
           "Microsoft refresh token failed - user may need to reconnect",
           {
             emailAccountId,
-          },
+          }
         );
       }
 
@@ -234,7 +236,7 @@ export const getOutlookClientWithRefresh = async ({
           {
             emailAccountId,
             errorMessage,
-          },
+          }
         );
 
         await cleanupInvalidTokens({
@@ -244,7 +246,7 @@ export const getOutlookClientWithRefresh = async ({
         });
 
         throw new SafeError(
-          "Your Microsoft authorization has expired. Please sign out and log in again to reconnect your account.",
+          "Your Microsoft authorization has expired. Please sign out and log in again to reconnect your account."
         );
       }
 
@@ -307,7 +309,9 @@ function createMailboxScopedClient(client: Client, mailbox: string): Client {
   const mailboxPath = `/users/${encodeURIComponent(mailbox)}`;
   const proxied = new Proxy(client, {
     get(target, prop, receiver) {
-      if (prop !== "api") return Reflect.get(target, prop, receiver);
+      if (prop !== "api") {
+        return Reflect.get(target, prop, receiver);
+      }
 
       return (path: string) => target.api(rewriteMeEndpoint(path, mailboxPath));
     },
@@ -327,7 +331,7 @@ function rewriteMeEndpoint(path: string, mailboxPath: string): string {
   if (absoluteV1MePattern.test(path)) {
     return path.replace(
       absoluteV1MePattern,
-      `https://graph.microsoft.com/v1.0${mailboxPath}`,
+      `https://graph.microsoft.com/v1.0${mailboxPath}`
     );
   }
 
@@ -336,7 +340,7 @@ function rewriteMeEndpoint(path: string, mailboxPath: string): string {
   if (absoluteBetaMePattern.test(path)) {
     return path.replace(
       absoluteBetaMePattern,
-      `https://graph.microsoft.com/beta${mailboxPath}`,
+      `https://graph.microsoft.com/beta${mailboxPath}`
     );
   }
 
@@ -349,17 +353,21 @@ export function isOutlookAppOnlyModeEnabled() {
 
 export function getConfiguredAppOnlyMailbox(mailboxEmail?: string | null) {
   const explicitMailbox = mailboxEmail?.trim().toLowerCase();
-  if (explicitMailbox) return explicitMailbox;
+  if (explicitMailbox) {
+    return explicitMailbox;
+  }
 
   const configuredMailbox =
     process.env.INBOXZERO_APP_MAILBOX?.trim().toLowerCase();
-  if (configuredMailbox) return configuredMailbox;
+  if (configuredMailbox) {
+    return configuredMailbox;
+  }
 
   return null;
 }
 
 export async function getMicrosoftAppOnlyAccessToken(logger: Logger) {
-  if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET) {
+  if (!(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET)) {
     throw new SafeError("Microsoft app credentials not configured");
   }
 
@@ -384,7 +392,7 @@ export async function getMicrosoftAppOnlyAccessToken(logger: Logger) {
         scope: APP_TOKEN_SCOPE,
         grant_type: "client_credentials",
       }),
-    },
+    }
   );
 
   const tokenResponse = (await response.json()) as {
@@ -394,14 +402,14 @@ export async function getMicrosoftAppOnlyAccessToken(logger: Logger) {
     error_description?: string;
   };
 
-  if (!response.ok || !tokenResponse.access_token) {
+  if (!(response.ok && tokenResponse.access_token)) {
     logger.error("Failed to fetch Microsoft app-only token", {
       status: response.status,
       error: tokenResponse.error,
       errorDescription: tokenResponse.error_description,
     });
     throw new SafeError(
-      tokenResponse.error_description || "Failed to fetch app-only token",
+      tokenResponse.error_description || "Failed to fetch app-only token"
     );
   }
 

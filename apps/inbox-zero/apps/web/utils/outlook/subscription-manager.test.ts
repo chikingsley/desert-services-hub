@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { EmailProvider } from "@/utils/email/types";
+import { createScopedLogger } from "@/utils/logger";
+import type { SubscriptionHistoryEntry } from "@/utils/outlook/subscription-history";
 import { OutlookSubscriptionManager } from "@/utils/outlook/subscription-manager";
 import prisma from "@/utils/prisma";
-import type { EmailProvider } from "@/utils/email/types";
-import type { SubscriptionHistoryEntry } from "@/utils/outlook/subscription-history";
-import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("test");
 
@@ -37,7 +37,7 @@ describe("OutlookSubscriptionManager", () => {
     manager = new OutlookSubscriptionManager(
       mockProvider,
       emailAccountId,
-      logger,
+      logger
     );
   });
 
@@ -61,11 +61,11 @@ describe("OutlookSubscriptionManager", () => {
 
       // Assert
       expect(mockProvider.unwatchEmails).toHaveBeenCalledWith(
-        existingSubscriptionId,
+        existingSubscriptionId
       );
       expect(mockProvider.watchEmails).toHaveBeenCalled();
       expect(result).toEqual(
-        expect.objectContaining({ ...newSubscription, changed: true }),
+        expect.objectContaining({ ...newSubscription, changed: true })
       );
     });
 
@@ -88,7 +88,7 @@ describe("OutlookSubscriptionManager", () => {
       expect(mockProvider.unwatchEmails).not.toHaveBeenCalled();
       expect(mockProvider.watchEmails).toHaveBeenCalled();
       expect(result).toEqual(
-        expect.objectContaining({ ...newSubscription, changed: true }),
+        expect.objectContaining({ ...newSubscription, changed: true })
       );
     });
 
@@ -100,7 +100,7 @@ describe("OutlookSubscriptionManager", () => {
 
       // Mock unwatchEmails to fail
       vi.mocked(mockProvider.unwatchEmails).mockRejectedValue(
-        new Error("Subscription not found"),
+        new Error("Subscription not found")
       );
 
       const newSubscription = {
@@ -116,7 +116,7 @@ describe("OutlookSubscriptionManager", () => {
       expect(mockProvider.unwatchEmails).toHaveBeenCalled();
       expect(mockProvider.watchEmails).toHaveBeenCalled();
       expect(result).toEqual(
-        expect.objectContaining({ ...newSubscription, changed: true }),
+        expect.objectContaining({ ...newSubscription, changed: true })
       );
     });
 
@@ -128,7 +128,7 @@ describe("OutlookSubscriptionManager", () => {
 
       // Mock watchEmails to fail
       vi.mocked(mockProvider.watchEmails).mockRejectedValue(
-        new Error("API error"),
+        new Error("API error")
       );
 
       // Act
@@ -188,7 +188,7 @@ describe("OutlookSubscriptionManager", () => {
         .watchEmailsSubscriptionHistory as SubscriptionHistoryEntry[];
 
       expect(updateCall.data.watchEmailsSubscriptionId).toBe(
-        "new-subscription-id",
+        "new-subscription-id"
       );
       expect(history).toHaveLength(1);
       expect(history[0]).toMatchObject({
@@ -237,10 +237,10 @@ describe("OutlookSubscriptionManager", () => {
     it("should clean up history entries older than 30 days", async () => {
       const now = new Date();
       const thirtyOneDaysAgo = new Date(
-        now.getTime() - 31 * 24 * 60 * 60 * 1000,
+        now.getTime() - 31 * 24 * 60 * 60 * 1000
       );
       const twentyNineDaysAgo = new Date(
-        now.getTime() - 29 * 24 * 60 * 60 * 1000,
+        now.getTime() - 29 * 24 * 60 * 60 * 1000
       );
 
       const existingHistory = [

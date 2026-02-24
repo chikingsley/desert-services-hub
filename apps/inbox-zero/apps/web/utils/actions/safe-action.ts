@@ -1,16 +1,16 @@
-import { createSafeActionClient } from "next-safe-action";
+import { randomUUID } from "node:crypto";
 import * as Sentry from "@sentry/nextjs";
 import { withServerActionInstrumentation } from "@sentry/nextjs";
-import { randomUUID } from "node:crypto";
-import { z } from "zod";
 import { after } from "next/server";
+import { createSafeActionClient } from "next-safe-action";
+import { z } from "zod";
+import { env } from "@/env";
+import { isAdmin } from "@/utils/admin";
 import { auth } from "@/utils/auth";
+import { captureException, SafeError } from "@/utils/error";
 import { createScopedLogger } from "@/utils/logger";
 import { flushLoggerSafely } from "@/utils/logger-flush";
 import prisma from "@/utils/prisma";
-import { isAdmin } from "@/utils/admin";
-import { captureException, SafeError } from "@/utils/error";
-import { env } from "@/env";
 
 // TODO: take functionality from `withActionInstrumentation` and move it here (apps/web/utils/actions/middleware.ts)
 
@@ -40,7 +40,9 @@ const baseClient = createSafeActionClient({
       // biome-ignore lint/suspicious/noConsole: helpful for debugging
       console.error("Error in server action", error);
     }
-    if (error instanceof SafeError) return error.message;
+    if (error instanceof SafeError) {
+      return error.message;
+    }
 
     captureException(error, {
       userId: context?.userId,
@@ -83,9 +85,13 @@ export const actionClient = baseClient
   .use(async ({ next, metadata, bindArgsClientInputs, ctx }) => {
     const session = await auth();
 
-    if (!session?.user) throw new SafeError("Unauthorized");
+    if (!session?.user) {
+      throw new SafeError("Unauthorized");
+    }
     const userEmail = session.user.email;
-    if (!userEmail) throw new SafeError("Unauthorized");
+    if (!userEmail) {
+      throw new SafeError("Unauthorized");
+    }
 
     const userId = session.user.id;
     const emailAccountId = bindArgsClientInputs[0] as string;
@@ -158,20 +164,23 @@ export const actionClientUser = baseClient.use(
         ctx: { userId, userEmail, logger },
       });
     });
-  },
+  }
 );
 
 export const adminActionClient = baseClient.use(
   async ({ next, metadata, ctx }) => {
     const session = await auth();
-    if (!session?.user) throw new SafeError("Unauthorized");
-    if (!isAdmin({ email: session.user.email }))
+    if (!session?.user) {
       throw new SafeError("Unauthorized");
+    }
+    if (!isAdmin({ email: session.user.email })) {
+      throw new SafeError("Unauthorized");
+    }
 
     const logger = ctx.logger.with({ admin: true });
 
     return withServerActionInstrumentation(metadata?.name, async () => {
       return next({ ctx: { logger } });
     });
-  },
+  }
 );

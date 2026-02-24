@@ -37,22 +37,22 @@ import { VirtualizedTable } from "@/apps/web/frontend/components/ui/virtualized-
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 
 interface EstimateVersionSummary {
-  id: string;
-  version_number: number;
-  total: number;
-  is_current: number;
   created_at: string;
+  id: string;
+  is_current: number;
+  total: number;
+  version_number: number;
 }
 
 export interface EstimateRowView {
-  id: string;
   base_number: string;
-  job_name: string;
   client_name: string | null;
-  job_address: string | null;
-  status: string;
   created_at: string;
   current_version: EstimateVersionSummary | null;
+  id: string;
+  job_address: string | null;
+  job_name: string;
+  status: string;
   takeoff_id: string | null;
 }
 

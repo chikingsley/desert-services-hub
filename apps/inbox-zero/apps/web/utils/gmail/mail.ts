@@ -1,20 +1,9 @@
-import { z } from "zod";
 import type { gmail_v1 } from "@googleapis/gmail";
 import MailComposer from "nodemailer/lib/mail-composer";
 import type Mail from "nodemailer/lib/mailer";
 import type { Attachment } from "nodemailer/lib/mailer";
-import { zodAttachment } from "@/utils/types/mail";
-import { convertEmailHtmlToText } from "@/utils/mail";
-import {
-  forwardEmailHtml,
-  forwardEmailSubject,
-  forwardEmailText,
-} from "@/utils/gmail/forward";
-import type { ParsedMessage } from "@/utils/types";
-import { createReplyContent } from "@/utils/gmail/reply";
+import { z } from "zod";
 import type { EmailForAction } from "@/utils/ai/types";
-import { createScopedLogger } from "@/utils/logger";
-import { withGmailRetry } from "@/utils/gmail/retry";
 import {
   buildReplyAllRecipients,
   formatCcList,
@@ -22,7 +11,20 @@ import {
 } from "@/utils/email/reply-all";
 import { formatReplySubject } from "@/utils/email/subject";
 import { buildThreadingHeaders } from "@/utils/email/threading";
-import { ensureEmailSendingEnabled } from "@/utils/mail";
+import {
+  forwardEmailHtml,
+  forwardEmailSubject,
+  forwardEmailText,
+} from "@/utils/gmail/forward";
+import { createReplyContent } from "@/utils/gmail/reply";
+import { withGmailRetry } from "@/utils/gmail/retry";
+import { createScopedLogger } from "@/utils/logger";
+import {
+  convertEmailHtmlToText,
+  ensureEmailSendingEnabled,
+} from "@/utils/mail";
+import type { ParsedMessage } from "@/utils/types";
+import { zodAttachment } from "@/utils/types/mail";
 
 const logger = createScopedLogger("gmail/mail");
 
@@ -108,7 +110,7 @@ const createRawMailMessage = async ({
 // https://www.labnol.org/google-api-service-account-220405
 export async function sendEmailWithHtml(
   gmail: gmail_v1.Gmail,
-  body: SendEmailBody,
+  body: SendEmailBody
 ) {
   ensureEmailSendingEnabled();
 
@@ -135,14 +137,14 @@ export async function sendEmailWithHtml(
         threadId: body.replyToEmail ? body.replyToEmail.threadId : undefined,
         raw,
       },
-    }),
+    })
   );
   return result;
 }
 
 export async function sendEmailWithPlainText(
   gmail: gmail_v1.Gmail,
-  body: Omit<SendEmailBody, "messageHtml"> & { messageText: string },
+  body: Omit<SendEmailBody, "messageHtml"> & { messageText: string }
 ) {
   const messageHtml = convertTextToHtmlParagraphs(body.messageText);
   return sendEmailWithHtml(gmail, { ...body, messageHtml });
@@ -156,7 +158,7 @@ export async function replyToEmail(
   >,
   reply: string,
   from?: string,
-  options?: { replyTo?: string },
+  options?: { replyTo?: string }
 ) {
   ensureEmailSendingEnabled();
 
@@ -187,7 +189,7 @@ export async function replyToEmail(
         threadId: message.threadId,
         raw,
       },
-    }),
+    })
   );
 
   return result;
@@ -201,13 +203,13 @@ export async function forwardEmail(
     cc?: string;
     bcc?: string;
     content?: string;
-  },
+  }
 ) {
   ensureEmailSendingEnabled();
 
   if (!options.to?.trim()) {
     throw new Error(
-      `Recipient address is required for forwarding email. Received: "${options.to}"`,
+      `Recipient address is required for forwarding email. Received: "${options.to}"`
     );
   }
 
@@ -218,14 +220,14 @@ export async function forwardEmail(
           userId: "me",
           messageId: message.id,
           id: attachment.attachmentId,
-        }),
+        })
       );
       return {
         content: Buffer.from(attachmentData.data.data || "", "base64"),
         contentType: attachment.mimeType,
         filename: attachment.filename,
       };
-    }) || [],
+    }) || []
   );
 
   const raw = await createRawMailMessage({
@@ -250,7 +252,7 @@ export async function forwardEmail(
         threadId: message.threadId,
         raw,
       },
-    }),
+    })
   );
 
   return result;
@@ -268,7 +270,7 @@ export async function draftEmail(
     bcc?: string;
     attachments?: Attachment[];
   },
-  userEmail: string,
+  userEmail: string
 ) {
   const { text, html } = createReplyContent({
     textContent: args.content,
@@ -278,7 +280,7 @@ export async function draftEmail(
   const recipients = buildReplyAllRecipients(
     originalEmail.headers,
     args.to,
-    userEmail,
+    userEmail
   );
 
   // Merge CC from reply-all with CC from args
@@ -310,7 +312,7 @@ export async function draftEmail(
 async function createDraft(
   gmail: gmail_v1.Gmail,
   threadId: string,
-  raw: string,
+  raw: string
 ) {
   logger.info("Calling Gmail API to create draft");
 
@@ -323,7 +325,7 @@ async function createDraft(
           raw,
         },
       },
-    }),
+    })
   );
 
   logger.info("Gmail API draft.create response received", {
@@ -335,7 +337,9 @@ async function createDraft(
 }
 
 export function convertTextToHtmlParagraphs(text?: string | null): string {
-  if (!text) return "";
+  if (!text) {
+    return "";
+  }
 
   const normalizedText = text.replace(/\r\n/g, "\n");
   const lines = normalizedText.split("\n");

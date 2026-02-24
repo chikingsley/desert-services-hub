@@ -1,23 +1,29 @@
-import type { PremiumTier } from "@/generated/prisma/enums";
-import type { Premium } from "@/generated/prisma/client";
 import { env } from "@/env";
+import type { Premium } from "@/generated/prisma/client";
+import type { PremiumTier } from "@/generated/prisma/enums";
 
 function isPremiumStripe(stripeSubscriptionStatus: string | null): boolean {
-  if (!stripeSubscriptionStatus) return false;
+  if (!stripeSubscriptionStatus) {
+    return false;
+  }
   const activeStatuses = ["active", "trialing"];
   return activeStatuses.includes(stripeSubscriptionStatus);
 }
 
 function isPremiumLemonSqueezy(lemonSqueezyRenewsAt: Date | null): boolean {
-  if (!lemonSqueezyRenewsAt) return false;
+  if (!lemonSqueezyRenewsAt) {
+    return false;
+  }
   return new Date(lemonSqueezyRenewsAt) > new Date();
 }
 
 export const isPremium = (
   lemonSqueezyRenewsAt: Date | null,
-  stripeSubscriptionStatus: string | null,
+  stripeSubscriptionStatus: string | null
 ): boolean => {
-  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) return true;
+  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) {
+    return true;
+  }
 
   return (
     isPremiumStripe(stripeSubscriptionStatus) ||
@@ -29,11 +35,15 @@ export const isActivePremium = (
   premium: Pick<
     Premium,
     "lemonSqueezyRenewsAt" | "stripeSubscriptionStatus"
-  > | null,
+  > | null
 ): boolean => {
-  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) return true;
+  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) {
+    return true;
+  }
 
-  if (!premium) return false;
+  if (!premium) {
+    return false;
+  }
 
   return (
     premium.stripeSubscriptionStatus === "active" ||
@@ -45,30 +55,36 @@ export const getUserTier = (
   premium?: Pick<
     Premium,
     "tier" | "lemonSqueezyRenewsAt" | "stripeSubscriptionStatus"
-  > | null,
+  > | null
 ) => {
   if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) {
     return "PROFESSIONAL_ANNUALLY" as const;
   }
 
-  if (!premium) return null;
+  if (!premium) {
+    return null;
+  }
 
   const isActive = isPremium(
     premium.lemonSqueezyRenewsAt || null,
-    premium.stripeSubscriptionStatus || null,
+    premium.stripeSubscriptionStatus || null
   );
 
-  if (!isActive) return null;
+  if (!isActive) {
+    return null;
+  }
 
   return premium.tier || null;
 };
 
 export const isAdminForPremium = (
   premiumAdmins: { id: string }[],
-  userId: string,
+  userId: string
 ) => {
   // if no admins are set, then we skip the check
-  if (!premiumAdmins.length) return true;
+  if (!premiumAdmins.length) {
+    return true;
+  }
   return premiumAdmins.some((admin) => admin.id === userId);
 };
 
@@ -89,22 +105,32 @@ const tierRanking = {
 
 export const hasUnsubscribeAccess = (
   tier: PremiumTier | null,
-  unsubscribeCredits?: number | null,
+  unsubscribeCredits?: number | null
 ): boolean => {
-  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) return true;
+  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) {
+    return true;
+  }
 
-  if (tier) return true;
-  if (unsubscribeCredits && unsubscribeCredits > 0) return true;
+  if (tier) {
+    return true;
+  }
+  if (unsubscribeCredits && unsubscribeCredits > 0) {
+    return true;
+  }
   return false;
 };
 
 export const hasAiAccess = (
   tier: PremiumTier | null,
-  aiApiKey?: string | null,
+  aiApiKey?: string | null
 ) => {
-  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) return true;
+  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) {
+    return true;
+  }
 
-  if (!tier) return false;
+  if (!tier) {
+    return false;
+  }
 
   const ranking = tierRanking[tier];
 
@@ -123,9 +149,13 @@ export const hasTierAccess = ({
   tier: PremiumTier | null;
   minimumTier: PremiumTier;
 }): boolean => {
-  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) return true;
+  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) {
+    return true;
+  }
 
-  if (!tier) return false;
+  if (!tier) {
+    return false;
+  }
 
   const ranking = tierRanking[tier];
 
@@ -136,7 +166,7 @@ export const hasTierAccess = ({
 
 export function isOnHigherTier(
   tier1?: PremiumTier | null,
-  tier2?: PremiumTier | null,
+  tier2?: PremiumTier | null
 ) {
   const tier1Rank = tier1 ? tierRanking[tier1] : 0;
   const tier2Rank = tier2 ? tierRanking[tier2] : 0;
@@ -145,7 +175,9 @@ export function isOnHigherTier(
 }
 
 export function getPremiumUserFilter() {
-  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) return {};
+  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) {
+    return {};
+  }
 
   return {
     user: {

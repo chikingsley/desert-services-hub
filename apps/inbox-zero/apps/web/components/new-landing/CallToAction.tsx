@@ -8,9 +8,9 @@ import { landingPageAnalytics } from "@/hooks/useAnalytics";
 import { cn } from "@/utils";
 
 interface CallToActionProps {
-  text?: string;
-  className?: string;
   buttonSize?: "xl" | "lg";
+  className?: string;
+  text?: string;
 }
 
 export function CallToAction({
@@ -21,8 +21,8 @@ export function CallToAction({
   const posthog = usePostHog();
 
   return (
-    <div className={cn("flex justify-center items-center gap-4", className)}>
-      <Button size={buttonSize} asChild>
+    <div className={cn("flex items-center justify-center gap-4", className)}>
+      <Button asChild size={buttonSize}>
         <Link
           href="/login"
           onClick={() => landingPageAnalytics.getStartedClicked(posthog)}
@@ -30,11 +30,11 @@ export function CallToAction({
           <span className="relative z-10">{text}</span>
         </Link>
       </Button>
-      <Button variant="secondary-two" size={buttonSize} asChild>
+      <Button asChild size={buttonSize} variant="secondary-two">
         <Link
           href="/sales"
-          target="_blank"
           onClick={() => landingPageAnalytics.talkToSalesClicked(posthog)}
+          target="_blank"
         >
           <Chat />
           Talk to sales

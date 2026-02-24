@@ -1,20 +1,20 @@
 "use client";
 
-import { useMemo, useCallback, useState } from "react";
-import useSWR from "swr";
 import { parseAsBoolean, useQueryState } from "nuqs";
+import { useCallback, useMemo, useState } from "react";
+import useSWR from "swr";
 import { AutoCategorizationSetup } from "@/app/(app)/[emailAccountId]/bulk-archive/AutoCategorizationSetup";
 import { BulkArchiveProgress } from "@/app/(app)/[emailAccountId]/bulk-archive/BulkArchiveProgress";
 import {
-  BulkArchiveSettingsModal,
   type BulkActionType,
+  BulkArchiveSettingsModal,
 } from "@/app/(app)/[emailAccountId]/bulk-archive/BulkArchiveSettingsModal";
-import { BulkArchiveCards } from "@/components/BulkArchiveCards";
 import { useCategorizeProgress } from "@/app/(app)/[emailAccountId]/smart-categories/CategorizeProgress";
 import { CategorizeWithAiButton } from "@/app/(app)/[emailAccountId]/smart-categories/CategorizeWithAiButton";
 import type { CategorizedSendersResponse } from "@/app/api/user/categorize/senders/categorized/route";
-import { PageWrapper } from "@/components/PageWrapper";
+import { BulkArchiveCards } from "@/components/BulkArchiveCards";
 import { LoadingContent } from "@/components/LoadingContent";
+import { PageWrapper } from "@/components/PageWrapper";
 import { TooltipExplanation } from "@/components/TooltipExplanation";
 import { PageHeading } from "@/components/Typography";
 
@@ -28,7 +28,7 @@ export function BulkArchive() {
     "/api/user/categorize/senders/categorized",
     {
       refreshInterval: isBulkCategorizing ? 2000 : undefined,
-    },
+    }
   );
 
   const senders = data?.senders ?? [];
@@ -42,7 +42,7 @@ export function BulkArchive() {
         name: sender.name ?? null,
         category: categories.find((c) => c.id === sender.category?.id) || null,
       })),
-    [senders, categories],
+    [senders, categories]
   );
 
   const handleProgressComplete = useCallback(() => {
@@ -54,10 +54,10 @@ export function BulkArchive() {
   // Show setup dialog for first-time setup only
   const shouldShowSetup =
     !setupDismissed &&
-    (onboarding || (!autoCategorizeSenders && !isBulkCategorizing));
+    (onboarding || !(autoCategorizeSenders || isBulkCategorizing));
 
   return (
-    <LoadingContent loading={isLoading} error={error}>
+    <LoadingContent error={error} loading={isLoading}>
       <PageWrapper>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -66,8 +66,8 @@ export function BulkArchive() {
           </div>
           <div className="flex items-center gap-2">
             <BulkArchiveSettingsModal
-              selectedAction={bulkAction}
               onActionChange={setBulkAction}
+              selectedAction={bulkAction}
             />
             <CategorizeWithAiButton
               buttonProps={{ variant: "outline", size: "sm" }}
@@ -76,17 +76,19 @@ export function BulkArchive() {
         </div>
         <BulkArchiveProgress onComplete={handleProgressComplete} />
         <BulkArchiveCards
-          emailGroups={emailGroups}
-          categories={categories}
           bulkAction={bulkAction}
+          categories={categories}
+          emailGroups={emailGroups}
           onCategoryChange={mutate}
         />
       </PageWrapper>
       <AutoCategorizationSetup
-        open={shouldShowSetup}
         onOpenChange={(open) => {
-          if (!open) setSetupDismissed(true);
+          if (!open) {
+            setSetupDismissed(true);
+          }
         }}
+        open={shouldShowSetup}
       />
     </LoadingContent>
   );

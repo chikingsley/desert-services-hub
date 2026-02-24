@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   containsUnsubscribeKeyword,
   containsUnsubscribeUrlPattern,
@@ -12,7 +12,7 @@ describe("containsUnsubscribeKeyword", () => {
 
     it("detects 'email preferences'", () => {
       expect(
-        containsUnsubscribeKeyword("Manage your email preferences here"),
+        containsUnsubscribeKeyword("Manage your email preferences here")
       ).toBe(true);
     });
 
@@ -26,7 +26,7 @@ describe("containsUnsubscribeKeyword", () => {
 
     it("detects 'notification preferences'", () => {
       expect(containsUnsubscribeKeyword("Edit notification preferences")).toBe(
-        true,
+        true
       );
     });
   });
@@ -34,19 +34,19 @@ describe("containsUnsubscribeKeyword", () => {
   describe("keyword matching behavior", () => {
     it("matches keyword at start of text", () => {
       expect(containsUnsubscribeKeyword("unsubscribe from this list")).toBe(
-        true,
+        true
       );
     });
 
     it("matches keyword at end of text", () => {
       expect(containsUnsubscribeKeyword("Click here to unsubscribe")).toBe(
-        true,
+        true
       );
     });
 
     it("matches keyword in middle of text", () => {
       expect(
-        containsUnsubscribeKeyword("You can unsubscribe at any time"),
+        containsUnsubscribeKeyword("You can unsubscribe at any time")
       ).toBe(true);
     });
 
@@ -79,7 +79,7 @@ describe("containsUnsubscribeKeyword", () => {
 
     it("returns false for similar but different text", () => {
       expect(containsUnsubscribeKeyword("subscribe to our newsletter")).toBe(
-        false,
+        false
       );
     });
 
@@ -98,38 +98,36 @@ describe("containsUnsubscribeUrlPattern", () => {
     it("detects 'unsubscribe' in URL", () => {
       expect(
         containsUnsubscribeUrlPattern(
-          "https://example.com/unsubscribe?email=test",
-        ),
+          "https://example.com/unsubscribe?email=test"
+        )
       ).toBe(true);
     });
 
     it("detects 'unsub' in URL (short form)", () => {
       expect(
         containsUnsubscribeUrlPattern(
-          "https://click.example.com/campaign/unsub-email/123",
-        ),
+          "https://click.example.com/campaign/unsub-email/123"
+        )
       ).toBe(true);
     });
 
     it("detects 'opt-out' in URL", () => {
       expect(
-        containsUnsubscribeUrlPattern("https://example.com/opt-out/user123"),
+        containsUnsubscribeUrlPattern("https://example.com/opt-out/user123")
       ).toBe(true);
     });
 
     it("detects 'optout' in URL (no hyphen)", () => {
       expect(
-        containsUnsubscribeUrlPattern(
-          "https://example.com/email/optout?id=abc",
-        ),
+        containsUnsubscribeUrlPattern("https://example.com/email/optout?id=abc")
       ).toBe(true);
     });
 
     it("detects 'list-manage' in URL (Mailchimp style)", () => {
       expect(
         containsUnsubscribeUrlPattern(
-          "https://list-manage.com/track/click?u=abc&id=123",
-        ),
+          "https://list-manage.com/track/click?u=abc&id=123"
+        )
       ).toBe(true);
     });
   });
@@ -137,31 +135,29 @@ describe("containsUnsubscribeUrlPattern", () => {
   describe("URL pattern matching behavior", () => {
     it("is case insensitive - matches UNSUB", () => {
       expect(
-        containsUnsubscribeUrlPattern("https://example.com/UNSUB/email"),
+        containsUnsubscribeUrlPattern("https://example.com/UNSUB/email")
       ).toBe(true);
     });
 
     it("matches pattern in query string", () => {
       expect(
         containsUnsubscribeUrlPattern(
-          "https://example.com/email?action=unsubscribe",
-        ),
+          "https://example.com/email?action=unsubscribe"
+        )
       ).toBe(true);
     });
 
     it("matches pattern in path", () => {
       expect(
-        containsUnsubscribeUrlPattern(
-          "https://example.com/unsubscribe/confirm",
-        ),
+        containsUnsubscribeUrlPattern("https://example.com/unsubscribe/confirm")
       ).toBe(true);
     });
 
     it("matches Portuguese email example (unsub-email)", () => {
       expect(
         containsUnsubscribeUrlPattern(
-          "https://click.lindtbrasil.com/campaign/unsub-email/MTM",
-        ),
+          "https://click.lindtbrasil.com/campaign/unsub-email/MTM"
+        )
       ).toBe(true);
     });
   });
@@ -173,19 +169,19 @@ describe("containsUnsubscribeUrlPattern", () => {
 
     it("returns false for regular URLs", () => {
       expect(containsUnsubscribeUrlPattern("https://example.com/about")).toBe(
-        false,
+        false
       );
     });
 
     it("returns false for subscribe URLs (not unsubscribe)", () => {
       expect(
-        containsUnsubscribeUrlPattern("https://example.com/subscribe"),
+        containsUnsubscribeUrlPattern("https://example.com/subscribe")
       ).toBe(false);
     });
 
     it("returns false for URLs with 'sub' but not 'unsub'", () => {
       expect(
-        containsUnsubscribeUrlPattern("https://example.com/submit-form"),
+        containsUnsubscribeUrlPattern("https://example.com/submit-form")
       ).toBe(false);
     });
   });

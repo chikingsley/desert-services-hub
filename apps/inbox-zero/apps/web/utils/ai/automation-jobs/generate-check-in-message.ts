@@ -1,14 +1,14 @@
 import { InvalidArgumentError } from "ai";
 import { z } from "zod";
-import { createGenerateObject } from "@/utils/llms";
-import { isTransientNetworkError, withRetry } from "@/utils/llms/retry";
-import { getModel } from "@/utils/llms/model";
+import { PROMPT_SECURITY_INSTRUCTIONS } from "@/utils/ai/security";
 import type { EmailProvider } from "@/utils/email/types";
 import { getEmailForLLM } from "@/utils/get-email-from-message";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import { isTransientNetworkError, withRetry } from "@/utils/llms/retry";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { stringifyEmailSimple } from "@/utils/stringify-email";
-import { PROMPT_SECURITY_INSTRUCTIONS } from "@/utils/ai/security";
 import type { Logger } from "@/utils/logger";
+import { stringifyEmailSimple } from "@/utils/stringify-email";
 
 const MAX_INBOX_MESSAGES_FOR_PROMPT = 8;
 
@@ -44,9 +44,9 @@ export async function aiGenerateAutomationCheckInMessage({
     throw new Error("Automation check-in prompt is required");
   }
 
-  if (!emailAccount.id || !emailAccount.userId || !emailAccount.email) {
+  if (!(emailAccount.id && emailAccount.userId && emailAccount.email)) {
     aiLogger.warn(
-      "Email account is missing required fields for automation check-in message generation",
+      "Email account is missing required fields for automation check-in message generation"
     );
     throw new Error("Email account is missing required fields");
   }
@@ -88,7 +88,7 @@ Return plain text only and keep the message short.`,
         InvalidArgumentError.isInstance(error),
       maxRetries: 2,
       delayMs: 1000,
-    },
+    }
   );
 
   aiLogger.info("Generated automation check-in message");

@@ -22,7 +22,7 @@ export type ArchiveCandidate = {
  * - Low confidence: everything else
  */
 export function getArchiveCandidates(
-  emailGroups: EmailGroup[],
+  emailGroups: EmailGroup[]
 ): ArchiveCandidate[] {
   return emailGroups.map((group) => {
     const categoryName = group.category?.name?.toLowerCase() || "";

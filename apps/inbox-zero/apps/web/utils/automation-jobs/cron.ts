@@ -36,18 +36,18 @@ export function getNextAutomationJobRunAt({
   }
 
   throw new Error(
-    `Could not find next run within ${MAX_SEARCH_MINUTES} minutes for cron: ${cronExpression}`,
+    `Could not find next run within ${MAX_SEARCH_MINUTES} minutes for cron: ${cronExpression}`
   );
 }
 
 function parseAutomationCronExpression(
-  cronExpression: string,
+  cronExpression: string
 ): ParsedAutomationCron {
   const parts = cronExpression.trim().split(/\s+/);
 
   if (parts.length !== CRON_PART_COUNT) {
     throw new Error(
-      `Invalid cron expression: expected ${CRON_PART_COUNT} fields, got ${parts.length}`,
+      `Invalid cron expression: expected ${CRON_PART_COUNT} fields, got ${parts.length}`
     );
   }
 
@@ -55,7 +55,7 @@ function parseAutomationCronExpression(
 
   if (dayOfMonth !== "*" || month !== "*") {
     throw new Error(
-      "Automation cron supports wildcard day-of-month and month only",
+      "Automation cron supports wildcard day-of-month and month only"
     );
   }
 
@@ -109,7 +109,9 @@ function parseCronField({
   label: string;
   normalize: (value: number) => number;
 }): Set<number> | null {
-  if (field === "*") return null;
+  if (field === "*") {
+    return null;
+  }
 
   const values = new Set<number>();
   const segments = field.split(",");
@@ -123,7 +125,7 @@ function parseCronField({
     const stepParts = token.split("/");
     if (stepParts.length > 2) {
       throw new Error(
-        `Invalid ${label} token ${token}: too many step delimiters`,
+        `Invalid ${label} token ${token}: too many step delimiters`
       );
     }
 
@@ -142,7 +144,7 @@ function parseCronField({
 
       if (normalized < min || normalized > max) {
         throw new Error(
-          `Invalid value ${normalized} in ${label} field. Expected ${min}-${max}`,
+          `Invalid value ${normalized} in ${label} field. Expected ${min}-${max}`
         );
       }
 
@@ -168,13 +170,15 @@ function parseRangeToken({
   max: number;
   label: string;
 }): [number, number] {
-  if (token === "*") return [min, max];
+  if (token === "*") {
+    return [min, max];
+  }
 
   if (token.includes("-")) {
     const rangeParts = token.split("-");
     if (rangeParts.length !== 2) {
       throw new Error(
-        `Invalid ${label} token ${token}: too many range delimiters`,
+        `Invalid ${label} token ${token}: too many range delimiters`
       );
     }
 
@@ -188,7 +192,7 @@ function parseRangeToken({
 
     if (start < min || end > max) {
       throw new Error(
-        `Invalid ${label} range ${token}: expected ${min}-${max}`,
+        `Invalid ${label} range ${token}: expected ${min}-${max}`
       );
     }
 
@@ -224,7 +228,9 @@ function parsePositiveInt(value: string, label: string) {
 
 function parseStep(value: string, label: string) {
   const step = parsePositiveInt(value, `${label} step`);
-  if (step <= 0) throw new Error(`Invalid ${label} step: ${value}`);
+  if (step <= 0) {
+    throw new Error(`Invalid ${label} step: ${value}`);
+  }
   return step;
 }
 

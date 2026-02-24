@@ -20,20 +20,20 @@ export interface LatLng {
 }
 
 export interface ParcelData {
-  apn: string;
-  address: string | null;
-  owner: string | null;
   acres: number | null;
-  polygon: LatLng[];
+  address: string | null;
+  apn: string;
   centroid: LatLng;
+  owner: string | null;
+  polygon: LatLng[];
   rawAttributes: Record<string, unknown>;
 }
 
 export interface PropertySearchResult {
-  apn: string;
   address: string;
-  owner: string | null;
+  apn: string;
   city: string | null;
+  owner: string | null;
 }
 
 // =============================================================================

@@ -1,50 +1,50 @@
 import {
   APICallError,
-  type ModelMessage,
-  type Tool,
-  ToolLoopAgent,
-  type JSONValue,
   generateObject,
   generateText,
+  type JSONValue,
+  type ModelMessage,
+  NoObjectGeneratedError,
   RetryError,
-  streamText,
-  smoothStream,
-  stepCountIs,
   type StreamTextOnFinishCallback,
   type StreamTextOnStepFinishCallback,
-  NoObjectGeneratedError,
+  smoothStream,
+  stepCountIs,
+  streamText,
+  type Tool,
+  ToolLoopAgent,
   TypeValidationError,
 } from "ai";
 import { jsonrepair } from "jsonrepair";
-import { saveAiUsage } from "@/utils/usage";
-import type { EmailAccountWithAI, UserAIFields } from "@/utils/llms/types";
-import {
-  addUserErrorMessageWithNotification,
-  ErrorType,
-} from "@/utils/error-messages";
 import {
   captureException,
+  isAiQuotaExceededError,
   isAnthropicInsufficientBalanceError,
   isIncorrectOpenAIAPIKeyError,
   isInsufficientCreditsError,
   isInvalidAIModelError,
   isOpenAIAPIKeyDeactivatedError,
-  isAiQuotaExceededError,
   markAsHandledUserKeyError,
   SafeError,
 } from "@/utils/error";
+import {
+  addUserErrorMessageWithNotification,
+  ErrorType,
+} from "@/utils/error-messages";
 import {
   getModel,
   type ModelType,
   type ResolvedModel,
   type SelectModel,
 } from "@/utils/llms/model";
+import type { EmailAccountWithAI, UserAIFields } from "@/utils/llms/types";
 import { createScopedLogger } from "@/utils/logger";
+import { saveAiUsage } from "@/utils/usage";
 import {
   extractLLMErrorInfo,
   isTransientNetworkError,
-  withNetworkRetry,
   withLLMRetry,
+  withNetworkRetry,
 } from "./retry";
 
 const logger = createScopedLogger("llms");
@@ -93,7 +93,7 @@ export function createGenerateText({
           },
           model: candidate.model,
         },
-        ...restArgs,
+        ...restArgs
       );
 
       if (result.usage) {
@@ -124,7 +124,7 @@ export function createGenerateText({
       try {
         return await withLLMRetry(
           () => withNetworkRetry(() => generate(candidate), { label }),
-          { label },
+          { label }
         );
       } catch (error) {
         if (nextCandidate && shouldFallbackToNextModel(error)) {
@@ -146,7 +146,7 @@ export function createGenerateText({
           emailAccount.id,
           label,
           candidate.modelName,
-          modelOptions.hasUserApiKey,
+          modelOptions.hasUserApiKey
         );
         throw error;
       }
@@ -203,7 +203,7 @@ export function createGenerateObject({
           },
           model: candidate.model,
         },
-        ...restArgs,
+        ...restArgs
       );
 
       if (result.usage) {
@@ -237,7 +237,7 @@ export function createGenerateObject({
                 NoObjectGeneratedError.isInstance(error) ||
                 TypeValidationError.isInstance(error),
             }),
-          { label },
+          { label }
         );
       } catch (error) {
         if (nextCandidate && shouldFallbackToNextModel(error)) {
@@ -259,7 +259,7 @@ export function createGenerateObject({
           emailAccount.id,
           label,
           candidate.modelName,
-          modelOptions.hasUserApiKey,
+          modelOptions.hasUserApiKey
         );
         throw error;
       }
@@ -301,7 +301,7 @@ export async function chatCompletionStream({
     const mergedProviderOptions = mergeProviderOptions(
       commonOptions.providerOptions,
       candidate.providerOptions as LLMProviderOptions | undefined,
-      requestProviderOptions,
+      requestProviderOptions
     );
 
     try {
@@ -415,7 +415,7 @@ export async function toolCallAgentStream({
     const mergedProviderOptions = mergeProviderOptions(
       commonOptions.providerOptions,
       candidate.providerOptions as LLMProviderOptions | undefined,
-      requestProviderOptions,
+      requestProviderOptions
     );
 
     const agent = new ToolLoopAgent({
@@ -436,7 +436,7 @@ export async function toolCallAgentStream({
         const finishPromise = onFinish?.(
           result as Parameters<
             NonNullable<StreamTextOnFinishCallback<Record<string, Tool>>>
-          >[0],
+          >[0]
         );
 
         try {
@@ -467,7 +467,7 @@ export async function toolCallAgentStream({
                   NonNullable<
                     StreamTextOnStepFinishCallback<Record<string, Tool>>
                   >
-                >[0],
+                >[0]
               );
             }
           : undefined,
@@ -508,7 +508,7 @@ async function handleError(
   emailAccountId: string,
   label: string,
   modelName: string,
-  hasUserApiKey: boolean,
+  hasUserApiKey: boolean
 ) {
   const isUserKeyInsufficientCredits =
     hasUserApiKey &&
@@ -569,7 +569,7 @@ async function handleError(
         logger,
       });
       throw new SafeError(
-        "The AI model you specified does not exist. Please update your AI settings.",
+        "The AI model you specified does not exist. Please update your AI settings."
       );
     }
 
@@ -629,7 +629,9 @@ function shouldFallbackToNextModel(error: unknown): boolean {
   }
 
   const llmErrorInfo = extractLLMErrorInfo(error);
-  if (llmErrorInfo.retryable) return true;
+  if (llmErrorInfo.retryable) {
+    return true;
+  }
 
   return isTransientNetworkError(error);
 }
@@ -640,7 +642,9 @@ function mergeProviderOptions(
   const merged: LLMProviderOptions = {};
 
   for (const options of providerOptionsList) {
-    if (!options) continue;
+    if (!options) {
+      continue;
+    }
 
     for (const [providerKey, value] of Object.entries(options)) {
       merged[providerKey] = {

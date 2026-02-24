@@ -61,66 +61,66 @@ const LLM_PROVIDER_OPTIONS = [
 ];
 
 interface TerraformSetupOptions {
-  outputDir?: string;
-  environment?: string;
-  region?: string;
-  baseUrl?: string;
-  domainName?: string;
   acmCertificateArn?: string;
-  route53ZoneId?: string;
-  rdsInstanceClass?: string;
+  aiGatewayApiKey?: string;
+  anthropicApiKey?: string;
+  baseUrl?: string;
+  bedrockAccessKey?: string;
+  bedrockRegion?: string;
+  bedrockSecretKey?: string;
+  domainName?: string;
   enableRedis?: boolean;
-  redisInstanceClass?: string;
-  llmProvider?: string;
-  llmModel?: string;
+  environment?: string;
+  googleApiKey?: string;
   googleClientId?: string;
   googleClientSecret?: string;
   googlePubsubTopicName?: string;
-  anthropicApiKey?: string;
-  openaiApiKey?: string;
-  googleApiKey?: string;
-  openrouterApiKey?: string;
   groqApiKey?: string;
-  aiGatewayApiKey?: string;
-  bedrockAccessKey?: string;
-  bedrockSecretKey?: string;
-  bedrockRegion?: string;
-  ollamaBaseUrl?: string;
-  ollamaModel?: string;
+  llmModel?: string;
+  llmProvider?: string;
   microsoftClientId?: string;
   microsoftClientSecret?: string;
+  ollamaBaseUrl?: string;
+  ollamaModel?: string;
+  openaiApiKey?: string;
+  openrouterApiKey?: string;
+  outputDir?: string;
+  rdsInstanceClass?: string;
+  redisInstanceClass?: string;
+  region?: string;
+  route53ZoneId?: string;
   yes?: boolean;
 }
 
 interface TerraformVarsConfig {
-  appName: string;
-  environment: string;
-  region: string;
-  baseUrl: string;
-  domainName: string;
-  route53ZoneId: string;
   acmCertificateArn: string;
-  rdsInstanceClass: string;
+  aiGatewayApiKey?: string;
+  anthropicApiKey?: string;
+  appName: string;
+  baseUrl: string;
+  bedrockAccessKey?: string;
+  bedrockRegion?: string;
+  bedrockSecretKey?: string;
+  defaultLlmModel: string;
+  defaultLlmProvider: string;
+  domainName: string;
   enableRedis: boolean;
-  redisInstanceClass: string;
+  environment: string;
+  googleApiKey?: string;
   googleClientId: string;
   googleClientSecret: string;
   googlePubsubTopicName: string;
-  defaultLlmProvider: string;
-  defaultLlmModel: string;
-  anthropicApiKey?: string;
-  openaiApiKey?: string;
-  googleApiKey?: string;
-  openrouterApiKey?: string;
   groqApiKey?: string;
-  aiGatewayApiKey?: string;
-  bedrockAccessKey?: string;
-  bedrockSecretKey?: string;
-  bedrockRegion?: string;
-  ollamaBaseUrl?: string;
-  ollamaModel?: string;
   microsoftClientId?: string;
   microsoftClientSecret?: string;
+  ollamaBaseUrl?: string;
+  ollamaModel?: string;
+  openaiApiKey?: string;
+  openrouterApiKey?: string;
+  rdsInstanceClass: string;
+  redisInstanceClass: string;
+  region: string;
+  route53ZoneId: string;
 }
 
 export async function runTerraformSetup(options: TerraformSetupOptions) {
@@ -161,7 +161,7 @@ export async function runTerraformSetup(options: TerraformSetupOptions) {
 
   const normalizedBaseUrl = normalizeBaseUrl(baseUrlInput);
   let domainName = options.domainName || normalizedBaseUrl.domainName;
-  if (!nonInteractive && !normalizedBaseUrl.baseUrl && !domainName) {
+  if (!(nonInteractive || normalizedBaseUrl.baseUrl || domainName)) {
     const domainInput = await promptOptionalText({
       message: "Custom domain name (optional):",
       placeholder: "app.example.com",
@@ -206,7 +206,7 @@ export async function runTerraformSetup(options: TerraformSetupOptions) {
     options.rdsInstanceClass,
     RDS_INSTANCE_OPTIONS,
     nonInteractive,
-    "RDS instance class",
+    "RDS instance class"
   );
   const rdsInstanceClass =
     validatedRdsInstanceClass ||
@@ -232,7 +232,7 @@ export async function runTerraformSetup(options: TerraformSetupOptions) {
         options.redisInstanceClass,
         REDIS_INSTANCE_OPTIONS,
         nonInteractive,
-        "Redis instance class",
+        "Redis instance class"
       )
     : undefined;
   const redisInstanceClass = enableRedis
@@ -283,7 +283,7 @@ export async function runTerraformSetup(options: TerraformSetupOptions) {
 
   const validatedLlmProvider = validateLlmProvider(
     options.llmProvider,
-    nonInteractive,
+    nonInteractive
   );
   const llmProvider =
     validatedLlmProvider ||
@@ -380,7 +380,7 @@ export async function runTerraformSetup(options: TerraformSetupOptions) {
   p.note(
     `Terraform files written to:\n${outputDir}\n\n` +
       "Note: terraform.tfvars contains secrets. Do not commit it.",
-    "Output",
+    "Output"
   );
   const verificationTokenPath = `/${DEFAULT_APP_NAME}/${environment}/secrets/GOOGLE_PUBSUB_VERIFICATION_TOKEN`;
   p.note(
@@ -388,7 +388,7 @@ export async function runTerraformSetup(options: TerraformSetupOptions) {
       "After apply, use `terraform output service_url` for the URL.\n" +
       `Google Pub/Sub verification token (SSM): ${verificationTokenPath}\n` +
       `aws ssm get-parameter --name ${verificationTokenPath} --with-decryption`,
-    "Next Steps",
+    "Next Steps"
   );
   p.outro("Terraform setup complete!");
 }
@@ -415,7 +415,7 @@ async function ensureOutputDir(outputDir: string, nonInteractive: boolean) {
   if (nonInteractive) {
     p.log.error(
       `Output directory is not empty: ${outputDir}\n` +
-        "Choose a new directory or remove existing files.",
+        "Choose a new directory or remove existing files."
     );
     process.exit(1);
   }
@@ -645,15 +645,19 @@ async function promptSelect(config: {
 
 function validateLlmProvider(
   value: string | undefined,
-  nonInteractive: boolean,
+  nonInteractive: boolean
 ): string | undefined {
-  if (!value) return undefined;
+  if (!value) {
+    return undefined;
+  }
   const allowed = new Set(LLM_PROVIDER_OPTIONS.map((option) => option.value));
-  if (allowed.has(value)) return value;
+  if (allowed.has(value)) {
+    return value;
+  }
   if (nonInteractive) {
     p.log.error(
       `Invalid LLM provider: ${value}. ` +
-        `Use one of: ${[...allowed].join(", ")}`,
+        `Use one of: ${[...allowed].join(", ")}`
     );
     process.exit(1);
   }
@@ -665,14 +669,18 @@ function validateInstanceClass(
   value: string | undefined,
   options: { value: string }[],
   nonInteractive: boolean,
-  label: string,
+  label: string
 ): string | undefined {
-  if (!value) return undefined;
+  if (!value) {
+    return undefined;
+  }
   const allowed = new Set(options.map((option) => option.value));
-  if (allowed.has(value)) return value;
+  if (allowed.has(value)) {
+    return value;
+  }
   if (nonInteractive) {
     p.log.error(
-      `Invalid ${label}: ${value}. Use one of: ${[...allowed].join(", ")}`,
+      `Invalid ${label}: ${value}. Use one of: ${[...allowed].join(", ")}`
     );
     process.exit(1);
   }
@@ -700,7 +708,7 @@ function normalizeBaseUrl(input: string) {
     return { baseUrl: "", domainName: "" };
   }
   let baseUrl = input.trim();
-  if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
+  if (!(baseUrl.startsWith("http://") || baseUrl.startsWith("https://"))) {
     baseUrl = `https://${baseUrl}`;
   }
   try {
@@ -717,7 +725,7 @@ function normalizeBaseUrl(input: string) {
 function assertNonEmpty(name: string, value: string) {
   if (!value) {
     p.log.error(
-      `Missing ${name}. Provide it as an option or environment variable.`,
+      `Missing ${name}. Provide it as an option or environment variable.`
     );
     process.exit(1);
   }
@@ -756,7 +764,7 @@ function renderTerraformTfvars(config: TerraformVarsConfig) {
 
   if (config.acmCertificateArn) {
     lines.push(
-      `acm_certificate_arn = "${escapeTfValue(config.acmCertificateArn)}"`,
+      `acm_certificate_arn = "${escapeTfValue(config.acmCertificateArn)}"`
     );
   }
 
@@ -764,26 +772,26 @@ function renderTerraformTfvars(config: TerraformVarsConfig) {
   lines.push(`enable_redis = ${config.enableRedis}`);
   if (config.enableRedis) {
     lines.push(
-      `redis_instance_class = "${escapeTfValue(config.redisInstanceClass)}"`,
+      `redis_instance_class = "${escapeTfValue(config.redisInstanceClass)}"`
     );
   }
 
   lines.push(`google_client_id = "${escapeTfValue(config.googleClientId)}"`);
   lines.push(
-    `google_client_secret = "${escapeTfValue(config.googleClientSecret)}"`,
+    `google_client_secret = "${escapeTfValue(config.googleClientSecret)}"`
   );
   lines.push(
     `google_pubsub_topic_name = "${escapeTfValue(
-      config.googlePubsubTopicName,
-    )}"`,
+      config.googlePubsubTopicName
+    )}"`
   );
 
   lines.push(
-    `default_llm_provider = "${escapeTfValue(config.defaultLlmProvider)}"`,
+    `default_llm_provider = "${escapeTfValue(config.defaultLlmProvider)}"`
   );
   if (config.defaultLlmModel) {
     lines.push(
-      `default_llm_model = "${escapeTfValue(config.defaultLlmModel)}"`,
+      `default_llm_model = "${escapeTfValue(config.defaultLlmModel)}"`
     );
   }
 
@@ -802,7 +810,7 @@ function renderTerraformTfvars(config: TerraformVarsConfig) {
   addOptionalTfVar(
     lines,
     "microsoft_client_secret",
-    config.microsoftClientSecret,
+    config.microsoftClientSecret
   );
 
   lines.push("");
@@ -814,7 +822,9 @@ function escapeTfValue(value: string) {
 }
 
 function addOptionalTfVar(lines: string[], key: string, value?: string) {
-  if (!value) return;
+  if (!value) {
+    return;
+  }
   lines.push(`${key} = "${escapeTfValue(value)}"`);
 }
 

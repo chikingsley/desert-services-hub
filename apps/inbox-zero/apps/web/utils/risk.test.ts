@@ -1,12 +1,12 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import type { RulesResponse } from "@/app/api/user/rules/route";
+import { ActionType } from "@/generated/prisma/enums";
 import {
-  getRiskLevel,
   getActionRiskLevel,
+  getRiskLevel,
   isFullyDynamicField,
   isPartiallyDynamicField,
 } from "./risk";
-import { ActionType } from "@/generated/prisma/enums";
-import type { RulesResponse } from "@/app/api/user/rules/route";
 
 // Run with:
 // pnpm test risk.test.ts
@@ -124,7 +124,7 @@ describe("getActionRiskLevel", () => {
         expect(result.level).toBe(expectedLevel);
         expect(result.message).toContain(expectedMessageContains);
       });
-    },
+    }
   );
 });
 
@@ -216,7 +216,7 @@ describe("getRiskLevel", () => {
         expect(result.level).toBe(expectedLevel);
         expect(result.message).toContain(expectedMessageContains);
       });
-    },
+    }
   );
 });
 

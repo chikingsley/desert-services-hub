@@ -1,8 +1,8 @@
-import { createScopedLogger } from "@/utils/logger";
+import type { ExecutedRule } from "@/generated/prisma/client";
 import { SafeError } from "@/utils/error";
+import { createScopedLogger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
 import { sleep } from "@/utils/sleep";
-import type { ExecutedRule } from "@/generated/prisma/client";
 import { validateWebhookUrl } from "@/utils/webhook-validation";
 
 const logger = createScopedLogger("webhook");
@@ -26,9 +26,11 @@ type WebhookPayload = {
 export const callWebhook = async (
   userId: string,
   url: string,
-  payload: WebhookPayload,
+  payload: WebhookPayload
 ) => {
-  if (!url) throw new Error("Webhook URL is required");
+  if (!url) {
+    throw new Error("Webhook URL is required");
+  }
 
   // Validate URL to prevent SSRF attacks
   const validation = await validateWebhookUrl(url);
@@ -44,7 +46,9 @@ export const callWebhook = async (
     where: { id: userId },
     select: { webhookSecret: true },
   });
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    throw new Error("User not found");
+  }
 
   try {
     await Promise.race([

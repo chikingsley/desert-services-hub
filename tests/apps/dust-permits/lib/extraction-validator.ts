@@ -17,44 +17,32 @@
 // =============================================================================
 
 export interface NoiExtraction {
-  applicantName: string | null;
-  applicantAddress1: string | null;
-  applicantAddress2: string | null;
-  applicantCity: string | null;
-  applicantState: string | null;
-  applicantZip: string | null;
-  siteName: string | null;
-  siteAddress: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  acresDisturbed: number | null;
-  swpppContactFirstName: string | null;
-  swpppContactLastName: string | null;
-  swpppContactEmail: string | null;
-  swpppContactPhone: string | null;
-  permitId: string | null;
-  ltfNumber: string | null;
   _extraction?: {
     source: "noi";
     confidence: "high" | "medium" | "low";
     missingFields: string[];
     warnings: string[];
   };
+  acresDisturbed: number | null;
+  applicantAddress1: string | null;
+  applicantAddress2: string | null;
+  applicantCity: string | null;
+  applicantName: string | null;
+  applicantState: string | null;
+  applicantZip: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  ltfNumber: string | null;
+  permitId: string | null;
+  siteAddress: string | null;
+  siteName: string | null;
+  swpppContactEmail: string | null;
+  swpppContactFirstName: string | null;
+  swpppContactLastName: string | null;
+  swpppContactPhone: string | null;
 }
 
 export interface PlanExtraction {
-  projectName: string | null;
-  projectLocation: string | null;
-  acreage: number | null;
-  owner: string | null;
-  engineer: string | null;
-  contractor: string | null;
-  dustControlMeasures: Record<string, unknown>;
-  sedimentControls?: {
-    bmp: string;
-    name: string;
-    location?: string;
-  }[];
   _extraction?: {
     source: "plan";
     confidence: "high" | "medium" | "low";
@@ -63,11 +51,22 @@ export interface PlanExtraction {
     missingCategories: string[];
     warnings: string[];
   };
+  acreage: number | null;
+  contractor: string | null;
+  dustControlMeasures: Record<string, unknown>;
+  engineer: string | null;
+  owner: string | null;
+  projectLocation: string | null;
+  projectName: string | null;
+  sedimentControls?: {
+    bmp: string;
+    name: string;
+    location?: string;
+  }[];
 }
 
 export interface ValidationResult {
-  valid: boolean;
-  score: number; // 0-100
+  extraFields: string[];
   matchedFields: string[];
   mismatchedFields: {
     field: string;
@@ -75,7 +74,8 @@ export interface ValidationResult {
     actual: unknown;
   }[];
   missingFields: string[];
-  extraFields: string[];
+  score: number; // 0-100
+  valid: boolean;
 }
 
 // =============================================================================

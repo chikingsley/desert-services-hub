@@ -14,8 +14,8 @@ const renderLink = ({
     <Link
       href={href}
       {...props}
-      target="_blank"
       className="font-semibold hover:underline"
+      target="_blank"
     >
       {content}
     </Link>

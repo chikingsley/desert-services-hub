@@ -8,11 +8,11 @@
  * proper subscription history tracking for webhook lookups.
  */
 
+import { createScopedLogger } from "@/utils/logger";
+import { createManagedOutlookSubscription } from "@/utils/outlook/subscription-manager";
 import prisma from "@/utils/prisma";
 import type { TestAccount } from "./accounts";
 import { logStep } from "./logging";
-import { createScopedLogger } from "@/utils/logger";
-import { createManagedOutlookSubscription } from "@/utils/outlook/subscription-manager";
 
 const logger = createScopedLogger("e2e-webhook");
 
@@ -28,7 +28,7 @@ const logger = createScopedLogger("e2e-webhook");
  * (NEXT_PUBLIC_BASE_URL or specific webhook URLs).
  */
 export async function setupTestWebhookSubscription(
-  account: TestAccount,
+  account: TestAccount
 ): Promise<{
   subscriptionId?: string;
   expirationDate?: Date;
@@ -132,7 +132,7 @@ export async function setupTestWebhookSubscription(
     }
 
     throw new Error(
-      `Failed to set up webhook subscription for ${account.email}: ${errorMessage}${hint}`,
+      `Failed to set up webhook subscription for ${account.email}: ${errorMessage}${hint}`
     );
   }
 }
@@ -141,7 +141,7 @@ export async function setupTestWebhookSubscription(
  * Tear down webhook subscription for a test account
  */
 export async function teardownTestWebhookSubscription(
-  account: TestAccount,
+  account: TestAccount
 ): Promise<void> {
   logStep("Tearing down webhook subscription", {
     email: account.email,
@@ -156,7 +156,7 @@ export async function teardownTestWebhookSubscription(
     });
 
     await account.emailProvider.unwatchEmails(
-      emailAccount?.watchEmailsSubscriptionId || undefined,
+      emailAccount?.watchEmailsSubscriptionId || undefined
     );
 
     // Clear subscription data in database
@@ -179,7 +179,7 @@ export async function teardownTestWebhookSubscription(
  * Verify webhook subscription is active for an account
  */
 export async function verifyWebhookSubscription(
-  account: TestAccount,
+  account: TestAccount
 ): Promise<boolean> {
   const emailAccount = await prisma.emailAccount.findUnique({
     where: { id: account.id },
@@ -217,7 +217,7 @@ export async function verifyWebhookSubscription(
  * - Re-registering updates the URL for Outlook
  */
 export async function ensureWebhookSubscription(
-  account: TestAccount,
+  account: TestAccount
 ): Promise<void> {
   const webhookUrl =
     process.env.WEBHOOK_URL || process.env.NEXT_PUBLIC_BASE_URL;
@@ -237,7 +237,7 @@ export async function ensureWebhookSubscription(
     throw new Error(
       `Failed to create Outlook webhook subscription for ${account.email}. ` +
         `WEBHOOK_URL: ${webhookUrl || "(not set)"}. ` +
-        "Ensure WEBHOOK_URL is set to a publicly accessible HTTPS URL (ngrok domain).",
+        "Ensure WEBHOOK_URL is set to a publicly accessible HTTPS URL (ngrok domain)."
     );
   }
 

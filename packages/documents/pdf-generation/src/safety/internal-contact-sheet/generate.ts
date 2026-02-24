@@ -3,16 +3,16 @@ import type {
   InternalContactRow,
   InternalContactSheetDocument,
 } from "@documents/pdf/internal-contact-sheet/types";
-import { sql } from "bun";
+import { db } from "@lib/db/client";
 
 interface ContactDbRow {
-  name: string;
-  email: string | null;
-  title: string | null;
-  phone: string | null;
-  office_phone: string | null;
-  mobile_phone: string | null;
   company_phone: string | null;
+  email: string | null;
+  mobile_phone: string | null;
+  name: string;
+  office_phone: string | null;
+  phone: string | null;
+  title: string | null;
 }
 
 const ROLE_PROJECT_MANAGER = "Project Manager";
@@ -46,36 +46,31 @@ function asRow(row: ContactDbRow): InternalContactRow {
 }
 
 export async function loadInternalContactSheetDoc(): Promise<InternalContactSheetDocument> {
-  const contacts = (await sql`
-    select
-      name,
-      email,
-      title,
-      phone,
-      office_phone,
-      mobile_phone,
-      company_phone
-    from contacts
-    where contact_type = 'internal_team'
-      and is_active = true
-      and title in (
-        ${ROLE_PROJECT_MANAGER},
-        ${ROLE_PROJECT_COORDINATOR},
-        ${ROLE_DISPATCHER_COORDINATOR},
-        ${ROLE_BILLING_CONTACT},
-        ${ROLE_FIELD_SUPERVISOR}
-      )
-    order by
-      case title
-        when 'Project Manager' then 1
-        when 'Project Coordinator' then 2
-        when 'Dispatcher / Coordinator' then 3
-        when 'Billing Contact' then 4
-        when 'Field Supervisor' then 5
-        else 99
-      end,
-      updated_at desc
-  `) as ContactDbRow[];
+  const contacts = await db
+    .query<ContactDbRow>(
+      `SELECT name, email, title, phone, office_phone, mobile_phone, company_phone
+     FROM contacts
+     WHERE contact_type = 'internal_team'
+       AND is_active = true
+       AND title IN ($1, $2, $3, $4, $5)
+     ORDER BY
+       CASE title
+         WHEN 'Project Manager' THEN 1
+         WHEN 'Project Coordinator' THEN 2
+         WHEN 'Dispatcher / Coordinator' THEN 3
+         WHEN 'Billing Contact' THEN 4
+         WHEN 'Field Supervisor' THEN 5
+         ELSE 99
+       END,
+       updated_at DESC`
+    )
+    .all(
+      ROLE_PROJECT_MANAGER,
+      ROLE_PROJECT_COORDINATOR,
+      ROLE_DISPATCHER_COORDINATOR,
+      ROLE_BILLING_CONTACT,
+      ROLE_FIELD_SUPERVISOR
+    );
 
   const byTitle = new Map<string, ContactDbRow>();
   for (const c of contacts) {

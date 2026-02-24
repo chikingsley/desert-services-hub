@@ -1,11 +1,6 @@
 "use client";
 
 import type {
-  Catalog,
-  CatalogItem,
-  CatalogSubcategory,
-} from "@/packages/estimates/catalog/types";
-import type {
   EditorEstimate,
   EditorLineItem,
   EditorSection,
@@ -13,6 +8,11 @@ import type {
 import { useCallback } from "react";
 import type { CatalogItemInfo } from "@/apps/web/frontend/lib/catalog-item-info";
 import { useUndoRedo } from "@/hooks/use-undo-redo";
+import type {
+  Catalog,
+  CatalogItem,
+  CatalogSubcategory,
+} from "@/packages/estimates/catalog/types";
 import {
   collectCategoryLineItems,
   createEmptyEstimate,
@@ -22,8 +22,8 @@ import {
 } from "./estimate-editor-helpers";
 
 export interface UseEstimateEditorOptions {
-  initialEstimate?: EditorEstimate;
   catalog: Catalog;
+  initialEstimate?: EditorEstimate;
 }
 
 export function useEstimateEditor({

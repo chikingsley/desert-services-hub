@@ -1,11 +1,11 @@
 // Client-side PDF generation for Desert Services estimates
 // Uses pdfmake browser build for live preview in iframe
 
-import { validateAndNormalizeEditorEstimateForPdf } from "@/packages/estimates/estimating/estimate-payload-validation-pdf";
 import type { EditorEstimate } from "@lib/db/types";
 import pdfMake from "pdfmake/build/pdfmake";
 import timesFonts from "pdfmake/build/standard-fonts/Times";
 import pdfFonts from "pdfmake/build/vfs_fonts";
+import { validateAndNormalizeEditorEstimateForPdf } from "@/packages/estimates/estimating/estimate-payload-validation-pdf";
 import type { EstimatePDFOptions } from "./build-estimate-doc-definition";
 import { buildEstimateDocDefinition } from "./build-estimate-doc-definition";
 

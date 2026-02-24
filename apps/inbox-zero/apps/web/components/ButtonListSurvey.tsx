@@ -19,14 +19,13 @@ export function ButtonListSurvey({
     <div className={cn("mx-auto flex max-w-lg flex-col gap-3", className)}>
       {options.map((option) => (
         <Button
-          key={option.value}
-          variant="outline"
-          onClick={() => onClick(option.value)}
           className={cn(
             "relative w-full",
-            option.recommended &&
-              "ring-1 ring-inset ring-black dark:ring-white",
+            option.recommended && "ring-1 ring-black ring-inset dark:ring-white"
           )}
+          key={option.value}
+          onClick={() => onClick(option.value)}
+          variant="outline"
         >
           <span className="absolute inset-0 flex items-center justify-center">
             {option.label}

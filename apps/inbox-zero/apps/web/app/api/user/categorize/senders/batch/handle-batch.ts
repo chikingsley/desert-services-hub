@@ -1,20 +1,20 @@
 import { NextResponse } from "next/server";
 import { aiCategorizeSendersSchema } from "@/app/api/user/categorize/senders/batch/handle-batch-validation";
+import { UNKNOWN_CATEGORY } from "@/utils/ai/categorize-sender/ai-categorize-senders";
 import {
   categorizeWithAi,
   getCategories,
   updateSenderCategory,
 } from "@/utils/categorize/senders/categorize";
-import { validateUserAndAiAccess } from "@/utils/user/validate";
-import { UNKNOWN_CATEGORY } from "@/utils/ai/categorize-sender/ai-categorize-senders";
-import prisma from "@/utils/prisma";
-import { saveCategorizationProgress } from "@/utils/redis/categorization-progress";
+import { createEmailProvider } from "@/utils/email/provider";
 import { SafeError } from "@/utils/error";
 import type { RequestWithLogger } from "@/utils/middleware";
-import { createEmailProvider } from "@/utils/email/provider";
+import prisma from "@/utils/prisma";
+import { saveCategorizationProgress } from "@/utils/redis/categorization-progress";
+import { validateUserAndAiAccess } from "@/utils/user/validate";
 
 export async function handleBatchRequest(
-  request: RequestWithLogger,
+  request: RequestWithLogger
 ): Promise<NextResponse> {
   try {
     await handleBatchInternal(request);
@@ -23,7 +23,7 @@ export async function handleBatchRequest(
     request.logger.error("Handle batch request error", { error });
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -54,7 +54,9 @@ async function handleBatchInternal(request: RequestWithLogger) {
 
   const account = emailAccountWithAccount?.account;
 
-  if (!account) throw new SafeError("No account found");
+  if (!account) {
+    throw new SafeError("No account found");
+  }
 
   const emailProvider = await createEmailProvider({
     emailAccountId,

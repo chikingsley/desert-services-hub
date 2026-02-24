@@ -30,16 +30,16 @@ const ColdEmailNotification: ColdEmailNotificationComponent = ({
         <Body className="bg-white font-sans">
           <Container className="mx-auto w-full max-w-[600px] p-0">
             <Section className="p-8 text-center">
-              <Link href={baseUrl} className="text-[15px]">
+              <Link className="text-[15px]" href={baseUrl}>
                 <Img
-                  src={"https://www.getinboxzero.com/icon.png"}
-                  width="40"
-                  height="40"
                   alt="Inbox Zero"
                   className="mx-auto my-0"
+                  height="40"
+                  src={"https://www.getinboxzero.com/icon.png"}
+                  width="40"
                 />
               </Link>
-              <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
+              <Text className="mx-0 mt-4 mb-8 p-0 text-center font-normal text-2xl">
                 <span className="font-semibold tracking-tighter">
                   Inbox Zero
                 </span>
@@ -47,29 +47,29 @@ const ColdEmailNotification: ColdEmailNotificationComponent = ({
             </Section>
 
             <Section className="px-8 pb-8">
-              <Text className="text-[16px] text-gray-700 mb-4 mt-0">
+              <Text className="mt-0 mb-4 text-[16px] text-gray-700">
                 The recipient uses{" "}
-                <Link href={baseUrl} className="text-blue-600 underline">
+                <Link className="text-blue-600 underline" href={baseUrl}>
                   Inbox Zero
                 </Link>{" "}
                 to automatically detect and filter cold emails from first-time
                 senders.
               </Text>
-              <Text className="text-[16px] text-gray-700 mb-4 mt-0">
+              <Text className="mt-0 mb-4 text-[16px] text-gray-700">
                 Your email was identified as unsolicited outreach and has been
                 filtered.
               </Text>
-              <Text className="text-[16px] text-gray-700 mb-0 mt-0">
+              <Text className="mt-0 mb-0 text-[16px] text-gray-700">
                 If this was sent in error or you need to reach them, please try
                 an alternative contact method.
               </Text>
             </Section>
 
-            <Hr className="border-solid border-gray-200 my-6" />
-            <Section className="mt-4 mb-8 text-center text-sm text-gray-500">
+            <Hr className="my-6 border-gray-200 border-solid" />
+            <Section className="mt-4 mb-8 text-center text-gray-500 text-sm">
               <Text className="m-0">
                 This is an automated message from{" "}
-                <Link href={baseUrl} className="text-blue-600 underline">
+                <Link className="text-blue-600 underline" href={baseUrl}>
                   Inbox Zero
                 </Link>
                 .

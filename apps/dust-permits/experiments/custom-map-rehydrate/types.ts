@@ -4,9 +4,9 @@ export interface LatLng {
 }
 
 export interface Bounds {
+  east: number;
   north: number;
   south: number;
-  east: number;
   west: number;
 }
 
@@ -20,30 +20,30 @@ export type CornerPosition =
   | "unknown";
 
 export interface ExtractedRoad {
-  name: string;
   direction: Direction;
   isPrimary: boolean;
+  name: string;
 }
 
 export interface ExtractedIntersection {
+  cornerPosition: CornerPosition;
   road1: string;
   road2: string;
-  cornerPosition: CornerPosition;
 }
 
 export interface ExtractedPlanHints {
-  projectName: string | null;
-  parcelNumber: string | null;
   address: string | null;
   city: string | null;
-  state: string | null;
-  county: string | null;
-  roads: ExtractedRoad[];
-  intersections: ExtractedIntersection[];
-  scaleInfo: string | null;
-  estimatedSizeMeters: number | null;
-  coordinates: LatLng | null;
   coordinateCandidates?: LatLng[];
+  coordinates: LatLng | null;
+  county: string | null;
+  estimatedSizeMeters: number | null;
+  intersections: ExtractedIntersection[];
+  parcelNumber: string | null;
+  projectName: string | null;
+  roads: ExtractedRoad[];
+  scaleInfo: string | null;
+  state: string | null;
 }
 
 export type SignalSource =
@@ -54,42 +54,42 @@ export type SignalSource =
   | "road_grounding";
 
 export interface LocationSignal {
-  source: SignalSource;
-  query: string;
-  coords: LatLng | null;
   confidence: number;
+  coords: LatLng | null;
   metadata?: Record<string, unknown>;
+  query: string;
+  source: SignalSource;
 }
 
 export interface LocationCluster {
   centroid: LatLng;
-  signals: LocationSignal[];
   radiusMeters: number;
+  signals: LocationSignal[];
   totalConfidence: number;
 }
 
 export interface RoadGeometry {
-  roadName: string;
   points: LatLng[];
+  roadName: string;
 }
 
 export interface RehydrateOptions {
-  googleMapsApiKey?: string;
+  aspectRatio?: number;
   clusterRadiusMeters?: number;
+  defaultSiteSizeMeters?: number;
+  enableRoadGeometry?: boolean;
+  googleMapsApiKey?: string;
   maxIntersections?: number;
   maxRoads?: number;
-  enableRoadGeometry?: boolean;
-  defaultSiteSizeMeters?: number;
-  aspectRatio?: number;
 }
 
 export interface RehydrateResult {
-  signals: LocationSignal[];
   clusters: LocationCluster[];
-  outliers: LocationSignal[];
-  consensusLocation: LatLng | null;
   consensusConfidence: number;
-  suggestedBounds: Bounds | null;
-  roadGeometries: RoadGeometry[];
+  consensusLocation: LatLng | null;
   log: string[];
+  outliers: LocationSignal[];
+  roadGeometries: RoadGeometry[];
+  signals: LocationSignal[];
+  suggestedBounds: Bounds | null;
 }

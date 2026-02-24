@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { GetEmailAccountsResponse } from "@/app/api/user/email-accounts/route";
 import { setLastEmailAccountAction } from "@/utils/actions/email-account-cookie";
 
@@ -87,7 +87,7 @@ export function useAccount() {
 
   if (context === undefined) {
     throw new Error(
-      "useEmailAccount must be used within an EmailAccountProvider",
+      "useEmailAccount must be used within an EmailAccountProvider"
     );
   }
 

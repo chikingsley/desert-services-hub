@@ -1,20 +1,20 @@
 .SignaturePad__overlay {
   position: fixed;
   top: 0;
-  left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  left: 0;
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .SignaturePad__modal {
+  padding: 16px;
   background: white;
   border-radius: 8px;
-  padding: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -27,34 +27,34 @@
 
 .SignaturePad__canvas {
   display: block;
+  touch-action: none;
+  cursor: crosshair;
+  background: white;
   border: 1px solid #ccc;
   border-radius: 4px;
-  cursor: crosshair;
-  touch-action: none;
-  background: white;
 }
 
 .SignaturePad__buttons {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
   justify-content: flex-end;
+  margin-top: 12px;
 }
 
 .SignaturePad__button {
   padding: 8px 16px;
   font-size: 14px;
-  border-radius: 4px;
   cursor: pointer;
+  border-radius: 4px;
   transition:
     background-color 0.2s,
     border-color 0.2s;
 }
 
 .SignaturePad__button--clear {
+  color: #666;
   background: white;
   border: 1px solid #ccc;
-  color: #666;
 }
 
 .SignaturePad__button--clear:hover {
@@ -63,9 +63,9 @@
 }
 
 .SignaturePad__button--cancel {
+  color: #666;
   background: white;
   border: 1px solid #ccc;
-  color: #666;
 }
 
 .SignaturePad__button--cancel:hover {
@@ -74,9 +74,9 @@
 }
 
 .SignaturePad__button--done {
+  color: white;
   background: #2196f3;
   border: 1px solid #2196f3;
-  color: white;
 }
 
 .SignaturePad__button--done:hover {

@@ -51,7 +51,7 @@ export type WebhookUrlValidationResult =
  * - DNS resolution must not resolve to private/internal IP addresses (both IPv4 and IPv6)
  */
 export async function validateWebhookUrl(
-  url: string,
+  url: string
 ): Promise<WebhookUrlValidationResult> {
   let parsedUrl: URL;
 

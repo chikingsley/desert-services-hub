@@ -1,18 +1,18 @@
-import { Button } from "@/components/ui/button";
 import {
-  TrashIcon,
-  MoreHorizontalIcon,
   ClockIcon,
-  SparklesIcon,
+  MoreHorizontalIcon,
   PenLineIcon,
+  SparklesIcon,
+  TrashIcon,
 } from "lucide-react";
-import { cn } from "@/utils";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/utils";
 
 function DeleteButton({
   onClick,
@@ -23,11 +23,11 @@ function DeleteButton({
 }) {
   return (
     <Button
+      aria-label={ariaLabel}
+      className="mt-1 size-8"
+      onClick={onClick}
       size="icon"
       variant="ghost"
-      className="size-8 mt-1"
-      aria-label={ariaLabel}
-      onClick={onClick}
     >
       <TrashIcon className="size-4 text-muted-foreground" />
     </Button>
@@ -63,16 +63,18 @@ function OptionsMenu({
     onSetManually ||
     onUseAiDraft;
 
-  if (!hasOptions) return null;
+  if (!hasOptions) {
+    return null;
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
+          aria-label="More options"
+          className="mt-1 size-8"
           size="icon"
           variant="ghost"
-          className="size-8 mt-1"
-          aria-label="More options"
         >
           <MoreHorizontalIcon className="size-4 text-muted-foreground" />
         </Button>
@@ -147,23 +149,23 @@ function ActionButtons({
   return (
     <div className="flex items-start">
       <OptionsMenu
+        hasDelay={hasDelay}
+        isManualMode={isManualMode}
+        isPromptMode={isPromptMode}
         onAddDelay={onAddDelay}
         onRemoveDelay={onRemoveDelay}
-        hasDelay={hasDelay}
-        onUsePrompt={onUsePrompt}
-        onUseLabel={onUseLabel}
-        isPromptMode={isPromptMode}
         onSetManually={onSetManually}
         onUseAiDraft={onUseAiDraft}
-        isManualMode={isManualMode}
+        onUseLabel={onUseLabel}
+        onUsePrompt={onUsePrompt}
       />
-      <DeleteButton onClick={onRemove} ariaLabel={removeAriaLabel} />
+      <DeleteButton ariaLabel={removeAriaLabel} onClick={onRemove} />
     </div>
   );
 }
 
 function CardLayout({ children }: { children: React.ReactNode }) {
-  return <div className="flex flex-col sm:flex-row gap-2">{children}</div>;
+  return <div className="flex flex-col gap-2 sm:flex-row">{children}</div>;
 }
 
 function CardLayoutRight({
@@ -174,7 +176,7 @@ function CardLayoutRight({
   className?: string;
 }) {
   return (
-    <div className={cn("space-y-2 mx-auto w-full", className)}>{children}</div>
+    <div className={cn("mx-auto w-full space-y-2", className)}>{children}</div>
   );
 }
 
@@ -214,17 +216,17 @@ export function RuleStep({
           {leftContent && <div className="shrink-0">{leftContent}</div>}
           <CardLayoutRight>{rightContent}</CardLayoutRight>
           <ActionButtons
-            onRemove={onRemove}
-            removeAriaLabel={removeAriaLabel}
-            onAddDelay={onAddDelay}
-            onRemoveDelay={onRemoveDelay}
             hasDelay={hasDelay}
-            onUsePrompt={onUsePrompt}
-            onUseLabel={onUseLabel}
+            isManualMode={isManualMode}
             isPromptMode={isPromptMode}
+            onAddDelay={onAddDelay}
+            onRemove={onRemove}
+            onRemoveDelay={onRemoveDelay}
             onSetManually={onSetManually}
             onUseAiDraft={onUseAiDraft}
-            isManualMode={isManualMode}
+            onUseLabel={onUseLabel}
+            onUsePrompt={onUsePrompt}
+            removeAriaLabel={removeAriaLabel}
           />
         </CardLayout>
       </div>

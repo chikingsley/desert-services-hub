@@ -1,23 +1,23 @@
 "use client";
 
-import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { Input } from "@/components/Input";
-import { Button } from "@/components/ui/button";
-import { toastSuccess, toastError } from "@/components/Toast";
-import { createOrganizationAction } from "@/utils/actions/organization";
-import {
-  createOrganizationBody,
-  type CreateOrganizationBody,
-} from "@/utils/actions/organization.validation";
-import { slugify } from "@/utils/string";
-import { useUser } from "@/hooks/useUser";
 import { LoadingContent } from "@/components/LoadingContent";
-import { useAccount } from "@/providers/EmailAccountProvider";
 import { PageHeader } from "@/components/PageHeader";
 import { PageWrapper } from "@/components/PageWrapper";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
+import { useUser } from "@/hooks/useUser";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { createOrganizationAction } from "@/utils/actions/organization";
+import {
+  type CreateOrganizationBody,
+  createOrganizationBody,
+} from "@/utils/actions/organization.validation";
+import { slugify } from "@/utils/string";
 
 export default function CreateOrganizationPage() {
   const router = useRouter();
@@ -59,36 +59,36 @@ export default function CreateOrganizationPage() {
         router.push(`/organization/${result?.data?.id}`);
       }
     },
-    [mutate, router, emailAccountId],
+    [mutate, router, emailAccountId]
   );
 
   return (
-    <PageWrapper className="max-w-2xl mx-auto">
+    <PageWrapper className="mx-auto max-w-2xl">
       <PageHeader title="Create Organization" />
-      <LoadingContent loading={isLoading} error={error}>
+      <LoadingContent error={error} loading={isLoading}>
         <form
-          className="max-w-sm space-y-4 mt-4"
+          className="mt-4 max-w-sm space-y-4"
           onSubmit={handleSubmit(onSubmit)}
         >
           <Input
-            type="text"
-            name="name"
+            error={errors.name}
             label="Organization Name"
+            name="name"
             placeholder="Apple Inc."
             registerProps={register("name")}
-            error={errors.name}
+            type="text"
           />
 
           <Input
-            type="text"
-            name="slug"
+            error={errors.slug}
             label="URL Slug"
+            name="slug"
             placeholder="apple-inc"
             registerProps={register("slug")}
-            error={errors.slug}
+            type="text"
           />
 
-          <Button type="submit" loading={isSubmitting}>
+          <Button loading={isSubmitting} type="submit">
             Create Organization
           </Button>
         </form>

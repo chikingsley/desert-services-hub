@@ -1,8 +1,8 @@
-import { after } from "next/server";
-import prisma from "@/utils/prisma";
-import { createScopedLogger } from "@/utils/logger";
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
+import { after } from "next/server";
 import type { auth } from "@/utils/auth";
+import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("utms");
 
@@ -26,7 +26,9 @@ export function registerUtmTracking({
 
   after(async () => {
     const user = await authPromise;
-    if (!user?.user) return;
+    if (!user?.user) {
+      return;
+    }
     await fetchUserAndStoreUtms(user.user.id, utmValues);
   });
 
@@ -49,7 +51,9 @@ export function extractUtmValues(cookies: ReadonlyRequestCookies): UtmValues {
 }
 
 function decodeCookieValue(value: string | undefined): string | undefined {
-  if (!value) return undefined;
+  if (!value) {
+    return undefined;
+  }
   try {
     return decodeURIComponent(value);
   } catch {
@@ -59,7 +63,7 @@ function decodeCookieValue(value: string | undefined): string | undefined {
 
 export async function fetchUserAndStoreUtms(
   userId: string,
-  utmValues: UtmValues,
+  utmValues: UtmValues
 ) {
   const user = await prisma.user
     .findUnique({

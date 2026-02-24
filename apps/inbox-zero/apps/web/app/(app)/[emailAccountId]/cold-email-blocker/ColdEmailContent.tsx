@@ -1,15 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { ColdEmailList } from "@/app/(app)/[emailAccountId]/cold-email-blocker/ColdEmailList";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ColdEmailRejected } from "@/app/(app)/[emailAccountId]/cold-email-blocker/ColdEmailRejected";
 import { ColdEmailTest } from "@/app/(app)/[emailAccountId]/cold-email-blocker/ColdEmailTest";
-import { Button } from "@/components/ui/button";
-import { prefixPath } from "@/utils/path";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import Link from "next/link";
 import { MessageText } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { prefixPath } from "@/utils/path";
 
 export function ColdEmailContent({ searchParam }: { searchParam?: string }) {
   const { emailAccountId } = useAccount();
@@ -23,22 +23,22 @@ export function ColdEmailContent({ searchParam }: { searchParam?: string }) {
         <TabsTrigger value="settings">Settings</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="test" className="mb-10">
+      <TabsContent className="mb-10" value="test">
         <ColdEmailTest />
       </TabsContent>
 
-      <TabsContent value="cold-emails" className="mb-10">
+      <TabsContent className="mb-10" value="cold-emails">
         <Card>
           <ColdEmailList />
         </Card>
       </TabsContent>
-      <TabsContent value="rejected" className="mb-10">
+      <TabsContent className="mb-10" value="rejected">
         <Card>
           <ColdEmailRejected />
         </Card>
       </TabsContent>
 
-      <TabsContent value="settings" className="mb-10">
+      <TabsContent className="mb-10" value="settings">
         <MessageText className="my-4">
           To manage cold email settings, go to the Assistant Rules tab and click
           Edit on the Cold Email rule.

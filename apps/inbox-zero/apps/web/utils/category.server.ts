@@ -1,5 +1,5 @@
-import prisma from "@/utils/prisma";
 import type { Prisma } from "@/generated/prisma/client";
+import prisma from "@/utils/prisma";
 
 export type CategoryWithRules = Prisma.CategoryGetPayload<{
   select: {

@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { env } from "@/env";
-import { Logo } from "@/components/new-landing/common/Logo";
-import { cn } from "@/utils";
-import { FooterLineLogo } from "@/components/new-landing/FooterLineLogo";
-import { Paragraph } from "@/components/new-landing/common/Typography";
-import { UnicornScene } from "@/components/new-landing/UnicornScene";
 import { footerNavigation } from "@/app/(landing)/home/Footer";
+import { Logo } from "@/components/new-landing/common/Logo";
+import { Paragraph } from "@/components/new-landing/common/Typography";
+import { FooterLineLogo } from "@/components/new-landing/FooterLineLogo";
+import { UnicornScene } from "@/components/new-landing/UnicornScene";
+import { env } from "@/env";
+import { cn } from "@/utils";
 
 interface FooterProps {
   className: string;
@@ -32,18 +32,18 @@ const selfHostedFooter = {
 export function Footer({ className, variant = "default" }: FooterProps) {
   if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) {
     return (
-      <footer className="relative z-50 border-t border-[#E7E7E7A3] bg-cover bg-center bg-no-repeat overflow-hidden">
+      <footer className="relative z-50 overflow-hidden border-[#E7E7E7A3] border-t bg-center bg-cover bg-no-repeat">
         <div className={cn("overflow-hidden px-6 py-12 lg:px-8", className)}>
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
             {selfHostedFooter.resources.map((item) => (
               <Link
-                key={item.name}
+                className="text-gray-500 text-sm leading-6 hover:text-gray-900"
                 href={item.href}
-                target={item.target}
+                key={item.name}
                 rel={
                   item.target === "_blank" ? "noopener noreferrer" : undefined
                 }
-                className="text-sm leading-6 text-gray-500 hover:text-gray-900"
+                target={item.target}
               >
                 {item.name}
               </Link>
@@ -51,21 +51,21 @@ export function Footer({ className, variant = "default" }: FooterProps) {
             <span className="text-gray-300">|</span>
             {selfHostedFooter.legal.map((item) => (
               <Link
-                key={item.name}
+                className="text-gray-500 text-sm leading-6 hover:text-gray-900"
                 href={item.href}
-                className="text-sm leading-6 text-gray-500 hover:text-gray-900"
+                key={item.name}
               >
                 {item.name}
               </Link>
             ))}
           </div>
-          <p className="mt-6 text-center text-xs leading-5 text-gray-500">
+          <p className="mt-6 text-center text-gray-500 text-xs leading-5">
             Powered by{" "}
             <Link
-              href="https://getinboxzero.com"
-              target="_blank"
-              rel="noopener noreferrer"
               className="hover:text-gray-900"
+              href="https://getinboxzero.com"
+              rel="noopener noreferrer"
+              target="_blank"
             >
               Inbox Zero
             </Link>
@@ -76,31 +76,31 @@ export function Footer({ className, variant = "default" }: FooterProps) {
   }
 
   return (
-    <footer className="relative z-50 border-t border-[#E7E7E7A3] bg-cover bg-center bg-no-repeat overflow-hidden">
+    <footer className="relative z-50 overflow-hidden border-[#E7E7E7A3] border-t bg-center bg-cover bg-no-repeat">
       {variant === "default" ? <UnicornScene className="opacity-15" /> : null}
       <div
         className={cn("overflow-hidden px-6 py-20 sm:py-24 lg:px-8", className)}
       >
         <div className="mt-16 grid grid-cols-2 gap-8 lg:grid-cols-5 xl:col-span-2 xl:mt-0">
           <div>
-            <FooterList title="Product" items={footerNavigation.main} />
+            <FooterList items={footerNavigation.main} title="Product" />
           </div>
           <div>
-            <FooterList title="Use Cases" items={footerNavigation.useCases} />
+            <FooterList items={footerNavigation.useCases} title="Use Cases" />
           </div>
           <div>
-            <FooterList title="Support" items={footerNavigation.support} />
+            <FooterList items={footerNavigation.support} title="Support" />
             <div className="mt-6">
-              <FooterList title="Free Tools" items={footerNavigation.tools} />
+              <FooterList items={footerNavigation.tools} title="Free Tools" />
             </div>
           </div>
           <div>
-            <FooterList title="Company" items={footerNavigation.company} />
+            <FooterList items={footerNavigation.company} title="Company" />
           </div>
           <div>
-            <FooterList title="Legal" items={footerNavigation.legal} />
+            <FooterList items={footerNavigation.legal} title="Legal" />
             <div className="mt-6">
-              <FooterList title="Compare" items={footerNavigation.compare} />
+              <FooterList items={footerNavigation.compare} title="Compare" />
             </div>
           </div>
         </div>
@@ -109,19 +109,19 @@ export function Footer({ className, variant = "default" }: FooterProps) {
           <div className="flex items-center gap-4">
             {footerNavigation.social.map((item) => (
               <Link
-                key={item.name}
-                href={item.href}
                 className="text-gray-400 hover:text-gray-500"
+                href={item.href}
+                key={item.name}
               >
                 <span className="sr-only">{item.name}</span>
-                <item.icon className="h-6 w-6" aria-hidden="true" />
+                <item.icon aria-hidden="true" className="h-6 w-6" />
               </Link>
             ))}
           </div>
         </div>
       </div>
       {variant === "default" ? (
-        <FooterLineLogo className="hidden xl:block absolute bottom-0 left-1/2 -translate-x-1/2 mx-auto px-6 lg:px-8 -z-10" />
+        <FooterLineLogo className="absolute bottom-0 left-1/2 -z-10 mx-auto hidden -translate-x-1/2 px-6 lg:px-8 xl:block" />
       ) : null}
     </footer>
   );
@@ -134,10 +134,10 @@ function FooterList(props: {
   return (
     <>
       <Paragraph
+        as="h3"
+        className="font-semibold leading-6"
         color="gray-900"
         size="sm"
-        className="font-semibold leading-6"
-        as="h3"
       >
         {props.title}
       </Paragraph>
@@ -145,10 +145,10 @@ function FooterList(props: {
         {props.items.map((item) => (
           <li key={item.name}>
             <Link
+              className="text-gray-500 text-sm leading-6 hover:text-gray-900"
               href={item.href}
-              target={item.target}
               prefetch={item.target !== "_blank"}
-              className="text-sm leading-6 text-gray-500 hover:text-gray-900"
+              target={item.target}
             >
               {item.name}
             </Link>

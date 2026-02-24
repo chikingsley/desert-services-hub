@@ -1,21 +1,21 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
+import type { Properties } from "posthog-js";
+import { usePostHog } from "posthog-js/react";
 import { useCallback, useEffect, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { useRouter, useSearchParams } from "next/navigation";
-import { usePostHog } from "posthog-js/react";
-import type { Properties } from "posthog-js";
 import { survey } from "@/app/(landing)/welcome/survey";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/Input";
+import { usePremium } from "@/components/PremiumAlert";
+import { Button } from "@/components/ui/button";
 import { env } from "@/env";
+import { useOnboardingAnalytics } from "@/hooks/useAnalytics";
+import { useSignUpEvent } from "@/hooks/useSignupEvent";
 import {
   completedOnboardingAction,
   saveOnboardingAnswersAction,
 } from "@/utils/actions/onboarding";
-import { useOnboardingAnalytics } from "@/hooks/useAnalytics";
-import { useSignUpEvent } from "@/hooks/useSignupEvent";
-import { usePremium } from "@/components/PremiumAlert";
 
 const surveyId = env.NEXT_PUBLIC_POSTHOG_ONBOARDING_SURVEY_ID;
 
@@ -59,7 +59,7 @@ export const OnboardingForm = (props: { questionIndex: number }) => {
       analytics.onComplete();
       posthog.capture("survey sent", { ...responses, $survey_id: surveyId });
     },
-    [posthog, analytics],
+    [posthog, analytics]
   );
 
   const onSubmit: SubmitHandler<Inputs> = useCallback(
@@ -111,13 +111,13 @@ export const OnboardingForm = (props: { questionIndex: number }) => {
       isFinalQuestion,
       analytics,
       isPremium,
-    ],
+    ]
   );
 
   const question = survey.questions[questionIndex];
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex justify-center">
+    <form className="flex justify-center" onSubmit={handleSubmit(onSubmit)}>
       <div>
         <div className="my-4 text-lg">{question.question}</div>
         {question.choices && (
@@ -125,11 +125,6 @@ export const OnboardingForm = (props: { questionIndex: number }) => {
             {question.choices?.map((answer) => (
               <Button
                 key={answer}
-                variant={
-                  watch(name)?.includes(answer) ? "secondary" : "outline"
-                }
-                type="button"
-                // quick and dirty radio button implementation
                 onClick={(e) => {
                   if (question.type === "multiple_choice") {
                     const values = new Set(getValues(name)?.split(","));
@@ -146,6 +141,11 @@ export const OnboardingForm = (props: { questionIndex: number }) => {
                     handleSubmit(onSubmit)(e);
                   }
                 }}
+                type="button"
+                // quick and dirty radio button implementation
+                variant={
+                  watch(name)?.includes(answer) ? "secondary" : "outline"
+                }
               >
                 {answer}
               </Button>
@@ -153,10 +153,10 @@ export const OnboardingForm = (props: { questionIndex: number }) => {
 
             {showOtherInput && (
               <Input
-                type="text"
+                error={errors[name]}
                 name={name}
                 registerProps={register(name)}
-                error={errors[name]}
+                type="text"
               />
             )}
           </div>
@@ -164,18 +164,18 @@ export const OnboardingForm = (props: { questionIndex: number }) => {
         {question.type === "open" && (
           <div>
             <Input
-              type="text"
               autosizeTextarea
-              rows={3}
-              name={name}
-              registerProps={register(name)}
               error={errors[name]}
+              name={name}
               placeholder="Optional"
+              registerProps={register(name)}
+              rows={3}
+              type="text"
             />
             <Button
               className="mt-4 w-full"
-              type="submit"
               loading={isSubmitting}
+              type="submit"
             >
               Get Started
             </Button>
@@ -185,7 +185,7 @@ export const OnboardingForm = (props: { questionIndex: number }) => {
         {(question.type === "multiple_choice" ||
           showOtherInput ||
           question.skippable) && (
-          <Button className="mt-4 w-full" type="submit" loading={isSubmitting}>
+          <Button className="mt-4 w-full" loading={isSubmitting} type="submit">
             {question.skippable ? "Skip" : "Next"}
           </Button>
         )}
@@ -244,7 +244,7 @@ function getResponses(seachParams: URLSearchParams): Record<string, string> {
       acc[name] = seachParams.get(name) ?? "";
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, string>
   );
 
   return responses;

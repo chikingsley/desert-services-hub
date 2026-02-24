@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { env } from "@/env";
-import { withEmailAccount } from "@/utils/middleware";
 import { SafeError } from "@/utils/error";
+import { getIntegration } from "@/utils/mcp/integrations";
+import { generateOAuthUrl } from "@/utils/mcp/oauth";
+import { withEmailAccount } from "@/utils/middleware";
 import {
-  oauthStateCookieOptions,
+  generateOAuthState,
+  getMcpOAuthStateType,
   getMcpPkceCookieName,
   getMcpStateCookieName,
-  getMcpOAuthStateType,
+  oauthStateCookieOptions,
 } from "@/utils/oauth/state";
-import { getIntegration } from "@/utils/mcp/integrations";
-import { generateOAuthState } from "@/utils/oauth/state";
-import { generateOAuthUrl } from "@/utils/mcp/oauth";
 import { hasTierAccess } from "@/utils/premium";
 import prisma from "@/utils/prisma";
 
@@ -40,7 +40,7 @@ export const GET = withEmailAccount(
       })
     ) {
       throw new SafeError(
-        "Integrations require a Plus plan or higher. Please upgrade to continue.",
+        "Integrations require a Plus plan or higher. Please upgrade to continue."
       );
     }
 
@@ -89,5 +89,5 @@ export const GET = withEmailAccount(
       logger.error("Failed to generate MCP auth URL", { error });
       throw new SafeError("Failed to generate authorization URL");
     }
-  },
+  }
 );

@@ -9,9 +9,9 @@ import { PDFDocument } from "pdf-lib";
 const PDF_HEADER = "%PDF";
 
 export interface GeneratePdfOptions {
-  includeSheets?: boolean;
   downloadSheetsFromUrl?: boolean;
   failOnMissingSheets?: boolean;
+  includeSheets?: boolean;
 }
 
 export interface GeneratePdfResult {

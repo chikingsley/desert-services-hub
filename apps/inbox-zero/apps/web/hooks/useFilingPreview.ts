@@ -7,6 +7,6 @@ export function useFilingPreview(shouldFetch: boolean) {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-    },
+    }
   );
 }

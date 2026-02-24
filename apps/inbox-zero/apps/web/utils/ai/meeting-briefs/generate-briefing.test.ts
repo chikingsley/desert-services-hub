@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MeetingBriefingData } from "@/utils/meeting-briefs/gather-context";
 
 vi.mock("server-only", () => ({}));
@@ -19,13 +19,13 @@ vi.mock("@/utils/ai/helpers", () => ({
 <user_info>
 <email>${emailAccount.email}</email>
 <about>${emailAccount.about}</about>
-</user_info>`,
+</user_info>`
   ),
 }));
 vi.mock("@/utils/stringify-email", () => ({
   stringifyEmailSimple: vi.fn(
     (email) =>
-      `From: ${email.from}\nSubject: ${email.subject}\nBody: ${email.content}`,
+      `From: ${email.from}\nSubject: ${email.subject}\nBody: ${email.content}`
   ),
 }));
 vi.mock("@/utils/get-email-from-message", () => ({
@@ -38,8 +38,8 @@ vi.mock("@/utils/get-email-from-message", () => ({
 
 vi.doUnmock("@/utils/date");
 
-import { buildPrompt } from "./generate-briefing";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { buildPrompt } from "./generate-briefing";
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -7,7 +7,7 @@ import type { ParsedMessage } from "@/utils/types";
  */
 export async function findThreadWithMultipleMessages(
   provider: EmailProvider,
-  minMessages = 2,
+  minMessages = 2
 ): Promise<{ threadId: string; messages: ParsedMessage[] }> {
   const inboxMessages = await provider.getInboxMessages(50);
 
@@ -23,6 +23,6 @@ export async function findThreadWithMultipleMessages(
 
   throw new Error(
     `TEST PREREQUISITE NOT MET: No thread found with ${minMessages}+ messages. ` +
-      "Send an email to the test account and reply to it to create a multi-message thread.",
+      "Send an email to the test account and reply to it to create a multi-message thread."
   );
 }

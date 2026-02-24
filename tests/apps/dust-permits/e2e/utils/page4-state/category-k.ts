@@ -6,32 +6,32 @@ import type { SelectorMap } from "@/form-data";
 import type { ValidationHelpers } from "./helpers";
 
 export interface CategoryKState {
-  hasSoilTextureOnSite: boolean;
-  hasSoilTextureImported: boolean;
-  hasWaterSource: boolean;
-  hasWaterMethod: boolean;
-  hasMeteredHydrantQty: boolean;
-  hasMeteredHydrantSize: boolean;
-  hasWaterTowerQty: boolean;
-  hasWaterTowerSize: boolean;
-  hasWaterPondQty: boolean;
-  hasWaterPondSize: boolean;
-  hasOffSiteQty: boolean;
-  hasOffSiteSize: boolean;
   hasHoseBibQty: boolean;
   hasHoseBibSize: boolean;
-  hasOtherSourceQty: boolean;
-  hasOtherSourceSize: boolean;
   hasHoseQty: boolean;
   hasHoseSize: boolean;
-  hasWaterTruckQty: boolean;
-  hasWaterTruckSize: boolean;
-  hasWaterPullQty: boolean;
-  hasWaterPullSize: boolean;
-  hasWaterBuffaloQty: boolean;
-  hasWaterBuffaloSize: boolean;
+  hasMeteredHydrantQty: boolean;
+  hasMeteredHydrantSize: boolean;
+  hasOffSiteQty: boolean;
+  hasOffSiteSize: boolean;
   hasOtherMethodQty: boolean;
   hasOtherMethodSize: boolean;
+  hasOtherSourceQty: boolean;
+  hasOtherSourceSize: boolean;
+  hasSoilTextureImported: boolean;
+  hasSoilTextureOnSite: boolean;
+  hasWaterBuffaloQty: boolean;
+  hasWaterBuffaloSize: boolean;
+  hasWaterMethod: boolean;
+  hasWaterPondQty: boolean;
+  hasWaterPondSize: boolean;
+  hasWaterPullQty: boolean;
+  hasWaterPullSize: boolean;
+  hasWaterSource: boolean;
+  hasWaterTowerQty: boolean;
+  hasWaterTowerSize: boolean;
+  hasWaterTruckQty: boolean;
+  hasWaterTruckSize: boolean;
 }
 
 export function getCategoryKState(

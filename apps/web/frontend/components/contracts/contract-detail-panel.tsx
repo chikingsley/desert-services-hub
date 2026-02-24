@@ -35,9 +35,9 @@ import { cn } from "@/lib/utils";
 
 interface ContractDetailPanelProps {
   contract: PipelineContract | null;
-  open: boolean;
-  onClose: () => void;
   onAdvance: (contract: PipelineContract) => void;
+  onClose: () => void;
+  open: boolean;
 }
 
 function formatCurrency(amount: number): string {

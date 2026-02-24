@@ -1,14 +1,14 @@
 import type { AnalyzeSenderPatternBody } from "@/app/api/ai/analyze-sender-pattern/route";
-import {
-  INTERNAL_API_KEY_HEADER,
-  getInternalApiUrl,
-} from "@/utils/internal-api";
 import { env } from "@/env";
+import {
+  getInternalApiUrl,
+  INTERNAL_API_KEY_HEADER,
+} from "@/utils/internal-api";
 import type { Logger } from "@/utils/logger";
 
 export async function analyzeSenderPattern(
   body: AnalyzeSenderPatternBody,
-  logger: Logger,
+  logger: Logger
 ) {
   try {
     const response = await fetch(
@@ -20,7 +20,7 @@ export async function analyzeSenderPattern(
           "Content-Type": "application/json",
           [INTERNAL_API_KEY_HEADER]: env.INTERNAL_API_KEY,
         },
-      },
+      }
     );
 
     if (!response.ok) {

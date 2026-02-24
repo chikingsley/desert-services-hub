@@ -4,7 +4,7 @@ import { putSsmParameterWithTags, runAwsCommand } from "./aws-cli";
 export function getWebhookUrl(
   appName: string,
   envName: string,
-  env: NodeJS.ProcessEnv,
+  env: NodeJS.ProcessEnv
 ): string {
   const stackResult = runAwsCommand(env, [
     "cloudformation",
@@ -58,7 +58,7 @@ export function setupGooglePubSub(params: {
   spawnSync(
     "gcloud",
     ["pubsub", "topics", "create", topicName, "--project", projectId],
-    { stdio: "pipe" },
+    { stdio: "pipe" }
   );
 
   // Grant Gmail service account publish permissions
@@ -74,7 +74,7 @@ export function setupGooglePubSub(params: {
       "--project",
       projectId,
     ],
-    { stdio: "pipe" },
+    { stdio: "pipe" }
   );
   if (iamResult.status !== 0) {
     return {
@@ -104,7 +104,7 @@ export function setupGooglePubSub(params: {
       "--project",
       projectId,
     ],
-    { stdio: "pipe" },
+    { stdio: "pipe" }
   );
 
   // Ignore "already exists" error

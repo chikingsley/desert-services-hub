@@ -69,18 +69,18 @@ export function FAQs() {
       <SectionHeading>Frequently asked questions</SectionHeading>
       <SectionContent>
         <CardWrapper>
-          <dl className="grid md:grid-cols-2 gap-6">
+          <dl className="grid gap-6 md:grid-cols-2">
             {faqs.map((faq) => (
               <Card
-                variant="extra-rounding"
                 className="gap-4"
                 key={faq.question}
+                variant="extra-rounding"
               >
                 <CardContent>
                   <Paragraph
                     as="dt"
+                    className="mb-4 font-semibold tracking-tight"
                     color="gray-900"
-                    className="font-semibold tracking-tight mb-4"
                   >
                     {faq.question}
                   </Paragraph>

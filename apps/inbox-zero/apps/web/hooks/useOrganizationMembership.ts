@@ -6,6 +6,6 @@ export function useOrganizationMembership(emailAccountId?: string) {
   const { emailAccountId: contextId } = useAccount();
   const id = emailAccountId ?? contextId;
   return useSWR<GetOrganizationMembershipResponse>(
-    id ? ["/api/user/organization-membership", id] : null,
+    id ? ["/api/user/organization-membership", id] : null
   );
 }

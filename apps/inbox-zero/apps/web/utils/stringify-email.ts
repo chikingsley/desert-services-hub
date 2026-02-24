@@ -17,7 +17,7 @@ export function stringifyEmail(email: EmailForLLM, maxLength: number) {
     const attachmentsXml = email.attachments
       .map(
         (att) =>
-          `<attachment filename="${att.filename}" type="${att.mimeType}" size="${att.size}" />`,
+          `<attachment filename="${att.filename}" type="${att.mimeType}" size="${att.size}" />`
       )
       .join("\n");
     emailParts.push(`<attachments>\n${attachmentsXml}\n</attachments>`);

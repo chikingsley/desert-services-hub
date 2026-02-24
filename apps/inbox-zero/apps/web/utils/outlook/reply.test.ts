@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createOutlookReplyContent } from "@/utils/outlook/reply";
 import type { ParsedMessage } from "@/utils/types";
 
@@ -14,19 +14,19 @@ describe("Outlook email formatting", () => {
 
     // Mock all date methods to use UTC values
     vi.spyOn(Date.prototype, "getHours").mockImplementation(function (
-      this: Date,
+      this: Date
     ) {
       return this.getUTCHours();
     });
 
     vi.spyOn(Date.prototype, "getMinutes").mockImplementation(function (
-      this: Date,
+      this: Date
     ) {
       return this.getUTCMinutes();
     });
 
     vi.spyOn(Date.prototype, "getDate").mockImplementation(function (
-      this: Date,
+      this: Date
     ) {
       return this.getUTCDate();
     });
@@ -36,12 +36,20 @@ describe("Outlook email formatting", () => {
     mockToLocaleString.mockImplementation(function (
       this: Date,
       _locales?: Intl.LocalesArgument,
-      options?: Intl.DateTimeFormatOptions,
+      options?: Intl.DateTimeFormatOptions
     ) {
-      if (options?.weekday === "short") return "Thu";
-      if (options?.month === "short") return "Feb";
-      if (options?.year === "numeric") return "2025";
-      if (options?.day === "numeric") return "6";
+      if (options?.weekday === "short") {
+        return "Thu";
+      }
+      if (options?.month === "short") {
+        return "Feb";
+      }
+      if (options?.year === "numeric") {
+        return "2025";
+      }
+      if (options?.day === "numeric") {
+        return "6";
+      }
       return ""; // Default case
     });
   });
@@ -79,7 +87,7 @@ describe("Outlook email formatting", () => {
   <div style="margin-top: 10px;">
     <div>Original message content</div>
   </div>
-</div>`.trim(),
+</div>`.trim()
     );
   });
 
@@ -111,7 +119,7 @@ describe("Outlook email formatting", () => {
   <div style="margin-top: 10px;">
     <div>תוכן ההודעה המקורית</div>
   </div>
-</div>`.trim(),
+</div>`.trim()
     );
   });
 
@@ -140,7 +148,7 @@ describe("Outlook email formatting", () => {
 
 On Thu, 6 Feb 2025 at 21:23, John Doe <john@example.com> wrote:
 
-> Original message content`,
+> Original message content`
     );
   });
 });

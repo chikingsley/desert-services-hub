@@ -4,7 +4,6 @@ const GOOGLE_GEOCODE_ENDPOINT =
   "https://maps.googleapis.com/maps/api/geocode/json";
 
 interface GeocodeResponse {
-  status?: string;
   error_message?: string;
   results?: Array<{
     geometry?: {
@@ -14,6 +13,7 @@ interface GeocodeResponse {
       };
     };
   }>;
+  status?: string;
 }
 
 function getApiKey(provided?: string): string | null {

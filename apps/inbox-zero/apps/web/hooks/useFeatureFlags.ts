@@ -54,7 +54,7 @@ export type PricingFrequencyDefault = "control" | "monthly";
 export function usePricingFrequencyDefault() {
   return (
     (useFeatureFlagVariantKey(
-      "pricing-frequency-default",
+      "pricing-frequency-default"
     ) as PricingFrequencyDefault) || "control"
   );
 }

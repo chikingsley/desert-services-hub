@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { Settings2Icon } from "lucide-react";
-import { PageHeading, TypographyP } from "@/components/Typography";
+import Image from "next/image";
 import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
-import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
 import { CategoriesSetup } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingCategories";
+import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
+import { PageHeading, TypographyP } from "@/components/Typography";
 
 export function StepLabels({
   emailAccountId,
@@ -20,13 +20,13 @@ export function StepLabels({
     <div className="relative">
       <div className="xl:pr-[50%]">
         <OnboardingWrapper className="py-0">
-          <IconCircle size="lg" className="mx-auto">
+          <IconCircle className="mx-auto" size="lg">
             <Settings2Icon className="size-6" />
           </IconCircle>
 
-          <div className="text-center mt-4">
+          <div className="mt-4 text-center">
             <PageHeading>How do you want your inbox organized?</PageHeading>
-            <TypographyP className="mt-2 max-w-lg mx-auto">
+            <TypographyP className="mx-auto mt-2 max-w-lg">
               We'll use these labels to organize your inbox. You can add custom
               labels and change them later.
             </TypographyP>
@@ -34,20 +34,20 @@ export function StepLabels({
 
           <CategoriesSetup
             emailAccountId={emailAccountId}
-            provider={provider}
             onNext={onNext}
+            provider={provider}
           />
         </OnboardingWrapper>
       </div>
 
-      <div className="fixed top-0 right-0 w-1/2 h-screen bg-white items-center justify-center hidden xl:flex px-10">
-        <div className="rounded-2xl p-4 bg-slate-50 border border-slate-200">
+      <div className="fixed top-0 right-0 hidden h-screen w-1/2 items-center justify-center bg-white px-10 xl:flex">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <Image
-            src="/images/assistant/labels.png"
             alt="Categorize your emails"
-            width={1200}
-            height={800}
             className="rounded-xl border border-slate-200"
+            height={800}
+            src="/images/assistant/labels.png"
+            width={1200}
           />
         </div>
       </div>

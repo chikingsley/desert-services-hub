@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { validateOAuthCallback } from "./callback-validation";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createScopedLogger } from "@/utils/logger";
 import { parseOAuthState } from "@/utils/oauth/state";
+import { validateOAuthCallback } from "./callback-validation";
 
 const logger = createScopedLogger("test");
 

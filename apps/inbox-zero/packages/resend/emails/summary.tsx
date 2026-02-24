@@ -1,18 +1,18 @@
 import {
-  Button,
-  Text,
-  Html,
-  Head,
-  Preview,
-  Tailwind,
   Body,
-  Container,
-  Link,
-  Section,
-  Img,
-  Heading,
-  Row,
+  Button,
   Column,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Img,
+  Link,
+  Preview,
+  Row,
+  Section,
+  Tailwind,
+  Text,
 } from "@react-email/components";
 
 type EmailItem = {
@@ -22,15 +22,15 @@ type EmailItem = {
 };
 
 export interface SummaryEmailProps {
+  awaitingReply?: EmailItem[];
+  awaitingReplyCount?: number;
   baseUrl: string;
   coldEmailers: EmailItem[];
-  // Reply tracker stats
-  needsReplyCount?: number;
-  awaitingReplyCount?: number;
+  needsAction?: EmailItem[];
   needsActionCount?: number;
   needsReply?: EmailItem[];
-  awaitingReply?: EmailItem[];
-  needsAction?: EmailItem[];
+  // Reply tracker stats
+  needsReplyCount?: number;
   unsubscribeToken: string;
 }
 
@@ -57,23 +57,23 @@ export default function SummaryEmail(props: SummaryEmailProps) {
         <Body className="bg-white font-sans">
           <Container className="mx-auto w-full max-w-[600px] p-0">
             <Section className="p-8 text-center">
-              <Link href={baseUrl} className="text-[15px]">
+              <Link className="text-[15px]" href={baseUrl}>
                 <Img
-                  src={"https://www.getinboxzero.com/icon.png"}
-                  width="40"
-                  height="40"
                   alt="Inbox Zero"
                   className="mx-auto my-0"
+                  height="40"
+                  src={"https://www.getinboxzero.com/icon.png"}
+                  width="40"
                 />
               </Link>
 
-              <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
+              <Text className="mx-0 mt-4 mb-8 p-0 text-center font-normal text-2xl">
                 <span className="font-semibold tracking-tighter">
                   Inbox Zero
                 </span>
               </Text>
 
-              <Heading className="my-4 text-4xl font-medium leading-tight">
+              <Heading className="my-4 font-medium text-4xl leading-tight">
                 Your Weekly Update
               </Heading>
               <Text className="mb-8 text-lg leading-8">
@@ -82,16 +82,16 @@ export default function SummaryEmail(props: SummaryEmailProps) {
             </Section>
 
             <ReplyTracker
-              needsReplyCount={needsReplyCount ?? 0}
+              awaitingReply={awaitingReply ?? []}
               awaitingReplyCount={awaitingReplyCount ?? 0}
+              baseUrl={baseUrl}
+              needsAction={needsAction ?? []}
               needsActionCount={needsActionCount ?? 0}
               needsReply={needsReply ?? []}
-              awaitingReply={awaitingReply ?? []}
-              needsAction={needsAction ?? []}
-              baseUrl={baseUrl}
+              needsReplyCount={needsReplyCount ?? 0}
             />
 
-            <ColdEmails coldEmailers={coldEmailers} baseUrl={baseUrl} />
+            <ColdEmails baseUrl={baseUrl} coldEmailers={coldEmailers} />
 
             <Footer baseUrl={baseUrl} unsubscribeToken={unsubscribeToken} />
           </Container>
@@ -180,35 +180,37 @@ function ReplyTracker({
   const hasReplyTrackerItems =
     needsReplyCount > 0 || awaitingReplyCount > 0 || needsActionCount > 0;
 
-  if (!hasReplyTrackerItems) return null;
+  if (!hasReplyTrackerItems) {
+    return null;
+  }
 
   return (
     <Section className="rounded-2xl bg-[#ffb366]/10 bg-[radial-gradient(circle_at_bottom_right,#ffb366_0%,transparent_60%)] p-8 text-center">
-      <Heading className="m-0 text-3xl font-medium text-[#a63b00]">
+      <Heading className="m-0 font-medium text-3xl text-[#a63b00]">
         Email Follow-ups
       </Heading>
 
       <Row className="mt-5">
         <Column className={`${columnWidth} text-center`}>
-          <Text className="text-sm font-medium text-[#a63b00]">Need Reply</Text>
-          <Text className="my-1 text-4xl font-bold text-gray-900">
+          <Text className="font-medium text-[#a63b00] text-sm">Need Reply</Text>
+          <Text className="my-1 font-bold text-4xl text-gray-900">
             {needsReplyCount}
           </Text>
         </Column>
         <Column className={`${columnWidth} text-center`}>
-          <Text className="text-sm font-medium text-[#a63b00]">
+          <Text className="font-medium text-[#a63b00] text-sm">
             Awaiting Reply
           </Text>
-          <Text className="my-1 text-4xl font-bold text-gray-900">
+          <Text className="my-1 font-bold text-4xl text-gray-900">
             {awaitingReplyCount}
           </Text>
         </Column>
         {showNeedsAction && (
           <Column className={`${columnWidth} text-center`}>
-            <Text className="text-sm font-medium text-[#a63b00]">
+            <Text className="font-medium text-[#a63b00] text-sm">
               Needs Action
             </Text>
-            <Text className="my-1 text-4xl font-bold text-gray-900">
+            <Text className="my-1 font-bold text-4xl text-gray-900">
               {needsActionCount}
             </Text>
           </Column>
@@ -230,7 +232,7 @@ function ReplyTracker({
       )}
 
       {hasReplyTrackerItems && (
-        <Section className="text-center mt-[32px] mb-[32px]">
+        <Section className="mt-[32px] mb-[32px] text-center">
           <Button
             href={`${baseUrl}/reply-tracker`}
             style={{
@@ -255,24 +257,26 @@ function ColdEmails({
   coldEmailers: EmailItem[];
   baseUrl: string;
 }) {
-  if (!coldEmailers.length) return null;
+  if (!coldEmailers.length) {
+    return null;
+  }
 
   return (
     <Section className="my-6 rounded-2xl bg-[#3b82f6]/5 bg-[radial-gradient(circle_at_bottom_right,#3b82f6_0%,transparent_60%)] p-8 text-center">
-      <Heading className="m-0 text-3xl font-medium text-[#1e40af]">
+      <Heading className="m-0 font-medium text-3xl text-[#1e40af]">
         Cold Emails
       </Heading>
-      <Text className="my-4 text-5xl font-bold text-gray-900">
+      <Text className="my-4 font-bold text-5xl text-gray-900">
         {coldEmailers.length}
       </Text>
-      <Text className="mb-4 text-xl text-gray-900">received this week</Text>
+      <Text className="mb-4 text-gray-900 text-xl">received this week</Text>
 
       {coldEmailers.length > 0 && (
         <EmailList description="" emails={coldEmailers} />
       )}
 
       {coldEmailers.length > 0 && (
-        <Section className="text-center mt-[32px] mb-[32px]">
+        <Section className="mt-[32px] mb-[32px] text-center">
           <Button
             href={`${baseUrl}/cold-email-blocker`}
             style={{
@@ -303,8 +307,8 @@ function Footer({
         You're receiving this email because you're subscribed to Inbox Zero
         stats updates. You can change this in your{" "}
         <Link
-          href={`${baseUrl}/settings#email-updates`}
           className="text-[15px]"
+          href={`${baseUrl}/settings#email-updates`}
         >
           settings
         </Link>
@@ -312,8 +316,8 @@ function Footer({
       </Text>
 
       <Link
-        href={`${baseUrl}/api/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`}
         className="text-[15px]"
+        href={`${baseUrl}/api/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`}
       >
         Unsubscribe from emails like this
       </Link>
@@ -323,14 +327,14 @@ function Footer({
 
 function EmailCard({ email }: { email: EmailItem }) {
   return (
-    <Section className="my-3 rounded-lg bg-white/50 p-4 text-left shadow-sm border border-[#ffb366]/20">
+    <Section className="my-3 rounded-lg border border-[#ffb366]/20 bg-white/50 p-4 text-left shadow-sm">
       <Row>
         <Column>
           <Text className="m-0 font-semibold">{email.from}</Text>
           <Text className="m-0 text-gray-600">{email.subject}</Text>
         </Column>
         <Column align="right">
-          <Text className="m-0 text-sm text-gray-500">
+          <Text className="m-0 text-gray-500 text-sm">
             {email.sentAt ? new Date(email.sentAt).toLocaleDateString() : ""}
           </Text>
         </Column>
@@ -346,15 +350,17 @@ function EmailList({
   description: string;
   emails: EmailItem[];
 }) {
-  if (emails.length === 0) return null;
+  if (emails.length === 0) {
+    return null;
+  }
 
   return (
     <div className="mt-8">
-      <Text className="mb-4 text-lg font-medium text-gray-900">
+      <Text className="mb-4 font-medium text-gray-900 text-lg">
         {description}
       </Text>
       {emails.map((email) => (
-        <EmailCard key={email.from + email.subject} email={email} />
+        <EmailCard email={email} key={email.from + email.subject} />
       ))}
     </div>
   );

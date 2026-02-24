@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Loading } from "@/components/Loading";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,10 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loading } from "@/components/Loading";
 import { useUser } from "@/hooks/useUser";
 import { handleInvitationAction } from "@/utils/actions/organization";
-import { setInvitationCookie, clearInvitationCookie } from "@/utils/cookies";
+import { clearInvitationCookie, setInvitationCookie } from "@/utils/cookies";
 
 export default function AcceptInvitationPage() {
   const params = useParams();
@@ -37,15 +37,16 @@ export default function AcceptInvitationPage() {
         hasProcessed ||
         !invitationId ||
         Array.isArray(invitationId)
-      )
+      ) {
         return;
+      }
 
       try {
         if (!user) {
           setHasProcessed(true);
           setInvitationCookie(invitationId);
           router.push(
-            `/login?next=/organizations/invitations/${invitationId}/accept`,
+            `/login?next=/organizations/invitations/${invitationId}/accept`
           );
           return;
         }
@@ -65,7 +66,7 @@ export default function AcceptInvitationPage() {
         }
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to process invitation",
+          err instanceof Error ? err.message : "Failed to process invitation"
         );
       } finally {
         setLoading(false);
@@ -79,7 +80,7 @@ export default function AcceptInvitationPage() {
 
   if (!invitationId || Array.isArray(invitationId)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Invalid invitation</CardTitle>
@@ -94,7 +95,7 @@ export default function AcceptInvitationPage() {
 
   if (loading || userLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
           <CardContent className="py-8">
             <Loading />
@@ -106,7 +107,7 @@ export default function AcceptInvitationPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Invitation error</CardTitle>
@@ -119,7 +120,7 @@ export default function AcceptInvitationPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Welcome!</CardTitle>
@@ -128,7 +129,7 @@ export default function AcceptInvitationPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => router.push("/welcome")} className="w-full">
+            <Button className="w-full" onClick={() => router.push("/welcome")}>
               Continue
             </Button>
           </CardContent>

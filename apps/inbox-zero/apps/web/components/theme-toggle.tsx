@@ -11,10 +11,9 @@ export function ThemeToggle({ focus }: { focus?: boolean }) {
 
   return (
     <button
-      type="button"
       className={cn(
-        "flex w-full items-center px-3 py-1 text-sm leading-6 text-foreground",
-        focus && "bg-accent",
+        "flex w-full items-center px-3 py-1 text-foreground text-sm leading-6",
+        focus && "bg-accent"
       )}
       onClick={toggleTheme}
       onKeyDown={(e) => {
@@ -23,6 +22,7 @@ export function ThemeToggle({ focus }: { focus?: boolean }) {
           toggleTheme();
         }
       }}
+      type="button"
     >
       {theme === "light" ? (
         <MoonIcon className="mr-2 h-4 w-4" />

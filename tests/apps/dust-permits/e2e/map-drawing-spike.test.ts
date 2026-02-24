@@ -501,9 +501,9 @@ describeSuite("Map Drawing Spike", () => {
 
         // Try common map container IDs
         interface MapType {
-          toScreen?: (p: unknown) => { x: number; y: number };
           extent?: { spatialReference?: { wkid?: number } };
           spatialReference?: { wkid?: number };
+          toScreen?: (p: unknown) => { x: number; y: number };
         }
         const mapIds = ["map", "mapDiv", "map_container", "esri_dijit_Map_0"];
         let map: MapType | null = null;
@@ -679,10 +679,10 @@ describeSuite("Map Drawing Spike", () => {
 
         // Find map
         interface MapInfoType {
-          toScreen?: (p: unknown) => { x: number; y: number };
           extent?: { getCenter?: () => unknown };
-          width?: number;
           height?: number;
+          toScreen?: (p: unknown) => { x: number; y: number };
+          width?: number;
         }
         const mapIds = ["map", "mapDiv", "map_container"];
         let map: MapInfoType | null = null;
@@ -955,11 +955,11 @@ describeSuite("Map Drawing Spike", () => {
 
           // Find map
           interface DrawMapType {
-            graphics?: { add: (g: unknown) => void; length?: number };
             extent?: {
               getCenter?: () => { x: number; y: number };
               spatialReference?: unknown;
             };
+            graphics?: { add: (g: unknown) => void; length?: number };
             spatialReference?: unknown;
           }
           const mapIds = ["map", "mapDiv", "map_container"];

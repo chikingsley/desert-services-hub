@@ -1,16 +1,17 @@
 "use client";
 
+import { fromPairs } from "lodash";
 import { useMemo } from "react";
 import type { DateRange } from "react-day-picker";
 import { LabelList, Pie, PieChart } from "recharts";
-import { fromPairs } from "lodash";
+import type { RuleStatsResponse } from "@/app/api/user/stats/rule-stats/route";
 import { LoadingContent } from "@/components/LoadingContent";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Card as ShadcnCard,
+  CardBasic,
   CardContent,
   CardHeader,
   CardTitle,
+  Card as ShadcnCard,
 } from "@/components/ui/card";
 import {
   type ChartConfig,
@@ -18,13 +19,12 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getDateRangeParams } from "./params";
 import { useOrgSWR } from "@/hooks/useOrgSWR";
-import type { RuleStatsResponse } from "@/app/api/user/stats/rule-stats/route";
-import { BarChart } from "./BarChart";
-import { CardBasic } from "@/components/ui/card";
 import { COLORS } from "@/utils/colors";
+import { BarChart } from "./BarChart";
+import { getDateRangeParams } from "./params";
 
 interface RuleStatsChartProps {
   dateRange?: DateRange;
@@ -43,11 +43,13 @@ export function RuleStatsChart({ dateRange, title }: RuleStatsChartProps) {
   const params = getDateRangeParams(dateRange);
 
   const { data, isLoading, error } = useOrgSWR<RuleStatsResponse>(
-    `/api/user/stats/rule-stats?${new URLSearchParams(params as Record<string, string>)}`,
+    `/api/user/stats/rule-stats?${new URLSearchParams(params as Record<string, string>)}`
   );
 
   const barChartData = useMemo(() => {
-    if (!data?.ruleStats) return [];
+    if (!data?.ruleStats) {
+      return [];
+    }
     return data.ruleStats.map((rule) => ({
       group: rule.ruleName,
       executed: rule.executedCount,
@@ -55,8 +57,9 @@ export function RuleStatsChart({ dateRange, title }: RuleStatsChartProps) {
   }, [data]);
 
   const { pieChartData, chartConfig, barChartConfig } = useMemo(() => {
-    if (!data?.ruleStats)
+    if (!data?.ruleStats) {
       return { pieChartData: [], chartConfig: {}, barChartConfig: {} };
+    }
 
     const pieData = data.ruleStats.map((rule, index) => ({
       name: rule.ruleName,
@@ -75,7 +78,7 @@ export function RuleStatsChart({ dateRange, title }: RuleStatsChartProps) {
             label: rule.ruleName,
             color: CHART_COLORS[index % CHART_COLORS.length],
           },
-        ]),
+        ])
       ),
     };
 
@@ -92,8 +95,8 @@ export function RuleStatsChart({ dateRange, title }: RuleStatsChartProps) {
 
   return (
     <LoadingContent
-      loading={isLoading}
       error={error}
+      loading={isLoading}
       loadingComponent={<Skeleton className="h-64 w-full rounded" />}
     >
       {data && barChartData.length > 0 && (
@@ -107,40 +110,40 @@ export function RuleStatsChart({ dateRange, title }: RuleStatsChartProps) {
               </TabsList>
             </div>
 
-            <TabsContent value="bar" className="mt-4">
+            <TabsContent className="mt-4" value="bar">
               <BarChart
-                data={barChartData}
                 config={barChartConfig}
+                data={barChartData}
                 dataKeys={["executed"]}
-                xAxisKey="group"
                 xAxisFormatter={(value) => value}
+                xAxisKey="group"
               />
             </TabsContent>
 
             <TabsContent value="pie">
               <ShadcnCard className="border-0 shadow-none">
                 <CardHeader className="items-center pb-0">
-                  <CardTitle className="text-base font-normal text-muted-foreground">
+                  <CardTitle className="font-normal text-base text-muted-foreground">
                     Rule Execution Distribution
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 pb-0">
                   <ChartContainer
-                    config={chartConfig}
                     className="mx-auto aspect-square max-h-[300px] [&_.recharts-text]:fill-background"
+                    config={chartConfig}
                   >
                     <PieChart>
                       <ChartTooltip
                         content={
-                          <ChartTooltipContent nameKey="value" hideLabel />
+                          <ChartTooltipContent hideLabel nameKey="value" />
                         }
                       />
                       <Pie data={pieChartData} dataKey="value">
                         <LabelList
-                          dataKey="name"
                           className="fill-background"
-                          stroke="none"
+                          dataKey="name"
                           fontSize={12}
+                          stroke="none"
                         />
                       </Pie>
                     </PieChart>
@@ -154,7 +157,7 @@ export function RuleStatsChart({ dateRange, title }: RuleStatsChartProps) {
       {data && barChartData.length === 0 && (
         <CardBasic>
           <p>{title}</p>
-          <div className="mt-4 h-72 flex items-center justify-center text-muted-foreground">
+          <div className="mt-4 flex h-72 items-center justify-center text-muted-foreground">
             <p>No executed rules found for this period.</p>
           </div>
         </CardBasic>

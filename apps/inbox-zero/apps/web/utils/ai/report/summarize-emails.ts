@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { createScopedLogger } from "@/utils/logger";
-import { createGenerateObject } from "@/utils/llms";
-import type { EmailForLLM } from "@/utils/types";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { sleep } from "@/utils/sleep";
-import { getModel } from "@/utils/llms/model";
 import { getEmailListPrompt } from "@/utils/ai/helpers";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { createScopedLogger } from "@/utils/logger";
+import { sleep } from "@/utils/sleep";
+import type { EmailForLLM } from "@/utils/types";
 
 const logger = createScopedLogger("email-report-summarize-emails");
 
@@ -21,7 +21,7 @@ export type EmailSummary = z.infer<typeof emailSummarySchema>;
 
 export async function aiSummarizeEmails(
   emails: EmailForLLM[],
-  emailAccount: EmailAccountWithAI,
+  emailAccount: EmailAccountWithAI
 ): Promise<EmailSummary[]> {
   if (emails.length === 0) {
     logger.warn("No emails to summarize, returning empty array");
@@ -40,7 +40,7 @@ export async function aiSummarizeEmails(
       batch,
       emailAccount,
       batchNumber,
-      totalBatches,
+      totalBatches
     );
     results.push(...batchResults);
 
@@ -56,7 +56,7 @@ async function processEmailBatch(
   emails: EmailForLLM[],
   emailAccount: EmailAccountWithAI,
   batchNumber: number,
-  totalBatches: number,
+  totalBatches: number
 ): Promise<EmailSummary[]> {
   const system = `You are an assistant that processes user emails to extract their core meaning for later analysis.
 

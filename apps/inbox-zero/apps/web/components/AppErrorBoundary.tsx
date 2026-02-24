@@ -4,7 +4,6 @@ import * as Sentry from "@sentry/nextjs";
 import { AlertCircle, Home, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
-import { env } from "@/env";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -13,6 +12,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { env } from "@/env";
 
 export function AppErrorBoundary({
   error,
@@ -29,7 +29,7 @@ export function AppErrorBoundary({
     <div className="flex h-full items-center justify-center p-4">
       <Empty>
         <EmptyHeader>
-          <EmptyMedia variant="icon" className="bg-destructive/10">
+          <EmptyMedia className="bg-destructive/10" variant="icon">
             <AlertCircle className="text-destructive" />
           </EmptyMedia>
           <EmptyTitle>Something went wrong</EmptyTitle>
@@ -49,11 +49,11 @@ export function AppErrorBoundary({
             </Link>
           </Button>
         </div>
-        <p className="mt-6 text-sm text-muted-foreground">
+        <p className="mt-6 text-muted-foreground text-sm">
           If this error persists, please contact support at{" "}
           <a
-            href={`mailto:${env.NEXT_PUBLIC_SUPPORT_EMAIL}`}
             className="underline"
+            href={`mailto:${env.NEXT_PUBLIC_SUPPORT_EMAIL}`}
           >
             {env.NEXT_PUBLIC_SUPPORT_EMAIL}
           </a>

@@ -16,16 +16,16 @@ import {
 import { cn } from "@/lib/utils";
 
 interface VirtualizedTableProps<T> {
-  rows: T[];
-  rowHeight?: number;
-  overscan?: number;
   colSpan: number;
-  maxBodyHeightClassName?: string;
-  header: ReactNode;
-  renderRow: (row: T, index: number) => ReactNode;
   empty: ReactNode;
-  tableClassName?: string;
+  header: ReactNode;
+  maxBodyHeightClassName?: string;
+  overscan?: number;
+  renderRow: (row: T, index: number) => ReactNode;
+  rowHeight?: number;
+  rows: T[];
   scrollMode?: "container" | "page";
+  tableClassName?: string;
 }
 
 export function VirtualizedTable<T>({

@@ -2,12 +2,12 @@
  * Shared helpers for E2E tests
  */
 
-import prisma from "@/utils/prisma";
 import type { EmailProvider } from "@/utils/email/types";
+import prisma from "@/utils/prisma";
 
 export async function findOldMessage(
   provider: EmailProvider,
-  daysOld = 7,
+  daysOld = 7
 ): Promise<{ threadId: string; messageId: string }> {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysOld);
@@ -32,7 +32,7 @@ export async function findOldMessage(
     selectedMessage = sortedByDate[0];
   }
 
-  if (!selectedMessage?.id || !selectedMessage?.threadId) {
+  if (!(selectedMessage?.id && selectedMessage?.threadId)) {
     throw new Error("No message found in inbox for testing");
   }
 
@@ -59,7 +59,15 @@ export async function ensureTestPremiumAccount(userId: string): Promise<void> {
     data: { aiApiKey: null },
   });
 
-  if (!user.premium) {
+  if (user.premium) {
+    await prisma.premium.update({
+      where: { id: user.premium.id },
+      data: {
+        stripeSubscriptionStatus: "active",
+        tier: "STARTER_MONTHLY",
+      },
+    });
+  } else {
     const premium = await prisma.premium.create({
       data: {
         tier: "STARTER_MONTHLY",
@@ -71,14 +79,6 @@ export async function ensureTestPremiumAccount(userId: string): Promise<void> {
       where: { id: user.id },
       data: { premiumId: premium.id },
     });
-  } else {
-    await prisma.premium.update({
-      where: { id: user.premium.id },
-      data: {
-        stripeSubscriptionStatus: "active",
-        tier: "STARTER_MONTHLY",
-      },
-    });
   }
 }
 
@@ -89,7 +89,7 @@ export async function ensureTestPremiumAccount(userId: string): Promise<void> {
  * Note: This creates a rule that matches ALL emails - use only in test accounts!
  */
 export async function ensureCatchAllTestRule(
-  emailAccountId: string,
+  emailAccountId: string
 ): Promise<void> {
   const existingRule = await prisma.rule.findFirst({
     where: {

@@ -1,7 +1,7 @@
+import { env } from "@/env";
+import { ActionType, SystemType } from "@/generated/prisma/enums";
 import { DEFAULT_COLD_EMAIL_PROMPT } from "@/utils/cold-email/prompt";
 import { isMicrosoftProvider } from "@/utils/email/provider-types";
-import { ActionType, SystemType } from "@/generated/prisma/enums";
-import { env } from "@/env";
 
 const ruleConfig: Record<
   SystemType,
@@ -123,8 +123,9 @@ const ruleConfig: Record<
 };
 
 export function getRuleConfig(systemType: SystemType) {
-  if (!ruleConfig[systemType])
+  if (!ruleConfig[systemType]) {
     throw new Error(`Invalid system type: ${systemType}`);
+  }
   return ruleConfig[systemType];
 }
 
@@ -165,7 +166,7 @@ export const SYSTEM_RULE_ORDER: SystemType[] = [
 
 export function getDefaultActions(
   systemType: SystemType,
-  provider: string,
+  provider: string
 ): Array<{
   id: string;
   type: ActionType;
@@ -340,7 +341,7 @@ export function getActionTypesForCategoryAction({
 
 export function getSystemRuleActionTypes(
   systemType: SystemType,
-  provider: string,
+  provider: string
 ): ActionTypeConfig[] {
   const config = getRuleConfig(systemType);
   const categoryAction = getCategoryAction(systemType, provider);

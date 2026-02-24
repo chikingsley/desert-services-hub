@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { DownloadIcon } from "lucide-react";
+import Link from "next/link";
 import type { ThreadMessage } from "@/components/email-list/types";
+import { Button } from "@/components/ui/button";
 import { CardBasic } from "@/components/ui/card";
 
 export function EmailAttachments({ message }: { message: ThreadMessage }) {
@@ -18,13 +18,13 @@ export function EmailAttachments({ message }: { message: ThreadMessage }) {
         const url = `/api/messages/attachment?${searchParams.toString()}`;
 
         return (
-          <CardBasic key={attachment.filename} className="p-4">
+          <CardBasic className="p-4" key={attachment.filename}>
             <div className="text-muted-foreground">{attachment.filename}</div>
             <div className="mt-4 flex items-center justify-between">
               <div className="text-muted-foreground">
                 {mimeTypeToString(attachment.mimeType)}
               </div>
-              <Button variant="outline" size="sm" asChild>
+              <Button asChild size="sm" variant="outline">
                 <Link href={url} target="_blank">
                   <DownloadIcon className="mr-2 h-4 w-4" />
                   Download

@@ -1,19 +1,19 @@
 import type { gmail_v1 } from "@googleapis/gmail";
 import { publishArchive, type TinybirdEmailAction } from "@inboxzero/tinybird";
 import {
+  type LabelVisibility,
+  labelVisibility,
+  type MessageVisibility,
+  messageVisibility,
+} from "@/utils/gmail/constants";
+import { extractErrorInfo, withGmailRetry } from "@/utils/gmail/retry";
+import {
   getLabelColor,
+  type InboxZeroLabel,
   inboxZeroLabels,
   PARENT_LABEL,
-  type InboxZeroLabel,
 } from "@/utils/label";
-import {
-  labelVisibility,
-  messageVisibility,
-  type LabelVisibility,
-  type MessageVisibility,
-} from "@/utils/gmail/constants";
 import { createScopedLogger } from "@/utils/logger";
-import { extractErrorInfo, withGmailRetry } from "@/utils/gmail/retry";
 
 const logger = createScopedLogger("gmail/label");
 
@@ -45,7 +45,7 @@ export async function labelThread(options: {
   const addLabelIds = options.addLabelIds?.filter((id) => id?.trim());
   const removeLabelIds = options.removeLabelIds?.filter((id) => id?.trim());
 
-  if (!addLabelIds?.length && !removeLabelIds?.length) {
+  if (!(addLabelIds?.length || removeLabelIds?.length)) {
     logger.warn("No valid labels to add or remove", { threadId });
     return;
   }
@@ -61,7 +61,7 @@ export async function labelThread(options: {
           addLabelIds,
           removeLabelIds,
         },
-      }),
+      })
     );
   } catch (error) {
     const { status, reason, errorMessage } = extractErrorInfo(error);
@@ -78,7 +78,7 @@ export async function labelThread(options: {
     const isInvalidRemoval =
       status === 400 &&
       ["invalidArgument", "failedPrecondition", "badRequest"].includes(
-        reason?.toString() ?? "",
+        reason?.toString() ?? ""
       );
 
     if (isRemovalOnly && (isMissingLabelError || isInvalidRemoval)) {
@@ -100,7 +100,7 @@ export async function labelThread(options: {
 export async function removeThreadLabel(
   gmail: gmail_v1.Gmail,
   threadId: string,
-  labelId: string,
+  labelId: string
 ) {
   await labelThread({
     gmail,
@@ -130,7 +130,7 @@ export async function archiveThread({
         removeLabelIds: [GmailLabel.INBOX],
         ...(labelId ? { addLabelIds: [labelId] } : {}),
       },
-    }),
+    })
   );
 
   const publishPromise = publishArchive({
@@ -181,7 +181,7 @@ export async function labelMessage({
       userId: "me",
       id: messageId,
       requestBody: { addLabelIds, removeLabelIds },
-    }),
+    })
   );
 }
 
@@ -203,7 +203,7 @@ export async function markReadThread(options: {
         : {
             addLabelIds: [GmailLabel.UNREAD],
           },
-    }),
+    })
   );
 }
 
@@ -235,7 +235,7 @@ export async function createLabel({
             textColor: "#000000",
           },
         },
-      }),
+      })
     );
     return createdLabel.data;
   } catch (error) {
@@ -244,12 +244,15 @@ export async function createLabel({
     if (errorMessage?.includes("Label name exists or conflicts")) {
       logger.warn("Label already exists", { name });
       const label = await getLabel({ gmail, name });
-      if (label) return label;
+      if (label) {
+        return label;
+      }
       throw new Error(`Label conflict but not found: ${name}`);
     }
 
-    if (errorMessage?.includes("Invalid label name"))
+    if (errorMessage?.includes("Invalid label name")) {
       throw new Error(`Invalid Gmail label name: "${name}"`);
+    }
 
     throw new Error(`Failed to create Gmail label "${name}": ${errorMessage}`);
   }
@@ -260,7 +263,9 @@ export async function createLabel({
  * For "Work/Projects/2024", creates "Work" and "Work/Projects" if they don't exist
  */
 async function ensureParentLabelsExist(gmail: gmail_v1.Gmail, name: string) {
-  if (!name.includes("/")) return;
+  if (!name.includes("/")) {
+    return;
+  }
 
   const parts = name.split("/");
   // Build up parent paths: ["Work", "Work/Projects", "Work/Projects/2024"]
@@ -276,7 +281,7 @@ async function ensureParentLabelsExist(gmail: gmail_v1.Gmail, name: string) {
 
 export async function getLabels(gmail: gmail_v1.Gmail) {
   const response = await withGmailRetry(() =>
-    gmail.users.labels.list({ userId: "me" }),
+    gmail.users.labels.list({ userId: "me" })
   );
   return response.data.labels;
 }
@@ -300,7 +305,7 @@ export async function getLabel(options: {
   const normalizedSearch = normalizeLabel(name);
 
   return labels?.find(
-    (label) => label.name && normalizeLabel(label.name) === normalizedSearch,
+    (label) => label.name && normalizeLabel(label.name) === normalizedSearch
   );
 }
 
@@ -321,9 +326,13 @@ export async function getOrCreateLabel({
   gmail: gmail_v1.Gmail;
   name: string;
 }) {
-  if (!name?.trim()) throw new Error("Label name cannot be empty");
+  if (!name?.trim()) {
+    throw new Error("Label name cannot be empty");
+  }
   const label = await getLabel({ gmail, name });
-  if (label) return label;
+  if (label) {
+    return label;
+  }
   const createdLabel = await createLabel({ gmail, name });
   return createdLabel;
 }
@@ -350,7 +359,9 @@ export async function getOrCreateInboxZeroLabel({
 
   // Return child label if it exists
   const label = labels?.find((label) => label.name === name);
-  if (label) return label;
+  if (label) {
+    return label;
+  }
 
   // Create child label if it doesn't exist
   const createdLabel = await createLabel({

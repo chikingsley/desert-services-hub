@@ -1,21 +1,21 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { SparklesIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { SparklesIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ResultsDisplay } from "@/app/(app)/[emailAccountId]/assistant/ResultDisplay";
 import { Input } from "@/components/Input";
 import { toastError } from "@/components/Toast";
-import { testAiCustomContentAction } from "@/utils/actions/ai-rule";
-import type { RunRulesResult } from "@/utils/ai/choose-rule/run-rules";
-import { ResultsDisplay } from "@/app/(app)/[emailAccountId]/assistant/ResultDisplay";
-import {
-  testAiCustomContentBody,
-  type TestAiCustomContentBody,
-} from "@/utils/actions/ai-rule.validation";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAccount } from "@/providers/EmailAccountProvider";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { testAiCustomContentAction } from "@/utils/actions/ai-rule";
+import {
+  type TestAiCustomContentBody,
+  testAiCustomContentBody,
+} from "@/utils/actions/ai-rule.validation";
+import type { RunRulesResult } from "@/utils/ai/choose-rule/run-rules";
 
 export const TestCustomEmailForm = () => {
   const [testResults, setTestResult] = useState<RunRulesResult[]>();
@@ -41,22 +41,22 @@ export const TestCustomEmailForm = () => {
         setTestResult(result?.data);
       }
     },
-    [emailAccountId],
+    [emailAccountId]
   );
 
   return (
     <div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+      <form className="space-y-2" onSubmit={handleSubmit(onSubmit)}>
         <Input
-          type="text"
           autosizeTextarea
-          rows={3}
+          error={errors.content}
           name="content"
           placeholder="Paste in email content or write your own. e.g. Receipt from Stripe for $49"
           registerProps={register("content", { required: true })}
-          error={errors.content}
+          rows={3}
+          type="text"
         />
-        <Button type="submit" loading={isSubmitting} size="sm">
+        <Button loading={isSubmitting} size="sm" type="submit">
           <SparklesIcon className="mr-2 size-4" />
           Test
         </Button>

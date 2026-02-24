@@ -1,5 +1,11 @@
 "use client";
 
+import { CheckCircle2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { RuleDialog } from "@/app/(app)/[emailAccountId]/assistant/RuleDialog";
+import { ActionBadges } from "@/app/(app)/[emailAccountId]/assistant/Rules";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -8,18 +14,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ActionBadges } from "@/app/(app)/[emailAccountId]/assistant/Rules";
-import { conditionsToString } from "@/utils/condition";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { RuleDialog } from "@/app/(app)/[emailAccountId]/assistant/RuleDialog";
 import { useDialogState } from "@/hooks/useDialogState";
-import { CheckCircle2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useLabels } from "@/hooks/useLabels";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { conditionsToString } from "@/utils/condition";
 import { prefixPath } from "@/utils/path";
 import type { CreateRuleResult } from "@/utils/rule/types";
-import { useLabels } from "@/hooks/useLabels";
 
 export function CreatedRulesModal({
   open,
@@ -31,9 +31,9 @@ export function CreatedRulesModal({
   rules: CreateRuleResult[] | null;
 }) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent>
-        <CreatedRulesContent rules={rules || []} onOpenChange={onOpenChange} />
+        <CreatedRulesContent onOpenChange={onOpenChange} rules={rules || []} />
       </DialogContent>
     </Dialog>
   );
@@ -71,15 +71,15 @@ export function CreatedRulesContent({
         </DialogDescription>
       </DialogHeader>
 
-      <div className="overflow-y-auto flex-1">
+      <div className="flex-1 overflow-y-auto">
         <div className="space-y-2">
           {rules.map((rule) => (
             <Card
+              className="cursor-pointer p-4"
               key={rule.id}
+              onClick={() => ruleDialog.onOpen({ ruleId: rule.id })}
               role="button"
               tabIndex={0}
-              className="p-4 cursor-pointer"
-              onClick={() => ruleDialog.onOpen({ ruleId: rule.id })}
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -92,11 +92,11 @@ export function CreatedRulesContent({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Actions:</span>
+                  <span className="font-medium text-sm">Actions:</span>
                   <ActionBadges
                     actions={rule.actions}
-                    provider={provider}
                     labels={userLabels}
+                    provider={provider}
                   />
                 </div>
               </div>
@@ -106,16 +106,16 @@ export function CreatedRulesContent({
       </div>
 
       <DialogFooter className="flex gap-2">
-        <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <Button onClick={() => onOpenChange(false)} variant="outline">
           Close
         </Button>
         <Button onClick={handleTestRules}>Test Rules</Button>
       </DialogFooter>
       <RuleDialog
-        ruleId={ruleDialog.data?.ruleId}
+        editMode={false}
         isOpen={ruleDialog.isOpen}
         onClose={ruleDialog.onClose}
-        editMode={false}
+        ruleId={ruleDialog.data?.ruleId}
       />
     </>
   );

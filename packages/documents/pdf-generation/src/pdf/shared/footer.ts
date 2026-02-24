@@ -5,18 +5,18 @@ import type { Content } from "pdfmake/interfaces";
 import { COLORS, COMPANY } from "./brand";
 
 export interface FooterOptions {
-  /** Left-side text. Default: "Desert Services LLC | (480) 513-8986 | desertservices.net" */
-  leftText?: string;
   /** Center text (e.g., "Desert Services 2026"). Default: none */
   centerText?: string;
-  /** Show page numbers on right. Default: true */
-  showPageNumbers?: boolean;
-  /** Font size. Default: 8 */
-  fontSize?: number;
   /** Text color. Default: COLORS.mutedForeground */
   color?: string;
+  /** Font size. Default: 8 */
+  fontSize?: number;
   /** Left/right margin (should match page margins). Default: 50 */
   horizontalMargin?: number;
+  /** Left-side text. Default: "Desert Services LLC | (480) 513-8986 | desertservices.net" */
+  leftText?: string;
+  /** Show page numbers on right. Default: true */
+  showPageNumbers?: boolean;
 }
 
 const DEFAULT_LEFT_TEXT = `${COMPANY.phone}  \u00B7  ${COMPANY.website}`;

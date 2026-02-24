@@ -3,51 +3,51 @@
 
 // Core estimate types (replaces Quote types)
 export interface EstimateLineItem {
-  id: string;
-  section_id?: string | null;
-  item_name?: string | null;
   description: string;
+  id: string;
+  item_name?: string | null;
+  notes?: string | null;
   quantity: number;
+  section_id?: string | null;
+  sort_order: number;
   unit: string;
   unit_price: number;
-  notes?: string | null;
-  sort_order: number;
 }
 
 export interface EstimateSection {
   id: string;
   name: string;
-  title?: string | null;
   show_subtotal: boolean;
   sort_order: number;
+  title?: string | null;
 }
 
 export interface EstimateVersion {
-  id: string;
-  version_number: number;
-  total: number;
-  is_current: boolean;
   created_at: string;
-  sections: EstimateSection[];
+  id: string;
+  is_current: boolean;
   line_items: EstimateLineItem[];
+  sections: EstimateSection[];
+  total: number;
+  version_number: number;
 }
 
 export interface Estimate {
-  id: string;
   base_number: string;
-  takeoff_id?: string | null;
-  job_name: string;
-  job_address?: string | null;
-  client_name?: string | null;
   client_address?: string | null;
   client_email?: string | null;
+  client_name?: string | null;
   client_phone?: string | null;
+  created_at: string;
   estimator?: string | null;
   estimator_email?: string | null;
+  id: string;
+  is_locked: boolean;
+  job_address?: string | null;
+  job_name: string;
   notes?: string | null;
   status: "draft" | "sent" | "accepted" | "declined";
-  is_locked: boolean;
-  created_at: string;
+  takeoff_id?: string | null;
   updated_at: string;
   versions: EstimateVersion[];
 }
@@ -55,24 +55,15 @@ export interface Estimate {
 // Input types for creating/updating estimates
 export interface CreateEstimateInput {
   base_number?: string; // Auto-generated if not provided
-  takeoff_id?: string;
-  job_name: string;
-  job_address?: string;
-  client_name?: string;
   client_address?: string;
   client_email?: string;
+  client_name?: string;
   client_phone?: string;
   estimator?: string;
   estimator_email?: string;
-  notes?: string;
-  status?: "draft" | "sent" | "accepted" | "declined";
   is_locked?: boolean;
-  sections?: Array<{
-    id?: string;
-    name: string;
-    title?: string;
-    show_subtotal?: boolean;
-  }>;
+  job_address?: string;
+  job_name: string;
   line_items?: Array<{
     section_id?: string;
     item_name?: string;
@@ -82,37 +73,46 @@ export interface CreateEstimateInput {
     unit_price?: number;
     notes?: string;
   }>;
+  notes?: string;
+  sections?: Array<{
+    id?: string;
+    name: string;
+    title?: string;
+    show_subtotal?: boolean;
+  }>;
+  status?: "draft" | "sent" | "accepted" | "declined";
+  takeoff_id?: string;
   total?: number;
 }
 
 export interface UpdateEstimateInput {
-  job_name?: string;
-  job_address?: string;
-  client_name?: string;
   client_email?: string;
+  client_name?: string;
   client_phone?: string;
+  is_locked?: boolean;
+  job_address?: string;
+  job_name?: string;
   notes?: string;
   status?: "draft" | "sent" | "accepted" | "declined";
-  is_locked?: boolean;
 }
 
 // Line item modification for updates
 export interface LineItemChange {
   action: "add" | "remove" | "update";
-  id?: string; // For update/remove
-  section_id?: string;
-  item_name?: string;
   description?: string;
+  id?: string; // For update/remove
+  item_name?: string;
+  notes?: string;
   quantity?: number;
+  section_id?: string;
   unit?: string;
   unit_price?: number;
-  notes?: string;
 }
 
 // Estimate number format: YYMMDD##R#
 // Example: 25122301R0 = Dec 23, 2025, estimate #1, original
 export interface EstimateNumber {
   base: string; // YYMMDD##
-  revision: number; // 0 = R0, 1 = R1, etc.
   full: string; // YYMMDD##R#
+  revision: number; // 0 = R0, 1 = R1, etc.
 }

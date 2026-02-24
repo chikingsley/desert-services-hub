@@ -12,12 +12,12 @@
  * - TEST_OUTLOOK_EMAIL=<your outlook email>
  */
 
-import { describe, test, expect, beforeAll, vi } from "vitest";
 import { subMonths } from "date-fns/subMonths";
-import prisma from "@/utils/prisma";
+import { beforeAll, describe, expect, test, vi } from "vitest";
 import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("test");
 const RUN_E2E_TESTS = process.env.RUN_E2E_TESTS;
@@ -73,7 +73,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
         expect(result.messages).toBeDefined();
         expect(Array.isArray(result.messages)).toBe(true);
         console.log(
-          `   ✅ subject:test returned ${result.messages.length} messages`,
+          `   ✅ subject:test returned ${result.messages.length} messages`
         );
       });
 
@@ -87,7 +87,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
         expect(result.messages).toBeDefined();
         expect(Array.isArray(result.messages)).toBe(true);
         console.log(
-          `   ✅ subject:"meeting" returned ${result.messages.length} messages`,
+          `   ✅ subject:"meeting" returned ${result.messages.length} messages`
         );
       });
 
@@ -101,7 +101,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
         expect(result.messages).toBeDefined();
         expect(Array.isArray(result.messages)).toBe(true);
         console.log(
-          `   ✅ from:${TEST_OUTLOOK_EMAIL} returned ${result.messages.length} messages`,
+          `   ✅ from:${TEST_OUTLOOK_EMAIL} returned ${result.messages.length} messages`
         );
       });
 
@@ -114,7 +114,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
         expect(result.messages).toBeDefined();
         expect(Array.isArray(result.messages)).toBe(true);
         console.log(
-          `   ✅ Plain "order status" returned ${result.messages.length} messages`,
+          `   ✅ Plain "order status" returned ${result.messages.length} messages`
         );
       });
 
@@ -127,7 +127,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
         expect(result.messages).toBeDefined();
         expect(Array.isArray(result.messages)).toBe(true);
         console.log(
-          `   ✅ OR query returned ${result.messages.length} messages`,
+          `   ✅ OR query returned ${result.messages.length} messages`
         );
       });
 
@@ -141,7 +141,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
         expect(result.messages).toBeDefined();
         expect(Array.isArray(result.messages)).toBe(true);
         console.log(
-          `   ✅ label:inbox meeting returned ${result.messages.length} messages`,
+          `   ✅ label:inbox meeting returned ${result.messages.length} messages`
         );
       });
 
@@ -157,7 +157,7 @@ describe.skipIf(!RUN_E2E_TESTS)(
         expect(result.messages).toBeDefined();
         expect(Array.isArray(result.messages)).toBe(true);
         console.log(
-          `   ✅ Query with date filter returned ${result.messages.length} messages`,
+          `   ✅ Query with date filter returned ${result.messages.length} messages`
         );
       });
 
@@ -169,9 +169,9 @@ describe.skipIf(!RUN_E2E_TESTS)(
         expect(result.messages).toBeDefined();
         expect(Array.isArray(result.messages)).toBe(true);
         console.log(
-          `   ✅ Empty query returned ${result.messages.length} messages`,
+          `   ✅ Empty query returned ${result.messages.length} messages`
         );
       });
     });
-  },
+  }
 );

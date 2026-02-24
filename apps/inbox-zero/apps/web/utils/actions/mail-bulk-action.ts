@@ -9,7 +9,7 @@ export const bulkArchiveAction = actionClient
   .inputSchema(
     z.object({
       froms: z.array(z.string()),
-    }),
+    })
   )
   .action(
     async ({
@@ -25,9 +25,9 @@ export const bulkArchiveAction = actionClient
       await emailProvider.bulkArchiveFromSenders(
         froms,
         emailAccount.email,
-        emailAccountId,
+        emailAccountId
       );
-    },
+    }
   );
 
 export const bulkTrashAction = actionClient
@@ -35,7 +35,7 @@ export const bulkTrashAction = actionClient
   .inputSchema(
     z.object({
       froms: z.array(z.string()),
-    }),
+    })
   )
   .action(
     async ({
@@ -51,7 +51,7 @@ export const bulkTrashAction = actionClient
       await emailProvider.bulkTrashFromSenders(
         froms,
         emailAccount.email,
-        emailAccountId,
+        emailAccountId
       );
-    },
+    }
   );

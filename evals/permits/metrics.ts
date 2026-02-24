@@ -6,38 +6,46 @@
 export function recallAtK(
   results: { queryId: string; rankedIds: string[] }[],
   qrels: Map<string, string>,
-  k: number,
+  k: number
 ): number {
   let hits = 0;
   let total = 0;
   for (const { queryId, rankedIds } of results) {
     const expected = qrels.get(queryId);
-    if (expected === undefined) continue;
+    if (expected === undefined) {
+      continue;
+    }
     total++;
-    if (rankedIds.slice(0, k).includes(expected)) hits++;
+    if (rankedIds.slice(0, k).includes(expected)) {
+      hits++;
+    }
   }
   return total === 0 ? 0 : hits / total;
 }
 
 export function mrr(
   results: { queryId: string; rankedIds: string[] }[],
-  qrels: Map<string, string>,
+  qrels: Map<string, string>
 ): number {
   let sum = 0;
   let total = 0;
   for (const { queryId, rankedIds } of results) {
     const expected = qrels.get(queryId);
-    if (expected === undefined) continue;
+    if (expected === undefined) {
+      continue;
+    }
     total++;
     const rank = rankedIds.indexOf(expected);
-    if (rank !== -1) sum += 1 / (rank + 1);
+    if (rank !== -1) {
+      sum += 1 / (rank + 1);
+    }
   }
   return total === 0 ? 0 : sum / total;
 }
 
 export function perQueryResults(
   results: { queryId: string; rankedIds: string[] }[],
-  qrels: Map<string, string>,
+  qrels: Map<string, string>
 ): {
   queryId: string;
   expected: string;
@@ -52,7 +60,9 @@ export function perQueryResults(
   }[] = [];
   for (const { queryId, rankedIds } of results) {
     const expected = qrels.get(queryId);
-    if (expected === undefined) continue;
+    if (expected === undefined) {
+      continue;
+    }
     const rank = rankedIds.indexOf(expected);
     out.push({
       queryId,

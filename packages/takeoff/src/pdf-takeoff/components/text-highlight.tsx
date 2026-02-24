@@ -24,48 +24,19 @@ export interface TextHighlightStyle {
  */
 export interface TextHighlightProps {
   /**
+   * Custom color presets for the style panel.
+   * Default: ["rgba(255, 226, 143, 1)", "#ffcdd2", "#c8e6c9", "#bbdefb", "#e1bee7"]
+   */
+  colorPresets?: string[];
+
+  /**
+   * Custom delete icon. Replaces the default trash icon.
+   */
+  deleteIcon?: ReactNode;
+  /**
    * Highlight to render over text.
    */
   highlight: ViewportHighlight;
-
-  /**
-   * Callback triggered whenever the user clicks on the part of a highlight.
-   *
-   * @param event - Mouse event associated with click.
-   */
-  onClick?(event: MouseEvent<HTMLDivElement>): void;
-
-  /**
-   * Callback triggered whenever the user enters the area of a text highlight.
-   *
-   * @param event - Mouse event associated with movement.
-   */
-  onMouseOver?(event: MouseEvent<HTMLDivElement>): void;
-
-  /**
-   * Callback triggered whenever the user leaves  the area of a text highlight.
-   *
-   * @param event - Mouse event associated with movement.
-   */
-  onMouseOut?(event: MouseEvent<HTMLDivElement>): void;
-
-  /**
-   * Indicates whether the component is autoscrolled into view, affecting
-   * default theming.
-   */
-  isScrolledTo: boolean;
-
-  /**
-   * Callback triggered whenever the user tries to open context menu on highlight.
-   *
-   * @param event - Mouse event associated with click.
-   */
-  onContextMenu?(event: MouseEvent<HTMLDivElement>): void;
-
-  /**
-   * Optional CSS styling applied to each TextHighlight part.
-   */
-  style?: CSSProperties;
 
   /**
    * Background/line color for the highlight.
@@ -82,9 +53,24 @@ export interface TextHighlightProps {
   highlightStyle?: "highlight" | "underline" | "strikethrough";
 
   /**
-   * Callback triggered when the style changes.
+   * Indicates whether the component is autoscrolled into view, affecting
+   * default theming.
    */
-  onStyleChange?(style: TextHighlightStyle): void;
+  isScrolledTo: boolean;
+
+  /**
+   * Callback triggered whenever the user clicks on the part of a highlight.
+   *
+   * @param event - Mouse event associated with click.
+   */
+  onClick?(event: MouseEvent<HTMLDivElement>): void;
+
+  /**
+   * Callback triggered whenever the user tries to open context menu on highlight.
+   *
+   * @param event - Mouse event associated with click.
+   */
+  onContextMenu?(event: MouseEvent<HTMLDivElement>): void;
 
   /**
    * Callback triggered when the delete button is clicked.
@@ -92,20 +78,33 @@ export interface TextHighlightProps {
   onDelete?(): void;
 
   /**
+   * Callback triggered whenever the user leaves  the area of a text highlight.
+   *
+   * @param event - Mouse event associated with movement.
+   */
+  onMouseOut?(event: MouseEvent<HTMLDivElement>): void;
+
+  /**
+   * Callback triggered whenever the user enters the area of a text highlight.
+   *
+   * @param event - Mouse event associated with movement.
+   */
+  onMouseOver?(event: MouseEvent<HTMLDivElement>): void;
+
+  /**
+   * Callback triggered when the style changes.
+   */
+  onStyleChange?(style: TextHighlightStyle): void;
+
+  /**
+   * Optional CSS styling applied to each TextHighlight part.
+   */
+  style?: CSSProperties;
+
+  /**
    * Custom style icon. Replaces the default palette icon.
    */
   styleIcon?: ReactNode;
-
-  /**
-   * Custom delete icon. Replaces the default trash icon.
-   */
-  deleteIcon?: ReactNode;
-
-  /**
-   * Custom color presets for the style panel.
-   * Default: ["rgba(255, 226, 143, 1)", "#ffcdd2", "#c8e6c9", "#bbdefb", "#e1bee7"]
-   */
-  colorPresets?: string[];
 }
 
 // Default icons

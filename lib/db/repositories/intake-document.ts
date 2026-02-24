@@ -36,24 +36,24 @@ const propagateDocumentProjectIdsStmt = db.query<{
 
 export interface InsertDocumentSuccessInput {
   documentType: string;
-  filePath: string;
   fileName: string;
-  summary: string;
-  rawExtractionJson: string;
+  filePath: string;
+  forwarderEmail: string | null;
   model: string;
-  processingTimeMs: number;
   originalFrom: string | null;
   originalSubject: string | null;
-  forwarderEmail: string | null;
+  processingTimeMs: number;
+  rawExtractionJson: string;
+  summary: string;
 }
 
 export interface InsertDocumentFailureInput {
-  filePath: string;
-  fileName: string;
   error: string;
+  fileName: string;
+  filePath: string;
+  forwarderEmail: string | null;
   originalFrom: string | null;
   originalSubject: string | null;
-  forwarderEmail: string | null;
 }
 
 export async function insertIntakeDocumentSuccess(

@@ -2,10 +2,10 @@ import { cva } from "class-variance-authority";
 
 interface CardWrapperProps {
   children: React.ReactNode;
+  className?: string;
   padding?: "none" | "xs" | "xs-2" | "sm" | "md";
   rounded?: "none" | "xs" | "sm" | "md" | "full";
   variant?: "default" | "dark-border";
-  className?: string;
 }
 
 export function CardWrapper({
@@ -16,7 +16,7 @@ export function CardWrapper({
   className,
 }: CardWrapperProps) {
   const cardWrapperStyles = cva(
-    "text-left border bg-gradient-to-b from-[#FFFFFF] to-[#F9F9F9]",
+    "border bg-gradient-to-b from-[#FFFFFF] to-[#F9F9F9] text-left",
     {
       variants: {
         padding: {
@@ -38,7 +38,7 @@ export function CardWrapper({
           "dark-border": "border-[#F2F2F2]",
         },
       },
-    },
+    }
   );
 
   return (

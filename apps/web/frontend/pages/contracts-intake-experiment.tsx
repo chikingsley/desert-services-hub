@@ -12,17 +12,17 @@ import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 import { formatCurrency } from "@/lib/utils";
 
 interface ContractRow {
-  id: number;
-  estimate_number: string | null;
-  name: string;
-  contractor: string | null;
   awarded_value: number | null;
   bid_value: number | null;
-  location: string | null;
-  project_name: string | null;
   contract_status: string | null;
-  dust_permit_status: string | null;
+  contractor: string | null;
   created_at?: string;
+  dust_permit_status: string | null;
+  estimate_number: string | null;
+  id: number;
+  location: string | null;
+  name: string;
+  project_name: string | null;
   updated_at?: string;
 }
 

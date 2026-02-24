@@ -8,11 +8,13 @@ export type SlackChannel = {
 
 export async function getChannelInfo(
   client: WebClient,
-  channelId: string,
+  channelId: string
 ): Promise<SlackChannel | null> {
   const response = await client.conversations.info({ channel: channelId });
 
-  if (!response.channel?.id || !response.channel?.name) return null;
+  if (!(response.channel?.id && response.channel?.name)) {
+    return null;
+  }
 
   return {
     id: response.channel.id,

@@ -1,8 +1,8 @@
-import z from "zod";
 import { createPatch } from "diff";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { getModel } from "@/utils/llms/model";
+import z from "zod";
 import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
 
 export async function aiDiffRules({
   emailAccount,
@@ -79,7 +79,7 @@ Return the result in JSON format. Do not include any other text in your response
           z.object({
             oldRule: z.string().describe("The old rule"),
             newRule: z.string().describe("The new rule"),
-          }),
+          })
         )
         .describe("The edited rules"),
       removedRules: z.array(z.string()).describe("The removed rules"),

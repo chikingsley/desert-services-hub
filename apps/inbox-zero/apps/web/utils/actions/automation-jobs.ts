@@ -1,17 +1,15 @@
 "use server";
 
-import { actionClient } from "@/utils/actions/safe-action";
+import {
+  AutomationJobRunStatus,
+  MessagingProvider,
+} from "@/generated/prisma/enums";
 import {
   saveAutomationJobBody,
   toggleAutomationJobBody,
   triggerTestCheckInBody,
 } from "@/utils/actions/automation-jobs.validation";
-import { SafeError } from "@/utils/error";
-import {
-  AutomationJobRunStatus,
-  MessagingProvider,
-} from "@/generated/prisma/enums";
-import prisma from "@/utils/prisma";
+import { actionClient } from "@/utils/actions/safe-action";
 import {
   getNextAutomationJobRunAt,
   validateAutomationCronExpression,
@@ -20,9 +18,11 @@ import {
   DEFAULT_AUTOMATION_JOB_CRON,
   getDefaultAutomationJobName,
 } from "@/utils/automation-jobs/defaults";
+import { SafeError } from "@/utils/error";
 import { isActivePremium } from "@/utils/premium";
-import { getUserPremium } from "@/utils/user/get";
+import prisma from "@/utils/prisma";
 import { publishToQstashQueue } from "@/utils/upstash";
+import { getUserPremium } from "@/utils/user/get";
 
 export const toggleAutomationJobAction = actionClient
   .metadata({ name: "toggleAutomationJob" })
@@ -78,7 +78,7 @@ export const toggleAutomationJobAction = actionClient
           emailAccountId,
         },
       });
-    },
+    }
   );
 
 export const saveAutomationJobAction = actionClient
@@ -118,11 +118,11 @@ export const saveAutomationJobAction = actionClient
         throw new SafeError("Only Slack is supported");
       }
 
-      if (!channel.isConnected || !channel.accessToken) {
+      if (!(channel.isConnected && channel.accessToken)) {
         throw new SafeError("Slack channel is not connected");
       }
 
-      if (!channel.providerUserId && !channel.channelId) {
+      if (!(channel.providerUserId || channel.channelId)) {
         throw new SafeError("Select a Slack destination first");
       }
 
@@ -165,7 +165,7 @@ export const saveAutomationJobAction = actionClient
           emailAccountId,
         },
       });
-    },
+    }
   );
 
 export const triggerTestCheckInAction = actionClient
@@ -203,7 +203,7 @@ export const triggerTestCheckInAction = actionClient
       channel.provider !== MessagingProvider.SLACK ||
       !channel.isConnected ||
       !channel.accessToken ||
-      (!channel.providerUserId && !channel.channelId)
+      !(channel.providerUserId || channel.channelId)
     ) {
       throw new SafeError("Slack channel is not connected");
     }

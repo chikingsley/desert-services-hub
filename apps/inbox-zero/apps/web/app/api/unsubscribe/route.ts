@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { withError, type RequestWithLogger } from "@/utils/middleware";
-import prisma from "@/utils/prisma";
 import { Frequency } from "@/generated/prisma/enums";
+import { type RequestWithLogger, withError } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export const GET = withError("unsubscribe", async (request) => {
   return unsubscribe(request);
@@ -33,14 +33,14 @@ async function unsubscribe(request: RequestWithLogger) {
         error:
           "Invalid unsubscribe token. You might have already unsubscribed.",
       },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
   if (emailToken.expiresAt < new Date()) {
     return NextResponse.json(
       { error: "Unsubscribe token expired" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -70,7 +70,7 @@ async function unsubscribe(request: RequestWithLogger) {
         message:
           "Error unsubscribing. Visit Settings page to unsubscribe from emails.",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 

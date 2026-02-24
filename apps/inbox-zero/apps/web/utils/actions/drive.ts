@@ -1,26 +1,26 @@
 "use server";
 
-import { actionClient } from "@/utils/actions/safe-action";
 import {
-  disconnectDriveBody,
-  updateFilingPromptBody,
-  updateFilingEnabledBody,
   addFilingFolderBody,
+  createDriveFolderBody,
+  disconnectDriveBody,
+  fileAttachmentBody,
+  moveFilingBody,
   removeFilingFolderBody,
   submitPreviewFeedbackBody,
-  moveFilingBody,
-  createDriveFolderBody,
-  fileAttachmentBody,
+  updateFilingEnabledBody,
+  updateFilingPromptBody,
 } from "@/utils/actions/drive.validation";
-import prisma from "@/utils/prisma";
-import { SafeError } from "@/utils/error";
-import { createDriveProviderWithRefresh } from "@/utils/drive/provider";
-import { createEmailProvider } from "@/utils/email/provider";
+import { actionClient } from "@/utils/actions/safe-action";
 import {
   getExtractableAttachments,
   processAttachment,
 } from "@/utils/drive/filing-engine";
+import { createDriveProviderWithRefresh } from "@/utils/drive/provider";
 import type { DriveProviderType } from "@/utils/drive/types";
+import { createEmailProvider } from "@/utils/email/provider";
+import { SafeError } from "@/utils/error";
+import prisma from "@/utils/prisma";
 
 export const disconnectDriveAction = actionClient
   .metadata({ name: "disconnectDrive" })
@@ -41,7 +41,7 @@ export const disconnectDriveAction = actionClient
       await prisma.driveConnection.delete({
         where: { id: connectionId, emailAccountId },
       });
-    },
+    }
   );
 
 export const updateFilingPromptAction = actionClient
@@ -55,7 +55,7 @@ export const updateFilingPromptAction = actionClient
           filingPrompt: filingPrompt || null,
         },
       });
-    },
+    }
   );
 
 export const updateFilingEnabledAction = actionClient
@@ -67,7 +67,7 @@ export const updateFilingEnabledAction = actionClient
         where: { id: emailAccountId },
         data: { filingEnabled },
       });
-    },
+    }
   );
 
 export const addFilingFolderAction = actionClient
@@ -111,7 +111,7 @@ export const addFilingFolderAction = actionClient
       });
 
       return folder;
-    },
+    }
   );
 
 export const removeFilingFolderAction = actionClient
@@ -138,7 +138,7 @@ export const submitPreviewFeedbackAction = actionClient
           feedbackAt: new Date(),
         },
       });
-    },
+    }
   );
 
 export const moveFilingAction = actionClient
@@ -164,7 +164,7 @@ export const moveFilingAction = actionClient
 
       const driveProvider = await createDriveProviderWithRefresh(
         filing.driveConnection,
-        logger,
+        logger
       );
 
       await driveProvider.moveFile(filing.fileId, targetFolderId);
@@ -180,7 +180,7 @@ export const moveFilingAction = actionClient
           feedbackAt: new Date(),
         },
       });
-    },
+    }
   );
 
 export const createDriveFolderAction = actionClient
@@ -205,13 +205,13 @@ export const createDriveFolderAction = actionClient
 
       const driveProvider = await createDriveProviderWithRefresh(
         connection,
-        logger,
+        logger
       );
 
       const folder = await driveProvider.createFolder(folderName);
 
       return folder;
-    },
+    }
   );
 
 export type FileAttachmentFiled = {
@@ -290,7 +290,7 @@ export const fileAttachmentAction = actionClient
 
       const extractableAttachments = getExtractableAttachments(message);
       const attachment = extractableAttachments.find(
-        (a) => a.filename === filename,
+        (a) => a.filename === filename
       );
 
       if (!attachment) {
@@ -323,7 +323,7 @@ export const fileAttachmentAction = actionClient
         };
       }
 
-      if (!result.success || !result.filing) {
+      if (!(result.success && result.filing)) {
         throw new SafeError(result.error || "Failed to file attachment");
       }
 
@@ -335,5 +335,5 @@ export const fileAttachmentAction = actionClient
         filedAt: new Date().toISOString(),
         provider: result.filing.provider as DriveProviderType,
       };
-    },
+    }
   );

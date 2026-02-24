@@ -1,11 +1,12 @@
 "use client";
 
-import { Response } from "@/components/ai-elements/response";
 import {
   Reasoning,
   ReasoningContent,
   ReasoningTrigger,
 } from "@/components/ai-elements/reasoning";
+import { Response } from "@/components/ai-elements/response";
+import type { ThreadLookup } from "@/components/assistant-chat/tools";
 import {
   AddToKnowledgeBase,
   BasicToolInfo,
@@ -18,12 +19,11 @@ import {
   UpdatedRuleConditions,
 } from "@/components/assistant-chat/tools";
 import type { ChatMessage } from "@/components/assistant-chat/types";
-import type { ThreadLookup } from "@/components/assistant-chat/tools";
 
 interface MessagePartProps {
-  part: ChatMessage["parts"][0];
   isStreaming: boolean;
   messageId: string;
+  part: ChatMessage["parts"][0];
   partIndex: number;
   threadLookup: ThreadLookup;
 }
@@ -54,9 +54,11 @@ export function MessagePart({
 
   if (part.type === "reasoning") {
     // Skip rendering if reasoning is redacted (limited token output from provider)
-    if (!part.text || part.text === "[REDACTED]") return null;
+    if (!part.text || part.text === "[REDACTED]") {
+      return null;
+    }
     return (
-      <Reasoning key={key} isStreaming={isStreaming} className="w-full">
+      <Reasoning className="w-full" isStreaming={isStreaming} key={key}>
         <ReasoningTrigger />
         <ReasoningContent>{part.text}</ReasoningContent>
       </Reasoning>
@@ -64,7 +66,9 @@ export function MessagePart({
   }
 
   if (part.type === "text") {
-    if (!part.text) return null;
+    if (!part.text) {
+      return null;
+    }
     return <Response key={key}>{part.text}</Response>;
   }
 
@@ -79,7 +83,7 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       return <BasicToolInfo key={toolCallId} text="Loaded account overview" />;
     }
@@ -93,7 +97,7 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       return <SearchInboxResult key={toolCallId} output={output} />;
     }
@@ -107,7 +111,7 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       const subject = getOutputField<string>(output, "subject");
       return (
@@ -128,11 +132,11 @@ export function MessagePart({
       ) {
         return (
           <ManageInboxResult
-            key={toolCallId}
             input={part.input}
+            isInProgress
+            key={toolCallId}
             output={getInProgressManageInboxOutput(part.input)}
             threadLookup={threadLookup}
-            isInProgress
           />
         );
       }
@@ -154,12 +158,12 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       return (
         <ManageInboxResult
-          key={toolCallId}
           input={part.input}
+          key={toolCallId}
           output={output}
           threadIds={
             part.input.action !== "bulk_archive_senders"
@@ -182,7 +186,7 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       return <BasicToolInfo key={toolCallId} text="Updated inbox features" />;
     }
@@ -196,7 +200,7 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       const to = getOutputField<string>(output, "to");
       return (
@@ -216,7 +220,7 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       const to = getOutputField<string>(output, "to");
       return (
@@ -238,7 +242,7 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       return <BasicToolInfo key={toolCallId} text="Read rules and settings" />;
     }
@@ -254,7 +258,7 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       return <BasicToolInfo key={toolCallId} text="Read learned patterns" />;
     }
@@ -273,13 +277,13 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       const ruleId = getOutputField<string>(output, "ruleId");
       return (
         <CreatedRuleToolCard
-          key={toolCallId}
           args={part.input}
+          key={toolCallId}
           ruleId={ruleId}
         />
       );
@@ -299,19 +303,20 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       const ruleId = getOutputField<string>(output, "ruleId");
-      if (!ruleId)
+      if (!ruleId) {
         return (
-          <ErrorToolCard key={toolCallId} error="Missing rule ID in response" />
+          <ErrorToolCard error="Missing rule ID in response" key={toolCallId} />
         );
+      }
       return (
         <UpdatedRuleConditions
-          key={toolCallId}
           args={part.input}
-          ruleId={ruleId}
+          key={toolCallId}
           originalConditions={getOutputField(output, "originalConditions")}
+          ruleId={ruleId}
           updatedConditions={getOutputField(output, "updatedConditions")}
         />
       );
@@ -331,19 +336,20 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       const ruleId = getOutputField<string>(output, "ruleId");
-      if (!ruleId)
+      if (!ruleId) {
         return (
-          <ErrorToolCard key={toolCallId} error="Missing rule ID in response" />
+          <ErrorToolCard error="Missing rule ID in response" key={toolCallId} />
         );
+      }
       return (
         <UpdatedRuleActions
-          key={toolCallId}
           args={part.input}
-          ruleId={ruleId}
+          key={toolCallId}
           originalActions={getOutputField(output, "originalActions")}
+          ruleId={ruleId}
           updatedActions={getOutputField(output, "updatedActions")}
         />
       );
@@ -363,17 +369,18 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       const ruleId = getOutputField<string>(output, "ruleId");
-      if (!ruleId)
+      if (!ruleId) {
         return (
-          <ErrorToolCard key={toolCallId} error="Missing rule ID in response" />
+          <ErrorToolCard error="Missing rule ID in response" key={toolCallId} />
         );
+      }
       return (
         <UpdatedLearnedPatterns
-          key={toolCallId}
           args={part.input}
+          key={toolCallId}
           ruleId={ruleId}
         />
       );
@@ -388,9 +395,9 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
-      return <UpdateAbout key={toolCallId} args={part.input} />;
+      return <UpdateAbout args={part.input} key={toolCallId} />;
     }
   }
 
@@ -404,9 +411,9 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
-      return <AddToKnowledgeBase key={toolCallId} args={part.input} />;
+      return <AddToKnowledgeBase args={part.input} key={toolCallId} />;
     }
   }
 
@@ -418,7 +425,7 @@ export function MessagePart({
     if (state === "output-available") {
       const { output } = part;
       if (isOutputWithError(output)) {
-        return <ErrorToolCard key={toolCallId} error={String(output.error)} />;
+        return <ErrorToolCard error={String(output.error)} key={toolCallId} />;
       }
       return <BasicToolInfo key={toolCallId} text="Memory saved" />;
     }

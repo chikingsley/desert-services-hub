@@ -72,8 +72,8 @@ export function calculateBoundsFromCorner(
 }
 
 export interface RefinementAdjustment {
-  shiftMeters: { north: number; east: number };
   scaleFactor: number;
+  shiftMeters: { north: number; east: number };
 }
 
 export function applyAdjustment(

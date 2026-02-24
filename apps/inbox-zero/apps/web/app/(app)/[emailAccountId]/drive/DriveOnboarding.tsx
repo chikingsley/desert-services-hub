@@ -1,11 +1,11 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
 import {
   PageSubHeading,
   TypographyH3,
   TypographyH4,
 } from "@/components/Typography";
+import { Card } from "@/components/ui/card";
 import { ConnectDrive } from "./ConnectDrive";
 
 const steps = [
@@ -35,8 +35,8 @@ export function DriveOnboarding() {
 
       <div className="mt-10 space-y-6">
         {steps.map((step) => (
-          <div key={step.number} className="flex gap-4">
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
+          <div className="flex gap-4" key={step.number}>
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-sm">
               {step.number}
             </div>
             <div>

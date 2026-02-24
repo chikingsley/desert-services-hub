@@ -1,6 +1,6 @@
 import { atom, useAtomValue } from "jotai";
-import { jotaiStore } from "@/store";
 import { useMemo } from "react";
+import { jotaiStore } from "@/store";
 
 const aiQueueAtom = atom<Set<string>>(new Set([]));
 

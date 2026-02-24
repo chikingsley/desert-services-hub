@@ -1,5 +1,5 @@
-import { ActionType } from "@/generated/prisma/enums";
 import type { Action, ExecutedAction, Prisma } from "@/generated/prisma/client";
+import { ActionType } from "@/generated/prisma/enums";
 
 export const actionInputs: Record<
   ActionType,
@@ -168,15 +168,33 @@ export function getActionFields(fields: Action | ExecutedAction | undefined) {
   } = {};
 
   // only return fields with a value
-  if (fields?.label) res.label = fields.label;
-  if (fields?.subject) res.subject = fields.subject;
-  if (fields?.content) res.content = fields.content;
-  if (fields?.to) res.to = fields.to;
-  if (fields?.cc) res.cc = fields.cc;
-  if (fields?.bcc) res.bcc = fields.bcc;
-  if (fields?.url) res.url = fields.url;
-  if (fields?.folderName) res.folderName = fields.folderName;
-  if (fields?.folderId) res.folderId = fields.folderId;
+  if (fields?.label) {
+    res.label = fields.label;
+  }
+  if (fields?.subject) {
+    res.subject = fields.subject;
+  }
+  if (fields?.content) {
+    res.content = fields.content;
+  }
+  if (fields?.to) {
+    res.to = fields.to;
+  }
+  if (fields?.cc) {
+    res.cc = fields.cc;
+  }
+  if (fields?.bcc) {
+    res.bcc = fields.bcc;
+  }
+  if (fields?.url) {
+    res.url = fields.url;
+  }
+  if (fields?.folderName) {
+    res.folderName = fields.folderName;
+  }
+  if (fields?.folderId) {
+    res.folderId = fields.folderId;
+  }
 
   return res;
 }
@@ -198,7 +216,7 @@ type ActionFieldsSelection = Pick<
 >;
 
 export function sanitizeActionFields(
-  action: Partial<ActionFieldsSelection> & { type: ActionType },
+  action: Partial<ActionFieldsSelection> & { type: ActionType }
 ): ActionFieldsSelection {
   const base: ActionFieldsSelection = {
     type: action.type,

@@ -1,16 +1,16 @@
 import { z } from "zod";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { Rule } from "@/generated/prisma/client";
 import { GroupItemType } from "@/generated/prisma/enums";
-import prisma from "@/utils/prisma";
 import { DEFAULT_COLD_EMAIL_PROMPT } from "@/utils/cold-email/prompt";
-import { stringifyEmail } from "@/utils/stringify-email";
-import { createScopedLogger } from "@/utils/logger";
-import type { EmailForLLM } from "@/utils/types";
-import type { EmailProvider } from "@/utils/email/types";
-import { getModel, type ModelType } from "@/utils/llms/model";
-import { createGenerateObject } from "@/utils/llms";
 import { extractEmailAddress } from "@/utils/email";
+import type { EmailProvider } from "@/utils/email/types";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel, type ModelType } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import { stringifyEmail } from "@/utils/stringify-email";
+import type { EmailForLLM } from "@/utils/types";
 
 export const COLD_EMAIL_FOLDER_NAME = "Cold Emails";
 
@@ -93,7 +93,7 @@ export async function isColdEmail({
     email,
     emailAccount,
     coldEmailRule?.instructions || DEFAULT_COLD_EMAIL_PROMPT,
-    modelType,
+    modelType
   );
 
   logger.info("AI is cold email?", {
@@ -111,7 +111,7 @@ async function aiIsColdEmail(
   email: EmailForLLM,
   emailAccount: EmailAccountWithAI,
   coldEmailPrompt: string,
-  modelType?: ModelType,
+  modelType?: ModelType
 ) {
   const system = `You are an assistant that decides if an email is a cold email or not.
 

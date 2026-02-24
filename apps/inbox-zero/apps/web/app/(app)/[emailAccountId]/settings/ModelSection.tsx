@@ -1,32 +1,32 @@
 "use client";
 
-import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { BarChartIcon } from "lucide-react";
+import Link from "next/link";
 import { useCallback } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import useSWR from "swr";
-import { Button } from "@/components/ui/button";
-import { toastError, toastSuccess } from "@/components/Toast";
-import { Input } from "@/components/Input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { LoadingContent } from "@/components/LoadingContent";
-import { SettingsSection } from "@/components/SettingsSection";
-import {
-  saveAiSettingsBody,
-  type SaveAiSettingsBody,
-} from "@/utils/actions/settings.validation";
-import { Select } from "@/components/Select";
 import type { OpenAiModelsResponse } from "@/app/api/ai/models/route";
 import { AlertBasic, AlertError } from "@/components/Alert";
+import { Input } from "@/components/Input";
+import { LoadingContent } from "@/components/LoadingContent";
+import { Select } from "@/components/Select";
+import { SettingsSection } from "@/components/SettingsSection";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
+import { useUser } from "@/hooks/useUser";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { updateAiSettingsAction } from "@/utils/actions/settings";
+import {
+  type SaveAiSettingsBody,
+  saveAiSettingsBody,
+} from "@/utils/actions/settings.validation";
 import {
   DEFAULT_PROVIDER,
   Provider,
   providerOptions,
 } from "@/utils/llms/config";
-import { useUser } from "@/hooks/useUser";
-import { useAccount } from "@/providers/EmailAccountProvider";
 import { prefixPath } from "@/utils/path";
-import { updateAiSettingsAction } from "@/utils/actions/settings";
 
 export function ModelSection() {
   const { emailAccountId } = useAccount();
@@ -36,20 +36,20 @@ export function ModelSection() {
     useSWR<OpenAiModelsResponse>(
       data?.aiApiKey && data.aiProvider === Provider.OPEN_AI
         ? "/api/ai/models"
-        : null,
+        : null
     );
 
   return (
     <SettingsSection>
-      <LoadingContent loading={isLoading || isLoadingModels} error={error}>
+      <LoadingContent error={error} loading={isLoading || isLoadingModels}>
         {data && (
           <ModelSectionForm
-            aiProvider={data.aiProvider}
-            aiModel={data.aiModel}
             aiApiKey={data.aiApiKey}
+            aiModel={data.aiModel}
+            aiProvider={data.aiProvider}
+            emailAccountId={emailAccountId}
             models={dataModels}
             refetchUser={mutate}
-            emailAccountId={emailAccountId}
           />
         )}
       </LoadingContent>
@@ -100,7 +100,7 @@ function ModelSectionForm(props: {
 
       refetchUser();
     },
-    [refetchUser],
+    [refetchUser]
   );
 
   const globalError = (errors as Record<string, { message?: string }>)[""];
@@ -114,7 +114,7 @@ function ModelSectionForm(props: {
       : [];
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-sm space-y-4">
+    <form className="max-w-sm space-y-4" onSubmit={handleSubmit(onSubmit)}>
       <Select
         label="Provider"
         options={providerOptions}
@@ -133,26 +133,26 @@ function ModelSectionForm(props: {
             />
           ) : (
             <Input
-              type="text"
-              name="aiModel"
-              label="Model"
-              registerProps={register("aiModel")}
               error={errors.aiModel}
+              label="Model"
+              name="aiModel"
+              registerProps={register("aiModel")}
+              type="text"
             />
           )}
 
           <Input
-            type="password"
-            name="aiApiKey"
-            label="API Key"
-            registerProps={register("aiApiKey")}
             error={errors.aiApiKey}
+            label="API Key"
+            name="aiApiKey"
+            registerProps={register("aiApiKey")}
+            type="password"
           />
         </>
       )}
 
       {globalError?.message && (
-        <AlertError title="Error saving" description={globalError.message} />
+        <AlertError description={globalError.message} title="Error saving" />
       )}
 
       {watch("aiProvider") === Provider.OPEN_AI &&
@@ -160,21 +160,21 @@ function ModelSectionForm(props: {
         modelSelectOptions.length === 0 &&
         (props.aiApiKey ? (
           <AlertError
-            title="Invalid API Key"
             description="We couldn't validate your API key. Please try again."
+            title="Invalid API Key"
           />
         ) : (
           <AlertBasic
-            title="API Key"
             description="Click Save to view available models for your API key."
+            title="API Key"
           />
         ))}
 
       <div className="flex items-center gap-2">
-        <Button type="submit" size="sm" loading={isSubmitting}>
+        <Button loading={isSubmitting} size="sm" type="submit">
           Save
         </Button>
-        <Button asChild variant="outline" size="sm">
+        <Button asChild size="sm" variant="outline">
           <Link href={prefixPath(emailAccountId, "/usage")}>
             <BarChartIcon className="mr-2 size-4" />
             View usage

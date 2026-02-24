@@ -6,14 +6,14 @@
 
 // Avatar types
 export interface AvatarResult {
-  url: string;
   source: "gravatar" | "initials" | "clearbit";
+  url: string;
 }
 
 // Company logo types
 export interface LogoResult {
-  url: string;
   exists: boolean;
+  url: string;
 }
 
 // ── Job Payload Schemas ─────────────────────────────────────

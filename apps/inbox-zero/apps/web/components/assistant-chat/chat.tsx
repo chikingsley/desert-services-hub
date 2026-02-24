@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import type { UseChatHelpers } from "@ai-sdk/react";
 import {
   ArrowUpIcon,
   HistoryIcon,
@@ -8,7 +8,18 @@ import {
   PlusIcon,
   SquareIcon,
 } from "lucide-react";
-import { Messages } from "./messages";
+import { useEffect, useState } from "react";
+import { useLocalStorage } from "usehooks-ts";
+import type { MessageContext } from "@/app/api/chat/validation";
+import {
+  PromptInput,
+  PromptInputSubmit,
+  PromptInputTextarea,
+} from "@/components/ai-elements/prompt-input";
+import { ExamplesDialog } from "@/components/assistant-chat/examples-dialog";
+import type { ChatMessage } from "@/components/assistant-chat/types";
+import { LoadingContent } from "@/components/LoadingContent";
+import { Tooltip } from "@/components/Tooltip";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,20 +28,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useChats } from "@/hooks/useChats";
-import { LoadingContent } from "@/components/LoadingContent";
-import { ExamplesDialog } from "@/components/assistant-chat/examples-dialog";
-import { Tooltip } from "@/components/Tooltip";
 import { useChat } from "@/providers/ChatProvider";
-import {
-  PromptInput,
-  PromptInputTextarea,
-  PromptInputSubmit,
-} from "@/components/ai-elements/prompt-input";
-import { useLocalStorage } from "usehooks-ts";
 import { useSession } from "@/utils/auth-client";
-import type { UseChatHelpers } from "@ai-sdk/react";
-import type { ChatMessage } from "@/components/assistant-chat/types";
-import type { MessageContext } from "@/app/api/chat/validation";
+import { Messages } from "./messages";
 
 export function Chat({ open }: { open: boolean }) {
   const {
@@ -46,7 +46,7 @@ export function Chat({ open }: { open: boolean }) {
   const { messages, status, stop, regenerate, setMessages } = chat;
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     "input",
-    "",
+    ""
   );
 
   useEffect(() => {
@@ -74,6 +74,7 @@ export function Chat({ open }: { open: boolean }) {
 
   const inputArea = (
     <PromptInput
+      className="relative rounded-2xl"
       onSubmit={(e) => {
         e.preventDefault();
         if (input.trim() && status === "ready") {
@@ -81,24 +82,16 @@ export function Chat({ open }: { open: boolean }) {
           setLocalStorageInput("");
         }
       }}
-      className="relative rounded-2xl"
     >
       <PromptInputTextarea
-        value={input}
-        placeholder="Ask me anything"
-        onChange={(e) => setInput(e.currentTarget.value)}
         className="pr-14"
+        onChange={(e) => setInput(e.currentTarget.value)}
+        placeholder="Ask me anything"
+        value={input}
       />
       <PromptInputSubmit
-        status={
-          status === "streaming"
-            ? "streaming"
-            : status === "submitted"
-              ? "submitted"
-              : "ready"
-        }
-        disabled={(!input.trim() && !context) || status !== "ready"}
-        className="absolute bottom-2 right-2 h-9 w-9 rounded-full bg-blue-500 text-white hover:bg-blue-600"
+        className="absolute right-2 bottom-2 h-9 w-9 rounded-full bg-blue-500 text-white hover:bg-blue-600"
+        disabled={!(input.trim() || context) || status !== "ready"}
         onClick={(e) => {
           if (status === "streaming") {
             e.preventDefault();
@@ -106,6 +99,13 @@ export function Chat({ open }: { open: boolean }) {
             setMessages((messages) => messages);
           }
         }}
+        status={
+          status === "streaming"
+            ? "streaming"
+            : status === "submitted"
+              ? "submitted"
+              : "ready"
+        }
       >
         {status === "submitted" ? (
           <Loader2 className="size-5 animate-spin" />
@@ -131,14 +131,14 @@ export function Chat({ open }: { open: boolean }) {
       <ChatTopBar hasMessages={hasMessages} setInput={setInput} />
       {hasMessages ? (
         <ChatMessagesView
-          status={status}
-          messages={messages}
-          setMessages={setMessages}
-          setInput={setInput}
-          regenerate={regenerate}
           context={context}
-          setContext={setContext}
           inputArea={inputArea}
+          messages={messages}
+          regenerate={regenerate}
+          setContext={setContext}
+          setInput={setInput}
+          setMessages={setMessages}
+          status={status}
         />
       ) : (
         <NewChatView
@@ -178,26 +178,20 @@ function ChatMessagesView({
 }) {
   return (
     <>
-      <div className="pointer-events-none h-2 -mb-2 z-10 bg-gradient-to-b from-background to-transparent" />
+      <div className="pointer-events-none z-10 -mb-2 h-2 bg-gradient-to-b from-background to-transparent" />
       <Messages
-        status={status}
-        messages={messages}
-        setMessages={setMessages}
-        setInput={setInput}
-        regenerate={regenerate}
-        isArtifactVisible={false}
         footer={
           <>
             {context ? (
               <div className="mb-2 flex items-center gap-2">
-                <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-muted-foreground text-xs">
                   Fix: {context.message.headers.subject.slice(0, 60)}
                   {context.message.headers.subject.length > 60 ? "..." : ""}
                   <button
-                    type="button"
                     aria-label="Remove context"
                     className="ml-1 rounded p-0.5 hover:bg-muted-foreground/10"
                     onClick={() => setContext(null)}
+                    type="button"
                   >
                     ×
                   </button>
@@ -205,9 +199,15 @@ function ChatMessagesView({
               </div>
             ) : null}
             <div className="relative z-10">{inputArea}</div>
-            <div className="absolute w-full bottom-0 h-20 bg-background pointer-events-none" />
+            <div className="pointer-events-none absolute bottom-0 h-20 w-full bg-background" />
           </>
         }
+        isArtifactVisible={false}
+        messages={messages}
+        regenerate={regenerate}
+        setInput={setInput}
+        setMessages={setMessages}
+        status={status}
       />
     </>
   );
@@ -237,18 +237,18 @@ function NewChatView({
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-[var(--chat-px)]">
       <div className="w-full max-w-[var(--chat-max-w)]">
-        <h1 className="mb-6 text-center text-2xl sm:text-3xl md:text-4xl font-extralight tracking-tight">
+        <h1 className="mb-6 text-center font-extralight text-2xl tracking-tight sm:text-3xl md:text-4xl">
           {greeting}
         </h1>
         {inputArea}
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           {CHAT_EXAMPLES.map((example) => (
             <Button
-              key={example}
-              variant="outline"
-              size="sm"
               className="rounded-full"
+              key={example}
               onClick={() => onSuggestionClick(example)}
+              size="sm"
+              variant="outline"
             >
               {example}
             </Button>
@@ -288,7 +288,7 @@ function NewChatButton() {
 
   return (
     <Tooltip content="Start a new conversation">
-      <Button variant="ghost" size="icon" onClick={setNewChat}>
+      <Button onClick={setNewChat} size="icon" variant="ghost">
         <PlusIcon className="size-5" />
         <span className="sr-only">New Chat</span>
       </Button>
@@ -306,10 +306,10 @@ function ChatHistoryDropdown() {
       <Tooltip content="View previous conversations">
         <DropdownMenuTrigger asChild>
           <Button
-            variant="ghost"
-            size="icon"
-            onMouseEnter={() => setShouldLoadChats(true)}
             onClick={() => mutate()}
+            onMouseEnter={() => setShouldLoadChats(true)}
+            size="icon"
+            variant="ghost"
           >
             <HistoryIcon className="size-5" />
             <span className="sr-only">Chat History</span>
@@ -318,19 +318,19 @@ function ChatHistoryDropdown() {
       </Tooltip>
       <DropdownMenuContent align="end">
         <LoadingContent
-          loading={isLoading}
           error={error}
+          errorComponent={
+            <DropdownMenuItem disabled>Error loading chats</DropdownMenuItem>
+          }
+          loading={isLoading}
           loadingComponent={
             <DropdownMenuItem
-              disabled
               className="flex items-center justify-center"
+              disabled
             >
               <Loader2 className="mr-2 size-4 animate-spin" />
               Loading chats...
             </DropdownMenuItem>
-          }
-          errorComponent={
-            <DropdownMenuItem disabled>Error loading chats</DropdownMenuItem>
           }
         >
           {data && data.chats.length > 0 ? (
@@ -358,9 +358,15 @@ function ChatHistoryDropdown() {
 function getGreeting(firstName: string | undefined): string {
   const hour = new Date().getHours();
   const name = firstName ? `, ${firstName}` : "";
-  if (hour < 5) return `Hey there${name}`;
-  if (hour < 12) return `Good morning${name}`;
-  if (hour < 18) return `Good afternoon${name}`;
+  if (hour < 5) {
+    return `Hey there${name}`;
+  }
+  if (hour < 12) {
+    return `Good morning${name}`;
+  }
+  if (hour < 18) {
+    return `Good afternoon${name}`;
+  }
   return `Good evening${name}`;
 }
 

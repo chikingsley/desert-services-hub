@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { isColdEmail } from "./is-cold-email";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getEmailAccount } from "@/__tests__/helpers";
-import type { EmailForLLM } from "@/utils/types";
 import { GroupItemType } from "@/generated/prisma/enums";
 import prisma from "@/utils/__mocks__/prisma";
 import { extractEmailAddress } from "@/utils/email";
+import type { EmailForLLM } from "@/utils/types";
+import { isColdEmail } from "./is-cold-email";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/utils/prisma");

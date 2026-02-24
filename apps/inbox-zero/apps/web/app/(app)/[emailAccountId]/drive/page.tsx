@@ -1,38 +1,38 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import Link from "next/link";
-import { parseAsBoolean, useQueryState } from "nuqs";
-import { useAction } from "next-safe-action/hooks";
 import { HashIcon } from "lucide-react";
-import { PageWrapper } from "@/components/PageWrapper";
-import { PageHeader } from "@/components/PageHeader";
+import Link from "next/link";
+import { useAction } from "next-safe-action/hooks";
+import { parseAsBoolean, useQueryState } from "nuqs";
+import { useCallback, useState } from "react";
 import { LoadingContent } from "@/components/LoadingContent";
+import { PageHeader } from "@/components/PageHeader";
+import { PageWrapper } from "@/components/PageWrapper";
+import { toastError, toastSuccess } from "@/components/Toast";
 import { Toggle } from "@/components/Toggle";
 import { MutedText } from "@/components/Typography";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { useDriveConnections } from "@/hooks/useDriveConnections";
-import { useMessagingChannels } from "@/hooks/useMessagingChannels";
-import { DriveConnections } from "./DriveConnections";
-import { FilingPreferences } from "./FilingPreferences";
-import { FilingActivity } from "./FilingActivity";
-import { DriveOnboarding } from "./DriveOnboarding";
-import { DriveSetup } from "./DriveSetup";
 import { Switch } from "@/components/ui/switch";
-import { useAccount } from "@/providers/EmailAccountProvider";
+import { useDriveConnections } from "@/hooks/useDriveConnections";
 import { useEmailAccountFull } from "@/hooks/useEmailAccountFull";
+import { useMessagingChannels } from "@/hooks/useMessagingChannels";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { cn } from "@/utils";
 import { updateFilingEnabledAction } from "@/utils/actions/drive";
 import { updateChannelFeaturesAction } from "@/utils/actions/messaging-channels";
 import { getActionErrorMessage } from "@/utils/error";
 import { prefixPath } from "@/utils/path";
-import { toastError, toastSuccess } from "@/components/Toast";
-import { cn } from "@/utils";
-import { Badge } from "@/components/ui/badge";
+import { DriveConnections } from "./DriveConnections";
+import { DriveOnboarding } from "./DriveOnboarding";
+import { DriveSetup } from "./DriveSetup";
+import { FilingActivity } from "./FilingActivity";
+import { FilingPreferences } from "./FilingPreferences";
 
 type DriveView = "onboarding" | "setup" | "settings";
 
@@ -56,7 +56,7 @@ export default function DrivePage() {
     hasConnections,
     filingEnabled,
     forceOnboarding,
-    forceSetup,
+    forceSetup
   );
 
   const handleToggle = useCallback(
@@ -81,14 +81,14 @@ export default function DrivePage() {
         setIsSaving(false);
       }
     },
-    [emailAccountId, mutateEmail],
+    [emailAccountId, mutateEmail]
   );
 
   return (
     <PageWrapper>
       <LoadingContent
-        loading={isLoading || emailLoading}
         error={error || emailError}
+        loading={isLoading || emailLoading}
       >
         {view === "onboarding" && <DriveOnboarding />}
         {view === "setup" && <DriveSetup />}
@@ -101,8 +101,8 @@ export default function DrivePage() {
                 {!filingEnabled && <Badge variant="destructive">Paused</Badge>}
                 <Switch
                   checked={filingEnabled}
-                  onCheckedChange={handleToggle}
                   disabled={isSaving}
+                  onCheckedChange={handleToggle}
                 />
               </div>
             </div>
@@ -110,7 +110,7 @@ export default function DrivePage() {
             <div
               className={cn(
                 "mt-6 space-y-4 transition-opacity duration-200",
-                !filingEnabled && "opacity-50 pointer-events-none",
+                !filingEnabled && "pointer-events-none opacity-50"
               )}
             >
               <DriveConnections />
@@ -128,10 +128,14 @@ function getDriveView(
   hasConnections: boolean,
   filingEnabled: boolean,
   forceOnboarding: boolean | null,
-  forceSetup: boolean | null,
+  forceSetup: boolean | null
 ): DriveView {
-  if (forceOnboarding === true || !hasConnections) return "onboarding";
-  if (forceSetup === true || (hasConnections && !filingEnabled)) return "setup";
+  if (forceOnboarding === true || !hasConnections) {
+    return "onboarding";
+  }
+  if (forceSetup === true || (hasConnections && !filingEnabled)) {
+    return "setup";
+  }
   return "settings";
 }
 
@@ -143,20 +147,24 @@ function IntegrationsPopover({ emailAccountId }: { emailAccountId: string }) {
 
   const availableProviders = data?.availableProviders ?? [];
 
-  if (isLoading || (allConnected.length === 0 && availableProviders.length === 0))
+  if (
+    isLoading ||
+    (allConnected.length === 0 && availableProviders.length === 0)
+  ) {
     return null;
+  }
 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button size="sm" variant="outline">
           Integrations
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72">
         <div className="space-y-3">
           <div>
-            <h4 className="text-sm font-medium">Integrations</h4>
+            <h4 className="font-medium text-sm">Integrations</h4>
             <MutedText className="text-xs">
               Send filing updates to connected apps
             </MutedText>
@@ -166,9 +174,9 @@ function IntegrationsPopover({ emailAccountId }: { emailAccountId: string }) {
             <div className="space-y-2">
               {withChannel.map((channel) => (
                 <SlackChannelToggle
-                  key={channel.id}
                   channel={channel}
                   emailAccountId={emailAccountId}
+                  key={channel.id}
                   onUpdate={mutate}
                 />
               ))}
@@ -177,8 +185,8 @@ function IntegrationsPopover({ emailAccountId }: { emailAccountId: string }) {
             <MutedText className="text-xs">
               Select a target channel in{" "}
               <Link
+                className="text-foreground underline"
                 href={prefixPath(emailAccountId, "/briefs")}
-                className="underline text-foreground"
               >
                 Meeting Briefs
               </Link>{" "}
@@ -216,7 +224,7 @@ function SlackChannelToggle({
           description: getActionErrorMessage(error.error) ?? "Failed to update",
         });
       },
-    },
+    }
   );
 
   return (
@@ -234,8 +242,8 @@ function SlackChannelToggle({
         </span>
       </div>
       <Toggle
-        name={`filing-${channel.id}`}
         enabled={channel.sendDocumentFilings}
+        name={`filing-${channel.id}`}
         onChange={(sendDocumentFilings) =>
           execute({ channelId: channel.id, sendDocumentFilings })
         }

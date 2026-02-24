@@ -1,18 +1,18 @@
 import { z } from "zod";
-import { withError } from "@/utils/middleware";
-import { withQstashOrInternal } from "@/utils/qstash";
-import prisma from "@/utils/prisma";
 import {
   AutomationJobRunStatus,
   MessagingProvider,
 } from "@/generated/prisma/enums";
-import { createEmailProvider } from "@/utils/email/provider";
 import { getAutomationJobMessage } from "@/utils/automation-jobs/message";
 import {
   AutomationJobConfigurationError,
   sendAutomationMessageToSlack,
 } from "@/utils/automation-jobs/slack";
+import { createEmailProvider } from "@/utils/email/provider";
+import { withError } from "@/utils/middleware";
 import { isActivePremium } from "@/utils/premium";
+import prisma from "@/utils/prisma";
+import { withQstashOrInternal } from "@/utils/qstash";
 import { getUserPremium } from "@/utils/user/get";
 
 export const maxDuration = 300;
@@ -84,7 +84,8 @@ export const POST = withError(
         createdAt: run.createdAt,
       });
       return new Response("Run currently running", { status: 409 });
-    } else if (run.status !== AutomationJobRunStatus.PENDING) {
+    }
+    if (run.status !== AutomationJobRunStatus.PENDING) {
       logger.info("Automation job run already processed", {
         automationJobRunId,
         status: run.status,
@@ -131,7 +132,7 @@ export const POST = withError(
       });
       if (!isActivePremium(premium)) {
         runLogger.info(
-          "Skipping automation job run because owner is not premium",
+          "Skipping automation job run because owner is not premium"
         );
         await markAutomationJobRunSkipped({
           automationJobRunId,
@@ -145,7 +146,7 @@ export const POST = withError(
 
       if (!run.automationJob.messagingChannel.isConnected) {
         runLogger.info(
-          "Skipping automation job run because messaging channel is disconnected",
+          "Skipping automation job run because messaging channel is disconnected"
         );
         await markAutomationJobRunSkipped({
           automationJobRunId,
@@ -159,7 +160,7 @@ export const POST = withError(
         run.automationJob.messagingChannel.provider !== MessagingProvider.SLACK
       ) {
         throw new AutomationJobConfigurationError(
-          "Unsupported messaging provider for automation job",
+          "Unsupported messaging provider for automation job"
         );
       }
 
@@ -167,7 +168,7 @@ export const POST = withError(
         run.automationJob.messagingChannel.emailAccount.account.provider;
       if (!provider) {
         throw new AutomationJobConfigurationError(
-          "Email provider is not connected",
+          "Email provider is not connected"
         );
       }
 
@@ -227,10 +228,10 @@ export const POST = withError(
         isConfigurationError
           ? "Automation job skipped due to configuration"
           : "Automation job execution failed",
-        { status: isConfigurationError ? 200 : 500 },
+        { status: isConfigurationError ? 200 : 500 }
       );
     }
-  }),
+  })
 );
 
 async function markAutomationJobRunSkipped({

@@ -1,59 +1,59 @@
 export interface ContractWonBridgeResult {
+  contractDocExtractsEnqueued: number;
   contractsClassified: number;
   contractsLinked: number;
-  contractDocExtractsEnqueued: number;
   documentsBackfilled: number;
-  estimatesMarkedWon: number;
-  estimatesMarkedLost: number;
-  mondayUpdates: number;
   errors: string[];
+  estimatesMarkedLost: number;
+  estimatesMarkedWon: number;
+  mondayUpdates: number;
 }
 
 export interface WonCandidate {
+  account_name: string | null;
+  awarded_value: number | null;
+  bid_value: number | null;
   email_id: number;
   email_received_at: string;
-  project_id: number;
-  project_name: string;
   estimate_id: number;
   estimate_name: string;
-  account_name: string | null;
-  monday_item_id: string | null;
-  bid_value: number | null;
-  awarded_value: number | null;
   match_type: "single_estimate" | "account_match";
+  monday_item_id: string | null;
+  project_id: number;
+  project_name: string;
 }
 
 export interface LoserCandidate {
+  account_name: string | null;
   estimate_id: number;
   estimate_name: string;
-  account_name: string | null;
   monday_item_id: string | null;
 }
 
 export interface WonPhaseResult {
+  errors: string[];
   estimatesMarkedWon: number;
   mondayUpdates: number;
-  errors: string[];
   wonByProject: Map<number, number[]>;
 }
 
 export interface LoserPhaseResult {
+  errors: string[];
   estimatesMarkedLost: number;
   mondayUpdates: number;
-  errors: string[];
 }
 
 export interface DocToEnqueue {
-  email_id: number;
   doc_id: number;
+  email_id: number;
 }
 
 export interface ContractFields {
-  project_name: string | null;
   contractor_name: string | null;
-  project_address: string | null;
-  po_number: string | null;
   document_type: string | null;
+  po_number: string | null;
+  project_address: string | null;
+  project_name: string | null;
 }
 
 export interface ProjectMatch {
@@ -62,8 +62,8 @@ export interface ProjectMatch {
 }
 
 export interface ContractDocExtractPayload {
-  email_id: number;
   doc_id: number;
+  email_id: number;
 }
 
 export type ContractDocExtractEnqueueJob = (
@@ -71,20 +71,20 @@ export type ContractDocExtractEnqueueJob = (
 ) => Promise<void>;
 
 export interface ContractAttachmentRow {
-  id: number;
   attachment_id: string;
-  name: string;
   content_type: string | null;
+  id: number;
+  name: string;
   size: number | null;
   storage_path: string | null;
 }
 
 export interface ContractAttachmentContext {
   emailId: number;
-  messageId: string;
-  mailboxEmail: string;
-  subject: string;
   fromEmail: string;
+  mailboxEmail: string;
+  messageId: string;
+  subject: string;
 }
 
 // ── Job Payload Schemas ─────────────────────────────────────

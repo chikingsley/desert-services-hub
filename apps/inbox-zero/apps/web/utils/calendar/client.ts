@@ -1,8 +1,8 @@
 import { auth, calendar, type calendar_v3 } from "@googleapis/calendar";
 import { env } from "@/env";
-import type { Logger } from "@/utils/logger";
-import { CALENDAR_SCOPES as GOOGLE_CALENDAR_SCOPES } from "@/utils/gmail/scopes";
 import { SafeError } from "@/utils/error";
+import { CALENDAR_SCOPES as GOOGLE_CALENDAR_SCOPES } from "@/utils/gmail/scopes";
+import type { Logger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
 
 type AuthOptions = {
@@ -117,7 +117,7 @@ export const getCalendarClientWithRefresh = async ({
 
 export async function fetchGoogleCalendars(
   calendarClient: calendar_v3.Calendar,
-  logger: Logger,
+  logger: Logger
 ) {
   try {
     const response = await calendarClient.calendarList.list();

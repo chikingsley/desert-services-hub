@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   Section,
   SectionContent,
@@ -6,11 +7,10 @@ import {
   SectionHeading,
   SectionSubtitle,
 } from "@/components/new-landing/common/Typography";
-import Image from "next/image";
 
 interface PreWrittenDraftsProps {
-  title: React.ReactNode;
   subtitle: React.ReactNode;
+  title: React.ReactNode;
 }
 
 export function PreWrittenDrafts({ title, subtitle }: PreWrittenDraftsProps) {
@@ -20,18 +20,18 @@ export function PreWrittenDrafts({ title, subtitle }: PreWrittenDraftsProps) {
       <SectionSubtitle>{subtitle}</SectionSubtitle>
       <SectionContent className="flex justify-center">
         <Image
-          className="hidden md:block"
-          src="/images/new-landing/pre-written-drafts.png"
           alt="pre-written drafts"
-          width={2000}
+          className="hidden md:block"
           height={2000}
+          src="/images/new-landing/pre-written-drafts.png"
+          width={2000}
         />
         <Image
-          className="block md:hidden"
-          src="/images/new-landing/pre-written-drafts-mobile.png"
           alt="an organized inbox"
-          width={2000}
+          className="block md:hidden"
           height={2000}
+          src="/images/new-landing/pre-written-drafts-mobile.png"
+          width={2000}
         />
       </SectionContent>
     </Section>

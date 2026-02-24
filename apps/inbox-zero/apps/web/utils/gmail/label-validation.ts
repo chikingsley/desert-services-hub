@@ -82,7 +82,7 @@ type LabelValidationResult = {
  */
 export function validateLabelNameBasic(name: string): LabelValidationResult {
   // Check if empty
-  if (!name || !name.trim()) {
+  if (!(name && name.trim())) {
     return { valid: false, error: "Label name cannot be empty" };
   }
 

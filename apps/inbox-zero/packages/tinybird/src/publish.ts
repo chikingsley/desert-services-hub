@@ -17,9 +17,11 @@ const tinybirdPublishEmailAction = tb.buildIngestEndpoint({
 });
 
 export async function publishEmailAction(
-  event: TinybirdEmailAction,
+  event: TinybirdEmailAction
 ): Promise<void> {
-  if (!isTinybirdEnabled()) return;
+  if (!isTinybirdEnabled()) {
+    return;
+  }
   await tinybirdPublishEmailAction(event);
 }
 

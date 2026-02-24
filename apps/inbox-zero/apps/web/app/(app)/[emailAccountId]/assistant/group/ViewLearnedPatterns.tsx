@@ -1,52 +1,50 @@
 "use client";
 
-import useSWR, { type KeyedMutator } from "swr";
-import sortBy from "lodash/sortBy";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { capitalCase } from "capital-case";
 import groupBy from "lodash/groupBy";
-import Link from "next/link";
-import { PlusIcon, ExternalLinkIcon, TrashIcon } from "lucide-react";
+import sortBy from "lodash/sortBy";
+import { PlusIcon, TrashIcon } from "lucide-react";
 import {
-  useState,
-  useCallback,
   type Dispatch,
   type SetStateAction,
+  useCallback,
+  useState,
 } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { capitalCase } from "capital-case";
-import { toastSuccess, toastError } from "@/components/Toast";
+import useSWR, { type KeyedMutator } from "swr";
 import type { GroupItemsResponse } from "@/app/api/user/group/[groupId]/items/route";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Input } from "@/components/Input";
 import { LoadingContent } from "@/components/LoadingContent";
+import { Select } from "@/components/Select";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Toggle } from "@/components/Toggle";
+import { Tooltip } from "@/components/Tooltip";
+import { MessageText, MutedText } from "@/components/Typography";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
-  TableRow,
   TableBody,
   TableCell,
-  TableHeader,
   TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { MessageText, MutedText } from "@/components/Typography";
+import type { GroupItem } from "@/generated/prisma/client";
+import { GroupItemType } from "@/generated/prisma/enums";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import {
   addGroupItemAction,
   deleteGroupItemAction,
 } from "@/utils/actions/group";
-import { GroupItemType } from "@/generated/prisma/enums";
-import type { GroupItem } from "@/generated/prisma/client";
-import { Input } from "@/components/Input";
-import { Select } from "@/components/Select";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   type AddGroupItemBody,
   addGroupItemBody,
 } from "@/utils/actions/group.validation";
-import { Badge } from "@/components/ui/badge";
 import { formatShortDate } from "@/utils/date";
-import { Tooltip } from "@/components/Tooltip";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { prefixPath } from "@/utils/path";
-import { Toggle } from "@/components/Toggle";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export function ViewLearnedPatterns({ groupId }: { groupId: string }) {
   return (
@@ -59,7 +57,7 @@ export function ViewLearnedPatterns({ groupId }: { groupId: string }) {
 function ViewGroupInner({ groupId }: { groupId: string }) {
   const { emailAccountId } = useAccount();
   const { data, isLoading, error, mutate } = useSWR<GroupItemsResponse>(
-    `/api/user/group/${groupId}/items`,
+    `/api/user/group/${groupId}/items`
   );
   const group = data?.group;
 
@@ -89,9 +87,9 @@ function ViewGroupInner({ groupId }: { groupId: string }) {
 
             <div className="mt-2 grid grid-cols-1 gap-1 sm:mt-0 sm:flex sm:items-center">
               <Button
-                variant="outline"
-                size="sm"
                 onClick={() => setShowAddItem(true)}
+                size="sm"
+                variant="outline"
               >
                 <PlusIcon className="mr-2 h-4 w-4" />
                 Add pattern
@@ -102,8 +100,8 @@ function ViewGroupInner({ groupId }: { groupId: string }) {
       </div>
       <div className="mt-2">
         <LoadingContent
-          loading={!data && isLoading}
           error={error}
+          loading={!data && isLoading}
           loadingComponent={<Skeleton className="m-4 h-24 rounded" />}
         >
           {data &&
@@ -161,7 +159,7 @@ const AddGroupItemForm = ({
       mutate();
       onClose();
     },
-    [mutate, onClose, emailAccountId, exclude],
+    [mutate, onClose, emailAccountId, exclude]
   );
 
   const handleKeyDown = useCallback(
@@ -172,7 +170,7 @@ const AddGroupItemForm = ({
         handleSubmit(onSubmit)(e);
       }
     },
-    [handleSubmit, onSubmit],
+    [handleSubmit, onSubmit]
   );
 
   return (
@@ -189,25 +187,25 @@ const AddGroupItemForm = ({
         />
         <div className="flex-1">
           <Input
-            type="text"
+            error={errors.value}
             name="value"
             placeholder="e.g. hello@company.com"
             registerProps={register("value", { required: true })}
-            error={errors.value}
+            type="text"
           />
         </div>
 
         <div className="flex gap-2">
           <Button
-            size="sm"
             loading={isSubmitting}
             onClick={() => {
               handleSubmit(onSubmit)();
             }}
+            size="sm"
           >
             Add
           </Button>
-          <Button variant="outline" size="sm" onClick={onClose}>
+          <Button onClick={onClose} size="sm" variant="outline">
             Cancel
           </Button>
         </div>
@@ -215,11 +213,11 @@ const AddGroupItemForm = ({
 
       <div className="mt-4 flex justify-end">
         <Toggle
-          name="exclude"
-          tooltipText="When enabled, never match this pattern."
-          label="Exclude"
           enabled={exclude}
+          label="Exclude"
+          name="exclude"
           onChange={setExclude}
+          tooltipText="When enabled, never match this pattern."
         />
       </div>
     </div>
@@ -234,30 +232,30 @@ function GroupItems({
   mutate: KeyedMutator<GroupItemsResponse>;
 }) {
   const groupedByStatus = groupBy(items, (item) =>
-    item.exclude ? "exclude" : "include",
+    item.exclude ? "exclude" : "include"
   );
 
   return (
     <div className="space-y-4">
       <GroupItemList
+        items={groupedByStatus.include || []}
+        mutate={mutate}
         title={
           <div className="flex items-center gap-x-1.5">
             When these patterns are encountered, the rule will automatically
             match:
           </div>
         }
-        items={groupedByStatus.include || []}
-        mutate={mutate}
       />
       {(groupedByStatus.exclude?.length || 0) > 0 && (
         <GroupItemList
+          items={groupedByStatus.exclude || []}
+          mutate={mutate}
           title={
             <div className="flex items-center gap-x-1.5">
               When these patterns are encountered, the rule will never match:
             </div>
           }
-          items={groupedByStatus.exclude || []}
-          mutate={mutate}
         />
       )}
     </div>
@@ -297,7 +295,7 @@ function GroupItemList({
                 <div className="flex items-center">
                   {isCreatedRecently ||
                     (isUpdatedRecently && (
-                      <Badge variant="green" className="mr-1">
+                      <Badge className="mr-1" variant="green">
                         {isCreatedRecently ? "New!" : "Updated"}
                       </Badge>
                     ))}
@@ -315,8 +313,6 @@ function GroupItemList({
                 </Tooltip>
 
                 <Button
-                  variant="outline"
-                  size="icon"
                   onClick={async () => {
                     const result = await deleteGroupItemAction(emailAccountId, {
                       id: item.id,
@@ -332,6 +328,8 @@ function GroupItemList({
                       mutate();
                     }
                   }}
+                  size="icon"
+                  variant="outline"
                 >
                   <TrashIcon className="size-4" />
                 </Button>
@@ -360,11 +358,11 @@ export function GroupItemDisplay({
   return (
     <>
       {item.exclude && (
-        <Badge variant="destructive" className="mr-2">
+        <Badge className="mr-2" variant="destructive">
           Exclude
         </Badge>
       )}
-      <Badge variant="secondary" className="mr-2">
+      <Badge className="mr-2" variant="secondary">
         {capitalCase(item.type)}
       </Badge>
       {item.value}

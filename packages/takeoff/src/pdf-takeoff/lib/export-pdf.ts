@@ -18,18 +18,18 @@ const WHITESPACE_REGEX = /\s+/;
  * @category Type
  */
 export interface ExportPdfOptions {
-  /** Default color for text highlights. Default: "rgba(255, 226, 143, 0.5)" */
-  textHighlightColor?: string;
   /** Default color for area highlights. Default: "rgba(255, 226, 143, 0.5)" */
   areaHighlightColor?: string;
-  /** Default text color for freetext. Default: "#333333" */
-  defaultFreetextColor?: string;
   /** Default background for freetext. Default: "#ffffc8" */
   defaultFreetextBgColor?: string;
+  /** Default text color for freetext. Default: "#333333" */
+  defaultFreetextColor?: string;
   /** Default font size for freetext. Default: 14 */
   defaultFreetextFontSize?: number;
   /** Progress callback for large PDFs */
   onProgress?: (current: number, total: number) => void;
+  /** Default color for text highlights. Default: "rgba(255, 226, 143, 0.5)" */
+  textHighlightColor?: string;
 }
 
 /**
@@ -38,32 +38,32 @@ export interface ExportPdfOptions {
  * @category Type
  */
 export interface ExportableHighlight {
-  id: string;
-  type?: "text" | "area" | "freetext" | "image" | "drawing" | "shape";
+  /** Background color for freetext highlights */
+  backgroundColor?: string;
+  /** Text color for freetext highlights */
+  color?: string;
   content?: {
     text?: string;
     image?: string; // Base64 data URL
     shape?: ShapeData; // Shape data for shape highlights
   };
-  position: ScaledPosition;
+  /** Font family for freetext highlights (not used in export, Helvetica is always used) */
+  fontFamily?: string;
+  /** Font size for freetext highlights */
+  fontSize?: string;
   /** Per-highlight color override (for text/area highlights) */
   highlightColor?: string;
   /** Style mode for text highlights: "highlight" (default), "underline", or "strikethrough" */
   highlightStyle?: "highlight" | "underline" | "strikethrough";
-  /** Text color for freetext highlights */
-  color?: string;
-  /** Background color for freetext highlights */
-  backgroundColor?: string;
-  /** Font size for freetext highlights */
-  fontSize?: string;
-  /** Font family for freetext highlights (not used in export, Helvetica is always used) */
-  fontFamily?: string;
+  id: string;
+  position: ScaledPosition;
   /** Shape type for shape highlights */
   shapeType?: "rectangle" | "circle" | "arrow";
   /** Stroke color for shape highlights */
   strokeColor?: string;
   /** Stroke width for shape highlights */
   strokeWidth?: number;
+  type?: "text" | "area" | "freetext" | "image" | "drawing" | "shape";
 }
 
 /**

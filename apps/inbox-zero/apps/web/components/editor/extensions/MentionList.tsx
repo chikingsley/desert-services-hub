@@ -1,10 +1,10 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
-import { cn } from "@/utils";
 import type { UserLabel } from "@/hooks/useLabels";
+import { cn } from "@/utils";
 
 interface MentionListProps {
-  items: (UserLabel & { isCreateNew?: boolean })[];
   command: (item: UserLabel & { isCreateNew?: boolean }) => void;
+  items: (UserLabel & { isCreateNew?: boolean })[];
 }
 
 export interface MentionListRef {
@@ -71,13 +71,13 @@ export const MentionList = forwardRef<MentionListRef, MentionListProps>(
       <div className="relative max-h-60 overflow-auto rounded-md border border-slate-200 bg-white shadow-md">
         {items.map((item, index) => (
           <button
-            key={item.id}
-            type="button"
             className={cn(
               "flex w-full items-center px-3 py-2 text-left text-sm hover:bg-slate-100",
-              index === selectedIndex && "bg-slate-100",
+              index === selectedIndex && "bg-slate-100"
             )}
+            key={item.id}
             onClick={() => selectItem(index)}
+            type="button"
           >
             {item.isCreateNew ? (
               <>
@@ -85,7 +85,7 @@ export const MentionList = forwardRef<MentionListRef, MentionListProps>(
                   <strong>Create label:</strong>{" "}
                   <span className="font-medium">{item.name}</span>
                 </span>
-                <span className="ml-2 text-xs text-slate-500">+</span>
+                <span className="ml-2 text-slate-500 text-xs">+</span>
               </>
             ) : (
               <span className="flex-1 truncate">{item.name}</span>
@@ -94,7 +94,7 @@ export const MentionList = forwardRef<MentionListRef, MentionListProps>(
         ))}
       </div>
     );
-  },
+  }
 );
 
 MentionList.displayName = "MentionList";

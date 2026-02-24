@@ -6,13 +6,15 @@ const TINYBIRD_TOKEN = process.env.TINYBIRD_TOKEN;
 
 async function deleteFromDatasource(
   datasource: string,
-  deleteCondition: string, // e.g. "email='abc@example.com'"
+  deleteCondition: string // e.g. "email='abc@example.com'"
 ): Promise<unknown> {
-  if (!isTinybirdEnabled()) return;
+  if (!isTinybirdEnabled()) {
+    return;
+  }
 
   const url = new URL(
     `/v0/datasources/${datasource}/delete`,
-    TINYBIRD_BASE_URL,
+    TINYBIRD_BASE_URL
   );
   const res = await fetch(url, {
     method: "POST",
@@ -27,7 +29,7 @@ async function deleteFromDatasource(
     throw new Error(
       `Unable to delete for datasource ${datasource}: [${
         res.status
-      }] ${await res.text()}`,
+      }] ${await res.text()}`
     );
   }
 
@@ -37,7 +39,7 @@ async function deleteFromDatasource(
 // Tinybird only allows 1 delete at a time
 async function _deleteFromDatasourceWithRetry(
   datasource: string,
-  deleteCondition: string,
+  deleteCondition: string
 ): Promise<unknown> {
   return pRetry(
     async () => {
@@ -59,9 +61,9 @@ async function _deleteFromDatasourceWithRetry(
       randomize: true,
       onFailedAttempt: (error) => {
         console.log(
-          `Rate limited when deleting from ${datasource}. Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`,
+          `Rate limited when deleting from ${datasource}. Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`
         );
       },
-    },
+    }
   );
 }

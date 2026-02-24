@@ -19,12 +19,12 @@ import {
 
 interface EmailTableRowProps {
   email: EmailWithDedup;
-  onRowClick: (emailId: number) => void;
+  onClassifyDomain: (domain: string, classification: string) => void;
   onClassifyEmail: (
     emailId: number,
     opts: { classification?: string | null; isExcluded?: boolean }
   ) => void;
-  onClassifyDomain: (domain: string, classification: string) => void;
+  onRowClick: (emailId: number) => void;
   onSpam: (domain: string) => void;
 }
 

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { encryptToken, decryptToken } from "./encryption";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { decryptToken, encryptToken } from "./encryption";
 
 // Mock server-only as it's required for tests
 vi.mock("server-only", () => ({}));

@@ -1,7 +1,7 @@
-import { z } from "zod";
 import { NextResponse } from "next/server";
-import { withEmailProvider } from "@/utils/middleware";
+import { z } from "zod";
 import type { EmailProvider } from "@/utils/email/types";
+import { withEmailProvider } from "@/utils/middleware";
 
 const threadQuery = z.object({ id: z.string() });
 export type ThreadQuery = z.infer<typeof threadQuery>;
@@ -10,7 +10,7 @@ export type ThreadResponse = Awaited<ReturnType<typeof getThread>>;
 async function getThread(
   id: string,
   includeDrafts: boolean,
-  emailProvider: EmailProvider,
+  emailProvider: EmailProvider
 ) {
   const thread = await emailProvider.getThread(id);
 
@@ -48,8 +48,8 @@ export const GET = withEmailProvider(
       });
       return NextResponse.json(
         { error: "Failed to fetch thread" },
-        { status: 500 },
+        { status: 500 }
       );
     }
-  },
+  }
 );

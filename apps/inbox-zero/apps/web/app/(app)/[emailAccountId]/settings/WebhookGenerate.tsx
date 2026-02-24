@@ -1,10 +1,10 @@
 "use client";
 
 import { KeyIcon } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
+import { toastError, toastSuccess } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import { regenerateWebhookSecretAction } from "@/utils/actions/webhook";
-import { toastError, toastSuccess } from "@/components/Toast";
-import { useAction } from "next-safe-action/hooks";
 import { getActionErrorMessage } from "@/utils/error";
 
 export function RegenerateSecretButton({
@@ -32,10 +32,10 @@ export function RegenerateSecretButton({
 
   return (
     <Button
-      variant="outline"
-      size="sm"
       loading={isExecuting}
       onClick={() => execute()}
+      size="sm"
+      variant="outline"
     >
       <KeyIcon className="mr-2 size-4" />
       {hasSecret ? "Regenerate secret" : "Generate secret"}

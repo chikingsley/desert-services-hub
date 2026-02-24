@@ -1,11 +1,11 @@
-import { runActionFunction } from "@/utils/ai/actions";
-import prisma from "@/utils/prisma";
 import type { Prisma } from "@/generated/prisma/client";
-import { ExecutedRuleStatus, ActionType } from "@/generated/prisma/enums";
-import type { Logger } from "@/utils/logger";
-import type { ParsedMessage } from "@/utils/types";
+import { ActionType, ExecutedRuleStatus } from "@/generated/prisma/enums";
+import { runActionFunction } from "@/utils/ai/actions";
 import { updateExecutedActionWithDraftId } from "@/utils/ai/choose-rule/draft-management";
 import type { EmailProvider } from "@/utils/email/types";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import type { ParsedMessage } from "@/utils/types";
 
 const MODULE = "ai-execute-act";
 

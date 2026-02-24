@@ -1,12 +1,12 @@
 import sumBy from "lodash/sumBy";
 import { after } from "next/server";
-import prisma from "@/utils/prisma";
-import type { PremiumTier } from "@/generated/prisma/enums";
-import { createScopedLogger } from "@/utils/logger";
-import { ensureEmailAccountsWatched } from "@/utils/email/watch-manager";
-import { hasTierAccess, isPremium } from "@/utils/premium";
-import { SafeError } from "@/utils/error";
 import { env } from "@/env";
+import type { PremiumTier } from "@/generated/prisma/enums";
+import { ensureEmailAccountsWatched } from "@/utils/email/watch-manager";
+import { SafeError } from "@/utils/error";
+import { createScopedLogger } from "@/utils/logger";
+import { hasTierAccess, isPremium } from "@/utils/premium";
+import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("premium");
 
@@ -98,7 +98,9 @@ export async function cancelPremiumLemon({
       where: { id: premiumId, lemonSqueezyVariantId: variantId },
       select: { id: true },
     });
-    if (!premium) return null;
+    if (!premium) {
+      return null;
+    }
   }
 
   return await prisma.premium.update({
@@ -114,7 +116,9 @@ export async function updateAccountSeats({ userId }: { userId: string }) {
     select: { premium: { select: { id: true } } },
   });
 
-  if (!user) throw new Error(`User not found for id ${userId}`);
+  if (!user) {
+    throw new Error(`User not found for id ${userId}`);
+  }
 
   if (!user.premium) {
     logger.warn("User has no premium", { userId });
@@ -185,11 +189,13 @@ export async function removeFromPendingInvites({
     select: { pendingInvites: true },
   });
 
-  if (!premium) return;
+  if (!premium) {
+    return;
+  }
 
   const currentPendingInvites = premium.pendingInvites || [];
   const updatedPendingInvites = currentPendingInvites.filter(
-    (e) => e !== email,
+    (e) => e !== email
   );
 
   if (currentPendingInvites.length !== updatedPendingInvites.length) {
@@ -218,7 +224,7 @@ export async function updateAccountSeatsForPremium(
     stripeSubscriptionItemId: string | null;
     lemonSqueezySubscriptionItemId?: number | null;
   },
-  totalSeats: number,
+  totalSeats: number
 ) {
   // Billing providers are disabled in the internal fork.
   // Keep this function as a no-op to preserve the call sites.
@@ -236,7 +242,9 @@ export async function checkHasAccess({
   userId: string;
   minimumTier: PremiumTier;
 }): Promise<boolean> {
-  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) return true;
+  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) {
+    return true;
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -251,12 +259,14 @@ export async function checkHasAccess({
     },
   });
 
-  if (!user) throw new SafeError("User not found");
+  if (!user) {
+    throw new SafeError("User not found");
+  }
 
   if (
     !isPremium(
       user?.premium?.lemonSqueezyRenewsAt || null,
-      user?.premium?.stripeSubscriptionStatus || null,
+      user?.premium?.stripeSubscriptionStatus || null
     )
   ) {
     return false;

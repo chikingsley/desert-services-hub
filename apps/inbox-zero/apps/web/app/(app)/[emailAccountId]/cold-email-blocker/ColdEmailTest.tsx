@@ -1,10 +1,10 @@
+import { TestRulesContent } from "@/app/(app)/[emailAccountId]/cold-email-blocker/TestRules";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TestRulesContent } from "@/app/(app)/[emailAccountId]/cold-email-blocker/TestRules";
 
 export function ColdEmailTest() {
   return (

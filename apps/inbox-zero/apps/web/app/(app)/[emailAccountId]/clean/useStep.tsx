@@ -1,5 +1,5 @@
-import { useCallback } from "react";
 import { parseAsInteger, useQueryState } from "nuqs";
+import { useCallback } from "react";
 import { CleanStep } from "@/app/(app)/[emailAccountId]/clean/types";
 
 export function useStep() {
@@ -7,7 +7,7 @@ export function useStep() {
     "step",
     parseAsInteger
       .withDefault(CleanStep.INTRO)
-      .withOptions({ history: "push", shallow: false }),
+      .withOptions({ history: "push", shallow: false })
   );
 
   const onNext = useCallback(() => {

@@ -2,23 +2,23 @@
 "use client";
 
 import keyBy from "lodash/keyBy";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CleanThread } from "@/utils/redis/clean.types";
 
 export function useEmailStream(
   emailAccountId: string,
   initialPaused = false,
   initialThreads: CleanThread[] = [],
-  filter?: string | null,
+  filter?: string | null
 ) {
   // Initialize emailsMap with sorted threads and proper dates
   const [emailsMap, setEmailsMap] = useState<Record<string, CleanThread>>(() =>
-    createEmailMap(initialThreads),
+    createEmailMap(initialThreads)
   );
 
   // Initialize emailOrder sorted by date (newest first)
   const [emailOrder, setEmailOrder] = useState<string[]>(() =>
-    getSortedThreadIds(initialThreads),
+    getSortedThreadIds(initialThreads)
   );
 
   const [isPaused, setIsPaused] = useState(initialPaused);
@@ -36,7 +36,9 @@ export function useEmailStream(
         return;
       }
 
-      if (eventSourceRef.current) return;
+      if (eventSourceRef.current) {
+        return;
+      }
 
       if (!emailAccountId) {
         console.error("Email account ID is missing, cannot connect to SSE.");
@@ -129,7 +131,9 @@ export function useEmailStream(
   const emails = useMemo(() => {
     return emailOrder.reduce<(typeof emailsMap)[string][]>((acc, id) => {
       const email = emailsMap[id];
-      if (!email) return acc;
+      if (!email) {
+        return acc;
+      }
 
       if (!filter) {
         acc.push(email);

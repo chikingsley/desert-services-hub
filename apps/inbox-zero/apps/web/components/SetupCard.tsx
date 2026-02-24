@@ -1,16 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
 import Image from "next/image";
-import { Card, CardFooter } from "@/components/ui/card";
+import type { ReactNode } from "react";
 import { SectionDescription, TypographyH3 } from "@/components/Typography";
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemTitle,
-} from "@/components/ui/item";
+import { Card, CardFooter } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +11,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemTitle,
+} from "@/components/ui/item";
 
 type FeatureItem = {
   icon: ReactNode;
@@ -51,7 +51,7 @@ export function SetupDialog({
   onOpenChange?: (open: boolean) => void;
 }) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="max-w-lg">
         <DialogHeader className="sr-only">
           <DialogTitle>{props.title}</DialogTitle>
@@ -74,12 +74,12 @@ function SetupContent({
   return (
     <>
       <Image
-        src={imageSrc}
         alt={imageAlt}
-        width={200}
-        height={200}
         className="mx-auto dark:brightness-90 dark:invert"
+        height={200}
+        src={imageSrc}
         unoptimized
+        width={200}
       />
 
       <div className="text-center">

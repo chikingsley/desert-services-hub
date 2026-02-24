@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
 import { env } from "@/env";
-import prisma from "@/utils/prisma";
 import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import { cleanupOrphanedAccount } from "@/utils/user/orphaned-account";
 
 interface AccountLinkingParams {
   existingAccountId: string | null;
-  hasEmailAccount: boolean;
   existingUserId: string | null;
-  targetUserId: string;
+  hasEmailAccount: boolean;
+  logger: Logger;
   provider: "google" | "microsoft";
   providerEmail: string;
-  logger: Logger;
+  targetUserId: string;
 }
 
 export async function handleAccountLinking({
@@ -42,7 +42,7 @@ export async function handleAccountLinking({
     return { type: "continue_create" };
   }
 
-  if (!existingAccountId || !hasEmailAccount) {
+  if (!(existingAccountId && hasEmailAccount)) {
     const existingEmailAccount = await prisma.emailAccount.findUnique({
       where: { email: providerEmail.trim().toLowerCase() },
       select: { id: true, userId: true, email: true },
@@ -56,7 +56,7 @@ export async function handleAccountLinking({
           email: providerEmail,
           existingUserId: existingEmailAccount.userId,
           targetUserId,
-        },
+        }
       );
       redirectUrl.searchParams.set("error", "account_already_exists_use_merge");
       return {
@@ -76,7 +76,7 @@ export async function handleAccountLinking({
         email: providerEmail,
         targetUserId,
         existingAccountId,
-      },
+      }
     );
     return {
       type: "update_tokens",
@@ -84,7 +84,7 @@ export async function handleAccountLinking({
     };
   }
 
-  if (!existingAccountId || !existingUserId) {
+  if (!(existingAccountId && existingUserId)) {
     throw new Error("Unexpected state: existingAccount should exist");
   }
 

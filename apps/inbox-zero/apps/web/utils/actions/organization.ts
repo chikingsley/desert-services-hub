@@ -1,25 +1,25 @@
 "use server";
 
-import { actionClient, actionClientUser } from "@/utils/actions/safe-action";
+import { env } from "@/env";
 import {
+  cancelInvitationBody,
+  createOrganizationAndInviteBody,
   createOrganizationBody,
+  handleInvitationBody,
   inviteMemberBody,
   removeMemberBody,
-  cancelInvitationBody,
-  handleInvitationBody,
   updateAnalyticsConsentBody,
-  createOrganizationAndInviteBody,
 } from "@/utils/actions/organization.validation";
-import prisma from "@/utils/prisma";
+import { actionClient, actionClientUser } from "@/utils/actions/safe-action";
 import { SafeError } from "@/utils/error";
-import { hasOrganizationAdminRole } from "@/utils/organizations/roles";
 import { sendOrganizationInvitation } from "@/utils/organizations/invitations";
+import { hasOrganizationAdminRole } from "@/utils/organizations/roles";
 import {
   claimPendingPremiumInvite,
   removeFromPendingInvites,
   removeUserFromPremium,
 } from "@/utils/premium/server";
-import { env } from "@/env";
+import prisma from "@/utils/prisma";
 import { slugify } from "@/utils/string";
 
 export const createOrganizationAction = actionClient
@@ -33,7 +33,7 @@ export const createOrganizationAction = actionClient
 
     if (existingMembership) {
       throw new SafeError(
-        "You are already a member of an organization. You can only be part of one organization at a time.",
+        "You are already a member of an organization. You can only be part of one organization at a time."
       );
     }
 
@@ -44,7 +44,7 @@ export const createOrganizationAction = actionClient
 
     if (existingOrganization) {
       throw new SafeError(
-        "An organization with this slug already exists. Please choose a different slug.",
+        "An organization with this slug already exists. Please choose a different slug."
       );
     }
 
@@ -88,13 +88,13 @@ export const inviteMemberAction = actionClientUser
 
       if (!hasOrganizationAdminRole(inviterMember.role)) {
         throw new SafeError(
-          "Only organization owners or admins can invite members.",
+          "Only organization owners or admins can invite members."
         );
       }
 
       if (role === "owner" && inviterMember.role !== "owner") {
         throw new SafeError(
-          "Only existing owners can assign the owner role to new members.",
+          "Only existing owners can assign the owner role to new members."
         );
       }
 
@@ -139,7 +139,7 @@ export const inviteMemberAction = actionClientUser
         await prisma.invitation.delete({ where: { id: invitation.id } });
         throw new SafeError("Failed to send invitation email");
       }
-    },
+    }
   );
 
 export const handleInvitationAction = actionClientUser
@@ -247,7 +247,7 @@ async function acceptInvitation({
       };
     }
     throw new SafeError(
-      "You are already a member of an organization. You can only be part of one organization at a time.",
+      "You are already a member of an organization. You can only be part of one organization at a time."
     );
   }
 
@@ -315,7 +315,7 @@ export const removeMemberAction = actionClientUser
 
     if (!hasOrganizationAdminRole(callerMembership.role)) {
       throw new SafeError(
-        "Only organization owners or admins can remove members.",
+        "Only organization owners or admins can remove members."
       );
     }
 
@@ -334,7 +334,7 @@ export const removeMemberAction = actionClientUser
       });
       if (ownerCount === 1) {
         throw new SafeError(
-          "Cannot remove the last remaining owner from the organization.",
+          "Cannot remove the last remaining owner from the organization."
         );
       }
     }
@@ -342,7 +342,7 @@ export const removeMemberAction = actionClientUser
     const premium = await getOrganizationPremium(targetMember.organizationId);
     if (premium) {
       const emailAccount = await getUserFromEmailAccount(
-        targetMember.emailAccountId,
+        targetMember.emailAccountId
       );
       if (emailAccount?.user) {
         await removeUserFromPremium({
@@ -391,7 +391,7 @@ export const cancelInvitationAction = actionClientUser
 
     if (!hasOrganizationAdminRole(callerMembership.role)) {
       throw new SafeError(
-        "Only organization owners or admins can cancel invitations.",
+        "Only organization owners or admins can cancel invitations."
       );
     }
 
@@ -413,7 +413,9 @@ export const cancelInvitationAction = actionClientUser
   });
 
 async function getOrganizationPremium(organizationId: string) {
-  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) return;
+  if (env.NEXT_PUBLIC_BYPASS_PREMIUM_CHECKS) {
+    return;
+  }
   const owner = await prisma.member.findFirst({
     where: { organizationId, role: "owner" },
     select: {
@@ -467,7 +469,7 @@ export const updateAnalyticsConsentAction = actionClient
       });
 
       return { success: true };
-    },
+    }
   );
 
 export const createOrganizationAndInviteAction = actionClient
@@ -491,7 +493,7 @@ export const createOrganizationAndInviteAction = actionClient
 
       if (existingMembership) {
         throw new SafeError(
-          "You are already a member of an organization. Use the standard invite flow.",
+          "You are already a member of an organization. Use the standard invite flow."
         );
       }
 
@@ -559,7 +561,7 @@ export const createOrganizationAndInviteAction = actionClient
       }
 
       return { organizationId: organization.id, results };
-    },
+    }
   );
 
 function getRandomId(): string {

@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { processHistoryItem } from "@/utils/webhook/process-history-item";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getEmailAccount } from "@/__tests__/helpers";
 import {
   createMockEmailProvider,
-  getMockParsedMessage,
   ErrorProviders,
+  getMockParsedMessage,
 } from "@/__tests__/mocks/email-provider.mock";
-import { getEmailAccount } from "@/__tests__/helpers";
 import { createScopedLogger } from "@/utils/logger";
 import { handleOutboundMessage } from "@/utils/reply-tracker/handle-outbound";
+import { processHistoryItem } from "@/utils/webhook/process-history-item";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/server", () => ({
@@ -75,8 +75,8 @@ describe("Provider Edge Cases", () => {
       await expect(
         processHistoryItem(
           { messageId: "deleted-msg", threadId: "thread-123" },
-          { ...baseOptions, provider },
-        ),
+          { ...baseOptions, provider }
+        )
       ).resolves.toBeUndefined();
     });
 
@@ -86,8 +86,8 @@ describe("Provider Edge Cases", () => {
       await expect(
         processHistoryItem(
           { messageId: "msg-123", threadId: "thread-123" },
-          { ...baseOptions, provider },
-        ),
+          { ...baseOptions, provider }
+        )
       ).rejects.toThrow("Rate limit exceeded");
     });
 
@@ -97,8 +97,8 @@ describe("Provider Edge Cases", () => {
       await expect(
         processHistoryItem(
           { messageId: "msg-123", threadId: "thread-123" },
-          { ...baseOptions, provider },
-        ),
+          { ...baseOptions, provider }
+        )
       ).rejects.toThrow("Quota exceeded");
     });
   });
@@ -111,8 +111,8 @@ describe("Provider Edge Cases", () => {
       await expect(
         processHistoryItem(
           { messageId: "deleted-msg", threadId: "thread-123" },
-          { ...baseOptions, provider },
-        ),
+          { ...baseOptions, provider }
+        )
       ).resolves.toBeUndefined();
     });
 
@@ -122,8 +122,8 @@ describe("Provider Edge Cases", () => {
       await expect(
         processHistoryItem(
           { messageId: "msg-123", threadId: "thread-123" },
-          { ...baseOptions, provider },
-        ),
+          { ...baseOptions, provider }
+        )
       ).rejects.toThrow("Too many requests");
     });
   });
@@ -135,8 +135,8 @@ describe("Provider Edge Cases", () => {
       await expect(
         processHistoryItem(
           { messageId: "msg-123", threadId: "thread-123" },
-          { ...baseOptions, provider },
-        ),
+          { ...baseOptions, provider }
+        )
       ).rejects.toThrow("invalid_grant");
     });
   });
@@ -148,8 +148,8 @@ describe("Provider Edge Cases", () => {
       await expect(
         processHistoryItem(
           { messageId: "msg-123", threadId: "thread-123" },
-          { ...baseOptions, provider },
-        ),
+          { ...baseOptions, provider }
+        )
       ).rejects.toThrow("fetch failed");
     });
   });
@@ -160,14 +160,14 @@ describe("Provider Edge Cases", () => {
         getMessage: vi.fn().mockResolvedValue(
           getMockParsedMessage({
             labelIds: ["INBOX"],
-          }),
+          })
         ),
         isSentMessage: vi.fn().mockReturnValue(false),
       });
 
       await processHistoryItem(
         { messageId: "msg-123", threadId: "thread-123" },
-        { ...baseOptions, provider },
+        { ...baseOptions, provider }
       );
 
       expect(provider.getMessage).toHaveBeenCalledWith("msg-123");
@@ -184,14 +184,14 @@ describe("Provider Edge Cases", () => {
               subject: "Test",
               date: "2024-01-01",
             },
-          }),
+          })
         ),
         isSentMessage: vi.fn().mockReturnValue(true),
       });
 
       await processHistoryItem(
         { messageId: "msg-123", threadId: "thread-123" },
-        { ...baseOptions, provider },
+        { ...baseOptions, provider }
       );
 
       expect(handleOutboundMessage).toHaveBeenCalled();
@@ -209,8 +209,8 @@ describe("Provider Edge Cases", () => {
       await expect(
         processHistoryItem(
           { messageId: "msg-123", threadId: "thread-123" },
-          { ...baseOptions, provider },
-        ),
+          { ...baseOptions, provider }
+        )
       ).resolves.toBeUndefined();
     });
 
@@ -224,8 +224,8 @@ describe("Provider Edge Cases", () => {
       await expect(
         processHistoryItem(
           { messageId: "msg-123", threadId: "thread-123" },
-          { ...baseOptions, provider },
-        ),
+          { ...baseOptions, provider }
+        )
       ).resolves.toBeUndefined();
     });
 
@@ -234,15 +234,15 @@ describe("Provider Edge Cases", () => {
         getMessage: vi.fn().mockRejectedValue(
           Object.assign(new Error("Not found"), {
             code: "itemNotFound",
-          }),
+          })
         ),
       });
 
       await expect(
         processHistoryItem(
           { messageId: "msg-123", threadId: "thread-123" },
-          { ...baseOptions, provider },
-        ),
+          { ...baseOptions, provider }
+        )
       ).resolves.toBeUndefined();
     });
   });
@@ -258,7 +258,7 @@ describe("Provider Edge Cases", () => {
         getMessage: vi
           .fn()
           .mockResolvedValue(
-            getMockParsedMessage({ id: "should-not-be-used" }),
+            getMockParsedMessage({ id: "should-not-be-used" })
           ),
         isSentMessage: vi.fn().mockReturnValue(false),
       });
@@ -269,7 +269,7 @@ describe("Provider Edge Cases", () => {
           threadId: "thread-123",
           message: preFetchedMessage,
         },
-        { ...baseOptions, provider },
+        { ...baseOptions, provider }
       );
 
       // getMessage should NOT be called since we passed a pre-fetched message
@@ -281,14 +281,14 @@ describe("Provider Edge Cases", () => {
         getMessage: vi.fn().mockResolvedValue(
           getMockParsedMessage({
             labelIds: ["INBOX"],
-          }),
+          })
         ),
         isSentMessage: vi.fn().mockReturnValue(false),
       });
 
       await processHistoryItem(
         { messageId: "msg-123", threadId: "thread-123" },
-        { ...baseOptions, provider },
+        { ...baseOptions, provider }
       );
 
       // getMessage should be called since no message was pre-fetched
@@ -318,7 +318,7 @@ describe("Provider Edge Cases", () => {
           threadId: "thread-123",
           message: preFetchedMessage,
         },
-        { ...baseOptions, provider },
+        { ...baseOptions, provider }
       );
 
       expect(provider.getMessage).not.toHaveBeenCalled();

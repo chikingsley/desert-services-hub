@@ -28,7 +28,7 @@ export type GoogleDriveAccessLevel = "limited" | "full";
 
 export function getGoogleDriveOAuth2Url(
   state: string,
-  accessLevel: GoogleDriveAccessLevel = "limited",
+  accessLevel: GoogleDriveAccessLevel = "limited"
 ): string {
   const oauth2Client = getGoogleDriveOAuth2Client();
   const scopes =
@@ -48,7 +48,7 @@ export async function exchangeGoogleDriveCode(code: string) {
   const oauth2Client = getGoogleDriveOAuth2Client();
   const { tokens } = await oauth2Client.getToken(code);
 
-  if (!tokens.access_token || !tokens.refresh_token) {
+  if (!(tokens.access_token && tokens.refresh_token)) {
     throw new Error("No access or refresh token returned from Google");
   }
 
@@ -104,7 +104,7 @@ export function getMicrosoftDriveOAuth2Url(state: string): string {
  * Exchange Microsoft OAuth code for tokens
  */
 export async function exchangeMicrosoftDriveCode(code: string) {
-  if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET) {
+  if (!(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET)) {
     throw new Error("Microsoft login not enabled - missing credentials");
   }
 
@@ -123,7 +123,7 @@ export async function exchangeMicrosoftDriveCode(code: string) {
         grant_type: "authorization_code",
         scope: MICROSOFT_DRIVE_SCOPES.join(" "),
       }),
-    },
+    }
   );
 
   if (!response.ok) {
@@ -133,7 +133,7 @@ export async function exchangeMicrosoftDriveCode(code: string) {
 
   const tokens = await response.json();
 
-  if (!tokens.access_token || !tokens.refresh_token) {
+  if (!(tokens.access_token && tokens.refresh_token)) {
     throw new Error("No access or refresh token returned from Microsoft");
   }
 

@@ -1,9 +1,9 @@
+import { sendReconnectionEmail } from "@inboxzero/resend";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import prisma from "@/utils/__mocks__/prisma";
-import { cleanupInvalidTokens } from "./cleanup-invalid-tokens";
-import { sendReconnectionEmail } from "@inboxzero/resend";
-import { createScopedLogger } from "@/utils/logger";
 import { addUserErrorMessage } from "@/utils/error-messages";
+import { createScopedLogger } from "@/utils/logger";
+import { cleanupInvalidTokens } from "./cleanup-invalid-tokens";
 
 const logger = createScopedLogger("test");
 
@@ -51,14 +51,14 @@ describe("cleanupInvalidTokens", () => {
         data: expect.objectContaining({
           disconnectedAt: expect.any(Date),
         }),
-      }),
+      })
     );
     expect(sendReconnectionEmail).toHaveBeenCalled();
     expect(addUserErrorMessage).toHaveBeenCalledWith(
       "user_1",
       "Account disconnected",
       expect.stringContaining("test@example.com"),
-      logger,
+      logger
     );
   });
 
@@ -81,7 +81,7 @@ describe("cleanupInvalidTokens", () => {
       "user_1",
       "Account disconnected",
       expect.stringContaining("test@example.com"),
-      logger,
+      logger
     );
   });
 

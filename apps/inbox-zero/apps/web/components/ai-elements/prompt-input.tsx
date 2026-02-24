@@ -1,14 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/utils";
 import type { ChatStatus } from "ai";
 import { Loader2Icon, SendIcon, SquareIcon, XIcon } from "lucide-react";
 import type {
@@ -18,6 +9,15 @@ import type {
 } from "react";
 import { Children } from "react";
 import TextareaAutosize from "react-textarea-autosize";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/utils";
 
 export type PromptInputProps = HTMLAttributes<HTMLFormElement>;
 
@@ -25,7 +25,7 @@ export const PromptInput = ({ className, ...props }: PromptInputProps) => (
   <form
     className={cn(
       "w-full divide-y overflow-hidden rounded-xl border bg-background shadow-sm",
-      className,
+      className
     )}
     {...props}
   />
@@ -73,16 +73,16 @@ export const PromptInputTextarea = ({
         "w-full resize-none rounded-none border-none p-3 shadow-none outline-none ring-0",
         "bg-transparent dark:bg-transparent",
         "focus-visible:ring-0",
-        className,
+        className
       )}
+      maxRows={15}
+      minRows={2}
       name="message"
       onChange={(e) => {
         onChange?.(e);
       }}
       onKeyDown={handleKeyDown}
       placeholder={placeholder}
-      minRows={2}
-      maxRows={15}
       {...props}
     />
   );
@@ -110,7 +110,7 @@ export const PromptInputTools = ({
     className={cn(
       "flex items-center gap-1",
       "[&_button:first-child]:rounded-bl-xl",
-      className,
+      className
     )}
     {...props}
   />
@@ -133,7 +133,7 @@ export const PromptInputButton = ({
         "shrink-0 gap-1.5 rounded-lg",
         variant === "ghost" && "text-muted-foreground",
         newSize === "default" && "px-3",
-        className,
+        className
       )}
       size={newSize}
       type="button"
@@ -196,7 +196,7 @@ export const PromptInputModelSelectTrigger = ({
     className={cn(
       "border-none bg-transparent font-medium text-muted-foreground shadow-none transition-colors",
       'hover:bg-accent hover:text-foreground [&[aria-expanded="true"]]:bg-accent [&[aria-expanded="true"]]:text-foreground',
-      className,
+      className
     )}
     {...props}
   />

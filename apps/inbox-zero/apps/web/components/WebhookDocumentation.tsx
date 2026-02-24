@@ -1,7 +1,8 @@
 "use client";
 
+import { Check, Copy } from "lucide-react";
 import { useState } from "react";
-import { Copy, Check } from "lucide-react";
+import { MutedText } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,7 +11,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { MutedText } from "@/components/Typography";
 
 export function WebhookDocumentationDialog({
   children,
@@ -20,7 +20,7 @@ export function WebhookDocumentationDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Webhook Payload</DialogTitle>
         </DialogHeader>
@@ -75,9 +75,9 @@ export function WebhookPayloadDocumentation() {
         <div className="flex items-center justify-between">
           <h4 className="font-medium">Webhook Payload Structure</h4>
           <Button
-            variant="ghost"
-            size="sm"
             onClick={() => copyToClipboard(payloadJson)}
+            size="sm"
+            variant="ghost"
           >
             {copied ? (
               <Check className="h-4 w-4" />
@@ -87,13 +87,13 @@ export function WebhookPayloadDocumentation() {
           </Button>
         </div>
 
-        <pre className="bg-muted p-4 rounded-md text-sm overflow-x-auto">
+        <pre className="overflow-x-auto rounded-md bg-muted p-4 text-sm">
           <code>{payloadJson}</code>
         </pre>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <h5 className="font-medium mb-2">Email Fields</h5>
+            <h5 className="mb-2 font-medium">Email Fields</h5>
             <div className="space-y-1">
               <MutedText>
                 <code>threadId</code> - Gmail/Outlook thread ID
@@ -117,7 +117,7 @@ export function WebhookPayloadDocumentation() {
           </div>
 
           <div>
-            <h5 className="font-medium mb-2">Rule Execution Fields</h5>
+            <h5 className="mb-2 font-medium">Rule Execution Fields</h5>
             <div className="space-y-1">
               <MutedText>
                 <code>id</code> - Execution ID
@@ -138,8 +138,8 @@ export function WebhookPayloadDocumentation() {
           </div>
         </div>
 
-        <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-md">
-          <div className="text-sm text-blue-600 dark:text-blue-400">
+        <div className="rounded-md bg-blue-50 p-3 dark:bg-blue-950/30">
+          <div className="text-blue-600 text-sm dark:text-blue-400">
             <strong>Authentication:</strong> Each request includes an{" "}
             <code>X-Webhook-Secret</code> header with your webhook secret for
             verification.
@@ -154,9 +154,9 @@ export function WebhookDocumentationLink() {
   return (
     <WebhookDocumentationDialog>
       <Button
-        variant="link"
+        className="h-auto p-0 text-blue-600 text-xs hover:text-blue-800"
         size="xs"
-        className="h-auto p-0 text-xs text-blue-600 hover:text-blue-800"
+        variant="link"
       >
         View payload structure
       </Button>

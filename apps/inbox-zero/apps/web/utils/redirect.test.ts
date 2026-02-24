@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildRedirectUrl } from "@/utils/redirect";
 
 describe("buildRedirectUrl", () => {
@@ -16,7 +16,7 @@ describe("buildRedirectUrl", () => {
 
   it("appends a single string param", () => {
     expect(buildRedirectUrl("/settings", { tab: "email" })).toBe(
-      "/settings?tab=email",
+      "/settings?tab=email"
     );
   });
 
@@ -30,7 +30,7 @@ describe("buildRedirectUrl", () => {
 
   it("skips undefined values", () => {
     expect(
-      buildRedirectUrl("/settings", { tab: "email", foo: undefined }),
+      buildRedirectUrl("/settings", { tab: "email", foo: undefined })
     ).toBe("/settings?tab=email");
   });
 
@@ -41,7 +41,7 @@ describe("buildRedirectUrl", () => {
 
   it("returns base path when all values are undefined", () => {
     expect(
-      buildRedirectUrl("/settings", { foo: undefined, bar: undefined }),
+      buildRedirectUrl("/settings", { foo: undefined, bar: undefined })
     ).toBe("/settings");
   });
 

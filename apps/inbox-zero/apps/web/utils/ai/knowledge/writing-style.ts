@@ -1,12 +1,11 @@
 import { z } from "zod";
-import { createScopedLogger } from "@/utils/logger";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { EmailForLLM } from "@/utils/types";
-import { truncate } from "@/utils/string";
-import { removeExcessiveWhitespace } from "@/utils/string";
-import { getModel } from "@/utils/llms/model";
-import { createGenerateObject } from "@/utils/llms";
 import { getUserInfoPrompt } from "@/utils/ai/helpers";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import { createScopedLogger } from "@/utils/logger";
+import { removeExcessiveWhitespace, truncate } from "@/utils/string";
+import type { EmailForLLM } from "@/utils/types";
 
 const logger = createScopedLogger("writing-style-analyzer");
 
@@ -58,7 +57,7 @@ ${emails
     (e) => `<email>
   <to>${e.to}</to>
   <body>${truncate(removeExcessiveWhitespace(e.content), 1000)}</body>
-</email>`,
+</email>`
   )
   .join("\n")}
 </emails>

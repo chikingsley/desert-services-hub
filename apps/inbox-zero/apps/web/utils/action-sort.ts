@@ -39,11 +39,11 @@ function getActionTypePriority(actionType: ActionType): number {
  * Actions with lower priority numbers (higher priority) appear first.
  */
 export function sortActionsByPriority<T extends { type: ActionType }>(
-  actions: T[],
+  actions: T[]
 ): T[] {
   return sortBy(
     actions,
     [(action) => getActionTypePriority(action.type)],
-    ["asc"],
+    ["asc"]
   );
 }

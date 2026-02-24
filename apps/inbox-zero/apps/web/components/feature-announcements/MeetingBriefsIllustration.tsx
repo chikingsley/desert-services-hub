@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export function MeetingBriefsIllustration() {
   const [stage, setStage] = useState(0);
@@ -41,16 +41,16 @@ export function MeetingBriefsIllustration() {
         <AnimatePresence mode="wait">
           {stage >= 1 && (
             <motion.div
-              key="email"
-              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
               className="w-full max-w-[260px] rounded-lg bg-white shadow-lg dark:bg-slate-800"
+              exit={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: 30 }}
+              key="email"
+              transition={{ duration: 0.5, ease: "easeOut" }}
             >
               {/* Email header */}
-              <div className="border-b border-gray-100 px-3 py-2 dark:border-gray-700">
-                <div className="text-[11px] font-semibold text-gray-900 dark:text-gray-100">
+              <div className="border-gray-100 border-b px-3 py-2 dark:border-gray-700">
+                <div className="font-semibold text-[11px] text-gray-900 dark:text-gray-100">
                   Briefing for{" "}
                   <span className="text-blue-600 dark:text-blue-400">
                     Product Review
@@ -67,15 +67,15 @@ export function MeetingBriefsIllustration() {
               {/* Email body */}
               <div className="px-3">
                 <motion.div
-                  className="overflow-hidden"
-                  initial={{ height: 0, opacity: 0 }}
                   animate={{
                     height: stage >= 2 ? "auto" : 0,
                     opacity: stage >= 2 ? 1 : 0,
                   }}
+                  className="overflow-hidden"
+                  initial={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.31, ease: "easeOut" }}
                 >
-                  <div className="py-2 text-[10px] font-semibold text-gray-800 dark:text-gray-200">
+                  <div className="py-2 font-semibold text-[10px] text-gray-800 dark:text-gray-200">
                     John Smith{" "}
                     <span className="font-normal text-gray-500 dark:text-gray-400">
                       (john@acme.com)
@@ -83,12 +83,12 @@ export function MeetingBriefsIllustration() {
                   </div>
                 </motion.div>
                 <motion.div
-                  className="space-y-0.5 overflow-hidden"
-                  initial={{ height: 0, opacity: 0 }}
                   animate={{
                     height: stage >= 3 ? "auto" : 0,
                     opacity: stage >= 3 ? 1 : 0,
                   }}
+                  className="space-y-0.5 overflow-hidden"
+                  initial={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.31, ease: "easeOut" }}
                 >
                   <div className="text-[9px] text-gray-600 dark:text-gray-400">

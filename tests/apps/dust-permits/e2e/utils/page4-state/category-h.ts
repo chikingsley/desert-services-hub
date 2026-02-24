@@ -7,12 +7,12 @@ import type { ValidationHelpers } from "./helpers";
 
 export interface CategoryHState {
   applies: boolean;
-  hasUseDustSuppressants: boolean;
-  hasSuppressantFrequency: boolean;
-  hasSuppressantAmount: boolean;
   hasCleanDebris: boolean;
   hasOther: boolean;
   hasOtherDescription: boolean;
+  hasSuppressantAmount: boolean;
+  hasSuppressantFrequency: boolean;
+  hasUseDustSuppressants: boolean;
 }
 
 export function getCategoryHState(

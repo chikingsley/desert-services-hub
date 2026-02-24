@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { Play } from "lucide-react";
-import { cn } from "@/utils";
+import Image from "next/image";
 import { usePostHog } from "posthog-js/react";
 import {
   Dialog,
@@ -11,12 +10,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { landingPageAnalytics } from "@/hooks/useAnalytics";
+import { cn } from "@/utils";
 
 interface HeroVideoProps {
-  videoSrc: string;
-  thumbnailSrc: string;
-  thumbnailAlt?: string;
   className?: string;
+  thumbnailAlt?: string;
+  thumbnailSrc: string;
+  videoSrc: string;
 }
 
 export default function HeroVideoDialog({
@@ -32,19 +32,19 @@ export default function HeroVideoDialog({
       <div className={cn("relative", className)}>
         <DialogTrigger asChild>
           <button
-            type="button"
-            onClick={() => landingPageAnalytics.videoClicked(posthog)}
             aria-label="Play video"
-            className="group relative cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-xl"
+            className="group relative cursor-pointer rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            onClick={() => landingPageAnalytics.videoClicked(posthog)}
+            type="button"
           >
-            <div className="relative -m-2 rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-2xl lg:p-4">
+            <div className="relative -m-2 rounded-xl bg-gray-900/5 p-2 ring-1 ring-gray-900/10 ring-inset lg:-m-4 lg:rounded-2xl lg:p-4">
               <Image
-                src={thumbnailSrc}
                 alt={thumbnailAlt}
-                width={2432}
+                className="rounded-md shadow ring-1 ring-gray-900/10 transition-all duration-200 ease-out group-hover:brightness-[0.9]"
                 height={1442}
                 priority
-                className="rounded-md shadow ring-1 ring-gray-900/10 transition-all duration-200 ease-out group-hover:brightness-[0.9]"
+                src={thumbnailSrc}
+                width={2432}
               />
             </div>
             <div className="absolute inset-0 flex scale-[0.9] items-center justify-center rounded-2xl transition-all duration-200 ease-out group-hover:scale-100">
@@ -66,11 +66,11 @@ export default function HeroVideoDialog({
           <DialogTitle className="sr-only">Video player</DialogTitle>
           <div className="relative aspect-video w-full">
             <iframe
-              src={videoSrc}
-              className="size-full rounded-lg"
-              title="Video content"
-              allowFullScreen
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="size-full rounded-lg"
+              src={videoSrc}
+              title="Video content"
             />
           </div>
         </DialogContent>

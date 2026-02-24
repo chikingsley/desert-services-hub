@@ -41,17 +41,17 @@ import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 interface ProjectsApiResponse {
+  facets: {
+    contractStatuses: Array<{ status: string; count: number }>;
+    contractPacketStatuses: Array<{ status: string; count: number }>;
+    dustStatuses: Array<{ status: string; count: number }>;
+  };
   items: ProjectRowData[];
   pagination: {
     page: number;
     perPage: number;
     total: number;
     totalPages: number;
-  };
-  facets: {
-    contractStatuses: Array<{ status: string; count: number }>;
-    contractPacketStatuses: Array<{ status: string; count: number }>;
-    dustStatuses: Array<{ status: string; count: number }>;
   };
 }
 

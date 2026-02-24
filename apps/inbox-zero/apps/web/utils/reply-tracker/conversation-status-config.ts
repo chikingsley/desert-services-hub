@@ -14,9 +14,11 @@ export type ConversationStatus =
   | "ACTIONED";
 
 export function isConversationStatusType(
-  systemType: SystemType | null | undefined,
+  systemType: SystemType | null | undefined
 ): systemType is ConversationStatus {
-  if (!systemType) return false;
+  if (!systemType) {
+    return false;
+  }
 
   return CONVERSATION_STATUS_TYPES.includes(systemType);
 }

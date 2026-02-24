@@ -1,12 +1,12 @@
-import prisma from "@/utils/prisma";
-import { hasAiAccess, getPremiumUserFilter } from "@/utils/premium";
-import type { Logger } from "@/utils/logger";
-import { createEmailProvider } from "@/utils/email/provider";
-import { captureException } from "@/utils/error";
 import { cleanupInvalidTokens } from "@/utils/auth/cleanup-invalid-tokens";
-import type { EmailProvider } from "@/utils/email/types";
-import { createManagedOutlookSubscription } from "@/utils/outlook/subscription-manager";
+import { createEmailProvider } from "@/utils/email/provider";
 import { isMicrosoftProvider } from "@/utils/email/provider-types";
+import type { EmailProvider } from "@/utils/email/types";
+import { captureException } from "@/utils/error";
+import type { Logger } from "@/utils/logger";
+import { createManagedOutlookSubscription } from "@/utils/outlook/subscription-manager";
+import { getPremiumUserFilter, hasAiAccess } from "@/utils/premium";
+import prisma from "@/utils/prisma";
 
 export type WatchEmailAccountResult =
   | {
@@ -75,9 +75,11 @@ async function getEmailAccountsToWatch(userIds: string[] | null) {
 
 async function watchEmailAccounts(
   emailAccounts: Awaited<ReturnType<typeof getEmailAccountsToWatch>>,
-  logger: Logger,
+  logger: Logger
 ): Promise<WatchEmailAccountResult[]> {
-  if (!emailAccounts.length) return [];
+  if (!emailAccounts.length) {
+    return [];
+  }
 
   logger.info("Watching email accounts", { count: emailAccounts.length });
 
@@ -91,7 +93,9 @@ async function watchEmailAccounts(
         provider: emailAccount.account.provider,
       });
       const result = await watchEmailAccount(emailAccount, log);
-      if (result) results.push(result);
+      if (result) {
+        results.push(result);
+      }
     } catch (error) {
       if (error instanceof Error) {
         const warn = [
@@ -126,13 +130,13 @@ async function watchEmailAccounts(
 
 async function watchEmailAccount(
   emailAccount: Awaited<ReturnType<typeof getEmailAccountsToWatch>>[number],
-  logger: Logger,
+  logger: Logger
 ): Promise<WatchEmailAccountResult | null> {
   const { account, user, watchEmailsExpirationDate } = emailAccount;
 
   const userHasAiAccess = hasAiAccess(
     user.premium?.tier || null,
-    user.aiApiKey,
+    user.aiApiKey
   );
 
   if (!userHasAiAccess) {
@@ -154,7 +158,7 @@ async function watchEmailAccount(
     return null;
   }
 
-  if (!account?.access_token || !account?.refresh_token) {
+  if (!(account?.access_token && account?.refresh_token)) {
     logger.info("User has no access token or refresh token");
 
     return {
@@ -219,7 +223,9 @@ async function watchEmails({
         logger,
       });
 
-      if (result) return { success: true, expirationDate: result };
+      if (result) {
+        return { success: true, expirationDate: result };
+      }
     } else {
       const result = await provider.watchEmails();
 

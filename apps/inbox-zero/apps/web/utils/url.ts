@@ -11,7 +11,7 @@ const PROVIDER_CONFIG: Record<
   {
     buildUrl: (
       messageOrThreadId: string,
-      emailAddress?: string | null,
+      emailAddress?: string | null
     ) => string;
     selectId: (messageId: string, threadId: string) => string;
     buildSearchUrl: (from: string, emailAddress?: string | null) => string;
@@ -36,7 +36,7 @@ const PROVIDER_CONFIG: Record<
     selectId: (messageId: string, _threadId: string) => messageId,
     buildSearchUrl: (from: string, emailAddress?: string | null) =>
       `${getGmailBaseUrl(
-        emailAddress,
+        emailAddress
       )}/#advanced-search/from=${encodeURIComponent(from)}`,
   },
   default: {
@@ -45,13 +45,13 @@ const PROVIDER_CONFIG: Record<
     selectId: (_messageId: string, threadId: string) => threadId,
     buildSearchUrl: (from: string, emailAddress?: string | null) =>
       `${getGmailBaseUrl(
-        emailAddress,
+        emailAddress
       )}/#advanced-search/from=${encodeURIComponent(from)}`,
   },
 } as const;
 
 function getProviderConfig(
-  provider?: string,
+  provider?: string
 ): (typeof PROVIDER_CONFIG)[keyof typeof PROVIDER_CONFIG] {
   return PROVIDER_CONFIG[provider ?? "default"];
 }
@@ -59,7 +59,7 @@ function getProviderConfig(
 export function getEmailUrl(
   messageOrThreadId: string,
   emailAddress?: string | null,
-  provider?: string,
+  provider?: string
 ): string {
   const config = getProviderConfig(provider);
   return config.buildUrl(messageOrThreadId, emailAddress);
@@ -74,7 +74,7 @@ export function getEmailUrlForMessage(
   messageId: string,
   threadId: string,
   emailAddress?: string | null,
-  provider?: string,
+  provider?: string
 ) {
   const config = getProviderConfig(provider);
   const idToUse = config?.selectId(messageId, threadId);
@@ -85,7 +85,7 @@ export function getEmailUrlForMessage(
 // Keep the old function name for backward compatibility
 export function getGmailUrl(
   messageOrThreadId: string,
-  emailAddress?: string | null,
+  emailAddress?: string | null
 ) {
   return getEmailUrl(messageOrThreadId, emailAddress, "google");
 }
@@ -98,17 +98,18 @@ export function getGmailSearchUrl(from: string, emailAddress?: string | null) {
 export function getEmailSearchUrl(
   from: string,
   emailAddress?: string | null,
-  provider?: string,
+  provider?: string
 ) {
   const config = provider ? PROVIDER_CONFIG[provider] : undefined;
-  if (!config)
+  if (!config) {
     return PROVIDER_CONFIG.default.buildSearchUrl(from, emailAddress);
+  }
   return config.buildSearchUrl(from, emailAddress);
 }
 
 export function getGmailBasicSearchUrl(emailAddress: string, query: string) {
   return `${getGmailBaseUrl(emailAddress)}/#search/${encodeURIComponent(
-    query,
+    query
   )}`;
 }
 

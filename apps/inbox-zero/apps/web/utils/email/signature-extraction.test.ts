@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { extractSignatureFromHtml } from "./signature-extraction";
 
 describe("extractSignatureFromHtml", () => {
@@ -22,7 +22,7 @@ describe("extractSignatureFromHtml", () => {
     const html = `<div dir="ltr"><div>Hey,</div><div><br></div><div>How's it going since we last spoke?</div><div><br></div><div id="Signature"><div dir="ltr">Best,<div>Demo Zero</div></div></div></div>`;
 
     expect(extractSignatureFromHtml(html)).toBe(
-      '<div dir="ltr">Best,<div>Demo Zero</div></div>',
+      '<div dir="ltr">Best,<div>Demo Zero</div></div>'
     );
   });
 
@@ -54,7 +54,7 @@ describe("extractSignatureFromHtml", () => {
 
     const signature = extractSignatureFromHtml(html);
     expect(signature).toBe(
-      "Best regards,<br>John & Jane © 2024<br><div>Support & Sales</div>",
+      "Best regards,<br>John & Jane © 2024<br><div>Support & Sales</div>"
     );
   });
 

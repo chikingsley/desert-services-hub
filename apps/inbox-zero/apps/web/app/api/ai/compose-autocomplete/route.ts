@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { withEmailAccount } from "@/utils/middleware";
 import { composeAutocompleteBody } from "@/app/api/ai/compose-autocomplete/validation";
 import { chatCompletionStream } from "@/utils/llms";
+import { withEmailAccount } from "@/utils/middleware";
 import { getEmailAccountWithAi } from "@/utils/user/get";
 
 export const POST = withEmailAccount(async (request) => {
@@ -9,7 +9,9 @@ export const POST = withEmailAccount(async (request) => {
 
   const user = await getEmailAccountWithAi({ emailAccountId });
 
-  if (!user) return NextResponse.json({ error: "Not authenticated" });
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" });
+  }
 
   const json = await request.json();
   const { prompt } = composeAutocompleteBody.parse(json);

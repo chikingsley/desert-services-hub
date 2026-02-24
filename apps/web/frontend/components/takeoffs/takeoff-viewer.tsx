@@ -23,21 +23,21 @@ import "@takeoff/pdf-takeoff/style/PdfHighlighter.css";
 import "@takeoff/pdf-takeoff/style/pdf_viewer.css";
 
 interface TakeoffViewerProps {
-  pdfUrl: string;
-  activeTool: TakeoffToolType | null;
+  activeColor: string;
   activeItemId: string;
   activeItemLabel: string;
-  activeColor: string;
+  activeTool: TakeoffToolType | null;
   annotations: TakeoffAnnotation[];
+  getNextNumber: (itemId: string) => number;
   onAnnotationAdd: (annotation: TakeoffAnnotation) => void;
   onAnnotationDelete?: (id: string) => void;
   onAnnotationUpdate?: (
     id: string,
     updates: Partial<TakeoffAnnotation>
   ) => void;
-  onToolClear: () => void;
-  getNextNumber: (itemId: string) => number;
   onPageChange?: (pageNumber: number, totalPages: number) => void;
+  onToolClear: () => void;
+  pdfUrl: string;
 }
 
 export function TakeoffViewer({

@@ -29,20 +29,23 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { formatCompactCurrency, formatCurrency } from "@/lib/utils";
 
 interface ContractFromApi {
-  id: number;
-  estimate_number: string | null;
-  name: string;
-  contractor: string | null;
   awarded_value: number | null;
   bid_value: number | null;
+  contract_status: string | null;
+  contractor: string | null;
+  dust_permit_status: string | null;
+  estimate_number: string | null;
+  id: number;
   location: string | null;
+  name: string;
   project_id: number | null;
   project_name: string | null;
-  contract_status: string | null;
-  dust_permit_status: string | null;
 }
 
 interface ContractsApiResponse {
+  facets: {
+    contractStatuses: Array<{ status: string; count: number }>;
+  };
   items: ContractFromApi[];
   pagination: {
     page: number;
@@ -50,32 +53,29 @@ interface ContractsApiResponse {
     total: number;
     totalPages: number;
   };
-  facets: {
-    contractStatuses: Array<{ status: string; count: number }>;
-  };
   summary: {
     totalValue: number;
   };
 }
 
 interface ReviewEntity {
-  class: string;
-  text: string;
   attributes: {
     severity?: "critical" | "warning" | "info";
     recommended_action?: string;
   };
+  class: string;
+  text: string;
 }
 
 interface ReviewDoc {
-  id: number;
-  file_name: string | null;
-  project_id: number | null;
-  entity_count: number;
   critical_count: number;
-  warning_count: number;
-  info_count: number;
   entities: ReviewEntity[];
+  entity_count: number;
+  file_name: string | null;
+  id: number;
+  info_count: number;
+  project_id: number | null;
+  warning_count: number;
 }
 
 interface ReviewApiResponse {

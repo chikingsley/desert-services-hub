@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/utils/index";
 import { type ComponentProps, memo } from "react";
 import { Streamdown } from "streamdown";
+import { cn } from "@/utils/index";
 
 type ResponseProps = ComponentProps<typeof Streamdown>;
 
@@ -11,13 +11,13 @@ export const Response = memo(
     <Streamdown
       className={cn(
         "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-        "[&_a]:!text-inherit [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:opacity-80",
-        className,
+        "[&_a]:!text-inherit [&_a:hover]:opacity-80 [&_a]:underline [&_a]:underline-offset-2",
+        className
       )}
       {...props}
     />
   ),
-  (prevProps, nextProps) => prevProps.children === nextProps.children,
+  (prevProps, nextProps) => prevProps.children === nextProps.children
 );
 
 Response.displayName = "Response";

@@ -1,11 +1,11 @@
 /** biome-ignore-all lint/style/noMagicNumbers: test */
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import { aiGetCalendarAvailability } from "@/utils/ai/calendar/availability";
-import type { EmailForLLM } from "@/utils/types";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { getEmailAccount } from "@/__tests__/helpers";
 import type { Prisma } from "@/generated/prisma/client";
-import { createScopedLogger } from "@/utils/logger";
+import { aiGetCalendarAvailability } from "@/utils/ai/calendar/availability";
 import type { BusyPeriod } from "@/utils/calendar/availability-types";
+import { createScopedLogger } from "@/utils/logger";
+import type { EmailForLLM } from "@/utils/types";
 
 const logger = createScopedLogger("test");
 
@@ -109,7 +109,7 @@ function getMockCalendarConnections(): CalendarConnectionWithCalendars[] {
 }
 
 function getMockCalendarConnectionsWithTimezone(
-  timezone: string,
+  timezone: string
 ): CalendarConnectionWithCalendars[] {
   return [
     {
@@ -151,11 +151,11 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
     // Setup default mocks
     const prisma = (await import("@/utils/prisma")).default;
     vi.mocked(prisma.calendarConnection.findMany).mockResolvedValue(
-      getMockCalendarConnections(),
+      getMockCalendarConnections()
     );
 
     const { getUnifiedCalendarAvailability } = vi.mocked(
-      await import("@/utils/calendar/unified-availability"),
+      await import("@/utils/calendar/unified-availability")
     );
     getUnifiedCalendarAvailability.mockResolvedValue(getMockBusyPeriods());
   });
@@ -186,7 +186,7 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
         console.debug("Generated suggested times:", result.suggestedTimes);
       }
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test("returns null for non-scheduling related emails", async () => {
@@ -259,7 +259,7 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
         console.debug("Specific time suggestions:", result.suggestedTimes);
       }
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -267,7 +267,7 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
     async () => {
       // Mock busy periods that conflict with requested times
       const { getUnifiedCalendarAvailability } = vi.mocked(
-        await import("@/utils/calendar/unified-availability"),
+        await import("@/utils/calendar/unified-availability")
       );
       getUnifiedCalendarAvailability.mockResolvedValue([
         {
@@ -299,7 +299,7 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
         console.debug("Alternative time suggestions:", result.suggestedTimes);
       }
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test("handles no calendar connections", async () => {
@@ -347,7 +347,7 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
         console.debug("Context-aware suggestions:", result.suggestedTimes);
       }
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -388,7 +388,7 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
         },
       ];
       vi.mocked(prisma.calendarConnection.findMany).mockResolvedValue(
-        multipleConnections,
+        multipleConnections
       );
 
       const messages = getSchedulingMessages();
@@ -407,7 +407,7 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
         console.debug("Multi-calendar suggestions:", result.suggestedTimes);
       }
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -416,7 +416,7 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
       // Mock calendar connections with EST timezone
       const prisma = (await import("@/utils/prisma")).default;
       vi.mocked(prisma.calendarConnection.findMany).mockResolvedValue(
-        getMockCalendarConnectionsWithTimezone("America/New_York"),
+        getMockCalendarConnectionsWithTimezone("America/New_York")
       );
 
       const messages = [
@@ -444,15 +444,15 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
 
       // Verify that getUnifiedCalendarAvailability was called with the correct timezone
       const { getUnifiedCalendarAvailability } = vi.mocked(
-        await import("@/utils/calendar/unified-availability"),
+        await import("@/utils/calendar/unified-availability")
       );
       expect(getUnifiedCalendarAvailability).toHaveBeenCalledWith(
         expect.objectContaining({
           timezone: "America/New_York",
-        }),
+        })
       );
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -461,7 +461,7 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
       // Mock calendar connections with PST timezone
       const prisma = (await import("@/utils/prisma")).default;
       vi.mocked(prisma.calendarConnection.findMany).mockResolvedValue(
-        getMockCalendarConnectionsWithTimezone("America/Los_Angeles"),
+        getMockCalendarConnectionsWithTimezone("America/Los_Angeles")
       );
 
       const messages = [
@@ -489,15 +489,15 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
 
       // Verify that getUnifiedCalendarAvailability was called with the correct timezone
       const { getUnifiedCalendarAvailability } = vi.mocked(
-        await import("@/utils/calendar/unified-availability"),
+        await import("@/utils/calendar/unified-availability")
       );
       expect(getUnifiedCalendarAvailability).toHaveBeenCalledWith(
         expect.objectContaining({
           timezone: "America/Los_Angeles",
-        }),
+        })
       );
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -540,15 +540,15 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
 
       // Verify that getUnifiedCalendarAvailability was called with UTC timezone
       const { getUnifiedCalendarAvailability } = vi.mocked(
-        await import("@/utils/calendar/unified-availability"),
+        await import("@/utils/calendar/unified-availability")
       );
       expect(getUnifiedCalendarAvailability).toHaveBeenCalledWith(
         expect.objectContaining({
           timezone: "UTC",
-        }),
+        })
       );
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -605,14 +605,14 @@ describe.runIf(isAiTest)("aiGetCalendarAvailability", () => {
 
       // Verify that getUnifiedCalendarAvailability was called with the primary calendar's timezone
       const { getUnifiedCalendarAvailability } = vi.mocked(
-        await import("@/utils/calendar/unified-availability"),
+        await import("@/utils/calendar/unified-availability")
       );
       expect(getUnifiedCalendarAvailability).toHaveBeenCalledWith(
         expect.objectContaining({
           timezone: "America/New_York",
-        }),
+        })
       );
     },
-    TIMEOUT,
+    TIMEOUT
   );
 });

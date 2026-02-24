@@ -1,14 +1,14 @@
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import type { ParsedMessage } from "@/utils/types";
 import { aiDetermineThreadStatus } from "@/utils/ai/reply/determine-thread-status";
-import prisma from "@/utils/prisma";
-import type { Logger } from "@/utils/logger";
-import { getEmailForLLM } from "@/utils/get-email-from-message";
 import { internalDateToDate, sortByInternalDate } from "@/utils/date";
 import type { EmailProvider } from "@/utils/email/types";
-import { applyThreadStatusLabel } from "./label-helpers";
-import { updateThreadTrackers } from "@/utils/reply-tracker/handle-conversation-status";
+import { getEmailForLLM } from "@/utils/get-email-from-message";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import { CONVERSATION_STATUS_TYPES } from "@/utils/reply-tracker/conversation-status-config";
+import { updateThreadTrackers } from "@/utils/reply-tracker/handle-conversation-status";
+import type { ParsedMessage } from "@/utils/types";
+import { applyThreadStatusLabel } from "./label-helpers";
 
 export async function handleOutboundReply({
   emailAccount,
@@ -45,7 +45,7 @@ export async function handleOutboundReply({
 
   const { isLatest, sortedMessages } = isMessageLatestInThread(
     message,
-    threadMessages,
+    threadMessages
   );
   if (!isLatest) {
     logger.info(
@@ -53,7 +53,7 @@ export async function handleOutboundReply({
       {
         processingMessageId: message.id,
         actualLatestMessageId: sortedMessages.at(-1)?.id,
-      },
+      }
     );
   }
 
@@ -63,7 +63,7 @@ export async function handleOutboundReply({
       maxLength: index === sortedMessages.length - 1 ? 2000 : 500, // Give more context for the latest message
       extractReply: true,
       removeForwarded: false,
-    }),
+    })
   );
 
   if (!threadMessagesForLLM.length) {
@@ -115,9 +115,11 @@ async function isOutboundTrackingEnabled({
 
 function isMessageLatestInThread(
   message: ParsedMessage,
-  threadMessages: ParsedMessage[],
+  threadMessages: ParsedMessage[]
 ): { isLatest: boolean; sortedMessages: ParsedMessage[] } {
-  if (!threadMessages.length) return { isLatest: false, sortedMessages: [] }; // Should not happen if called correctly
+  if (!threadMessages.length) {
+    return { isLatest: false, sortedMessages: [] }; // Should not happen if called correctly
+  }
 
   const sortedMessages = [...threadMessages].sort(sortByInternalDate());
   const actualLatestMessage = sortedMessages.at(-1);

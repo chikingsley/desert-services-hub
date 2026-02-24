@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -7,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { TimeRange } from "./date-filter";
 
 const timeRangeOptions = [
@@ -34,10 +34,10 @@ export function TimeRangeFilter() {
 
   return (
     <Select
-      value={timeRange}
       onValueChange={(value: TimeRange) => {
         router.push(`${pathname}?${createQueryString(value)}`);
       }}
+      value={timeRange}
     >
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="Select time range" />

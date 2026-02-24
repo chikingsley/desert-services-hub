@@ -1,14 +1,14 @@
+import type { Logger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
 import { transferPremiumDuringMerge } from "@/utils/user/merge-premium";
-import type { Logger } from "@/utils/logger";
 
 interface MergeAccountOptions {
+  email: string;
+  logger: Logger;
+  name: string | null;
   sourceAccountId: string;
   sourceUserId: string;
   targetUserId: string;
-  email: string;
-  name: string | null;
-  logger: Logger;
 }
 
 export async function mergeAccount({
@@ -36,11 +36,11 @@ export async function mergeAccount({
       {
         sourceUserId,
         emailAccountCount: sourceUserEmailAccounts.length,
-      },
+      }
     );
 
     const accountBeingMoved = sourceUserEmailAccounts.find(
-      (acc) => acc.accountId === sourceAccountId,
+      (acc) => acc.accountId === sourceAccountId
     );
     const isPrimaryAccount = accountBeingMoved?.email === sourceUser?.email;
 
@@ -60,7 +60,7 @@ export async function mergeAccount({
 
     if (isPrimaryAccount) {
       const newPrimaryAccount = sourceUserEmailAccounts.find(
-        (acc) => acc.id !== accountBeingMoved?.id,
+        (acc) => acc.id !== accountBeingMoved?.id
       );
       if (newPrimaryAccount) {
         const userUpdate = prisma.user.update({

@@ -110,7 +110,9 @@ export default function DigestEmail(props: DigestEmailProps) {
   });
 
   const renderEmailContent = (item: DigestItem) => {
-    if (!item.content) return null;
+    if (!item.content) {
+      return null;
+    }
 
     const contentText = item.content;
 
@@ -126,7 +128,7 @@ export default function DigestEmail(props: DigestEmailProps) {
               // Remove leading bullet point characters (•, -, *, etc.) if present
               const cleanedLine = line.trim().replace(/^[•\-*]\s+/, "");
               return (
-                <li key={index} className="text-[14px] text-gray-800 mb-[1px]">
+                <li className="mb-[1px] text-[14px] text-gray-800" key={index}>
                   {cleanedLine}
                 </li>
               );
@@ -134,14 +136,13 @@ export default function DigestEmail(props: DigestEmailProps) {
           </ul>
         </div>
       );
-    } else {
-      // Single line content
-      return (
-        <Text className="text-[14px] text-gray-800 mt-[4px] mb-0 leading-[1.5]">
-          {contentText}
-        </Text>
-      );
     }
+    // Single line content
+    return (
+      <Text className="mt-[4px] mb-0 text-[14px] text-gray-800 leading-[1.5]">
+        {contentText}
+      </Text>
+    );
   };
 
   const CategorySection = ({
@@ -157,9 +158,9 @@ export default function DigestEmail(props: DigestEmailProps) {
       return (
         <Section className="mb-[8px]" id={categoryKey}>
           <div className="mb-[8px]">
-            <div className="text-left mb-[8px]">
+            <div className="mb-[8px] text-left">
               <div className="px-4 py-3">
-                <Text className="text-[16px] text-gray-700 mt-0 mb-0">
+                <Text className="mt-0 mb-0 text-[16px] text-gray-700">
                   {categoryData.count}{" "}
                   <span className={`${colors.text} font-semibold`}>
                     {(ruleNames?.[categoryKey] || categoryKey).toLowerCase()}
@@ -168,9 +169,8 @@ export default function DigestEmail(props: DigestEmailProps) {
                   {categoryData.senders.map((sender, index) => {
                     if (index === 0) {
                       return sender;
-                    } else {
-                      return `, ${sender}`;
                     }
+                    return `, ${sender}`;
                   })}
                   {categoryData.count > 5 && " and more"}
                 </Text>
@@ -178,17 +178,17 @@ export default function DigestEmail(props: DigestEmailProps) {
             </div>
 
             <div
-              className={`border-l-[4px] border-t border-r border-b border-solid border-gray-200 ${colors.leftBorder} bg-[#fdfefe] rounded-[8px] overflow-hidden`}
+              className={`border-gray-200 border-t border-r border-b border-l-[4px] border-solid ${colors.leftBorder} overflow-hidden rounded-[8px] bg-[#fdfefe]`}
             >
               {categoryData.items.map((item, index) => (
                 <div key={index}>
                   <div className="p-[20px]">
                     {/* Email Header */}
                     <div className="mb-[12px]">
-                      <Text className="text-[16px] font-bold text-gray-900 mt-0 mb-0">
+                      <Text className="mt-0 mb-0 font-bold text-[16px] text-gray-900">
                         {item.subject}
                       </Text>
-                      <Text className="text-[14px] text-gray-700 mt-[2px] mb-0">
+                      <Text className="mt-[2px] mb-0 text-[14px] text-gray-700">
                         From:{" "}
                         <span className="font-medium text-gray-800">
                           {item.from}
@@ -202,7 +202,7 @@ export default function DigestEmail(props: DigestEmailProps) {
 
                   {/* Separator line - don't show after the last item */}
                   {index < categoryData.items.length - 1 && (
-                    <Hr className="border-solid border-gray-200 my-0 mx-[20px]" />
+                    <Hr className="mx-[20px] my-0 border-gray-200 border-solid" />
                   )}
                 </div>
               ))}
@@ -210,30 +210,28 @@ export default function DigestEmail(props: DigestEmailProps) {
           </div>
         </Section>
       );
-    } else {
-      // Categories with no highlights - much more compact
-      return (
-        <div className="mb-[4px]" id={categoryKey}>
-          <div className="px-4 py-2">
-            <Text className="text-[16px] text-gray-700 mt-0 mb-0">
-              {categoryData.count}{" "}
-              <span className={`${colors.text} font-semibold`}>
-                {(ruleNames?.[categoryKey] || categoryKey).toLowerCase()}
-              </span>
-              {" from "}
-              {categoryData.senders.map((sender, index) => {
-                if (index === 0) {
-                  return sender;
-                } else {
-                  return `, ${sender}`;
-                }
-              })}
-              {categoryData.count > 5 && " and more"}
-            </Text>
-          </div>
-        </div>
-      );
     }
+    // Categories with no highlights - much more compact
+    return (
+      <div className="mb-[4px]" id={categoryKey}>
+        <div className="px-4 py-2">
+          <Text className="mt-0 mb-0 text-[16px] text-gray-700">
+            {categoryData.count}{" "}
+            <span className={`${colors.text} font-semibold`}>
+              {(ruleNames?.[categoryKey] || categoryKey).toLowerCase()}
+            </span>
+            {" from "}
+            {categoryData.senders.map((sender, index) => {
+              if (index === 0) {
+                return sender;
+              }
+              return `, ${sender}`;
+            })}
+            {categoryData.count > 5 && " and more"}
+          </Text>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -243,23 +241,23 @@ export default function DigestEmail(props: DigestEmailProps) {
         <Body className="bg-white font-sans">
           <Container className="mx-auto w-full max-w-[600px] p-0">
             <Section className="p-4 text-center">
-              <Link href={baseUrl} className="text-[15px]">
+              <Link className="text-[15px]" href={baseUrl}>
                 <Img
-                  src={"https://www.getinboxzero.com/icon.png"}
-                  width="40"
-                  height="40"
                   alt="Inbox Zero"
                   className="mx-auto my-0"
+                  height="40"
+                  src={"https://www.getinboxzero.com/icon.png"}
+                  width="40"
                 />
               </Link>
 
-              <Text className="mx-0 mb-8 mt-4 p-0 text-center text-2xl font-normal">
+              <Text className="mx-0 mt-4 mb-8 p-0 text-center font-normal text-2xl">
                 <span className="font-semibold tracking-tighter">
                   Inbox Zero
                 </span>
               </Text>
 
-              <Heading className="my-4 text-4xl font-medium leading-tight">
+              <Heading className="my-4 font-medium text-4xl leading-tight">
                 Your Digest
               </Heading>
               <Text className="mb-8 text-lg leading-8">
@@ -271,15 +269,17 @@ export default function DigestEmail(props: DigestEmailProps) {
               Object.keys(digestData).map((categoryKey) => {
                 const categoryData = normalizeCategoryData(
                   categoryKey,
-                  digestData[categoryKey],
+                  digestData[categoryKey]
                 );
-                if (!categoryData) return null;
+                if (!categoryData) {
+                  return null;
+                }
 
                 return (
                   <CategorySection
-                    key={categoryKey}
-                    categoryKey={categoryKey}
                     categoryData={categoryData}
+                    categoryKey={categoryKey}
+                    key={categoryKey}
                   />
                 );
               })
@@ -288,16 +288,16 @@ export default function DigestEmail(props: DigestEmailProps) {
                 <Text className="text-gray-500 text-lg">
                   No emails to summarize in this digest.
                 </Text>
-                <Text className="text-gray-400 text-sm mt-2">
+                <Text className="mt-2 text-gray-400 text-sm">
                   We'll send you a summary when there are emails to report.
                 </Text>
               </Section>
             )}
-            <Hr className="border-solid border-gray-200 my-[24px]" />
+            <Hr className="my-[24px] border-gray-200 border-solid" />
             <Footer
               baseUrl={baseUrl}
-              unsubscribeToken={unsubscribeToken}
               emailAccountId={emailAccountId}
+              unsubscribeToken={unsubscribeToken}
             />
           </Container>
         </Body>
@@ -581,21 +581,21 @@ function Footer({
   emailAccountId: string;
 }) {
   return (
-    <Section className="mt-8 text-center text-sm text-gray-500">
+    <Section className="mt-8 text-center text-gray-500 text-sm">
       <Text className="m-0">
         You're receiving this email because you enabled digest emails in your
         Inbox Zero settings.
       </Text>
       <div className="mt-[8px]">
         <Link
+          className="mr-[16px] text-gray-500 underline"
           href={`${baseUrl}/api/unsubscribe?token=${unsubscribeToken}`}
-          className="text-gray-500 underline mr-[16px]"
         >
           Unsubscribe
         </Link>
         <Link
-          href={`${baseUrl}/${emailAccountId}/automation?tab=settings`}
           className="text-gray-500 underline"
+          href={`${baseUrl}/${emailAccountId}/automation?tab=settings`}
         >
           Customize what you receive
         </Link>
@@ -650,20 +650,21 @@ const normalizeCategoryData = (
     | string
     | Date
     | Record<string, string>
-    | undefined,
+    | undefined
 ): NormalizedCategoryData | null => {
   if (Array.isArray(data)) {
     const items = data;
     const senders = Array.from(new Set(items.map((item) => item.from))).slice(
       0,
-      5,
+      5
     );
     return {
       count: items.length,
       senders,
       items,
     };
-  } else if (
+  }
+  if (
     data &&
     typeof data === "object" &&
     !Array.isArray(data) &&

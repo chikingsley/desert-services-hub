@@ -1,5 +1,5 @@
-import { isDefined } from "@/utils/types";
 import { createScopedLogger } from "@/utils/logger";
+import { isDefined } from "@/utils/types";
 
 const logger = createScopedLogger("gmail/batch");
 
@@ -10,12 +10,14 @@ const BATCH_LIMIT = 100;
 export async function getBatch(
   ids: string[],
   endpoint: string, // e.g. /gmail/v1/users/me/messages
-  accessToken: string,
+  accessToken: string
 ) {
-  if (!ids.length) return [];
+  if (!ids.length) {
+    return [];
+  }
   if (ids.length > BATCH_LIMIT) {
     throw new Error(
-      `Request count exceeds the limit. Received: ${ids.length}, Limit: ${BATCH_LIMIT}`,
+      `Request count exceeds the limit. Received: ${ids.length}, Limit: ${BATCH_LIMIT}`
     );
   }
 
@@ -61,11 +63,15 @@ function parseBatchResponse(batchResponse: string, contentType: string | null) {
   // Process each part
   const decodedParts = parts.map((part) => {
     // Skip empty parts
-    if (!part.trim()) return;
+    if (!part.trim()) {
+      return;
+    }
 
     // Find where the JSON part of the response starts
     const jsonStartIndex = part.indexOf("{");
-    if (jsonStartIndex === -1) return; // Skip if no JSON data found
+    if (jsonStartIndex === -1) {
+      return; // Skip if no JSON data found
+    }
 
     // Extract the JSON string
     const jsonResponse = part.substring(jsonStartIndex);
@@ -90,7 +96,7 @@ function checkBatchResponseForError(batchResponse: string) {
     if (jsonResponse.error) {
       throw new Error(
         "parseBatchResponse: Error in batch response",
-        jsonResponse.error,
+        jsonResponse.error
       );
     }
   } catch {

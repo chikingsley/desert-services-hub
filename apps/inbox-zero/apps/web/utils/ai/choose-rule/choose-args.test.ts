@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from "vitest";
-import { combineActionsWithAiArgs } from "./choose-args";
-import { ActionType } from "@/generated/prisma/enums";
+import { describe, expect, it, vi } from "vitest";
 import type { Action } from "@/generated/prisma/client";
+import { ActionType } from "@/generated/prisma/enums";
+import { combineActionsWithAiArgs } from "./choose-args";
 
 vi.mock("server-only", () => ({}));
 
@@ -53,7 +53,7 @@ describe("combineActionsWithAiArgs", () => {
 
       // Verify that template variables are properly replaced
       expect(result[0].content).toBe(
-        "Dear Mr. Johnson,\n\nThank you for your email. I'd be happy to help with your request.\n\nBest regards",
+        "Dear Mr. Johnson,\n\nThank you for your email. I'd be happy to help with your request.\n\nBest regards"
       );
     });
 
@@ -101,12 +101,12 @@ describe("combineActionsWithAiArgs", () => {
       const result = combineActionsWithAiArgs(
         actions,
         aiArgs,
-        draftFromAnotherAction,
+        draftFromAnotherAction
       );
 
       // Verify that template variables are processed correctly
       expect(result[0].content).toBe(
-        "Hello Alice, I hope this email finds you well.",
+        "Hello Alice, I hope this email finds you well."
       );
     });
   });

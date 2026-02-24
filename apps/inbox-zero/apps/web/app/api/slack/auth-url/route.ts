@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
 import { env } from "@/env";
-import { withEmailAccount } from "@/utils/middleware";
-import prisma from "@/utils/prisma";
 import { MessagingProvider } from "@/generated/prisma/enums";
-import {
-  SLACK_STATE_COOKIE_NAME,
-  SLACK_OAUTH_STATE_TYPE,
-  SLACK_SCOPES,
-} from "@/utils/slack/constants";
+import { withEmailAccount } from "@/utils/middleware";
 import {
   generateSignedOAuthState,
   oauthStateCookieOptions,
 } from "@/utils/oauth/state";
+import prisma from "@/utils/prisma";
+import {
+  SLACK_OAUTH_STATE_TYPE,
+  SLACK_SCOPES,
+  SLACK_STATE_COOKIE_NAME,
+} from "@/utils/slack/constants";
 
 export type GetSlackAuthUrlResponse = {
   url: string;
@@ -21,10 +21,10 @@ export type GetSlackAuthUrlResponse = {
 export const GET = withEmailAccount("slack/auth-url", async (request) => {
   const { emailAccountId } = request.auth;
 
-  if (!env.SLACK_CLIENT_ID || !env.SLACK_CLIENT_SECRET) {
+  if (!(env.SLACK_CLIENT_ID && env.SLACK_CLIENT_SECRET)) {
     return NextResponse.json(
       { error: "Slack integration not configured" },
-      { status: 503 },
+      { status: 503 }
     );
   }
 
@@ -71,7 +71,7 @@ function getAuthUrl({ emailAccountId }: { emailAccountId: string }) {
 }
 
 async function findOrgMateWorkspace(
-  emailAccountId: string,
+  emailAccountId: string
 ): Promise<{ teamId: string; teamName: string } | null> {
   const channel = await prisma.messagingChannel.findFirst({
     where: {
@@ -92,7 +92,9 @@ async function findOrgMateWorkspace(
     select: { teamId: true, teamName: true },
   });
 
-  if (!channel) return null;
+  if (!channel) {
+    return null;
+  }
   return {
     teamId: channel.teamId,
     teamName: channel.teamName ?? "Slack workspace",

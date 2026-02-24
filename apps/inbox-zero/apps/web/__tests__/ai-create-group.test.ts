@@ -1,9 +1,9 @@
-import { describe, it, expect, vi } from "vitest";
 import type { gmail_v1 } from "@googleapis/gmail";
+import { describe, expect, it, vi } from "vitest";
+import { getEmailAccount } from "@/__tests__/helpers";
 import { aiGenerateGroupItems } from "@/utils/ai/group/create-group";
 import { queryBatchMessages } from "@/utils/gmail/message";
 import type { ParsedMessage } from "@/utils/types";
-import { getEmailAccount } from "@/__tests__/helpers";
 
 // pnpm test-ai ai-create-group
 
@@ -67,6 +67,6 @@ describe.runIf(isAiTest)("aiGenerateGroupItems", () => {
 
       expect(queryBatchMessages).toHaveBeenCalled();
     },
-    TIMEOUT,
+    TIMEOUT
   ); // Increased timeout for AI call
 });

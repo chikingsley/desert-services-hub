@@ -10,14 +10,14 @@ describe("calendar OAuth callback helpers", () => {
     it("extracts AADSTS code when present", () => {
       expect(
         extractAadstsCode(
-          "AADSTS65004: User declined to consent to access the app.",
-        ),
+          "AADSTS65004: User declined to consent to access the app."
+        )
       ).toBe("AADSTS65004");
     });
 
     it("extracts longer AADSTS codes", () => {
       expect(extractAadstsCode("AADSTS7000215: Invalid client secret.")).toBe(
-        "AADSTS7000215",
+        "AADSTS7000215"
       );
     });
 
@@ -37,7 +37,7 @@ describe("calendar OAuth callback helpers", () => {
           oauthError: "access_denied",
           errorSubcode: "cancel",
           aadstsCode: "AADSTS65004",
-        }),
+        })
       ).toBe("consent_declined");
     });
 
@@ -47,7 +47,7 @@ describe("calendar OAuth callback helpers", () => {
           oauthError: "access_denied",
           errorSubcode: null,
           aadstsCode: "AADSTS65001",
-        }),
+        })
       ).toBe("admin_consent_required");
     });
 
@@ -57,7 +57,7 @@ describe("calendar OAuth callback helpers", () => {
           oauthError: "access_denied",
           errorSubcode: null,
           aadstsCode: null,
-        }),
+        })
       ).toBe("access_denied");
     });
 
@@ -67,7 +67,7 @@ describe("calendar OAuth callback helpers", () => {
           oauthError: "server_error",
           errorSubcode: null,
           aadstsCode: null,
-        }),
+        })
       ).toBe("oauth_error");
     });
   });
@@ -76,8 +76,8 @@ describe("calendar OAuth callback helpers", () => {
     it("returns a sanitized message with AADSTS code", () => {
       expect(
         getSafeOAuthErrorDescription(
-          "AADSTS65004: User declined to consent to access the app.",
-        ),
+          "AADSTS65004: User declined to consent to access the app."
+        )
       ).toBe("Microsoft error AADSTS65004.");
     });
 

@@ -1,13 +1,13 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { Input } from "@/components/Input";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   type MessageQuery,
   messageQuerySchema,
 } from "@/app/api/messages/validation";
+import { Input } from "@/components/Input";
 
 export function SearchForm({
   defaultQuery,
@@ -31,18 +31,18 @@ export function SearchForm({
     async (data) => {
       onSearch(data.q || "");
     },
-    [onSearch],
+    [onSearch]
   );
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Input
-        type="text"
+        className="flex-1"
+        error={errors.q}
         name="search"
         placeholder="Search emails..."
         registerProps={register("q")}
-        error={errors.q}
-        className="flex-1"
+        type="text"
       />
     </form>
   );

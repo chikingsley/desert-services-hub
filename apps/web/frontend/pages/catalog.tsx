@@ -12,6 +12,7 @@ import {
 import { fetcher } from "@/apps/web/frontend/lib/fetcher";
 
 interface CatalogData {
+  bundles: Bundle[];
   categories: Array<{
     id: string;
     name: string;
@@ -52,7 +53,6 @@ interface CatalogData {
       }>;
     }>;
   }>;
-  bundles: Bundle[];
   readOnly?: boolean;
 }
 

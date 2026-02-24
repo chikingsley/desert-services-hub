@@ -42,14 +42,14 @@ const LOCATION_SELECT_RADIO_ID_RE = /locations:(\d+):selectRadio/;
 
 /** A single row from the Page 2 locations table */
 interface LocationRow {
-  index: number;
-  radioSelector: string;
   address: string;
   city: string;
-  zip: string;
-  parcel: string;
+  index: number;
   latitude: string;
   longitude: string;
+  parcel: string;
+  radioSelector: string;
+  zip: string;
 }
 
 function pickFallbackLocationRow(

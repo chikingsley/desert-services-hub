@@ -1,4 +1,4 @@
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { aiSummarizeEmailForDigest } from "@/utils/ai/digest/summarize-email-for-digest";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { EmailForLLM } from "@/utils/types";
@@ -79,7 +79,7 @@ describe.runIf(isAiTest)("aiSummarizeEmailForDigest", () => {
       expect(result).toHaveProperty("content");
       expect(typeof result?.content).toBe("string");
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -110,7 +110,7 @@ describe.runIf(isAiTest)("aiSummarizeEmailForDigest", () => {
       expect(result).toHaveProperty("content");
       expect(typeof result?.content).toBe("string");
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -135,7 +135,7 @@ describe.runIf(isAiTest)("aiSummarizeEmailForDigest", () => {
         content: expect.any(String),
       });
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -151,7 +151,7 @@ describe.runIf(isAiTest)("aiSummarizeEmailForDigest", () => {
 
       expect(result).toBeNull();
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -181,7 +181,7 @@ describe.runIf(isAiTest)("aiSummarizeEmailForDigest", () => {
         content: expect.any(String),
       });
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -210,7 +210,7 @@ describe.runIf(isAiTest)("aiSummarizeEmailForDigest", () => {
         });
       }
     },
-    TIMEOUT * 2,
+    TIMEOUT * 2
   );
 
   test(
@@ -236,7 +236,7 @@ describe.runIf(isAiTest)("aiSummarizeEmailForDigest", () => {
         content: expect.any(String),
       });
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -262,7 +262,7 @@ describe.runIf(isAiTest)("aiSummarizeEmailForDigest", () => {
         content: expect.any(String),
       });
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -270,7 +270,7 @@ describe.runIf(isAiTest)("aiSummarizeEmailForDigest", () => {
     async () => {
       const emailAccount = getEmailAccount();
       const longContent = `${"This is a very long email content. ".repeat(
-        100,
+        100
       )}End of long content.`;
 
       const messageToSummarize = getTestEmail({
@@ -291,7 +291,7 @@ describe.runIf(isAiTest)("aiSummarizeEmailForDigest", () => {
         content: expect.any(String),
       });
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -380,7 +380,7 @@ Your Choice
       const lines = content.split("\n").filter((line) => line.trim());
       expect(lines.length).toBeLessThanOrEqual(4);
     },
-    TIMEOUT,
+    TIMEOUT
   );
 
   test(
@@ -565,6 +565,6 @@ Upgrade to paid`,
       const lines = content.split("\n").filter((line) => line.trim());
       expect(lines.length).toBeLessThanOrEqual(5);
     },
-    TIMEOUT,
+    TIMEOUT
   );
 });

@@ -1,14 +1,14 @@
 import { Suspense } from "react";
-import { getThreadsByJobId } from "@/utils/redis/clean";
-import prisma from "@/utils/prisma";
-import { CardTitle } from "@/components/ui/card";
-import { Loading } from "@/components/Loading";
+import { CleanRun } from "@/app/(app)/[emailAccountId]/clean/CleanRun";
 import {
   getJobById,
   getLastJob,
 } from "@/app/(app)/[emailAccountId]/clean/helpers";
-import { CleanRun } from "@/app/(app)/[emailAccountId]/clean/CleanRun";
+import { Loading } from "@/components/Loading";
+import { CardTitle } from "@/components/ui/card";
 import { checkUserOwnsEmailAccount } from "@/utils/email-account";
+import prisma from "@/utils/prisma";
+import { getThreadsByJobId } from "@/utils/redis/clean";
 
 export default async function CleanRunPage(props: {
   params: Promise<{ emailAccountId: string }>;
@@ -26,7 +26,9 @@ export default async function CleanRunPage(props: {
     select: { email: true },
   });
 
-  if (!emailAccount) return <CardTitle>Email account not found</CardTitle>;
+  if (!emailAccount) {
+    return <CardTitle>Email account not found</CardTitle>;
+  }
 
   const threads = await getThreadsByJobId({ emailAccountId, jobId });
 
@@ -34,7 +36,9 @@ export default async function CleanRunPage(props: {
     ? await getJobById({ emailAccountId, jobId })
     : await getLastJob({ emailAccountId });
 
-  if (!job) return <CardTitle>Job not found</CardTitle>;
+  if (!job) {
+    return <CardTitle>Job not found</CardTitle>;
+  }
 
   const [total, done] = await Promise.all([
     prisma.cleanupThread.count({
@@ -48,11 +52,11 @@ export default async function CleanRunPage(props: {
   return (
     <Suspense fallback={<Loading />}>
       <CleanRun
+        done={done}
         isPreviewBatch={isPreviewBatch === "true"}
         job={job}
         threads={threads}
         total={total}
-        done={done}
       />
     </Suspense>
   );

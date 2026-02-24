@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
-import { withEmailProvider } from "@/utils/middleware";
-import { SafeError } from "@/utils/error";
 import {
   getExtractableAttachments,
   processAttachment,
 } from "@/utils/drive/filing-engine";
-import type { ParsedMessage, Attachment } from "@/utils/types";
-import type { EmailProvider } from "@/utils/email/types";
-import type { Logger } from "@/utils/logger";
 import type { DriveProviderType } from "@/utils/drive/types";
+import type { EmailProvider } from "@/utils/email/types";
+import { SafeError } from "@/utils/error";
+import type { Logger } from "@/utils/logger";
+import { withEmailProvider } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
+import type { Attachment, ParsedMessage } from "@/utils/types";
 
 export type FilingPreviewResult = {
   filingId: string;
@@ -87,7 +87,7 @@ async function getPreviewData({
 
   if (!emailAccount.filingPrompt) {
     throw new SafeError(
-      "Please describe how you organize files before previewing",
+      "Please describe how you organize files before previewing"
     );
   }
 
@@ -115,7 +115,7 @@ async function getPreviewData({
 
   const messagesWithAttachments = findMessagesWithExtractableAttachments(
     messages,
-    MAX_FILINGS,
+    MAX_FILINGS
   );
 
   logger.info("Extractable attachments found", {
@@ -149,7 +149,7 @@ async function getPreviewData({
 
 function findMessagesWithExtractableAttachments(
   messages: ParsedMessage[],
-  limit: number,
+  limit: number
 ): Array<{ message: ParsedMessage; attachments: Attachment[] }> {
   const result: Array<{ message: ParsedMessage; attachments: Attachment[] }> =
     [];
@@ -158,7 +158,9 @@ function findMessagesWithExtractableAttachments(
     const extractable = getExtractableAttachments(message);
     if (extractable.length > 0) {
       result.push({ message, attachments: extractable });
-      if (result.length >= limit) break;
+      if (result.length >= limit) {
+        break;
+      }
     }
   }
 

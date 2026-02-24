@@ -18,17 +18,17 @@ export function CopyInput({
     <div className="flex w-full flex-1 items-center gap-1">
       <input
         className="block w-full flex-1 rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500 disabled:ring-gray-200 sm:text-sm"
+        disabled
         name="copy-input"
+        readOnly
         type={visible ? "text" : "password"}
         value={value}
-        readOnly
-        disabled
       />
       {masked && (
         <Button
+          onClick={() => setVisible((v) => !v)}
           type="button"
           variant="outline"
-          onClick={() => setVisible((v) => !v)}
         >
           {visible ? (
             <EyeOffIcon className="size-4" />
@@ -38,11 +38,11 @@ export function CopyInput({
         </Button>
       )}
       <Button
-        variant="outline"
         onClick={() => {
           navigator.clipboard.writeText(value);
           setCopied(true);
         }}
+        variant="outline"
       >
         <CopyIcon className="mr-2 size-4" />
         {copied ? "Copied!" : "Copy"}

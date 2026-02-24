@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { checkPermissionsAction } from "@/utils/actions/permissions";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { prefixPath } from "@/utils/path";
+import { useEffect } from "react";
 import { useOrgAccess } from "@/hooks/useOrgAccess";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { checkPermissionsAction } from "@/utils/actions/permissions";
+import { prefixPath } from "@/utils/path";
 
 const permissionsChecked: Record<string, boolean> = {};
 
@@ -16,9 +16,13 @@ export function PermissionsCheck() {
 
   useEffect(() => {
     // Skip permissions check when viewing another user's account (non-owner)
-    if (!isAccountOwner) return;
+    if (!isAccountOwner) {
+      return;
+    }
 
-    if (permissionsChecked[emailAccountId]) return;
+    if (permissionsChecked[emailAccountId]) {
+      return;
+    }
     permissionsChecked[emailAccountId] = true;
 
     checkPermissionsAction(emailAccountId).then((result) => {

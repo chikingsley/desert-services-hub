@@ -1,11 +1,11 @@
+import { cva, type VariantProps } from "class-variance-authority";
 import { type ForwardedRef, forwardRef } from "react";
-import { type VariantProps, cva } from "class-variance-authority";
 import { cn } from "@/utils";
 
 export type Color = VariantProps<typeof badgeVariants>["color"];
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset",
+  "inline-flex items-center rounded-md px-2 py-1 font-medium text-xs ring-1 ring-inset",
   {
     variants: {
       color: {
@@ -23,14 +23,14 @@ const badgeVariants = cva(
         pink: "bg-pink-50 text-pink-700 ring-pink-600/10 dark:bg-pink-400/10 dark:text-pink-400 dark:ring-pink-400/20",
       },
     },
-  },
+  }
 );
 
 // https://www.radix-ui.com/docs/primitives/guides/composition
 export const Badge = forwardRef(
   (
     props: { children: React.ReactNode; color: Color; className?: string },
-    ref: ForwardedRef<HTMLSpanElement | null>,
+    ref: ForwardedRef<HTMLSpanElement | null>
   ) => {
     const { color, className, ...rest } = props;
 
@@ -43,6 +43,6 @@ export const Badge = forwardRef(
         {props.children}
       </span>
     );
-  },
+  }
 );
 Badge.displayName = "Badge";

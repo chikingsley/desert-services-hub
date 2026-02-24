@@ -28,15 +28,15 @@ import { esriMap, mapPopup } from "@/portal/utils/selectors/page2";
 // ============================================================================
 
 export interface MapResult {
-  success: boolean;
-  searchedBy: "parcel" | "address" | null;
   basemapChanged: boolean;
   drawingComplete: boolean;
+  searchedBy: "parcel" | "address" | null;
+  success: boolean;
 }
 
 export interface MapSearchData {
-  parcelNumber?: string | null;
   address?: string | null;
+  parcelNumber?: string | null;
 }
 
 // ============================================================================

@@ -3,10 +3,10 @@ import { cn } from "@/utils";
 
 interface WordRevealProps {
   children?: string;
-  words?: React.ReactNode[];
-  duration?: number;
   delay?: number;
+  duration?: number;
   spaceBetween?: string;
+  words?: React.ReactNode[];
 }
 
 export function WordReveal({
@@ -22,9 +22,9 @@ export function WordReveal({
     <>
       {wordsToReveal.map((word, index) => (
         <BlurFade
+          as="span"
           delay={delay + duration * index}
           inView
-          as="span"
           key={`${word}-${index}`}
         >
           {word}

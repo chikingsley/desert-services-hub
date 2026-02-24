@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { generateSignedOAuthState, parseSignedOAuthState } from "./state";
 
 describe("signed OAuth state", () => {
@@ -34,8 +34,8 @@ describe("signed OAuth state", () => {
 
     expect(() =>
       parseSignedOAuthState<{ emailAccountId: string; type: "slack" }>(
-        tamperedState,
-      ),
+        tamperedState
+      )
     ).toThrow("Invalid OAuth state signature");
   });
 
@@ -50,7 +50,7 @@ describe("signed OAuth state", () => {
     });
 
     expect(() =>
-      parseSignedOAuthState<{ emailAccountId: string; type: "slack" }>(state),
+      parseSignedOAuthState<{ emailAccountId: string; type: "slack" }>(state)
     ).toThrow("OAuth state expired");
   });
 });

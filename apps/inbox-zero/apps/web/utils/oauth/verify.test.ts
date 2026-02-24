@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { verifyEmailAccountAccess } from "./verify";
-import { RedirectError } from "./redirect";
 import prisma from "@/utils/__mocks__/prisma";
 import { createScopedLogger } from "@/utils/logger";
+import { RedirectError } from "./redirect";
+import { verifyEmailAccountAccess } from "./verify";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/utils/prisma");
@@ -38,7 +38,7 @@ describe("verifyEmailAccountAccess", () => {
       emailAccountId,
       logger,
       redirectUrl,
-      responseHeaders,
+      responseHeaders
     );
 
     expect(result).toEqual({ userId });
@@ -60,14 +60,14 @@ describe("verifyEmailAccountAccess", () => {
         emailAccountId,
         logger,
         redirectUrl,
-        responseHeaders,
+        responseHeaders
       );
       expect.fail("Should have thrown RedirectError");
     } catch (error) {
       expect(error).toBeInstanceOf(RedirectError);
       if (error instanceof RedirectError) {
         expect(error.redirectUrl.searchParams.get("error")).toBe(
-          "unauthorized",
+          "unauthorized"
         );
         expect(error.responseHeaders).toBe(responseHeaders);
       }
@@ -84,14 +84,14 @@ describe("verifyEmailAccountAccess", () => {
         emailAccountId,
         logger,
         redirectUrl,
-        responseHeaders,
+        responseHeaders
       );
       expect.fail("Should have thrown RedirectError");
     } catch (error) {
       expect(error).toBeInstanceOf(RedirectError);
       if (error instanceof RedirectError) {
         expect(error.redirectUrl.searchParams.get("error")).toBe(
-          "unauthorized",
+          "unauthorized"
         );
         expect(error.responseHeaders).toBe(responseHeaders);
       }
@@ -112,7 +112,7 @@ describe("verifyEmailAccountAccess", () => {
         emailAccountId,
         logger,
         redirectUrl,
-        responseHeaders,
+        responseHeaders
       );
       expect.fail("Should have thrown RedirectError");
     } catch (error) {

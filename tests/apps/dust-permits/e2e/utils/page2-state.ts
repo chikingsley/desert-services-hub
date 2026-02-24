@@ -39,11 +39,11 @@ export interface LocationData {
   address: string;
   city: string;
   county: string;
-  state: string;
-  zip: string;
-  parcel: string;
   latitude: string;
   longitude: string;
+  parcel: string;
+  state: string;
+  zip: string;
 }
 
 /** Access point data from the access points table */
@@ -54,24 +54,24 @@ export interface AccessPointData {
 
 /** Full Page 2 state */
 export interface Page2State {
-  /** Disturbed area acreage from site drawing */
-  disturbedAcreage: string;
-  /** Whether disturbed acreage has a value */
-  hasDisturbedAcreage: boolean;
-  /** Number of locations in the table */
-  locationCount: number;
-  /** First location data (if exists) */
-  firstLocation: LocationData | null;
   /** Number of access points */
   accessPointCount: number;
+  /** Disturbed area acreage from site drawing */
+  disturbedAcreage: string;
   /** First access point data (if exists) */
   firstAccessPoint: AccessPointData | null;
+  /** First location data (if exists) */
+  firstLocation: LocationData | null;
+  /** Whether disturbed acreage has a value */
+  hasDisturbedAcreage: boolean;
   /** Whether Edit Site Drawing button is visible (indicates map data exists) */
   hasMapData: boolean;
-  /** Whether Add Site Drawing button is visible (indicates no map data) */
-  needsMapData: boolean;
   /** Whether the "Project site drawing not found" error message is visible */
   hasNoDrawingError: boolean;
+  /** Number of locations in the table */
+  locationCount: number;
+  /** Whether Add Site Drawing button is visible (indicates no map data) */
+  needsMapData: boolean;
 }
 
 /**

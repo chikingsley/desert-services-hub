@@ -1,6 +1,6 @@
-import { describe, expect, it, beforeEach, vi, afterEach } from "vitest";
-import { forwardEmailHtml } from "./forward";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ParsedMessage } from "@/utils/types";
+import { forwardEmailHtml } from "./forward";
 
 describe("email forwarding", () => {
   // Set a specific timezone offset for consistent testing
@@ -14,19 +14,19 @@ describe("email forwarding", () => {
 
     // Mock all date methods to use UTC values
     vi.spyOn(Date.prototype, "getHours").mockImplementation(function (
-      this: Date,
+      this: Date
     ) {
       return this.getUTCHours();
     });
 
     vi.spyOn(Date.prototype, "getMinutes").mockImplementation(function (
-      this: Date,
+      this: Date
     ) {
       return this.getUTCMinutes();
     });
 
     vi.spyOn(Date.prototype, "getDate").mockImplementation(function (
-      this: Date,
+      this: Date
     ) {
       return this.getUTCDate();
     });
@@ -36,12 +36,20 @@ describe("email forwarding", () => {
     mockToLocaleString.mockImplementation(function (
       this: Date,
       _locales?: Intl.LocalesArgument,
-      options?: Intl.DateTimeFormatOptions,
+      options?: Intl.DateTimeFormatOptions
     ) {
-      if (options?.weekday === "short") return "Thu";
-      if (options?.month === "short") return "Feb";
-      if (options?.year === "numeric") return "2025";
-      if (options?.day === "numeric") return "6";
+      if (options?.weekday === "short") {
+        return "Thu";
+      }
+      if (options?.month === "short") {
+        return "Feb";
+      }
+      if (options?.year === "numeric") {
+        return "2025";
+      }
+      if (options?.day === "numeric") {
+        return "6";
+      }
       return ""; // Default case
     });
   });
@@ -80,7 +88,7 @@ Subject: great meeting!<br>
 To: To &lt;<a href="mailto:to@demo.com">to@demo.com</a>&gt;<br>
 </div><br><br>
 ${message.textHtml}
-</div></div>`.trim(),
+</div></div>`.trim()
     );
   });
 

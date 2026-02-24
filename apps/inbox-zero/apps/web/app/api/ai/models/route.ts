@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import prisma from "@/utils/prisma";
-import { withEmailAccount } from "@/utils/middleware";
 import { Provider } from "@/utils/llms/config";
+import { withEmailAccount } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 
 export type OpenAiModelsResponse = Awaited<ReturnType<typeof getOpenAiModels>>;
 
@@ -23,11 +23,11 @@ export const GET = withEmailAccount("api/ai/models", async (req) => {
   });
 
   if (
-    !emailAccount ||
-    !emailAccount.user.aiApiKey ||
+    !(emailAccount && emailAccount.user.aiApiKey) ||
     emailAccount.user.aiProvider !== Provider.OPEN_AI
-  )
+  ) {
     return NextResponse.json([]);
+  }
 
   try {
     const result = await getOpenAiModels({

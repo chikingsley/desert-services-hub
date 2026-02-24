@@ -1,11 +1,11 @@
-import { describe, it, expect } from "vitest";
 import type { Message } from "@microsoft/microsoft-graph-types";
+import { describe, expect, it } from "vitest";
 import {
   convertMessage,
-  sanitizeOutlookSearchQuery,
-  sanitizeKqlValue,
   sanitizeKqlFieldQuery,
   sanitizeKqlTextQuery,
+  sanitizeKqlValue,
+  sanitizeOutlookSearchQuery,
 } from "@/utils/outlook/message";
 
 describe("convertMessage", () => {
@@ -142,13 +142,13 @@ describe("sanitizeKqlValue", () => {
 describe("sanitizeKqlFieldQuery", () => {
   it("should return field:value without outer quotes", () => {
     expect(sanitizeKqlFieldQuery("participants:user@example.com")).toBe(
-      "participants:user@example.com",
+      "participants:user@example.com"
     );
   });
 
   it("should quote value with spaces", () => {
     expect(sanitizeKqlFieldQuery("subject:meeting notes")).toBe(
-      'subject:"meeting notes"',
+      'subject:"meeting notes"'
     );
   });
 
@@ -158,13 +158,13 @@ describe("sanitizeKqlFieldQuery", () => {
 
   it("should escape backslashes in value", () => {
     expect(sanitizeKqlFieldQuery("subject:path\\file")).toBe(
-      "subject:path\\\\file",
+      "subject:path\\\\file"
     );
   });
 
   it("should escape quotes in value", () => {
     expect(sanitizeKqlFieldQuery('subject:say "hi"')).toBe(
-      'subject:"say \\"hi\\""',
+      'subject:"say \\"hi\\""'
     );
   });
 
@@ -217,7 +217,7 @@ describe("sanitizeOutlookSearchQuery", () => {
   describe("KQL field queries (field:value syntax)", () => {
     it("should NOT wrap participants:email in outer quotes", () => {
       const result = sanitizeOutlookSearchQuery(
-        "participants:user@example.com",
+        "participants:user@example.com"
       );
       expect(result.sanitized).toBe("participants:user@example.com");
       expect(result.wasSanitized).toBe(true);
@@ -269,10 +269,10 @@ describe("sanitizeOutlookSearchQuery", () => {
 
     it("should remove internal double quotes and wrap in outer quotes", () => {
       const result = sanitizeOutlookSearchQuery(
-        'Reinstatement of "Universal policy" for "5161 Collins Ave"',
+        'Reinstatement of "Universal policy" for "5161 Collins Ave"'
       );
       expect(result.sanitized).toBe(
-        '"Reinstatement of Universal policy for 5161 Collins Ave"',
+        '"Reinstatement of Universal policy for 5161 Collins Ave"'
       );
       expect(result.wasSanitized).toBe(true);
     });
@@ -329,7 +329,7 @@ describe("sanitizeOutlookSearchQuery", () => {
       const result = sanitizeOutlookSearchQuery(query);
       expect(result.sanitized).not.toContain('\\"');
       expect(result.sanitized).toBe(
-        '"Reinstatement of Universal policy for 123 Main St Apt #100"',
+        '"Reinstatement of Universal policy for 123 Main St Apt #100"'
       );
     });
 
@@ -338,7 +338,7 @@ describe("sanitizeOutlookSearchQuery", () => {
       const result = sanitizeOutlookSearchQuery(query);
       expect(result.sanitized).not.toMatch(/^"participants:/);
       expect(result.sanitized).toBe(
-        "participants:john.doe@company.example.com",
+        "participants:john.doe@company.example.com"
       );
     });
   });

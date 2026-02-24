@@ -1,9 +1,9 @@
-import prisma from "@/utils/prisma";
-import { ActionType } from "@/generated/prisma/enums";
 import type { ExecutedRule } from "@/generated/prisma/client";
-import type { Logger } from "@/utils/logger";
+import { ActionType } from "@/generated/prisma/enums";
 import type { EmailProvider } from "@/utils/email/types";
+import type { Logger } from "@/utils/logger";
 import { convertEmailHtmlToText } from "@/utils/mail";
+import prisma from "@/utils/prisma";
 import type { ParsedMessage } from "@/utils/types";
 
 /**
@@ -51,13 +51,13 @@ export async function handlePreviousDraftDeletion({
     });
 
     const currentDraftDetails = await client.getDraft(
-      previousDraftAction.draftId,
+      previousDraftAction.draftId
     );
 
     if (!currentDraftDetails?.textPlain) {
       logger.warn(
         "Could not fetch current draft details or content, skipping deletion.",
-        { previousDraftId: previousDraftAction.draftId },
+        { previousDraftId: previousDraftAction.draftId }
       );
       return;
     }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { withEmailAccount } from "@/utils/middleware";
 import { getUserCategories } from "@/utils/category.server";
+import { withEmailAccount } from "@/utils/middleware";
 
 export type UserCategoriesResponse = Awaited<ReturnType<typeof getCategories>>;
 

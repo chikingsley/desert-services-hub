@@ -1,12 +1,12 @@
 "use client";
 
-import { useEditor, EditorContent, type Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import { Markdown } from "tiptap-markdown";
 import { Placeholder } from "@tiptap/extension-placeholder";
-import { useCallback, forwardRef, useImperativeHandle } from "react";
-import { cn } from "@/utils";
+import { type Editor, EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { forwardRef, useCallback, useImperativeHandle } from "react";
+import { Markdown } from "tiptap-markdown";
 import { EnterHandler } from "@/components/editor/extensions";
+import { cn } from "@/utils";
 
 export type TiptapHandle = {
   appendContent: (content: string) => void;
@@ -36,7 +36,7 @@ export const Tiptap = forwardRef<
     placeholder,
     output = "html",
   },
-  ref,
+  ref
 ) {
   const editor = useEditor({
     extensions: [
@@ -76,14 +76,14 @@ export const Tiptap = forwardRef<
             : editor.getHTML();
         onChange?.(content);
       },
-      [onChange, output],
+      [onChange, output]
     ),
     autofocus,
     editorProps: {
       attributes: {
         class: cn(
-          "px-3 py-2 max-w-none focus:outline-none min-h-[120px]",
-          className,
+          "min-h-[120px] max-w-none px-3 py-2 focus:outline-none",
+          className
         ),
         ...(placeholder && { "data-placeholder": placeholder }),
       },
@@ -92,7 +92,9 @@ export const Tiptap = forwardRef<
 
   useImperativeHandle(ref, () => ({
     appendContent: (content: string) => {
-      if (!editor) return;
+      if (!editor) {
+        return;
+      }
 
       // Get the document end position
       const endPosition = editor.state.doc.content.size;
@@ -101,7 +103,9 @@ export const Tiptap = forwardRef<
       editor.commands.insertContentAt(endPosition, content);
     },
     getMarkdown: () => {
-      if (!editor) return null;
+      if (!editor) {
+        return null;
+      }
       return editor.storage.markdown.getMarkdown();
     },
   }));
@@ -113,8 +117,8 @@ export const Tiptap = forwardRef<
         <div className="absolute bottom-2 left-0 flex">
           <button
             className="rounded-tr-md px-4 py-1 text-muted-foreground transition-transform hover:translate-x-1"
-            type="button"
             onClick={onMoreClick}
+            type="button"
           >
             ...
           </button>

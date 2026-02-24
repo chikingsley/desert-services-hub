@@ -1,6 +1,5 @@
 "use client";
 
-import type { Catalog } from "@/packages/estimates/catalog/types";
 import type { EditorEstimate, EditorLineItem } from "@lib/db/types";
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -13,19 +12,20 @@ import { Input } from "@/apps/web/frontend/components/ui/input";
 import { Label } from "@/apps/web/frontend/components/ui/label";
 import { useEstimateEditor } from "@/hooks/use-estimate-editor";
 import { formatCurrency } from "@/lib/utils";
+import type { Catalog } from "@/packages/estimates/catalog/types";
 
 interface InlineEstimateEditorProps {
   catalog: Catalog;
+  compactRows?: boolean;
+  estimateId?: string | null;
   initialEstimate?: EditorEstimate;
-  onSave?: (estimate: EditorEstimate) => Promise<void>;
-  onSaveStatusChange?: (status: "saved" | "saving" | "unsaved") => void;
   onEstimateChange?: (estimate: EditorEstimate) => void;
-  onSaveRef?: (ref: { save: () => Promise<void> } | null) => void;
   onResetRef?: (
     ref: { reset: (estimate: EditorEstimate) => void } | null
   ) => void;
-  estimateId?: string | null;
-  compactRows?: boolean;
+  onSave?: (estimate: EditorEstimate) => Promise<void>;
+  onSaveRef?: (ref: { save: () => Promise<void> } | null) => void;
+  onSaveStatusChange?: (status: "saved" | "saving" | "unsaved") => void;
 }
 
 export function InlineEstimateEditor({

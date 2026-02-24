@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
 import { JSDOM } from "jsdom";
+import { describe, expect, it } from "vitest";
 import { extractEmailReply } from "./extract-reply.client";
 
 // pnpm test utils/parse/extract-reply.client.test.ts
@@ -53,7 +53,7 @@ describe("extractEmailReply", () => {
 
     const result = extractEmailReply(html);
     expect(result.draftHtml).toBe(
-      '<div dir="ltr">This is a direct reply</div>',
+      '<div dir="ltr">This is a direct reply</div>'
     );
     expect(result.originalHtml).toBe(`<div class="gmail_quote">
         Original thread content
@@ -97,7 +97,7 @@ describe("extractEmailReply", () => {
 
     const result = extractEmailReply(html);
     expect(result.draftHtml).toBe(
-      '<div dir="ltr">hey, that sounds awesome!!!</div>',
+      '<div dir="ltr">hey, that sounds awesome!!!</div>'
     );
     expect(result.originalHtml).toContain("gmail_quote");
   });
@@ -107,7 +107,7 @@ describe("extractEmailReply", () => {
 
     const result = extractEmailReply(html);
     expect(result.draftHtml).toBe(
-      '<div dir="ltr">This is my <b>formatted</b> reply with <i>styling</i>.</div>',
+      '<div dir="ltr">This is my <b>formatted</b> reply with <i>styling</i>.</div>'
     );
     expect(result.originalHtml).toContain("gmail_quote");
   });
@@ -117,7 +117,7 @@ describe("extractEmailReply", () => {
 
     const result = extractEmailReply(html);
     expect(result.draftHtml).toBe(
-      '<div dir="ltr">hi,<div><br></div><div>this is a test</div></div>',
+      '<div dir="ltr">hi,<div><br></div><div>this is a test</div></div>'
     );
     expect(result.originalHtml).toContain("gmail_quote");
   });

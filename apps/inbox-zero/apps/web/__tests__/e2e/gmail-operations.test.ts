@@ -10,17 +10,17 @@
  * 2. Set TEST_GMAIL_MESSAGE_ID with a real messageId from your logs
  */
 
-import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
-import prisma from "@/utils/prisma";
-import { createEmailProvider } from "@/utils/email/provider";
-import type { GmailProvider } from "@/utils/email/google";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   ensureCatchAllTestRule,
   ensureTestPremiumAccount,
   findOldMessage,
 } from "@/__tests__/e2e/helpers";
+import type { GmailProvider } from "@/utils/email/google";
+import { createEmailProvider } from "@/utils/email/provider";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("test");
 
@@ -80,7 +80,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Gmail Webhook Payload", () => {
         const oldMessage = await findOldMessage(provider, 7);
         TEST_GMAIL_MESSAGE_ID = oldMessage.messageId;
         console.log(
-          `   ✅ Using message from account: ${TEST_GMAIL_MESSAGE_ID}`,
+          `   ✅ Using message from account: ${TEST_GMAIL_MESSAGE_ID}`
         );
       } catch (_error) {
         console.log("   ⚠️  Could not find old message, using default");
@@ -145,7 +145,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Gmail Webhook Payload", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(realWebhookPayload),
-      },
+      }
     );
 
     // Call the webhook handler
@@ -219,7 +219,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Gmail Webhook Payload", () => {
       console.log(`      Subject: ${draft?.subject || "(no subject)"}`);
       console.log("      Content:");
       console.log(
-        `        ${draft?.textPlain?.substring(0, 200).replace(/\n/g, "\n        ") || "(empty)"}`,
+        `        ${draft?.textPlain?.substring(0, 200).replace(/\n/g, "\n        ") || "(empty)"}`
       );
       if (draft?.textPlain && draft.textPlain.length > 200) {
         console.log(`        ... (${draft.textPlain.length} total characters)`);

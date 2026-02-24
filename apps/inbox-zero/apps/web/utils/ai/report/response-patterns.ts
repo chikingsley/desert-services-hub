@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createGenerateObject } from "@/utils/llms";
 import type { EmailSummary } from "@/utils/ai/report/summarize-emails";
+import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
 import { createScopedLogger } from "@/utils/logger";
-import { getModel } from "@/utils/llms/model";
 
 const logger = createScopedLogger("email-report-response-patterns");
 
@@ -18,14 +18,14 @@ const responsePatternsSchema = z.object({
       triggers: z
         .array(z.string())
         .describe("What types of emails trigger this response"),
-    }),
+    })
   ),
   suggestedTemplates: z.array(
     z.object({
       templateName: z.string().describe("Name of the email template"),
       template: z.string().describe("The actual email template text"),
       useCase: z.string().describe("When to use this template"),
-    }),
+    })
   ),
   categoryOrganization: z.array(
     z.object({
@@ -39,14 +39,14 @@ const responsePatternsSchema = z.object({
       priority: z
         .enum(["high", "medium", "low"])
         .describe("Priority level for this category"),
-    }),
+    })
   ),
 });
 
 export async function aiAnalyzeResponsePatterns(
   emailSummaries: EmailSummary[],
   emailAccount: EmailAccountWithAI,
-  sentEmailSummaries?: EmailSummary[],
+  sentEmailSummaries?: EmailSummary[]
 ) {
   const system = `You are an expert email behavior analyst. Your task is to identify common response patterns and suggest email categorization and templates based on the user's email activity.
 

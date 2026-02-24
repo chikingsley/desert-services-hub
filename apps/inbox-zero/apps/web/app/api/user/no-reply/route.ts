@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { isDefined } from "@/utils/types";
-import { withEmailProvider } from "@/utils/middleware";
 import { createEmailProvider } from "@/utils/email/provider";
 import type { Logger } from "@/utils/logger";
+import { withEmailProvider } from "@/utils/middleware";
+import { isDefined } from "@/utils/types";
 
 export type NoReplyResponse = Awaited<ReturnType<typeof getNoReply>>;
 
@@ -34,7 +34,7 @@ async function getNoReply({
         const lastMessageFrom = lastMessage?.headers?.from;
         const isSentByUser = lastMessageFrom?.includes(userEmail);
 
-        if (isSentByUser)
+        if (isSentByUser) {
           return {
             ...message,
             thread: {
@@ -42,7 +42,8 @@ async function getNoReply({
               messages: thread.messages,
             },
           };
-      }) || [],
+        }
+      }) || []
     )
   ).filter(isDefined);
 

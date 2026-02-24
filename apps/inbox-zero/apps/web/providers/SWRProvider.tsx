@@ -1,28 +1,28 @@
 "use client";
 
 import {
-  useCallback,
-  useState,
   createContext,
-  useMemo,
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
+  useState,
 } from "react";
-import { SWRConfig, mutate } from "swr";
-import { captureException } from "@/utils/error";
+import { mutate, SWRConfig } from "swr";
 import { useAccount } from "@/providers/EmailAccountProvider";
 import {
   EMAIL_ACCOUNT_HEADER,
   MICROSOFT_AUTH_EXPIRED_ERROR_CODE,
   NO_REFRESH_TOKEN_ERROR_CODE,
 } from "@/utils/config";
+import { captureException } from "@/utils/error";
 import { prefixPath } from "@/utils/path";
 
 // https://swr.vercel.app/docs/error-handling#status-code-and-error-object
 const fetcher = async (
   url: string,
   init?: RequestInit | undefined,
-  emailAccountId?: string | null,
+  emailAccountId?: string | null
 ) => {
   const headers = new Headers(init?.headers);
 
@@ -51,30 +51,29 @@ const fetcher = async (
     }
 
     if (
-      errorData.errorCode === NO_REFRESH_TOKEN_ERROR_CODE ||
-      errorData.errorCode === MICROSOFT_AUTH_EXPIRED_ERROR_CODE
+      (errorData.errorCode === NO_REFRESH_TOKEN_ERROR_CODE ||
+        errorData.errorCode === MICROSOFT_AUTH_EXPIRED_ERROR_CODE) &&
+      emailAccountId
     ) {
-      if (emailAccountId) {
-        const errorMessage =
-          errorData.errorCode === MICROSOFT_AUTH_EXPIRED_ERROR_CODE
-            ? "Microsoft authorization expired"
-            : "Refresh token missing";
+      const errorMessage =
+        errorData.errorCode === MICROSOFT_AUTH_EXPIRED_ERROR_CODE
+          ? "Microsoft authorization expired"
+          : "Refresh token missing";
 
-        captureException(new Error(errorMessage), {
-          extra: {
-            url,
-            status: res.status,
-            statusText: res.statusText,
-            responseBody: errorData,
-            emailAccountId,
-          },
-        });
+      captureException(new Error(errorMessage), {
+        extra: {
+          url,
+          status: res.status,
+          statusText: res.statusText,
+          responseBody: errorData,
+          emailAccountId,
+        },
+      });
 
-        console.log(`${errorMessage}, redirecting to consent page...`);
-        const redirectUrl = prefixPath(emailAccountId, "/permissions/consent");
-        window.location.href = redirectUrl;
-        return;
-      }
+      console.log(`${errorMessage}, redirecting to consent page...`);
+      const redirectUrl = prefixPath(emailAccountId, "/permissions/consent");
+      window.location.href = redirectUrl;
+      return;
     }
 
     const errorMessage =
@@ -150,7 +149,7 @@ export const SWRProvider = (props: { children: React.ReactNode }) => {
       }
       return fetcher(keyOrUrl, init, emailAccountId);
     },
-    [emailAccountId],
+    [emailAccountId]
   );
 
   const value = useMemo(() => ({ resetCache }), [resetCache]);
@@ -173,7 +172,9 @@ export const SWRProvider = (props: { children: React.ReactNode }) => {
 
 // Dev-only config to handle transient 404s during HMR
 function getDevOnlySWRConfig() {
-  if (process.env.NODE_ENV !== "development") return {};
+  if (process.env.NODE_ENV !== "development") {
+    return {};
+  }
 
   return {
     keepPreviousData: true,
@@ -182,7 +183,7 @@ function getDevOnlySWRConfig() {
       _key: string,
       _config: unknown,
       revalidate: (opts: { retryCount: number }) => void,
-      { retryCount }: { retryCount: number },
+      { retryCount }: { retryCount: number }
     ) => {
       // Retry 404s quickly (likely HMR transient errors)
       if (error.status === 404) {
@@ -190,7 +191,9 @@ function getDevOnlySWRConfig() {
         return;
       }
       // Don't retry on other client errors (4xx)
-      if (error.status && error.status >= 400 && error.status < 500) return;
+      if (error.status && error.status >= 400 && error.status < 500) {
+        return;
+      }
       // Default exponential backoff for server errors
       setTimeout(() => revalidate({ retryCount }), 5000 * 2 ** retryCount);
     },

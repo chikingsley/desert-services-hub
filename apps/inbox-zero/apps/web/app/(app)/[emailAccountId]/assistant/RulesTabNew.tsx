@@ -1,12 +1,12 @@
-import { Rules } from "@/app/(app)/[emailAccountId]/assistant/Rules";
 import { AddRuleDialog } from "@/app/(app)/[emailAccountId]/assistant/AddRuleDialog";
-import { MutedText } from "@/components/Typography";
 import { BulkRunRules } from "@/app/(app)/[emailAccountId]/assistant/BulkRunRules";
+import { Rules } from "@/app/(app)/[emailAccountId]/assistant/Rules";
+import { MutedText } from "@/components/Typography";
 
 export function RulesTab() {
   return (
     <div>
-      <div className="flex items-center mb-2 justify-between gap-2">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <MutedText className="hidden sm:block">
           Your assistant automatically organizes incoming emails using these
           rules.

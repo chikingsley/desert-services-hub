@@ -1,19 +1,20 @@
-import { NextResponse } from "next/server";
+import type { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
 import { cookies, headers } from "next/headers";
+import { NextResponse } from "next/server";
 import { auth } from "@/utils/auth";
-import { withError } from "@/utils/middleware";
+import { ONE_HOUR_MS } from "@/utils/date";
 import { sendCompleteRegistrationEvent } from "@/utils/fb";
+import type { Logger } from "@/utils/logger";
+import { withError } from "@/utils/middleware";
 import { trackUserSignedUp } from "@/utils/posthog";
 import prisma from "@/utils/prisma";
-import { ONE_HOUR_MS } from "@/utils/date";
-import type { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
-import type { Logger } from "@/utils/logger";
 
 export const POST = withError("complete-registration", async (request) => {
   const logger = request.logger;
   const session = await auth();
-  if (!session?.user.email)
+  if (!session?.user.email) {
     return NextResponse.json({ error: "Not authenticated" });
+  }
 
   const headersList = await headers();
   const eventSourceUrl = headersList.get("referer");
@@ -37,7 +38,7 @@ export const POST = withError("complete-registration", async (request) => {
   const posthogPromise = storePosthogSignupEvent(
     session.user.id,
     session.user.email,
-    logger,
+    logger
   );
 
   const [fbResult, posthogResult] = await Promise.allSettled([
@@ -76,7 +77,7 @@ function getIp(headersList: ReadonlyHeaders) {
 async function storePosthogSignupEvent(
   userId: string,
   email: string,
-  logger: Logger,
+  logger: Logger
 ) {
   const userCreatedAt = await prisma.user.findUnique({
     where: { id: userId },

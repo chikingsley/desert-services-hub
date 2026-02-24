@@ -1,19 +1,19 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useMemo } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import { FormSection, FormSectionLeft } from "@/components/Form";
-import { toastError, toastSuccess } from "@/components/Toast";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Select } from "@/components/Select";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import { Frequency } from "@/generated/prisma/enums";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { updateEmailSettingsAction } from "@/utils/actions/settings";
 import {
   type SaveEmailUpdateSettingsBody,
   saveEmailUpdateSettingsBody,
 } from "@/utils/actions/settings.validation";
-import { updateEmailSettingsAction } from "@/utils/actions/settings";
-import { useAccount } from "@/providers/EmailAccountProvider";
 
 export function EmailUpdatesSection({
   summaryEmailFrequency,
@@ -25,13 +25,13 @@ export function EmailUpdatesSection({
   return (
     <FormSection id="email-updates">
       <FormSectionLeft
-        title="Email Updates"
         description="Get a weekly digest of items that need your attention."
+        title="Email Updates"
       />
 
       <SummaryUpdateSectionForm
-        summaryEmailFrequency={summaryEmailFrequency}
         mutate={mutate}
+        summaryEmailFrequency={summaryEmailFrequency}
       />
     </FormSection>
   );
@@ -72,7 +72,7 @@ function SummaryUpdateSectionForm({
 
       mutate();
     },
-    [emailAccountId, mutate],
+    [emailAccountId, mutate]
   );
 
   const options: { label: string; value: Frequency }[] = useMemo(
@@ -86,11 +86,11 @@ function SummaryUpdateSectionForm({
         value: Frequency.WEEKLY,
       },
     ],
-    [],
+    []
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
       {/* <Select
         label="Stats Update Email"
         options={options}
@@ -104,7 +104,7 @@ function SummaryUpdateSectionForm({
         error={errors.summaryEmailFrequency}
       />
 
-      <Button type="submit" loading={isSubmitting}>
+      <Button loading={isSubmitting} type="submit">
         Save
       </Button>
     </form>

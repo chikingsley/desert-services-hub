@@ -17,12 +17,12 @@
  * - Clean up all test labels at the end
  */
 
-import { describe, test, expect, beforeAll, afterAll, vi } from "vitest";
-import prisma from "@/utils/prisma";
-import { createEmailProvider } from "@/utils/email/provider";
-import type { GmailProvider } from "@/utils/email/google";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import { findOldMessage } from "@/__tests__/e2e/helpers";
+import type { GmailProvider } from "@/utils/email/google";
+import { createEmailProvider } from "@/utils/email/provider";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("test");
 
@@ -61,7 +61,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Google Gmail Labeling E2E Tests", () => {
     if (!testEmail) {
       console.warn("\n⚠️  Set TEST_GMAIL_EMAIL env var to run these tests");
       console.warn(
-        "   Example: TEST_GMAIL_EMAIL=your@gmail.com pnpm test-e2e google-labeling\n",
+        "   Example: TEST_GMAIL_EMAIL=your@gmail.com pnpm test-e2e google-labeling\n"
       );
       return;
     }
@@ -90,7 +90,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Google Gmail Labeling E2E Tests", () => {
     })) as GmailProvider;
 
     // If message ID not provided, fetch a real message from the account
-    if (!_TEST_GMAIL_MESSAGE_ID || !_TEST_GMAIL_THREAD_ID) {
+    if (!(_TEST_GMAIL_MESSAGE_ID && _TEST_GMAIL_THREAD_ID)) {
       console.log("   📝 Fetching a real message from account for testing...");
 
       const oldMessage = await findOldMessage(provider, 7);
@@ -111,7 +111,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Google Gmail Labeling E2E Tests", () => {
     // Clean up all test labels created during the test suite
     if (createdTestLabels.length > 0) {
       console.log(
-        `\n   🧹 Cleaning up ${createdTestLabels.length} test labels...`,
+        `\n   🧹 Cleaning up ${createdTestLabels.length} test labels...`
       );
 
       let deletedCount = 0;
@@ -131,7 +131,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Google Gmail Labeling E2E Tests", () => {
       }
 
       console.log(
-        `   ✅ Deleted ${deletedCount} labels, ${failedCount} failed\n`,
+        `   ✅ Deleted ${deletedCount} labels, ${failedCount} failed\n`
       );
     }
   });
@@ -219,7 +219,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Google Gmail Labeling E2E Tests", () => {
       expect(secondLabel.id).toBe(firstLabel.id);
 
       console.log(
-        "   ✅ Duplicate creation returned existing label (handled gracefully)",
+        "   ✅ Duplicate creation returned existing label (handled gracefully)"
       );
     });
 
@@ -255,7 +255,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Google Gmail Labeling E2E Tests", () => {
 
       console.log(
         "   ✅ Retrieved nested label by full name:",
-        retrievedNested?.name,
+        retrievedNested?.name
       );
     });
 
@@ -379,7 +379,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Google Gmail Labeling E2E Tests", () => {
           messageId: fakeMessageId,
           labelId: label.id,
           labelName: null,
-        }),
+        })
       ).rejects.toThrow();
 
       console.log("   ✅ Correctly threw error for non-existent message");
@@ -423,7 +423,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Google Gmail Labeling E2E Tests", () => {
 
       // Should not throw error
       await expect(
-        provider.removeThreadLabel(getTestThreadId(), fakeLabel),
+        provider.removeThreadLabel(getTestThreadId(), fakeLabel)
       ).resolves.not.toThrow();
 
       console.log("   ✅ Handled removing non-existent label gracefully");
@@ -439,7 +439,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Google Gmail Labeling E2E Tests", () => {
 
       // Get all messages in the thread
       const threadMessages = await provider.getThreadMessages(
-        getTestThreadId(),
+        getTestThreadId()
       );
       console.log(`   📝 Thread has ${threadMessages.length} message(s)`);
 
@@ -467,13 +467,13 @@ describe.skipIf(!RUN_E2E_TESTS)("Google Gmail Labeling E2E Tests", () => {
       }
 
       console.log(
-        `   ✅ Verified label removed from all ${threadMessages.length} message(s)`,
+        `   ✅ Verified label removed from all ${threadMessages.length} message(s)`
       );
     });
 
     test("should handle empty label ID gracefully", async () => {
       await expect(
-        provider.removeThreadLabel(getTestThreadId(), ""),
+        provider.removeThreadLabel(getTestThreadId(), "")
       ).resolves.not.toThrow();
 
       console.log("   ✅ Handled empty label ID gracefully");
@@ -515,7 +515,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Google Gmail Labeling E2E Tests", () => {
       const messageWithLabel = await provider.getMessage(getTestMessageId());
       expect(messageWithLabel.labelIds).toContain(label.id);
       console.log(
-        `      ✅ Label verified on message (${messageWithLabel.labelIds?.length} total labels)`,
+        `      ✅ Label verified on message (${messageWithLabel.labelIds?.length} total labels)`
       );
 
       // Step 5: Remove label from thread

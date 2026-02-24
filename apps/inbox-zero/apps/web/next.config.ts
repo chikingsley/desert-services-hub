@@ -1,9 +1,9 @@
-import { withSentryConfig } from "@sentry/nextjs";
-import { withAxiom } from "next-axiom";
 import nextMdx from "@next/mdx";
+import { withSentryConfig } from "@sentry/nextjs";
 import withSerwistInit from "@serwist/next";
-import { env } from "./env";
 import type { NextConfig } from "next";
+import { withAxiom } from "next-axiom";
+import { env } from "./env";
 
 const withMDX = nextMdx({
   options: {
@@ -325,15 +325,15 @@ const exportConfig = useSentry
   : mdxConfig;
 
 // NEXTAUTH_SECRET is deprecated but kept as an option to not break the build. At least one must be set.
-if (!env.AUTH_SECRET && !env.NEXTAUTH_SECRET) {
+if (!(env.AUTH_SECRET || env.NEXTAUTH_SECRET)) {
   throw new Error(
-    "Either AUTH_SECRET or NEXTAUTH_SECRET environment variable must be defined",
+    "Either AUTH_SECRET or NEXTAUTH_SECRET environment variable must be defined"
   );
 }
 
 if (env.MICROSOFT_CLIENT_ID && !env.MICROSOFT_WEBHOOK_CLIENT_STATE) {
   throw new Error(
-    "MICROSOFT_WEBHOOK_CLIENT_STATE environment variable must be defined",
+    "MICROSOFT_WEBHOOK_CLIENT_STATE environment variable must be defined"
   );
 }
 

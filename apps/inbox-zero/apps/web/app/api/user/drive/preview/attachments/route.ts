@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
-import { withEmailProvider } from "@/utils/middleware";
-import { SafeError } from "@/utils/error";
 import { getExtractableAttachments } from "@/utils/drive/filing-engine";
-import { extractNameFromEmail, extractEmailAddress } from "@/utils/email";
-import type { ParsedMessage } from "@/utils/types";
+import { extractEmailAddress, extractNameFromEmail } from "@/utils/email";
 import type { EmailProvider } from "@/utils/email/types";
+import { SafeError } from "@/utils/error";
 import type { Logger } from "@/utils/logger";
+import { withEmailProvider } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
+import type { ParsedMessage } from "@/utils/types";
 
 export type AttachmentPreviewItem = {
   messageId: string;
@@ -67,7 +67,7 @@ async function getAttachmentsData({
 
   if (!emailAccount.filingPrompt) {
     throw new SafeError(
-      "Please describe how you organize files before previewing",
+      "Please describe how you organize files before previewing"
     );
   }
 
@@ -96,7 +96,7 @@ async function getAttachmentsData({
 
 function extractAttachmentPreviews(
   messages: ParsedMessage[],
-  limit: number,
+  limit: number
 ): AttachmentPreviewItem[] {
   const result: AttachmentPreviewItem[] = [];
 
@@ -114,7 +114,9 @@ function extractAttachmentPreviews(
         senderName: extractNameFromEmail(message.headers.from),
         subject: message.headers.subject || message.subject || "(No subject)",
       });
-      if (result.length >= limit) return result;
+      if (result.length >= limit) {
+        return result;
+      }
     }
   }
 

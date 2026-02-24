@@ -269,11 +269,11 @@ export function formatDateForFilename(date: Date = new Date()): string {
 }
 
 export interface FilenameOptions {
-  type: keyof typeof DOCUMENT_TYPES;
   date: string;
+  extension?: string;
   identifier?: string;
   modifier?: string;
-  extension?: string;
+  type: keyof typeof DOCUMENT_TYPES;
 }
 
 /**

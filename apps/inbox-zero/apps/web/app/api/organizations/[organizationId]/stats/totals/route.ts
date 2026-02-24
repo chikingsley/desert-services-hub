@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import prisma from "@/utils/prisma";
+import { Prisma } from "@/generated/prisma/client";
 import { withAuth } from "@/utils/middleware";
 import { fetchAndCheckIsAdmin } from "@/utils/organizations/access";
-import { Prisma } from "@/generated/prisma/client";
+import prisma from "@/utils/prisma";
 import { type OrgStatsParams, orgStatsParams } from "../types";
 
 export type OrgTotalsResponse = Awaited<ReturnType<typeof getTotals>>;
@@ -28,7 +28,7 @@ export const GET = withAuth(
     });
 
     return NextResponse.json(result);
-  },
+  }
 );
 
 async function getTotals({
@@ -59,7 +59,7 @@ async function getTotals({
   const rulesDateConditions: Prisma.Sql[] = [];
   if (fromDate) {
     rulesDateConditions.push(
-      Prisma.sql`er."createdAt" >= ${new Date(fromDate)}`,
+      Prisma.sql`er."createdAt" >= ${new Date(fromDate)}`
     );
   }
   if (toDate) {

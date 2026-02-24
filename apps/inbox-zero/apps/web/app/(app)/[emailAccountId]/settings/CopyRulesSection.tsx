@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
+import { useState } from "react";
+import { CopyRulesDialog } from "@/app/(app)/[emailAccountId]/settings/CopyRulesDialog";
 import { Button } from "@/components/ui/button";
 import {
   Item,
-  ItemContent,
-  ItemTitle,
   ItemActions,
+  ItemContent,
   ItemSeparator,
+  ItemTitle,
 } from "@/components/ui/item";
-import { CopyRulesDialog } from "@/app/(app)/[emailAccountId]/settings/CopyRulesDialog";
 
 type Account = {
   id: string;
@@ -31,7 +31,9 @@ export function CopyRulesSection({
 
   const sourceAccounts = allAccounts.filter((a) => a.id !== emailAccountId);
 
-  if (sourceAccounts.length === 0) return null;
+  if (sourceAccounts.length === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -41,7 +43,7 @@ export function CopyRulesSection({
           <ItemTitle>Copy Rules From Another Account</ItemTitle>
         </ItemContent>
         <ItemActions>
-          <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+          <Button onClick={() => setOpen(true)} size="sm" variant="outline">
             <ArrowLeftRight className="mr-2 size-4" />
             Copy Rules
           </Button>
@@ -49,11 +51,11 @@ export function CopyRulesSection({
       </Item>
 
       <CopyRulesDialog
-        open={open}
         onOpenChange={setOpen}
-        targetAccountId={emailAccountId}
-        targetAccountEmail={emailAccountEmail}
+        open={open}
         sourceAccounts={sourceAccounts}
+        targetAccountEmail={emailAccountEmail}
+        targetAccountId={emailAccountId}
       />
     </>
   );

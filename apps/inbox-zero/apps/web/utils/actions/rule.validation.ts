@@ -146,7 +146,7 @@ const zodAction = z
     }
     if (
       data.type === ActionType.MOVE_FOLDER &&
-      (!data.folderName?.value?.trim() || !data.folderId?.value?.trim())
+      !(data.folderName?.value?.trim() && data.folderId?.value?.trim())
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -172,7 +172,7 @@ export const createRuleBody = z.object({
         // Allow multiple STATIC conditions if they have different fields populated
         // But only allow one AI condition
         const aiConditions = conditions.filter(
-          (c) => c.type === ConditionType.AI,
+          (c) => c.type === ConditionType.AI
         );
         if (aiConditions.length > 1) {
           return false;
@@ -180,7 +180,7 @@ export const createRuleBody = z.object({
 
         // For STATIC conditions, check if they have different fields
         const staticConditions = conditions.filter(
-          (c) => c.type === ConditionType.STATIC,
+          (c) => c.type === ConditionType.STATIC
         );
 
         // Filter out empty static conditions (where the active field has no value)
@@ -200,10 +200,18 @@ export const createRuleBody = z.object({
         // Create a signature for each non-empty static condition based on which fields are populated
         const staticSignatures = nonEmptyStaticConditions.map((c) => {
           const fields = [];
-          if (c.from) fields.push("from");
-          if (c.to) fields.push("to");
-          if (c.subject) fields.push("subject");
-          if (c.body) fields.push("body");
+          if (c.from) {
+            fields.push("from");
+          }
+          if (c.to) {
+            fields.push("to");
+          }
+          if (c.subject) {
+            fields.push("subject");
+          }
+          if (c.body) {
+            fields.push("body");
+          }
           return fields.sort().join(",");
         });
 
@@ -213,7 +221,7 @@ export const createRuleBody = z.object({
       },
       {
         message: "You can't have duplicate conditions.",
-      },
+      }
     ),
   conditionalOperator: z
     .enum([LogicalOperator.AND, LogicalOperator.OR])
@@ -392,7 +400,7 @@ const importedRule = z
     {
       message:
         "At least one condition (from, to, subject, body, or instructions) must be provided",
-    },
+    }
   );
 
 export const importRulesBody = z.object({

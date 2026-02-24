@@ -8,15 +8,16 @@
  *
  * Usage: bun run evals/seed-dataset.ts [--count 500]
  */
-import { db } from "@lib/db/client";
+
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { db } from "@lib/db/client";
 
 const DIR = import.meta.dirname ?? join(process.cwd(), "evals");
 const SAMPLE_COUNT = Number(
   process.argv.includes("--count")
     ? process.argv[process.argv.indexOf("--count") + 1]
-    : 500,
+    : 500
 );
 
 async function main() {
@@ -25,9 +26,12 @@ async function main() {
   // 1. Corpus: all projects
   console.log("Fetching projects...");
   const projects = await db
-    .query<{ id: number; name: string; address: string | null; lifecycle_state: string }>(
-      "SELECT id, name, address, lifecycle_state FROM projects ORDER BY id",
-    )
+    .query<{
+      id: number;
+      name: string;
+      address: string | null;
+      lifecycle_state: string;
+    }>("SELECT id, name, address, lifecycle_state FROM projects ORDER BY id")
     .all();
 
   console.log(`  ${projects.length} projects`);
@@ -48,7 +52,7 @@ async function main() {
        FROM emails
        WHERE project_id IS NOT NULL AND subject IS NOT NULL
        ORDER BY received_at DESC
-       LIMIT $1`,
+       LIMIT $1`
     )
     .all(SAMPLE_COUNT * 3);
 
@@ -76,7 +80,7 @@ async function main() {
   const sampled = pool.slice(0, SAMPLE_COUNT);
 
   console.log(
-    `  ${sampled.length} emails sampled across ${new Set(sampled.map((e) => e.project_id)).size} projects`,
+    `  ${sampled.length} emails sampled across ${new Set(sampled.map((e) => e.project_id)).size} projects`
   );
 
   // 3. Write corpus.jsonl
@@ -91,9 +95,9 @@ async function main() {
           text: [p.name, p.address, p.lifecycle_state]
             .filter(Boolean)
             .join(" | "),
-        }),
+        })
       )
-      .join("\n") + "\n",
+      .join("\n") + "\n"
   );
   console.log(`  Wrote ${corpusPath}`);
 
@@ -112,7 +116,7 @@ async function main() {
   }));
   writeFileSync(
     queriesPath,
-    queries.map((q) => JSON.stringify(q)).join("\n") + "\n",
+    queries.map((q) => JSON.stringify(q)).join("\n") + "\n"
   );
   console.log(`  Wrote ${queriesPath}`);
 

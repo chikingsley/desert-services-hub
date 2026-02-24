@@ -1,28 +1,28 @@
 "use client";
 
-import * as React from "react";
 import { CheckIcon } from "lucide-react";
-import { cn } from "@/utils";
+import * as React from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  Command,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandSeparator,
-} from "@/components/ui/command";
+import { cn } from "@/utils";
 
 interface MultiSelectFilterProps<_TData, _TValue> {
-  title?: string;
+  maxDisplayedValues?: number;
   options: {
     label: string;
     value: string;
@@ -30,7 +30,7 @@ interface MultiSelectFilterProps<_TData, _TValue> {
   }[];
   selectedValues: Set<string>;
   setSelectedValues: (values: Set<string>) => void;
-  maxDisplayedValues?: number;
+  title?: string;
 }
 
 export function MultiSelectFilter<TData, TValue>({
@@ -43,14 +43,14 @@ export function MultiSelectFilter<TData, TValue>({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 border-dashed">
+        <Button className="h-8 border-dashed" size="sm" variant="outline">
           {title}
           {selectedValues?.size > 0 && (
             <>
-              <Separator orientation="vertical" className="mx-2 h-4" />
+              <Separator className="mx-2 h-4" orientation="vertical" />
               <Badge
-                variant="secondary"
                 className="rounded-sm px-1 font-normal lg:hidden"
+                variant="secondary"
               >
                 {selectedValues.size}
               </Badge>
@@ -58,8 +58,8 @@ export function MultiSelectFilter<TData, TValue>({
                 {typeof maxDisplayedValues === "number" &&
                 selectedValues.size > maxDisplayedValues ? (
                   <Badge
-                    variant="secondary"
                     className="rounded-sm px-1 font-normal"
+                    variant="secondary"
                   >
                     {selectedValues.size} selected
                   </Badge>
@@ -68,9 +68,9 @@ export function MultiSelectFilter<TData, TValue>({
                     .filter((option) => selectedValues.has(option.value))
                     .map((option) => (
                       <Badge
-                        variant="secondary"
-                        key={option.value}
                         className="rounded-sm px-1 font-normal"
+                        key={option.value}
+                        variant="secondary"
                       >
                         {option.label}
                       </Badge>
@@ -81,19 +81,19 @@ export function MultiSelectFilter<TData, TValue>({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0" align="start">
+      <PopoverContent align="start" className="w-[200px] p-0">
         <Command>
           <CommandInput placeholder={title} />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
               <CommandItem
+                className="justify-center text-center"
                 onSelect={() =>
                   setSelectedValues(
-                    new Set(options.map((option) => option.value)),
+                    new Set(options.map((option) => option.value))
                   )
                 }
-                className="justify-center text-center"
               >
                 Select all
               </CommandItem>
@@ -103,8 +103,8 @@ export function MultiSelectFilter<TData, TValue>({
               <>
                 <CommandGroup>
                   <CommandItem
-                    onSelect={() => setSelectedValues(new Set())}
                     className="justify-center text-center"
+                    onSelect={() => setSelectedValues(new Set())}
                   >
                     Clear filters
                   </CommandItem>
@@ -133,7 +133,7 @@ export function MultiSelectFilter<TData, TValue>({
                         "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                         isSelected
                           ? "bg-primary text-primary-foreground"
-                          : "opacity-50 [&_svg]:invisible",
+                          : "opacity-50 [&_svg]:invisible"
                       )}
                     >
                       <CheckIcon className={cn("h-4 w-4")} />
@@ -155,7 +155,7 @@ export function MultiSelectFilter<TData, TValue>({
 
 export function useMultiSelectFilter(options: string[]) {
   const [selectedValues, setSelectedValues] = React.useState<Set<string>>(
-    new Set(options),
+    new Set(options)
   );
   return { selectedValues, setSelectedValues };
 }

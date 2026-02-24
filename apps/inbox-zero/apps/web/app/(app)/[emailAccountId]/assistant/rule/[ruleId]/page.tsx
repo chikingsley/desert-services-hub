@@ -14,16 +14,16 @@ export default async function RulePage(props: {
     <div>
       {searchParams.new === "true" && (
         <TopSection
-          title="Here are your rule settings!"
           descriptionComponent={
             <p>
               These rules were AI generated, feel free to adjust them to your
               needs.
             </p>
           }
+          title="Here are your rule settings!"
         />
       )}
-      <div className="content-container mx-auto w-full max-w-3xl">
+      <div className="mx-auto w-full max-w-3xl content-container">
         <Rule ruleId={params.ruleId} />
       </div>
     </div>

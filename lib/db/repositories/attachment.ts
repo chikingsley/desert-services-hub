@@ -228,8 +228,11 @@ export async function searchEmailsFullText(
     });
   }
 
-  const { clause: attClause, params: attParams, nextIndex: attNext } =
-    likeWhere(["extracted_text"], query);
+  const {
+    clause: attClause,
+    params: attParams,
+    nextIndex: attNext,
+  } = likeWhere(["extracted_text"], query);
 
   const attachmentRows = await db
     .query<{ email_id: number }, unknown[]>(

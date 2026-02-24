@@ -1,27 +1,27 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAction } from "next-safe-action/hooks";
+import { useCallback, useEffect, useMemo } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import type { z } from "zod";
 import { Input } from "@/components/Input";
-import { Button } from "@/components/ui/button";
-import { toastSuccess } from "@/components/Toast";
 import { LoadingContent } from "@/components/LoadingContent";
+import { Select } from "@/components/Select";
 import { SettingCard } from "@/components/SettingCard";
+import { toastSuccess } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCalendars } from "@/hooks/useCalendars";
 import { useAccount } from "@/providers/EmailAccountProvider";
-import { useAction } from "next-safe-action/hooks";
 import {
-  updateEmailAccountTimezoneAction,
   updateCalendarBookingLinkAction,
+  updateEmailAccountTimezoneAction,
 } from "@/utils/actions/calendar";
 import {
-  updateTimezoneBody,
   updateBookingLinkBody,
+  updateTimezoneBody,
 } from "@/utils/actions/calendar.validation";
-import { Select } from "@/components/Select";
 
 const BASE_TIMEZONES = [
   { label: "Samoa (GMT-11)", value: "Pacific/Samoa" },
@@ -149,7 +149,7 @@ export function CalendarSettings() {
           executeUpdateTimezone(data);
         }
       },
-      [executeUpdateTimezone],
+      [executeUpdateTimezone]
     );
 
   const onSubmitBookingLink: SubmitHandler<
@@ -158,60 +158,59 @@ export function CalendarSettings() {
     (data) => {
       executeUpdateBookingLink(data);
     },
-    [executeUpdateBookingLink],
+    [executeUpdateBookingLink]
   );
 
   return (
     <div className="space-y-2">
       <SettingCard
-        title="Calendar Booking Link"
-        description="Your booking link for the AI to share when scheduling meetings"
         collapseOnMobile
+        description="Your booking link for the AI to share when scheduling meetings"
         right={
           <LoadingContent
-            loading={isLoading}
             error={error}
+            loading={isLoading}
             loadingComponent={<Skeleton className="h-10 w-80" />}
           >
             <form
+              className="flex w-full flex-col gap-2 sm:flex-row sm:items-center md:w-auto"
               onSubmit={handleSubmitBookingLink(onSubmitBookingLink)}
-              className="flex flex-col gap-2 sm:flex-row sm:items-center w-full md:w-auto"
             >
               <div className="w-full sm:w-80">
                 <Input
-                  type="url"
+                  error={bookingLinkErrors.bookingLink}
                   name="bookingLink"
                   placeholder="https://cal.com/your-link"
                   registerProps={registerBookingLink("bookingLink")}
-                  error={bookingLinkErrors.bookingLink}
+                  type="url"
                 />
               </div>
               <Button
-                type="submit"
+                className="w-full sm:w-auto"
                 loading={isUpdatingBookingLink}
                 size="sm"
-                className="w-full sm:w-auto"
+                type="submit"
               >
                 Save
               </Button>
             </form>
           </LoadingContent>
         }
+        title="Calendar Booking Link"
       />
 
       <SettingCard
-        title="Timezone"
-        description="Your timezone for calendar scheduling suggestions"
         collapseOnMobile
+        description="Your timezone for calendar scheduling suggestions"
         right={
           <LoadingContent
-            loading={isLoading}
             error={error}
+            loading={isLoading}
             loadingComponent={<Skeleton className="h-10 w-64" />}
           >
             <form
+              className="flex w-full flex-col gap-2 sm:flex-row sm:items-center md:w-auto"
               onSubmit={handleSubmitTimezone(onSubmitTimezone)}
-              className="flex flex-col gap-2 sm:flex-row sm:items-center w-full md:w-auto"
             >
               <div className="w-full sm:w-64">
                 <Select
@@ -221,16 +220,17 @@ export function CalendarSettings() {
                 />
               </div>
               <Button
-                type="submit"
+                className="w-full sm:w-auto"
                 loading={isUpdatingTimezone}
                 size="sm"
-                className="w-full sm:w-auto"
+                type="submit"
               >
                 Save
               </Button>
             </form>
           </LoadingContent>
         }
+        title="Timezone"
       />
     </div>
   );

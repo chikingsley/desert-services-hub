@@ -1,13 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createCalendarEventProviders } from "@/utils/calendar/event-provider";
+import type {
+  CalendarEvent,
+  CalendarEventProvider,
+} from "@/utils/calendar/event-types";
+import { createScopedLogger } from "@/utils/logger";
 import {
-  getMeetingContext,
   formatMeetingContextForPrompt,
+  getMeetingContext,
   type MeetingContext,
 } from "./recipient-context";
-import type { CalendarEventProvider } from "@/utils/calendar/event-types";
-import type { CalendarEvent } from "@/utils/calendar/event-types";
-import { createCalendarEventProviders } from "@/utils/calendar/event-provider";
-import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("test");
 
@@ -197,7 +199,7 @@ Use this context naturally if relevant. For past meetings, you might reference t
 
       const result = formatMeetingContextForPrompt(
         meetings,
-        "America/New_York",
+        "America/New_York"
       );
 
       // Readable prompt text:
@@ -464,7 +466,7 @@ Use this context naturally if relevant. For past meetings, you might reference t
           startTime: new Date(`2024-01-${15 + i}T10:00:00Z`),
           endTime: new Date(`2024-01-${15 + i}T11:00:00Z`),
           attendees: [{ email: "recipient@example.com" }],
-        }),
+        })
       );
 
       const now = new Date();

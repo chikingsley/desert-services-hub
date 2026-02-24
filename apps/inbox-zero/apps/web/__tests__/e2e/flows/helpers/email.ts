@@ -3,30 +3,30 @@
  */
 
 import type { EmailProvider } from "@/utils/email/types";
+import { getNextMessageSequence, getTestSubjectPrefix } from "../config";
 import type { TestAccount } from "./accounts";
-import { getTestSubjectPrefix, getNextMessageSequence } from "../config";
-import { logStep, logAssertion } from "./logging";
+import { logAssertion, logStep } from "./logging";
 
 interface SendTestEmailOptions {
-  from: TestAccount;
-  to: TestAccount;
-  subject: string;
   body: string;
+  from: TestAccount;
   /** Whether to include E2E run ID prefix in subject */
   includePrefix?: boolean;
+  subject: string;
+  to: TestAccount;
 }
 
 interface SendTestEmailResult {
+  fullSubject: string;
   messageId: string;
   threadId: string;
-  fullSubject: string;
 }
 
 /**
  * Send a test email from one account to another
  */
 export async function sendTestEmail(
-  options: SendTestEmailOptions,
+  options: SendTestEmailOptions
 ): Promise<SendTestEmailResult> {
   const { from, to, subject, body, includePrefix = true } = options;
 
@@ -172,19 +172,19 @@ export async function assertEmailLabeled(options: {
 
   for (const expectedLabel of expectedLabels) {
     const hasLabel = actualLabels.some(
-      (label) => label.toLowerCase() === expectedLabel.toLowerCase(),
+      (label) => label.toLowerCase() === expectedLabel.toLowerCase()
     );
 
     logAssertion(
       `Label "${expectedLabel}" present`,
       hasLabel,
-      `Found: ${actualLabels.join(", ")}`,
+      `Found: ${actualLabels.join(", ")}`
     );
 
     if (!hasLabel) {
       throw new Error(
         `Expected message ${messageId} to have label "${expectedLabel}", ` +
-          `but found: [${actualLabels.join(", ")}]`,
+          `but found: [${actualLabels.join(", ")}]`
       );
     }
   }
@@ -265,13 +265,13 @@ export async function assertMessageInThread(options: {
   logAssertion(
     "Message in correct thread",
     inThread,
-    `Expected: ${expectedThreadId}, Got: ${message.threadId}`,
+    `Expected: ${expectedThreadId}, Got: ${message.threadId}`
   );
 
   if (!inThread) {
     throw new Error(
       `Expected message ${messageId} to be in thread ${expectedThreadId}, ` +
-        `but it's in thread ${message.threadId}`,
+        `but it's in thread ${message.threadId}`
     );
   }
 }
@@ -329,7 +329,7 @@ export async function cleanupTestEmails(options: {
 
   const messages = await provider.getInboxMessages(50);
   const testMessages = messages.filter((msg) =>
-    msg.subject?.includes(subjectPrefix),
+    msg.subject?.includes(subjectPrefix)
   );
 
   let cleaned = 0;
@@ -372,11 +372,17 @@ async function findVerifiedSentMessage(options: {
     const sentMessages = await provider.getSentMessages(20);
 
     const match = sentMessages.find((msg) => {
-      if (msg.threadId !== threadId) return false;
-      if (msg.subject !== expectedSubject) return false;
+      if (msg.threadId !== threadId) {
+        return false;
+      }
+      if (msg.subject !== expectedSubject) {
+        return false;
+      }
 
       const msgDate = new Date(msg.internalDate || msg.date);
-      if (msgDate < sentAfter) return false;
+      if (msgDate < sentAfter) {
+        return false;
+      }
 
       return true;
     });
@@ -396,6 +402,6 @@ async function findVerifiedSentMessage(options: {
 
   throw new Error(
     `Failed to find sent message after ${maxAttempts} attempts. ` +
-      `Expected threadId=${threadId}, subject="${expectedSubject}", sentAfter=${sentAfter.toISOString()}`,
+      `Expected threadId=${threadId}, subject="${expectedSubject}", sentAfter=${sentAfter.toISOString()}`
   );
 }

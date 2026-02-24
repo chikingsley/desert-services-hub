@@ -43,7 +43,9 @@ export function useAllLabels() {
     useSWR<LabelsResponse>("/api/labels");
 
   const userLabels = useMemo(() => {
-    if (!data?.labels) return [];
+    if (!data?.labels) {
+      return [];
+    }
 
     return data.labels
       .filter((label) => label.type === "user")
@@ -64,7 +66,9 @@ export function useLabels() {
     useSWR<LabelsResponse>("/api/labels");
 
   const userLabels: EmailLabel[] = useMemo(() => {
-    if (!data?.labels) return [];
+    if (!data?.labels) {
+      return [];
+    }
 
     return data.labels
       .filter((label) => label.type === "user")
@@ -123,8 +127,12 @@ function sortLabels(a: SortableLabel, b: SortableLabel) {
   const bName = b.name || "";
 
   // Order words that start with [ at the end
-  if (aName.startsWith("[") && !bName.startsWith("[")) return 1;
-  if (!aName.startsWith("[") && bName.startsWith("[")) return -1;
+  if (aName.startsWith("[") && !bName.startsWith("[")) {
+    return 1;
+  }
+  if (!aName.startsWith("[") && bName.startsWith("[")) {
+    return -1;
+  }
 
   return aName.localeCompare(bName);
 }

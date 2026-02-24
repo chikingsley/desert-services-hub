@@ -1,18 +1,13 @@
 "use client";
 
-import { useCallback } from "react";
-import { type SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusIcon } from "lucide-react";
-import { useModal } from "@/hooks/useModal";
-import { Button, type ButtonProps } from "@/components/ui/button";
+import { useCallback } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import { Input } from "@/components/Input";
-import { toastSuccess, toastError } from "@/components/Toast";
-import {
-  createCategoryBody,
-  type CreateCategoryBody,
-} from "@/utils/actions/categorize.validation";
-import { createCategoryAction } from "@/utils/actions/categorize";
+import { toastError, toastSuccess } from "@/components/Toast";
+import { MessageText } from "@/components/Typography";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -20,8 +15,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { Category } from "@/generated/prisma/client";
-import { MessageText } from "@/components/Typography";
+import { useModal } from "@/hooks/useModal";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { createCategoryAction } from "@/utils/actions/categorize";
+import {
+  type CreateCategoryBody,
+  createCategoryBody,
+} from "@/utils/actions/categorize.validation";
 
 type ExampleCategory = {
   name: string;
@@ -104,9 +104,9 @@ export function CreateCategoryButton({
       </Button>
 
       <CreateCategoryDialog
+        closeModal={closeModal}
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
-        closeModal={closeModal}
       />
     </div>
   );
@@ -124,7 +124,7 @@ export function CreateCategoryDialog({
   closeModal: () => void;
 }) {
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={isOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Category</DialogTitle>
@@ -164,7 +164,7 @@ function CreateCategoryForm({
       setValue("name", category.name);
       setValue("description", category.description);
     },
-    [setValue],
+    [setValue]
   );
 
   const onSubmit: SubmitHandler<CreateCategoryBody> = useCallback(
@@ -180,39 +180,39 @@ function CreateCategoryForm({
         closeModal();
       }
     },
-    [closeModal, emailAccountId],
+    [closeModal, emailAccountId]
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
       <Input
-        type="text"
-        name="name"
-        label="Name"
-        registerProps={register("name", { required: true })}
         error={errors.name}
+        label="Name"
+        name="name"
+        registerProps={register("name", { required: true })}
+        type="text"
       />
       <Input
-        type="text"
         autosizeTextarea
-        rows={2}
-        name="description"
-        label="Description (Optional)"
-        explainText="Additional information used by the AI to categorize senders"
-        registerProps={register("description")}
         error={errors.description}
+        explainText="Additional information used by the AI to categorize senders"
+        label="Description (Optional)"
+        name="description"
+        registerProps={register("description")}
+        rows={2}
+        type="text"
       />
 
       <div className="rounded border border-border bg-muted/50 p-3">
-        <div className="text-xs font-medium">Examples</div>
+        <div className="font-medium text-xs">Examples</div>
         <div className="mt-1 flex flex-wrap gap-2">
           {EXAMPLE_CATEGORIES.map((category) => (
             <Button
               key={category.name}
+              onClick={() => handleExampleClick(category)}
+              size="xs"
               type="button"
               variant="outline"
-              size="xs"
-              onClick={() => handleExampleClick(category)}
             >
               <PlusIcon className="mr-1 size-2" />
               {category.name}
@@ -229,7 +229,7 @@ function CreateCategoryForm({
         </MessageText>
       )}
 
-      <Button type="submit" loading={isSubmitting}>
+      <Button loading={isSubmitting} type="submit">
         {category ? "Update" : "Create"}
       </Button>
     </form>

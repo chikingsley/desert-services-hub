@@ -22,21 +22,9 @@ export interface DrawingCanvasProps {
   isActive: boolean;
 
   /**
-   * Stroke color for drawing.
-   * @default "#000000"
+   * Callback when drawing is cancelled.
    */
-  strokeColor?: string;
-
-  /**
-   * Stroke width for drawing.
-   * @default 3
-   */
-  strokeWidth?: number;
-
-  /**
-   * The PDF viewer instance.
-   */
-  viewer: InstanceType<typeof TPDFViewer>;
+  onCancel: () => void;
 
   /**
    * Callback when drawing is complete.
@@ -52,9 +40,21 @@ export interface DrawingCanvasProps {
   ) => void;
 
   /**
-   * Callback when drawing is cancelled.
+   * Stroke color for drawing.
+   * @default "#000000"
    */
-  onCancel: () => void;
+  strokeColor?: string;
+
+  /**
+   * Stroke width for drawing.
+   * @default 3
+   */
+  strokeWidth?: number;
+
+  /**
+   * The PDF viewer instance.
+   */
+  viewer: InstanceType<typeof TPDFViewer>;
 }
 
 interface Point {
@@ -63,8 +63,8 @@ interface Point {
 }
 
 interface Stroke {
-  points: Point[];
   color: string;
+  points: Point[];
   width: number;
 }
 

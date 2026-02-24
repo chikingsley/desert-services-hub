@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { StepConnectCalendar } from "./StepConnectCalendar";
-import { StepSendTestBrief } from "./StepSendTestBrief";
-import { StepReady } from "./StepReady";
-import { prefixPath } from "@/utils/path";
-import { useAccount } from "@/providers/EmailAccountProvider";
+import { useCallback } from "react";
 import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { prefixPath } from "@/utils/path";
+import { StepConnectCalendar } from "./StepConnectCalendar";
+import { StepReady } from "./StepReady";
+import { StepSendTestBrief } from "./StepSendTestBrief";
 
 const TOTAL_STEPS = 3;
 
@@ -27,7 +27,7 @@ export function MeetingBriefsOnboardingContent({
     if (clampedStep < TOTAL_STEPS) {
       const nextStep = clampedStep + 1;
       router.push(
-        prefixPath(emailAccountId, `/onboarding-brief?step=${nextStep}`),
+        prefixPath(emailAccountId, `/onboarding-brief?step=${nextStep}`)
       );
     }
   }, [router, emailAccountId, clampedStep]);

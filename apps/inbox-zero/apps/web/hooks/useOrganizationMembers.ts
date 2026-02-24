@@ -3,6 +3,6 @@ import type { OrganizationMembersResponse } from "@/app/api/organizations/[organ
 
 export function useOrganizationMembers(organizationId: string) {
   return useSWR<OrganizationMembersResponse>(
-    `/api/organizations/${organizationId}/members`,
+    `/api/organizations/${organizationId}/members`
   );
 }

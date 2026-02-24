@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { withEmailProvider } from "@/utils/middleware";
 import { type ThreadsQuery, threadsQuery } from "@/app/api/threads/validation";
-import { isDefined } from "@/utils/types";
-import prisma from "@/utils/prisma";
-import { isIgnoredSender } from "@/utils/filter-ignored-senders";
 import type { EmailProvider } from "@/utils/email/types";
+import { isIgnoredSender } from "@/utils/filter-ignored-senders";
+import { withEmailProvider } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
+import { isDefined } from "@/utils/types";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +48,7 @@ export const GET = withEmailProvider("threads", async (request) => {
     request.logger.error("Error fetching threads", { error, emailAccountId });
     return NextResponse.json(
       { error: "Failed to fetch threads" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 });
@@ -95,7 +95,9 @@ async function getThreads({
 
       // Filter out ignored senders from the already parsed messages
       const filteredMessages = thread.messages.filter((message) => {
-        if (!message.headers?.from) return true; // Keep messages without from field
+        if (!message.headers?.from) {
+          return true; // Keep messages without from field
+        }
         return !isIgnoredSender(message.headers.from);
       });
 
@@ -105,7 +107,7 @@ async function getThreads({
         snippet: thread.snippet,
         plan,
       };
-    }),
+    })
   );
 
   return {

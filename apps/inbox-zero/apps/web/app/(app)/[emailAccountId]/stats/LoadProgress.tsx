@@ -1,5 +1,5 @@
-import { MessageText } from "@/components/Typography";
 import { ButtonLoader } from "@/components/Loading";
+import { MessageText } from "@/components/Typography";
 
 export function LoadProgress() {
   return (

@@ -1,7 +1,7 @@
-import { PageWrapper } from "@/components/PageWrapper";
 import { OrgAnalyticsConsentBanner } from "@/app/(app)/organization/[organizationId]/OrgAnalyticsConsentBanner";
-import { OrgStats } from "@/app/(app)/organization/[organizationId]/stats/OrgStats";
 import { OrganizationTabs } from "@/app/(app)/organization/[organizationId]/OrganizationTabs";
+import { OrgStats } from "@/app/(app)/organization/[organizationId]/stats/OrgStats";
+import { PageWrapper } from "@/components/PageWrapper";
 
 export default async function OrgStatsPage({
   params,

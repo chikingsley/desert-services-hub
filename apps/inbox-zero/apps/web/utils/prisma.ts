@@ -16,6 +16,8 @@ const _prisma =
     }),
   }).$extends(encryptedTokens) as unknown as PrismaClient);
 
-if (env.NODE_ENV === "development") global.prisma = _prisma;
+if (env.NODE_ENV === "development") {
+  global.prisma = _prisma;
+}
 
 export default _prisma;

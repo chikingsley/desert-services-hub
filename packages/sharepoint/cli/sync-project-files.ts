@@ -188,15 +188,15 @@ if (notionId) {
 }
 
 interface AttachmentRow {
+  content_type: string;
+  email_date: string;
+  from_email: string;
   id: number;
   name: string;
-  content_type: string;
+  size: number;
   storage_bucket: string;
   storage_path: string;
-  size: number;
   subject: string;
-  from_email: string;
-  email_date: string;
 }
 
 const attachments = await db.query<AttachmentRow>(query).all(...queryParams);

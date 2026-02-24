@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PremiumTier } from "@/generated/prisma/enums";
-import { transferPremiumDuringMerge } from "./merge-premium";
 import prisma from "@/utils/__mocks__/prisma";
 import { createScopedLogger } from "@/utils/logger";
+import { transferPremiumDuringMerge } from "./merge-premium";
 
 const logger = createScopedLogger("test");
 
@@ -303,7 +303,7 @@ describe("transferPremiumDuringMerge", () => {
           id: sourceUserId,
           email: "source@example.com",
           premiumId: null,
-          premiumAdminId: premiumAdminId,
+          premiumAdminId,
           premium: null,
           premiumAdmin: {
             id: premiumAdminId,
@@ -337,7 +337,7 @@ describe("transferPremiumDuringMerge", () => {
       // Should update target user's premiumAdminId
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: targetUserId },
-        data: { premiumAdminId: premiumAdminId },
+        data: { premiumAdminId },
       });
     });
 
@@ -424,7 +424,7 @@ describe("transferPremiumDuringMerge", () => {
 
       // Should not throw an error, but should complete gracefully
       await expect(
-        transferPremiumDuringMerge({ sourceUserId, targetUserId, logger }),
+        transferPremiumDuringMerge({ sourceUserId, targetUserId, logger })
       ).resolves.toBeUndefined();
 
       // Should not make any updates when target user is not found
@@ -461,12 +461,12 @@ describe("transferPremiumDuringMerge", () => {
 
       // Mock database error
       prisma.user.update.mockRejectedValue(
-        new Error("Database connection failed"),
+        new Error("Database connection failed")
       );
 
       // Should not throw an error, but should complete gracefully
       await expect(
-        transferPremiumDuringMerge({ sourceUserId, targetUserId, logger }),
+        transferPremiumDuringMerge({ sourceUserId, targetUserId, logger })
       ).resolves.toBeUndefined();
     });
   });

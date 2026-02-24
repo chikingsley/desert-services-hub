@@ -8,9 +8,9 @@ import {
   useState,
 } from "react";
 import { toastError, toastSuccess } from "@/components/Toast";
-import { isError } from "@/utils/error";
-import { loadEmailStatsAction } from "@/utils/actions/stats";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { loadEmailStatsAction } from "@/utils/actions/stats";
+import { isError } from "@/utils/error";
 
 type Context = {
   isLoading: boolean;
@@ -46,7 +46,9 @@ class StatLoader {
     loadBefore: boolean;
     showToast: boolean;
   }) {
-    if (this.#isLoading) return;
+    if (this.#isLoading) {
+      return;
+    }
 
     this.#isLoading = true;
 
@@ -81,14 +83,16 @@ export function StatLoaderProvider(props: { children: React.ReactNode }) {
       });
       setIsLoading(false);
     },
-    [emailAccountId],
+    [emailAccountId]
   );
 
   const onLoadBatch = useCallback(
     async (options: { loadBefore: boolean; showToast: boolean }) => {
       const batchSize = 50;
       for (let i = 0; i < batchSize; i++) {
-        if (stopLoading) break;
+        if (stopLoading) {
+          break;
+        }
         console.log("Loading batch", i);
         await onLoad({
           ...options,
@@ -97,7 +101,7 @@ export function StatLoaderProvider(props: { children: React.ReactNode }) {
       }
       setStopLoading(false);
     },
-    [onLoad, stopLoading],
+    [onLoad, stopLoading]
   );
 
   const onCancelLoadBatch = useCallback(() => {

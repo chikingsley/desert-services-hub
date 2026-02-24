@@ -15,6 +15,6 @@ export async function markSpam(options: {
       requestBody: {
         addLabelIds: [GmailLabel.SPAM],
       },
-    }),
+    })
   );
 }

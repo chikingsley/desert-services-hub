@@ -1,27 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { AlertTriangleIcon, CreditCardIcon, XIcon } from "lucide-react";
 import Link from "next/link";
-import { XIcon, CreditCardIcon, AlertTriangleIcon } from "lucide-react";
-import { useUser } from "@/hooks/useUser";
-import { isPremium } from "@/utils/premium";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { cn } from "@/utils";
+import { useState } from "react";
 import { HoverCard } from "@/components/HoverCard";
 import { MutedText } from "@/components/Typography";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useUser } from "@/hooks/useUser";
+import { cn } from "@/utils";
+import { isPremium } from "@/utils/premium";
 
 interface PremiumData {
   lemonSqueezyRenewsAt?: Date | string | null;
-  stripeSubscriptionStatus?: string | null;
-  stripeSubscriptionId?: string | null;
   lemonSqueezySubscriptionId?: number | string | null;
+  stripeSubscriptionId?: string | null;
+  stripeSubscriptionStatus?: string | null;
   tier?: string | null;
 }
 
 interface PremiumExpiredCardProps {
-  premium: PremiumData | null | undefined;
   onDismiss?: () => void;
+  premium: PremiumData | null | undefined;
 }
 
 export function PremiumExpiredCardContent({
@@ -38,10 +38,12 @@ export function PremiumExpiredCardContent({
 
   const isUserPremium = isPremium(
     lemonSqueezyRenewsAt,
-    premium?.stripeSubscriptionStatus || null,
+    premium?.stripeSubscriptionStatus || null
   );
 
-  if (isUserPremium) return null;
+  if (isUserPremium) {
+    return null;
+  }
 
   const getSubscriptionMessage = () => {
     const UPGRADE_MESSAGE = {
@@ -58,10 +60,11 @@ export function PremiumExpiredCardContent({
       lemonSqueezyRenewsAt && lemonSqueezyRenewsAt < new Date();
 
     // Check if user never had a subscription
-    const hasNoSubscription =
-      !status &&
-      !premium.stripeSubscriptionId &&
-      !premium.lemonSqueezySubscriptionId;
+    const hasNoSubscription = !(
+      status ||
+      premium.stripeSubscriptionId ||
+      premium.lemonSqueezySubscriptionId
+    );
 
     if (!premium || hasNoSubscription) {
       return {
@@ -114,11 +117,12 @@ export function PremiumExpiredCardContent({
 
   const { title, description } = getSubscriptionMessage();
 
-  const isNewUser =
-    !premium ||
-    (!premium.stripeSubscriptionStatus &&
-      !premium.stripeSubscriptionId &&
-      !premium.lemonSqueezySubscriptionId);
+  const isNewUser = !(
+    premium &&
+    (premium.stripeSubscriptionStatus ||
+      premium.stripeSubscriptionId ||
+      premium.lemonSqueezySubscriptionId)
+  );
 
   const buttonText = isNewUser ? "Upgrade" : "Reactivate";
   const buttonHref = "/settings";
@@ -130,29 +134,29 @@ export function PremiumExpiredCardContent({
         className="w-64"
         content={
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+            <p className="font-semibold text-orange-800 text-sm dark:text-orange-200">
               {title}
             </p>
             <MutedText>{description}</MutedText>
             <Button
               asChild
+              className="mt-2 h-8 w-full border-0 bg-orange-600 text-white shadow-sm hover:bg-orange-700"
               size="sm"
-              className="w-full bg-orange-600 text-white hover:bg-orange-700 border-0 shadow-sm h-8 mt-2"
             >
               <Link
-                href={buttonHref}
                 className="flex items-center justify-center gap-1.5"
+                href={buttonHref}
               >
                 <CreditCardIcon className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">{buttonText}</span>
+                <span className="font-medium text-xs">{buttonText}</span>
               </Link>
             </Button>
           </div>
         }
       >
         <Link
+          className="flex items-center justify-center rounded-lg bg-orange-100 p-2 transition-colors hover:bg-orange-200 dark:bg-orange-900/30 dark:hover:bg-orange-900/50"
           href={buttonHref}
-          className="flex items-center justify-center p-2 rounded-lg bg-orange-100 hover:bg-orange-200 transition-colors dark:bg-orange-900/30 dark:hover:bg-orange-900/50"
         >
           <AlertTriangleIcon className="h-5 w-5 text-orange-600 dark:text-orange-400" />
         </Link>
@@ -164,27 +168,27 @@ export function PremiumExpiredCardContent({
     <Card
       className={cn(
         "border-orange-200 bg-gradient-to-tr from-transparent via-orange-50/80 to-orange-500/15 shadow-sm",
-        "dark:border-orange-900 dark:from-orange-950/50 dark:via-orange-900/20 dark:to-orange-800/10",
+        "dark:border-orange-900 dark:from-orange-950/50 dark:via-orange-900/20 dark:to-orange-800/10"
       )}
     >
       <div className="p-3">
         <div className="flex items-start gap-2">
-          <AlertTriangleIcon className="h-4 w-4 flex-shrink-0 text-orange-600 dark:text-orange-400 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-orange-800 dark:text-orange-200 leading-tight">
+          <AlertTriangleIcon className="mt-0.5 h-4 w-4 flex-shrink-0 text-orange-600 dark:text-orange-400" />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-orange-800 text-sm leading-tight dark:text-orange-200">
               {title}
             </p>
-            <p className="text-xs text-orange-700/80 dark:text-orange-300/80 mt-1">
+            <p className="mt-1 text-orange-700/80 text-xs dark:text-orange-300/80">
               {description}
             </p>
           </div>
 
           {onDismiss && (
             <button
-              type="button"
-              className="flex-shrink-0 rounded p-1 text-orange-600 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-300 transition-colors dark:text-orange-400 dark:hover:bg-orange-900/20 dark:focus:ring-orange-700"
-              onClick={onDismiss}
               aria-label="Dismiss banner"
+              className="flex-shrink-0 rounded p-1 text-orange-600 transition-colors hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-300 dark:text-orange-400 dark:focus:ring-orange-700 dark:hover:bg-orange-900/20"
+              onClick={onDismiss}
+              type="button"
             >
               <XIcon className="h-3 w-3" />
             </button>
@@ -194,15 +198,15 @@ export function PremiumExpiredCardContent({
         <div className="mt-3">
           <Button
             asChild
+            className="h-8 w-full border-0 bg-orange-600 text-white shadow-sm hover:bg-orange-700"
             size="sm"
-            className="w-full bg-orange-600 text-white hover:bg-orange-700 border-0 shadow-sm h-8"
           >
             <Link
-              href={buttonHref}
               className="flex items-center justify-center gap-1.5"
+              href={buttonHref}
             >
               <CreditCardIcon className="h-3.5 w-3.5" />
-              <span className="text-xs font-medium">{buttonText}</span>
+              <span className="font-medium text-xs">{buttonText}</span>
             </Link>
           </Button>
         </div>
@@ -219,14 +223,16 @@ export function PremiumCard({
   const [dismissed, setDismissed] = useState(false);
   const { data: user, isLoading } = useUser();
 
-  if (isLoading || dismissed || !user) return null;
+  if (isLoading || dismissed || !user) {
+    return null;
+  }
 
   return (
     <div className={cn("px-3 pt-4", isCollapsed && "flex justify-center")}>
       <PremiumExpiredCardContent
-        premium={user.premium}
-        onDismiss={isCollapsed ? undefined : () => setDismissed(true)}
         isCollapsed={isCollapsed}
+        onDismiss={isCollapsed ? undefined : () => setDismissed(true)}
+        premium={user.premium}
       />
     </div>
   );

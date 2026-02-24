@@ -11,14 +11,14 @@
  * 3. Set TEST_CONVERSATION_ID with a real conversationId from your logs (optional)
  */
 
-import { describe, test, expect, beforeAll, afterAll, vi } from "vitest";
-import prisma from "@/utils/prisma";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
+import { findOldMessage } from "@/__tests__/e2e/helpers";
+import { extractEmailAddress } from "@/utils/email";
 import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
-import type { ParsedMessage } from "@/utils/types";
-import { extractEmailAddress } from "@/utils/email";
-import { findOldMessage } from "@/__tests__/e2e/helpers";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
+import type { ParsedMessage } from "@/utils/types";
 
 const logger = createScopedLogger("test");
 
@@ -49,7 +49,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
     if (!testEmail) {
       console.warn("\n⚠️  Set TEST_OUTLOOK_EMAIL env var to run these tests");
       console.warn(
-        "   Example: TEST_OUTLOOK_EMAIL=your@email.com pnpm test-e2e microsoft-drafting\n",
+        "   Example: TEST_OUTLOOK_EMAIL=your@email.com pnpm test-e2e microsoft-drafting\n"
       );
       return;
     }
@@ -97,20 +97,22 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
           subject: replySourceMessage.headers.subject,
           from: replySourceMessage.headers.from,
           threadId: replySourceMessage.threadId,
-        },
+        }
       );
     } else {
       console.warn(
-        "   ⚠️  Could not find a replyable Outlook message; drafting tests will be skipped",
+        "   ⚠️  Could not find a replyable Outlook message; drafting tests will be skipped"
       );
     }
   });
 
   afterAll(async () => {
-    if (!provider || createdDraftIds.length === 0) return;
+    if (!provider || createdDraftIds.length === 0) {
+      return;
+    }
 
     console.log(
-      `\n   🧹 Cleaning up ${createdDraftIds.length} draft(s) created during tests...`,
+      `\n   🧹 Cleaning up ${createdDraftIds.length} draft(s) created during tests...`
     );
 
     let deletedCount = 0;
@@ -130,13 +132,13 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
     }
 
     console.log(
-      `   ✅ Deleted ${deletedCount} draft(s), ${failedCount} deletion(s) failed\n`,
+      `   ✅ Deleted ${deletedCount} draft(s), ${failedCount} deletion(s) failed\n`
     );
   }, 30_000);
 
   describe("Reply drafting", () => {
     test("should create reply draft and fetch by id immediately", async () => {
-      if (!provider || !emailAccount) {
+      if (!(provider && emailAccount)) {
         console.log("   ⚠️  Provider not initialized, skipping test");
         return;
       }
@@ -144,7 +146,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
       const message = await loadReplySourceMessage();
       if (!message) {
         console.log(
-          "   ⚠️  No replyable message available, skipping draft creation test",
+          "   ⚠️  No replyable message available, skipping draft creation test"
         );
         return;
       }
@@ -155,7 +157,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
         {
           content: draftContent,
         },
-        emailAccount.email,
+        emailAccount.email
       );
 
       expect(draftResult.draftId).toBeDefined();
@@ -173,7 +175,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
       expect(fetchedDraft?.id).toBe(draftResult.draftId);
       expect(fetchedDraft?.threadId).toBeTruthy();
       expect(fetchedDraft?.textPlain || fetchedDraft?.textHtml || "").toContain(
-        "Test Outlook draft",
+        "Test Outlook draft"
       );
 
       console.log("   ✅ Fetched draft immediately after creation", {
@@ -183,7 +185,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
     }, 30_000);
 
     test("should delete draft", async () => {
-      if (!provider || !emailAccount) {
+      if (!(provider && emailAccount)) {
         console.log("   ⚠️  Provider not initialized, skipping test");
         return;
       }
@@ -191,7 +193,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
       const message = await loadReplySourceMessage();
       if (!message) {
         console.log(
-          "   ⚠️  No replyable message available, skipping draft deletion test",
+          "   ⚠️  No replyable message available, skipping draft deletion test"
         );
         return;
       }
@@ -201,7 +203,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
         {
           content: `Draft to delete ${Date.now()}`,
         },
-        emailAccount.email,
+        emailAccount.email
       );
 
       expect(draftResult.draftId).toBeDefined();
@@ -230,7 +232,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
             {
               draftId: draftResult.draftId,
               error: errorMessage,
-            },
+            }
           );
           // This is a known issue - test passes but draft remains for cleanup
         } else {
@@ -240,7 +242,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
     }, 30_000);
 
     test("should handle draft updates without change key errors", async () => {
-      if (!provider || !emailAccount) {
+      if (!(provider && emailAccount)) {
         console.log("   ⚠️  Provider not initialized, skipping test");
         return;
       }
@@ -248,7 +250,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
       const message = await loadReplySourceMessage();
       if (!message) {
         console.log(
-          "   ⚠️  No replyable message available, skipping change key test",
+          "   ⚠️  No replyable message available, skipping change key test"
         );
         return;
       }
@@ -262,7 +264,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
           {
             content: draftContent,
           },
-          emailAccount.email,
+          emailAccount.email
         );
 
         expect(draftResult.draftId).toBeDefined();
@@ -273,7 +275,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
           "   ✅ Draft created successfully without change key error",
           {
             draftId: draftResult.draftId,
-          },
+          }
         );
       } catch (error) {
         const errorMessage =
@@ -282,14 +284,14 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
         // Check if this is the exact change key error we're trying to fix
         if (
           errorMessage.includes(
-            "change key passed in the request does not match the current change key",
+            "change key passed in the request does not match the current change key"
           )
         ) {
           console.error(
             "   ❌ Reproduced change key error! This confirms the bug exists.",
             {
               error: errorMessage,
-            },
+            }
           );
           throw error; // Fail the test to show the bug
         }
@@ -301,9 +303,9 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
   });
 
   async function loadReplySourceMessage(): Promise<ParsedMessage | null> {
-    if (!provider || !replySourceMessage) {
+    if (!(provider && replySourceMessage)) {
       console.log(
-        "   ⚠️  No reply source message available, skipping drafting operation",
+        "   ⚠️  No reply source message available, skipping drafting operation"
       );
       return null;
     }
@@ -318,7 +320,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
         {
           messageId: replySourceMessage.id,
           error: error instanceof Error ? error.message : String(error),
-        },
+        }
       );
 
       return replySourceMessage;
@@ -338,7 +340,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
       try {
         const message = await provider.getMessage(TEST_OUTLOOK_MESSAGE_ID);
         console.log(
-          `   🔍 Using TEST_OUTLOOK_MESSAGE_ID ${TEST_OUTLOOK_MESSAGE_ID} for drafts`,
+          `   🔍 Using TEST_OUTLOOK_MESSAGE_ID ${TEST_OUTLOOK_MESSAGE_ID} for drafts`
         );
         return message;
       } catch (error) {
@@ -347,7 +349,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
           {
             messageId: TEST_OUTLOOK_MESSAGE_ID,
             error: error instanceof Error ? error.message : String(error),
-          },
+          }
         );
       }
     }
@@ -365,7 +367,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
           {
             conversationId: TEST_CONVERSATION_ID,
             error: error instanceof Error ? error.message : String(error),
-          },
+          }
         );
       }
     }
@@ -384,15 +386,14 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
           subject: message.headers.subject,
         });
         return message;
-      } else {
-        console.log("   ⚠️  Message from helper is outbound, will scan threads");
       }
+      console.log("   ⚠️  Message from helper is outbound, will scan threads");
     } catch (error) {
       console.warn(
         "   ⚠️  Failed to find old message using helper, will scan threads",
         {
           error: error instanceof Error ? error.message : String(error),
-        },
+        }
       );
     }
 
@@ -416,7 +417,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
           {
             threadId: thread.id,
             error: error instanceof Error ? error.message : String(error),
-          },
+          }
         );
       }
     }
@@ -426,14 +427,20 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
 
   function pickInboundMessage(
     messages: ParsedMessage[],
-    normalizedAccountEmail: string | null,
+    normalizedAccountEmail: string | null
   ): ParsedMessage | null {
-    if (!messages.length) return null;
+    if (!messages.length) {
+      return null;
+    }
 
     const inbound = messages.find((message) => {
-      if (!message.id) return false;
+      if (!message.id) {
+        return false;
+      }
       const from = normalizeEmail(message.headers.from);
-      if (!from) return false;
+      if (!from) {
+        return false;
+      }
       return !normalizedAccountEmail || from !== normalizedAccountEmail;
     });
 
@@ -445,7 +452,9 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Drafting E2E Tests", () => {
   }
 
   function normalizeEmail(value?: string): string | null {
-    if (!value) return null;
+    if (!value) {
+      return null;
+    }
     const extracted = extractEmailAddress(value) || value;
     const normalized = extracted.trim().toLowerCase();
     return normalized || null;

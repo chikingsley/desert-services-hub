@@ -1,23 +1,23 @@
+import type { gmail_v1 } from "@googleapis/gmail";
+import * as Sentry from "@sentry/nextjs";
 import uniqBy from "lodash/uniqBy";
 import { NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
-import { getGmailClientWithRefresh } from "@/utils/gmail/client";
-import { GmailLabel } from "@/utils/gmail/label";
-import { captureException } from "@/utils/error";
+import { processHistoryItem } from "@/app/api/google/webhook/process-history-item";
 import {
   HistoryEventType,
   type ProcessHistoryOptions,
 } from "@/app/api/google/webhook/types";
-import { processHistoryItem } from "@/app/api/google/webhook/process-history-item";
+import { captureException } from "@/utils/error";
+import { getGmailClientWithRefresh } from "@/utils/gmail/client";
 import { getHistory } from "@/utils/gmail/history";
+import { GmailLabel } from "@/utils/gmail/label";
+import type { Logger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 import {
-  validateWebhookAccount,
   getWebhookEmailAccount,
   type ValidatedWebhookAccountData,
+  validateWebhookAccount,
 } from "@/utils/webhook/validate-webhook-account";
-import prisma from "@/utils/prisma";
-import type { Logger } from "@/utils/logger";
-import type { gmail_v1 } from "@googleapis/gmail";
 
 export async function processHistoryForUser(
   decodedData: {
@@ -25,7 +25,7 @@ export async function processHistoryForUser(
     historyId: number;
   },
   options: { startHistoryId?: string },
-  logger: Logger,
+  logger: Logger
 ) {
   const startTime = Date.now();
   const { emailAddress, historyId } = decodedData;
@@ -58,8 +58,10 @@ export async function processHistoryForUser(
   });
 
   if (
-    !validatedEmailAccount.account?.access_token ||
-    !validatedEmailAccount.account?.refresh_token
+    !(
+      validatedEmailAccount.account?.access_token &&
+      validatedEmailAccount.account?.refresh_token
+    )
   ) {
     logger.error("Missing tokens after validation");
     return NextResponse.json({ error: true });
@@ -116,7 +118,7 @@ export async function processHistoryForUser(
             },
           },
         },
-        logger,
+        logger
       );
     } else {
       logger.info("No history", {
@@ -160,7 +162,9 @@ async function processHistory(options: ProcessHistoryOptions, logger: Logger) {
   const { history, emailAccount } = options;
   const { email: userEmail, id: emailAccountId } = emailAccount;
 
-  if (!history?.length) return;
+  if (!history?.length) {
+    return;
+  }
 
   for (const h of history) {
     const historyMessages = [
@@ -169,7 +173,9 @@ async function processHistory(options: ProcessHistoryOptions, logger: Logger) {
       ...(h.labelsRemoved || []),
     ];
 
-    if (!historyMessages.length) continue;
+    if (!historyMessages.length) {
+      continue;
+    }
 
     const allEvents = [
       ...(h.messagesAdded || [])
@@ -196,7 +202,7 @@ async function processHistory(options: ProcessHistoryOptions, logger: Logger) {
 
     const uniqueEvents = uniqBy(
       allEvents,
-      (e) => `${e.type}:${e.item.message?.id}`,
+      (e) => `${e.type}:${e.item.message?.id}`
     );
 
     for (const event of uniqueEvents) {
@@ -237,7 +243,9 @@ async function updateLastSyncedHistoryId({
   emailAccountId: string;
   lastSyncedHistoryId?: string | null;
 }) {
-  if (!lastSyncedHistoryId) return;
+  if (!lastSyncedHistoryId) {
+    return;
+  }
 
   // Use conditional update: only set if new value > current value (or current is null)
   // This prevents race conditions where slower webhook processors with older
@@ -258,12 +266,17 @@ const isInboxOrSentMessage = (message: {
 }) => {
   const labels = message.message?.labelIds;
 
-  if (!labels) return false;
+  if (!labels) {
+    return false;
+  }
 
-  if (labels.includes(GmailLabel.INBOX) && !labels.includes(GmailLabel.DRAFT))
+  if (labels.includes(GmailLabel.INBOX) && !labels.includes(GmailLabel.DRAFT)) {
     return true;
+  }
 
-  if (labels.includes(GmailLabel.SENT)) return true;
+  if (labels.includes(GmailLabel.SENT)) {
+    return true;
+  }
 
   return false;
 };
@@ -306,14 +319,14 @@ async function fetchGmailHistoryResilient({
   | { status: "expired" }
 > {
   const lastSyncedHistoryId = Number.parseInt(
-    emailAccount?.lastSyncedHistoryId || "0",
+    emailAccount?.lastSyncedHistoryId || "0"
   );
 
   // If the gap is too large (e.g. > 500 items), we start from currentHistoryId - 500.
   // This prevents timeouts and runaway processing costs if the system falls way behind.
   const startHistoryIdNum = Math.max(
     lastSyncedHistoryId,
-    webhookHistoryId - 500,
+    webhookHistoryId - 500
   );
   const startHistoryId =
     options?.startHistoryId || startHistoryIdNum.toString();

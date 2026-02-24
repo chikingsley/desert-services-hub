@@ -24,28 +24,28 @@ export interface WebMercatorCoord {
 }
 
 export interface MapFeature {
-  type: "polygon" | "point" | "polyline";
+  attributes: Record<string, unknown>;
   /** Coordinates in Web Mercator (WKID 102100) */
   coordinates: WebMercatorCoord[];
   /** Coordinates converted to lat/lng (WGS84) */
   latLngCoordinates: LatLng[];
-  attributes: Record<string, unknown>;
   layerIndex: number;
+  type: "polygon" | "point" | "polyline";
 }
 
 export interface PermitMapData {
-  permitId: string;
-  polygons: MapFeature[];
-  points: MapFeature[];
-  polylines: MapFeature[];
-  /** The primary disturbed area polygon (usually layer 3) */
-  disturbedArea: MapFeature | null;
   /** Access points (usually layer 0) */
   accessPoints: MapFeature[];
-  /** Centroid of the disturbed area in lat/lng */
-  centroid: LatLng | null;
   /** Total acreage from attributes (if available) */
   acreage: number | null;
+  /** Centroid of the disturbed area in lat/lng */
+  centroid: LatLng | null;
+  /** The primary disturbed area polygon (usually layer 3) */
+  disturbedArea: MapFeature | null;
+  permitId: string;
+  points: MapFeature[];
+  polygons: MapFeature[];
+  polylines: MapFeature[];
 }
 
 // =============================================================================
@@ -432,6 +432,7 @@ export async function permitHasMapData(permitId: string): Promise<boolean> {
 // =============================================================================
 
 interface FeatureQueryResponse {
+  error?: { message: string };
   features?: {
     geometry?: {
       rings?: number[][][];
@@ -441,5 +442,4 @@ interface FeatureQueryResponse {
     };
     attributes?: Record<string, unknown>;
   }[];
-  error?: { message: string };
 }

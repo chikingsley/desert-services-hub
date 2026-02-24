@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Button } from "@/components/ui/button";
+import { useAction } from "next-safe-action/hooks";
+import { useCallback, useState } from "react";
+import { DigestSettingsForm } from "@/app/(app)/[emailAccountId]/settings/DigestSettingsForm";
 import { SettingCard } from "@/components/SettingCard";
+import { toastError } from "@/components/Toast";
+import { Toggle } from "@/components/Toggle";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,13 +15,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Toggle } from "@/components/Toggle";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DigestSettingsForm } from "@/app/(app)/[emailAccountId]/settings/DigestSettingsForm";
 import { useEmailAccountFull } from "@/hooks/useEmailAccountFull";
-import { useAction } from "next-safe-action/hooks";
 import { toggleDigestAction } from "@/utils/actions/settings";
-import { toastError } from "@/components/Toast";
 import { createCanonicalTimeOfDay } from "@/utils/schedule";
 
 export function DigestSetting() {
@@ -35,12 +35,14 @@ export function DigestSetting() {
           description: error.error?.serverError ?? "Failed to update settings",
         });
       },
-    },
+    }
   );
 
   const handleToggle = useCallback(
     (enable: boolean) => {
-      if (!data) return;
+      if (!data) {
+        return;
+      }
 
       const optimisticData = {
         ...data,
@@ -52,12 +54,11 @@ export function DigestSetting() {
         timeOfDay: enable ? createCanonicalTimeOfDay(9, 0) : undefined,
       });
     },
-    [data, mutate, executeToggle],
+    [data, mutate, executeToggle]
   );
 
   return (
     <SettingCard
-      title="Digest"
       description="Get a daily summary of your newsletter emails."
       right={
         isLoading ? (
@@ -65,13 +66,13 @@ export function DigestSetting() {
         ) : (
           <div className="flex items-center gap-2">
             {enabled && (
-              <Dialog open={open} onOpenChange={setOpen}>
+              <Dialog onOpenChange={setOpen} open={open}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button size="sm" variant="outline">
                     Configure
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-h-[90vh] max-w-7xl overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Digest settings</DialogTitle>
                     <DialogDescription>
@@ -85,13 +86,14 @@ export function DigestSetting() {
               </Dialog>
             )}
             <Toggle
-              name="digest-enabled"
               enabled={enabled}
+              name="digest-enabled"
               onChange={handleToggle}
             />
           </div>
         )
       }
+      title="Digest"
     />
   );
 }

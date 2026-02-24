@@ -36,17 +36,17 @@ interface Pagination {
 }
 
 interface Facets {
-  statuses: Array<{ status: string; count: number }>;
   sources: {
     manual: number;
     takeoff: number;
   };
+  statuses: Array<{ status: string; count: number }>;
 }
 
 interface EstimatesApiResponse {
+  facets: Facets;
   items: EstimateRowView[];
   pagination: Pagination;
-  facets: Facets;
 }
 
 const SOURCE_OPTIONS = [

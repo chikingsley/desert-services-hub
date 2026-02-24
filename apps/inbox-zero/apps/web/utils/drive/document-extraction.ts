@@ -19,18 +19,18 @@ import type { Logger } from "@/utils/logger";
 // ============================================================================
 
 export interface ExtractionResult {
-  text: string;
   pageCount?: number;
+  text: string;
   truncated: boolean;
 }
 
 export interface ExtractionOptions {
+  /** Logger for debugging */
+  logger?: Logger;
   /** Maximum characters to extract (default: 10000) */
   maxLength?: number;
   /** Maximum pages to process for PDFs (default: 50) */
   maxPages?: number;
-  /** Logger for debugging */
-  logger?: Logger;
 }
 
 // Supported MIME types for extraction
@@ -53,7 +53,7 @@ export type ExtractableMimeType = (typeof EXTRACTABLE_MIME_TYPES)[number];
 export async function extractTextFromDocument(
   buffer: Buffer,
   mimeType: string,
-  options: ExtractionOptions = {},
+  options: ExtractionOptions = {}
 ): Promise<ExtractionResult | null> {
   const { maxLength = 10_000, maxPages = 50, logger } = options;
 
@@ -92,7 +92,7 @@ export function isExtractableMimeType(mimeType: string): boolean {
  */
 export function canUseNativePdfSupport(
   buffer: Buffer,
-  pageCount?: number,
+  pageCount?: number
 ): boolean {
   const MAX_SIZE_MB = 32;
   const MAX_PAGES = 100;
@@ -111,7 +111,7 @@ async function extractFromPdf(
   buffer: Buffer,
   maxLength: number,
   maxPages: number,
-  logger?: Logger,
+  logger?: Logger
 ): Promise<ExtractionResult> {
   const { getDocumentProxy } = await import("unpdf");
 
@@ -176,7 +176,7 @@ async function extractFromPdf(
 async function extractFromDocx(
   buffer: Buffer,
   maxLength: number,
-  logger?: Logger,
+  logger?: Logger
 ): Promise<ExtractionResult> {
   // Dynamic import to avoid loading the library if not needed
   const mammoth = await import("mammoth");
@@ -203,7 +203,7 @@ async function extractFromDocx(
 
 function extractFromPlainText(
   buffer: Buffer,
-  maxLength: number,
+  maxLength: number
 ): ExtractionResult {
   const text = buffer.toString("utf-8");
   const truncated = text.length > maxLength;
@@ -223,7 +223,9 @@ function extractFromPlainText(
  * Useful for logging without exposing full content.
  */
 export function getDocumentPreview(text: string, length = 200): string {
-  if (text.length <= length) return text;
+  if (text.length <= length) {
+    return text;
+  }
   return `${text.slice(0, length)}...`;
 }
 

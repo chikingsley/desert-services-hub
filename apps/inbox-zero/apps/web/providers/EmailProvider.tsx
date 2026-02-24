@@ -3,11 +3,11 @@
 import { createContext, useContext, useMemo } from "react";
 import { useLabels } from "@/hooks/useLabels";
 import { useAccount } from "@/providers/EmailAccountProvider";
-import { OUTLOOK_COLOR_MAP } from "@/utils/outlook/label";
 import {
   isGoogleProvider,
   isMicrosoftProvider,
 } from "@/utils/email/provider-types";
+import { OUTLOOK_COLOR_MAP } from "@/utils/outlook/label";
 
 export type EmailLabel = {
   id: string;
@@ -24,8 +24,8 @@ export type EmailLabel = {
 export type EmailLabels = Record<string, EmailLabel>;
 
 interface Context {
-  userLabels: EmailLabels;
   labelsIsLoading: boolean;
+  userLabels: EmailLabels;
 }
 
 const EmailContext = createContext<Context>({
@@ -42,7 +42,8 @@ function mapLabelColor(provider: string, label: any): EmailLabel["color"] {
 
   if (isGoogleProvider(provider)) {
     return label.color;
-  } else if (isMicrosoftProvider(provider)) {
+  }
+  if (isMicrosoftProvider(provider)) {
     const presetColor = label.color as string;
     const backgroundColor =
       OUTLOOK_COLOR_MAP[presetColor as keyof typeof OUTLOOK_COLOR_MAP] ||
@@ -62,7 +63,9 @@ export function EmailProvider(props: { children: React.ReactNode }) {
   const { userLabels: rawUserLabels, isLoading } = useLabels();
 
   const userLabels = useMemo(() => {
-    if (!rawUserLabels || !provider || accountIsLoading) return {};
+    if (!(rawUserLabels && provider) || accountIsLoading) {
+      return {};
+    }
 
     return rawUserLabels.reduce((acc, label) => {
       if (label.id && label.name) {
@@ -83,7 +86,7 @@ export function EmailProvider(props: { children: React.ReactNode }) {
 
   const value = useMemo(
     () => ({ userLabels, labelsIsLoading: isLoading || accountIsLoading }),
-    [userLabels, isLoading, accountIsLoading],
+    [userLabels, isLoading, accountIsLoading]
   );
 
   return (

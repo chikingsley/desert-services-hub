@@ -17,12 +17,12 @@
  * - Clean up all test labels at the end
  */
 
-import { describe, test, expect, beforeAll, afterAll, vi } from "vitest";
-import prisma from "@/utils/prisma";
-import { createEmailProvider } from "@/utils/email/provider";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import { findOldMessage } from "@/__tests__/e2e/helpers";
+import { createEmailProvider } from "@/utils/email/provider";
 import type { EmailProvider } from "@/utils/email/types";
 import { createScopedLogger } from "@/utils/logger";
+import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("test");
 
@@ -50,7 +50,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Labeling E2E Tests", () => {
     if (!testEmail) {
       console.warn("\n⚠️  Set TEST_OUTLOOK_EMAIL env var to run these tests");
       console.warn(
-        "   Example: TEST_OUTLOOK_EMAIL=your@email.com pnpm test-e2e microsoft-labeling\n",
+        "   Example: TEST_OUTLOOK_EMAIL=your@email.com pnpm test-e2e microsoft-labeling\n"
       );
       return;
     }
@@ -85,7 +85,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Labeling E2E Tests", () => {
         const oldMessage = await findOldMessage(provider, 7);
         TEST_OUTLOOK_MESSAGE_ID = oldMessage.messageId;
         console.log(
-          `   ✅ Using message from account: ${TEST_OUTLOOK_MESSAGE_ID}`,
+          `   ✅ Using message from account: ${TEST_OUTLOOK_MESSAGE_ID}`
         );
       } catch {
         console.log("   ⚠️  Could not find old message, using default");
@@ -103,7 +103,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Labeling E2E Tests", () => {
     // Clean up all test labels created during the test suite
     if (createdTestLabels.length > 0) {
       console.log(
-        `\n   🧹 Cleaning up ${createdTestLabels.length} test labels...`,
+        `\n   🧹 Cleaning up ${createdTestLabels.length} test labels...`
       );
 
       let deletedCount = 0;
@@ -123,7 +123,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Labeling E2E Tests", () => {
       }
 
       console.log(
-        `   ✅ Deleted ${deletedCount} labels, ${failedCount} failed\n`,
+        `   ✅ Deleted ${deletedCount} labels, ${failedCount} failed\n`
       );
     }
   });
@@ -215,7 +215,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Labeling E2E Tests", () => {
       expect(secondLabel.name).toBe(testLabelName);
 
       console.log(
-        "   ✅ Duplicate creation handled gracefully - returned existing label",
+        "   ✅ Duplicate creation handled gracefully - returned existing label"
       );
     });
   });
@@ -310,7 +310,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Labeling E2E Tests", () => {
           messageId: fakeMessageId,
           labelId: label.id,
           labelName: null,
-        }),
+        })
       ).rejects.toThrow();
 
       console.log("   ✅ Correctly threw error for non-existent message");
@@ -354,7 +354,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Labeling E2E Tests", () => {
 
       // Should not throw error
       await expect(
-        provider.removeThreadLabel(TEST_CONVERSATION_ID, fakeLabel),
+        provider.removeThreadLabel(TEST_CONVERSATION_ID, fakeLabel)
       ).resolves.not.toThrow();
 
       console.log("   ✅ Handled removing non-existent label gracefully");
@@ -397,13 +397,13 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Labeling E2E Tests", () => {
       }
 
       console.log(
-        `   ✅ Verified label removed from all ${threadMessages.length} message(s)`,
+        `   ✅ Verified label removed from all ${threadMessages.length} message(s)`
       );
     });
 
     test("should handle empty label ID gracefully", async () => {
       await expect(
-        provider.removeThreadLabel(TEST_CONVERSATION_ID, ""),
+        provider.removeThreadLabel(TEST_CONVERSATION_ID, "")
       ).resolves.not.toThrow();
 
       console.log("   ✅ Handled empty label ID gracefully");
@@ -443,11 +443,11 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Labeling E2E Tests", () => {
       // Step 4: Verify label on message
       console.log("   📝 Step 4: Verifying label on message...");
       const messageWithLabel = await provider.getMessage(
-        TEST_OUTLOOK_MESSAGE_ID,
+        TEST_OUTLOOK_MESSAGE_ID
       );
       expect(messageWithLabel.labelIds).toContain(label.id);
       console.log(
-        `      ✅ Label verified on message (${messageWithLabel.labelIds?.length} total labels)`,
+        `      ✅ Label verified on message (${messageWithLabel.labelIds?.length} total labels)`
       );
 
       // Step 5: Remove label from thread (use the message's actual threadId)
@@ -458,7 +458,7 @@ describe.skipIf(!RUN_E2E_TESTS)("Microsoft Outlook Labeling E2E Tests", () => {
       // Step 6: Verify label no longer on message
       console.log("   📝 Step 6: Verifying label removed from message...");
       const messageWithoutLabel = await provider.getMessage(
-        TEST_OUTLOOK_MESSAGE_ID,
+        TEST_OUTLOOK_MESSAGE_ID
       );
       expect(messageWithoutLabel.labelIds).not.toContain(label.id);
       console.log("      ✅ Label confirmed removed from message");

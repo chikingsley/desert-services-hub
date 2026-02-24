@@ -9,7 +9,7 @@
  * This ensures tests pass consistently across different CI environments
  * and local development machines regardless of timezone.
  */
-import { describe, expect, it, beforeAll, afterAll } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   bitmaskToDayOfWeek,
   bitmaskToDaysOfWeek,
@@ -106,13 +106,13 @@ describe("dayOfWeekToBitmask", () => {
 
   it("should throw error for invalid day values", () => {
     expect(() => dayOfWeekToBitmask(-1)).toThrow(
-      "Invalid day of week: -1. Must be integer between 0 and 6.",
+      "Invalid day of week: -1. Must be integer between 0 and 6."
     );
     expect(() => dayOfWeekToBitmask(7)).toThrow(
-      "Invalid day of week: 7. Must be integer between 0 and 6.",
+      "Invalid day of week: 7. Must be integer between 0 and 6."
     );
     expect(() => dayOfWeekToBitmask(1.5)).toThrow(
-      "Invalid day of week: 1.5. Must be integer between 0 and 6.",
+      "Invalid day of week: 1.5. Must be integer between 0 and 6."
     );
   });
 });
@@ -141,7 +141,7 @@ describe("bitmaskToDayOfWeek", () => {
 
     // Tuesday, Thursday, Saturday
     expect(
-      bitmaskToDayOfWeek(DAYS.TUESDAY | DAYS.THURSDAY | DAYS.SATURDAY),
+      bitmaskToDayOfWeek(DAYS.TUESDAY | DAYS.THURSDAY | DAYS.SATURDAY)
     ).toBe(2);
   });
 
@@ -179,7 +179,7 @@ describe("bitmaskToDaysOfWeek", () => {
 
     // Monday, Wednesday, Friday
     expect(
-      bitmaskToDaysOfWeek(DAYS.MONDAY | DAYS.WEDNESDAY | DAYS.FRIDAY),
+      bitmaskToDaysOfWeek(DAYS.MONDAY | DAYS.WEDNESDAY | DAYS.FRIDAY)
     ).toEqual([1, 3, 5]);
 
     // Weekend days

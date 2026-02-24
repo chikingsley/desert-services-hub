@@ -1,18 +1,28 @@
 "use client";
 
-import Link from "next/link";
-import { toast } from "sonner";
 import {
+  CopyIcon,
+  HistoryIcon,
   MoreHorizontalIcon,
   PenIcon,
   PlusIcon,
-  HistoryIcon,
-  Trash2Icon,
   SparklesIcon,
-  CopyIcon,
+  Trash2Icon,
 } from "lucide-react";
+import Link from "next/link";
+import { useAction } from "next-safe-action/hooks";
 import { useMemo } from "react";
+import { toast } from "sonner";
+import {
+  getStepNumber,
+  STEP_KEYS,
+} from "@/app/(app)/[emailAccountId]/onboarding/steps";
+import type { RulesResponse } from "@/app/api/user/rules/route";
+import { Badge } from "@/components/Badge";
 import { LoadingContent } from "@/components/LoadingContent";
+import { getActionColor } from "@/components/PlanBadge";
+import { toastError } from "@/components/Toast";
+import { TruncatedTooltipText } from "@/components/TruncatedTooltipText";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader } from "@/components/ui/card";
 import {
@@ -22,6 +32,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSidebar } from "@/components/ui/sidebar";
+import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -30,36 +42,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
-import { deleteRuleAction, toggleRuleAction } from "@/utils/actions/rule";
-import { Badge } from "@/components/Badge";
-import { getActionColor } from "@/components/PlanBadge";
-import { toastError } from "@/components/Toast";
-import { useRules } from "@/hooks/useRules";
-import { LogicalOperator } from "@/generated/prisma/enums";
 import type { ActionType } from "@/generated/prisma/client";
-import { useAction } from "next-safe-action/hooks";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { prefixPath } from "@/utils/path";
-import type { RulesResponse } from "@/app/api/user/rules/route";
-import { sortActionsByPriority } from "@/utils/action-sort";
-import { getActionDisplay, getActionIcon } from "@/utils/action-display";
-import { RuleDialog } from "./RuleDialog";
+import { LogicalOperator } from "@/generated/prisma/enums";
 import { useDialogState } from "@/hooks/useDialogState";
-import { useChat } from "@/providers/ChatProvider";
-import { useSidebar } from "@/components/ui/sidebar";
 import { useLabels } from "@/hooks/useLabels";
+import { useRules } from "@/hooks/useRules";
+import { useChat } from "@/providers/ChatProvider";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { getActionDisplay, getActionIcon } from "@/utils/action-display";
+import { sortActionsByPriority } from "@/utils/action-sort";
+import { deleteRuleAction, toggleRuleAction } from "@/utils/actions/rule";
 import { conditionsToString } from "@/utils/condition";
-import { TruncatedTooltipText } from "@/components/TruncatedTooltipText";
+import { prefixPath } from "@/utils/path";
 import {
+  getDefaultActions,
   getRuleConfig,
   SYSTEM_RULE_ORDER,
-  getDefaultActions,
 } from "@/utils/rule/consts";
-import {
-  STEP_KEYS,
-  getStepNumber,
-} from "@/app/(app)/[emailAccountId]/onboarding/steps";
+import { RuleDialog } from "./RuleDialog";
 
 export function Rules({
   showAddRuleButton = true,
@@ -80,13 +80,13 @@ export function Rules({
 
   const { emailAccountId, provider } = useAccount();
   const { executeAsync: toggleRule } = useAction(
-    toggleRuleAction.bind(null, emailAccountId),
+    toggleRuleAction.bind(null, emailAccountId)
   );
   const { executeAsync: deleteRule } = useAction(
     deleteRuleAction.bind(null, emailAccountId),
     {
       onSettled: () => mutate(),
-    },
+    }
   );
 
   const rules: RulesResponse = useMemo(() => {
@@ -94,9 +94,11 @@ export function Rules({
 
     const systemRulePlaceholders = SYSTEM_RULE_ORDER.map((systemType) => {
       const existingRule = existingRules.find(
-        (r) => r.systemType === systemType,
+        (r) => r.systemType === systemType
       );
-      if (existingRule) return existingRule;
+      if (existingRule) {
+        return existingRule;
+      }
 
       const ruleConfiguration = getRuleConfig(systemType);
 
@@ -109,7 +111,7 @@ export function Rules({
         automate: true,
         actions: getDefaultActions(systemType, provider),
         group: null,
-        emailAccountId: emailAccountId,
+        emailAccountId,
         createdAt: new Date(),
         updatedAt: new Date(),
         categoryFilterType: null,
@@ -127,7 +129,7 @@ export function Rules({
     const userRules = existingRules.filter((rule) => !rule.systemType);
 
     return [...systemRulePlaceholders, ...userRules].sort(
-      (a, b) => (b.enabled ? 1 : 0) - (a.enabled ? 1 : 0),
+      (a, b) => (b.enabled ? 1 : 0) - (a.enabled ? 1 : 0)
     );
   }, [data, emailAccountId, provider]);
 
@@ -136,14 +138,14 @@ export function Rules({
   return (
     <div className="space-y-6">
       <Card>
-        <LoadingContent loading={isLoading} error={error}>
+        <LoadingContent error={error} loading={isLoading}>
           {hasRules ? (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-16 px-2 sm:px-4">Enabled</TableHead>
                   <TableHead className="px-2 sm:px-4">Name</TableHead>
-                  <TableHead className="hidden sm:table-cell px-2 sm:px-4">
+                  <TableHead className="hidden px-2 sm:table-cell sm:px-4">
                     Prompt
                   </TableHead>
                   <TableHead className="px-2 sm:px-4">Action</TableHead>
@@ -151,7 +153,7 @@ export function Rules({
                     {showAddRuleButton && (
                       <div className="flex justify-end">
                         <div className="my-2">
-                          <Button size="sm" onClick={onCreateRule}>
+                          <Button onClick={onCreateRule} size="sm">
                             <PlusIcon className="mr-2 hidden size-4 md:block" />
                             Add Rule
                           </Button>
@@ -167,12 +169,14 @@ export function Rules({
 
                   return (
                     <TableRow
-                      key={rule.id}
-                      className={`${!rule.enabled ? "bg-muted opacity-60" : ""} ${
+                      className={`${rule.enabled ? "" : "bg-muted opacity-60"} ${
                         isPlaceholder ? "cursor-default" : "cursor-pointer"
                       }`}
+                      key={rule.id}
                       onClick={() => {
-                        if (isPlaceholder) return;
+                        if (isPlaceholder) {
+                          return;
+                        }
                         ruleDialog.onOpen({
                           ruleId: rule.id,
                           editMode: false,
@@ -180,11 +184,10 @@ export function Rules({
                       }}
                     >
                       <TableCell
+                        className="p-2 text-center sm:p-4"
                         onClick={(e) => e.stopPropagation()}
-                        className="text-center p-2 sm:p-4"
                       >
                         <Switch
-                          size="sm"
                           checked={rule.enabled}
                           onCheckedChange={async (enabled) => {
                             const isSystemRule = !!rule.systemType;
@@ -198,9 +201,9 @@ export function Rules({
                                     : r
                                   : r.id === rule.id
                                     ? { ...r, enabled }
-                                    : r,
+                                    : r
                               ),
-                              { revalidate: false },
+                              { revalidate: false }
                             );
 
                             const result = await toggleRule({
@@ -220,34 +223,35 @@ export function Rules({
                             // Revalidate to sync with server
                             mutate();
                           }}
+                          size="sm"
                         />
                       </TableCell>
-                      <TableCell className="font-medium p-2 sm:p-4">
+                      <TableCell className="p-2 font-medium sm:p-4">
                         {rule.name}
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell p-2 sm:p-4">
+                      <TableCell className="hidden p-2 sm:table-cell sm:p-4">
                         <TruncatedTooltipText
-                          text={conditionsToString(rule)}
-                          maxLength={50}
                           className="max-w-xs"
+                          maxLength={50}
+                          text={conditionsToString(rule)}
                         />
                       </TableCell>
                       <TableCell className="p-2 sm:p-4">
                         <ActionBadges
                           actions={rule.actions}
-                          provider={provider}
                           labels={userLabels}
+                          provider={provider}
                         />
                       </TableCell>
-                      <TableCell className="w-fit whitespace-nowrap text-center px-1 py-2">
+                      <TableCell className="w-fit whitespace-nowrap px-1 py-2 text-center">
                         {!isPlaceholder && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 aria-haspopup="true"
+                                onClick={(e) => e.stopPropagation()}
                                 size="icon"
                                 variant="ghost"
-                                onClick={(e) => e.stopPropagation()}
                               >
                                 <MoreHorizontalIcon className="size-4" />
                                 <span className="sr-only">Toggle menu</span>
@@ -271,7 +275,7 @@ export function Rules({
                               <DropdownMenuItem
                                 onClick={() => {
                                   setInput(
-                                    `I'd like to edit the "${rule.name}" rule:\n`,
+                                    `I'd like to edit the "${rule.name}" rule:\n`
                                   );
                                   setOpen((arr) => [...arr, "chat-sidebar"]);
                                 }}
@@ -293,7 +297,7 @@ export function Rules({
                                 <Link
                                   href={prefixPath(
                                     emailAccountId,
-                                    `/automation?tab=history&ruleId=${rule.id}`,
+                                    `/automation?tab=history&ruleId=${rule.id}`
                                   )}
                                 >
                                   <HistoryIcon className="mr-2 size-4" />
@@ -305,7 +309,7 @@ export function Rules({
                               <DropdownMenuItem
                                 onClick={async () => {
                                   const yes = confirm(
-                                    `Are you sure you want to delete the rule "${rule.name}"?`,
+                                    `Are you sure you want to delete the rule "${rule.name}"?`
                                   );
                                   if (yes) {
                                     toast.promise(
@@ -320,7 +324,7 @@ export function Rules({
                                         ) {
                                           throw new Error(
                                             res?.serverError ||
-                                              "There was an error deleting your rule",
+                                              "There was an error deleting your rule"
                                           );
                                         }
 
@@ -334,7 +338,7 @@ export function Rules({
                                         finally: () => {
                                           mutate();
                                         },
-                                      },
+                                      }
                                     );
                                   }
                                 }}
@@ -358,15 +362,15 @@ export function Rules({
       </Card>
 
       <RuleDialog
-        ruleId={ruleDialog.data?.ruleId}
         duplicateRule={ruleDialog.data?.duplicateRule}
+        editMode={ruleDialog.data?.editMode}
         isOpen={ruleDialog.isOpen}
         onClose={ruleDialog.onClose}
         onSuccess={() => {
           mutate();
           ruleDialog.onClose();
         }}
-        editMode={ruleDialog.data?.editMode}
+        ruleId={ruleDialog.data?.ruleId}
       />
     </div>
   );
@@ -390,17 +394,17 @@ export function ActionBadges({
   labels: Array<{ id: string; name: string }>;
 }) {
   return (
-    <div className="flex gap-1 sm:gap-2 flex-wrap min-w-0 justify-start">
+    <div className="flex min-w-0 flex-wrap justify-start gap-1 sm:gap-2">
       {sortActionsByPriority(actions).map((action) => {
         const Icon = getActionIcon(action.type);
 
         return (
           <Badge
-            key={action.id}
+            className="w-fit shrink-0 sm:text-nowrap"
             color={getActionColor(action.type)}
-            className="w-fit sm:text-nowrap shrink-0"
+            key={action.id}
           >
-            <Icon className="size-3 mr-1.5 hidden sm:block" />
+            <Icon className="mr-1.5 hidden size-3 sm:block" />
             {getActionDisplay(action, provider, labels)}
           </Badge>
         );
@@ -421,7 +425,7 @@ function NoRules() {
             <Link
               href={prefixPath(
                 emailAccountId,
-                `/onboarding?step=${getStepNumber(STEP_KEYS.LABELS)}`,
+                `/onboarding?step=${getStepNumber(STEP_KEYS.LABELS)}`
               )}
             >
               Set up default rules

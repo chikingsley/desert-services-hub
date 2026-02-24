@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { findItem } from "@/packages/estimates/catalog/catalog";
 import { db } from "@lib/db/client";
 import {
   linkEstimateToProject,
@@ -7,6 +6,7 @@ import {
 } from "@lib/db/repositories/project-estimate";
 import { createEstimate } from "@/api/estimates/estimates";
 import { getProjectFinalSov } from "@/api/projects/projects-by-id";
+import { findItem } from "@/packages/estimates/catalog/catalog";
 
 const TEST_PREFIX = "_TEST_DELETE_ME_PROJECT_FINAL_SOV_";
 const projectIds: number[] = [];

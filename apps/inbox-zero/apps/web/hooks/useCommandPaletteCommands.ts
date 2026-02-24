@@ -1,39 +1,39 @@
 "use client";
 
-import { useMemo } from "react";
-import { useRouter } from "next/navigation";
 import {
-  SparklesIcon,
   BarChartBigIcon,
-  SettingsIcon,
-  UserIcon,
-  ScrollTextIcon,
-  UsersIcon,
-  ShieldCheckIcon,
-  type LucideIcon,
+  BrushIcon,
   CalendarIcon,
   FileTextIcon,
-  BrushIcon,
-  ZapIcon,
+  type LucideIcon,
   MailsIcon,
+  ScrollTextIcon,
+  SettingsIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+  UserIcon,
+  UsersIcon,
+  ZapIcon,
 } from "lucide-react";
-import type { Command } from "@/lib/commands/types";
-import { useRules } from "@/hooks/useRules";
-import { useUser } from "@/hooks/useUser";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { prefixPath } from "@/utils/path";
+import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import {
   useCleanerEnabled,
   useIntegrationsEnabled,
   useMeetingBriefsEnabled,
 } from "@/hooks/useFeatureFlags";
+import { useRules } from "@/hooks/useRules";
+import { useUser } from "@/hooks/useUser";
+import type { Command } from "@/lib/commands/types";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import { isGoogleProvider } from "@/utils/email/provider-types";
+import { prefixPath } from "@/utils/path";
 
 interface NavigationItem {
-  name: string;
   href: string;
   icon: LucideIcon;
   keywords?: string[];
+  name: string;
 }
 
 function useNavigationItems(): NavigationItem[] {
@@ -105,13 +105,7 @@ function useNavigationItems(): NavigationItem[] {
         keywords: ["block", "cold", "spam", "filter"],
       },
     ],
-    [
-      emailAccountId,
-      provider,
-      showCleaner,
-      showMeetingBriefs,
-      showIntegrations,
-    ],
+    [emailAccountId, provider, showCleaner, showMeetingBriefs, showIntegrations]
   );
 }
 
@@ -188,11 +182,13 @@ export function useCommandPaletteCommands() {
         action: () => router.push("/accounts"),
       },
     ],
-    [router, emailAccountId],
+    [router, emailAccountId]
   );
 
   const ruleCommands = useMemo<Command[]>(() => {
-    if (!rulesData) return [];
+    if (!rulesData) {
+      return [];
+    }
 
     return rulesData.map((rule, index) => ({
       id: `rule-${rule.id}`,
@@ -208,7 +204,9 @@ export function useCommandPaletteCommands() {
   }, [rulesData, router, emailAccountId]);
 
   const accountCommands = useMemo<Command[]>(() => {
-    if (!user?.emailAccounts) return [];
+    if (!user?.emailAccounts) {
+      return [];
+    }
 
     return user.emailAccounts
       .filter((account) => account.id !== emailAccountId)
@@ -231,7 +229,7 @@ export function useCommandPaletteCommands() {
       ...ruleCommands,
       ...accountCommands,
     ],
-    [navigationCommands, settingsCommands, ruleCommands, accountCommands],
+    [navigationCommands, settingsCommands, ruleCommands, accountCommands]
   );
 
   return {

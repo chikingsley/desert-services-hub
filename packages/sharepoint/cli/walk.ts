@@ -66,17 +66,17 @@ function initDb(dbPath: string): Database {
 // --- Walker ---
 
 interface WalkOptions {
-  maxDepth: number;
   batchSize: number;
+  db: Database | null;
   foldersOnly: boolean;
   jsonOutput: boolean;
-  db: Database | null;
+  maxDepth: number;
 }
 
 interface WalkStats {
-  folders: number;
-  files: number;
   errors: number;
+  files: number;
+  folders: number;
 }
 
 function recordFolder(

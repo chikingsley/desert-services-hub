@@ -1,7 +1,7 @@
-import { createAuthClient } from "better-auth/react";
-import { env } from "@/env";
 import { ssoClient } from "@better-auth/sso/client";
 import { organizationClient } from "better-auth/client/plugins";
+import { createAuthClient } from "better-auth/react";
+import { env } from "@/env";
 
 export const { signIn, signOut, signUp, useSession, getSession, sso } =
   createAuthClient({

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { isReceiptSubject, isReceiptSender } from "./find-receipts";
+import { describe, expect, it, vi } from "vitest";
+import { isReceiptSender, isReceiptSubject } from "./find-receipts";
 
 vi.mock("server-only", () => ({}));
 
@@ -20,7 +20,7 @@ describe("isReceiptSubject", () => {
     expect(isReceiptSubject("Invoice #12345 from Company")).toBe(true);
     expect(isReceiptSubject("Purchase Order #ABC-123")).toBe(true);
     expect(isReceiptSubject("Receipt for subscription payment (ID: 456)")).toBe(
-      true,
+      true
     );
   });
 

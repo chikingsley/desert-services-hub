@@ -1,23 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { useAction } from "next-safe-action/hooks";
 import { BrainIcon } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
 import { ViewLearnedPatterns } from "@/app/(app)/[emailAccountId]/assistant/group/ViewLearnedPatterns";
+import { toastError } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
-  DialogHeader,
-  DialogTrigger,
   DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { createGroupAction } from "@/utils/actions/group";
-import { useAccount } from "@/providers/EmailAccountProvider";
-import { toastError } from "@/components/Toast";
-import { getActionErrorMessage } from "@/utils/error";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { createGroupAction } from "@/utils/actions/group";
+import { getActionErrorMessage } from "@/utils/error";
 
 export function LearnedPatternsDialog({
   ruleId,
@@ -51,24 +51,30 @@ export function LearnedPatternsDialog({
           description: getActionErrorMessage(error.error),
         });
       },
-    },
+    }
   );
 
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
-          size="sm"
-          Icon={BrainIcon}
           disabled={disabled}
+          Icon={BrainIcon}
           onClick={async () => {
-            if (!ruleId) return;
-            if (groupId) return;
-            if (isExecuting) return;
+            if (!ruleId) {
+              return;
+            }
+            if (groupId) {
+              return;
+            }
+            if (isExecuting) {
+              return;
+            }
 
             execute({ ruleId });
           }}
+          size="sm"
+          variant="outline"
         >
           View learned patterns
         </Button>

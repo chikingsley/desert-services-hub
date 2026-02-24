@@ -1,17 +1,17 @@
 "use client";
 
+import { DownloadIcon, UploadIcon } from "lucide-react";
 import { useCallback, useRef } from "react";
 import { toast } from "sonner";
-import { DownloadIcon, UploadIcon } from "lucide-react";
+import { toastError } from "@/components/Toast";
 import { Button } from "@/components/ui/button";
 import {
   Item,
-  ItemContent,
-  ItemTitle,
   ItemActions,
+  ItemContent,
   ItemSeparator,
+  ItemTitle,
 } from "@/components/ui/item";
-import { toastError } from "@/components/Toast";
 import { useRules } from "@/hooks/useRules";
 import { importRulesAction } from "@/utils/actions/rule";
 import { formatUtcDate } from "@/utils/date";
@@ -25,7 +25,9 @@ export function RuleImportExportSetting({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const exportRules = useCallback(() => {
-    if (!data) return;
+    if (!data) {
+      return;
+    }
 
     const exportData = data.map((rule) => ({
       name: rule.name,
@@ -72,7 +74,9 @@ export function RuleImportExportSetting({
   const importRules = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
-      if (!file) return;
+      if (!file) {
+        return;
+      }
 
       try {
         const text = await file.text();
@@ -96,7 +100,7 @@ export function RuleImportExportSetting({
         } else if (result?.data) {
           const { createdCount, updatedCount, skippedCount } = result.data;
           toast.success(
-            `Imported ${createdCount} new, updated ${updatedCount} existing${skippedCount > 0 ? `, skipped ${skippedCount}` : ""}`,
+            `Imported ${createdCount} new, updated ${updatedCount} existing${skippedCount > 0 ? `, skipped ${skippedCount}` : ""}`
           );
           mutate();
         }
@@ -112,7 +116,7 @@ export function RuleImportExportSetting({
         fileInputRef.current.value = "";
       }
     },
-    [emailAccountId, mutate],
+    [emailAccountId, mutate]
   );
 
   return (
@@ -124,26 +128,26 @@ export function RuleImportExportSetting({
         </ItemContent>
         <ItemActions>
           <input
-            type="file"
-            ref={fileInputRef}
             accept=".json"
-            onChange={importRules}
-            className="hidden"
             aria-label="Import rules from JSON file"
+            className="hidden"
+            onChange={importRules}
+            ref={fileInputRef}
+            type="file"
           />
           <Button
+            onClick={() => fileInputRef.current?.click()}
             size="sm"
             variant="outline"
-            onClick={() => fileInputRef.current?.click()}
           >
             <UploadIcon className="mr-2 size-4" />
             Import
           </Button>
           <Button
+            disabled={!data?.length}
+            onClick={exportRules}
             size="sm"
             variant="outline"
-            onClick={exportRules}
-            disabled={!data?.length}
           >
             <DownloadIcon className="mr-2 size-4" />
             Export

@@ -1,16 +1,16 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { getDriveFileUrl } from "./url";
 
 describe("getDriveFileUrl", () => {
   it("should return Google Drive URL for google provider", () => {
     expect(getDriveFileUrl("file123", "google")).toBe(
-      "https://drive.google.com/file/d/file123/view",
+      "https://drive.google.com/file/d/file123/view"
     );
   });
 
   it("should return OneDrive URL for microsoft provider", () => {
     expect(getDriveFileUrl("file456", "microsoft")).toBe(
-      "https://onedrive.live.com/?id=file456",
+      "https://onedrive.live.com/?id=file456"
     );
   });
 
@@ -22,7 +22,7 @@ describe("getDriveFileUrl", () => {
   it("should handle file IDs with special characters", () => {
     const fileId = "1a2b3c-4d5e6f_7g8h9i";
     expect(getDriveFileUrl(fileId, "google")).toBe(
-      `https://drive.google.com/file/d/${fileId}/view`,
+      `https://drive.google.com/file/d/${fileId}/view`
     );
   });
 });

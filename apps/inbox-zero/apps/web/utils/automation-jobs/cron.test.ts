@@ -11,25 +11,25 @@ describe("validateAutomationCronExpression", () => {
 
   it("rejects cron with non-wildcard day-of-month", () => {
     expect(() => validateAutomationCronExpression("0 9 1 * *")).toThrow(
-      "Automation cron supports wildcard day-of-month and month only",
+      "Automation cron supports wildcard day-of-month and month only"
     );
   });
 
   it("rejects cron with invalid step", () => {
     expect(() => validateAutomationCronExpression("*/0 9 * * *")).toThrow(
-      "Invalid minute step: 0",
+      "Invalid minute step: 0"
     );
   });
 
   it("rejects cron with multiple step delimiters", () => {
     expect(() => validateAutomationCronExpression("1/2/3 9 * * *")).toThrow(
-      "Invalid minute token 1/2/3: too many step delimiters",
+      "Invalid minute token 1/2/3: too many step delimiters"
     );
   });
 
   it("rejects cron with multiple range delimiters", () => {
     expect(() => validateAutomationCronExpression("1-2-3 9 * * *")).toThrow(
-      "Invalid minute token 1-2-3: too many range delimiters",
+      "Invalid minute token 1-2-3: too many range delimiters"
     );
   });
 });

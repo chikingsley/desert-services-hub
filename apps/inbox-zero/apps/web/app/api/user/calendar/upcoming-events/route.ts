@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { withEmailAccount } from "@/utils/middleware";
 import { createCalendarEventProviders } from "@/utils/calendar/event-provider";
 import type { Logger } from "@/utils/logger";
+import { withEmailAccount } from "@/utils/middleware";
 
 export type GetCalendarUpcomingEventsResponse = Awaited<
   ReturnType<typeof getData>
@@ -17,7 +17,7 @@ export const GET = withEmailAccount(
       logger: request.logger,
     });
     return NextResponse.json(result);
-  },
+  }
 );
 
 async function getData({
@@ -32,7 +32,7 @@ async function getData({
   const providerEvents = await Promise.all(
     providers.map(async (provider) => {
       return provider.fetchEvents({ maxResults: 3 });
-    }),
+    })
   );
 
   return {

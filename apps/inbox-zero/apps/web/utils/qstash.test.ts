@@ -25,7 +25,9 @@ async function loadMiddleware({
 
   const isValidInternalApiKey = vi.fn(() => internalApiKeyValid);
   const verifySignatureAppRouter = vi.fn((handler: (...args: any[]) => any) => {
-    if (verifyResponse) return vi.fn(() => verifyResponse);
+    if (verifyResponse) {
+      return vi.fn(() => verifyResponse);
+    }
     return handler;
   });
 

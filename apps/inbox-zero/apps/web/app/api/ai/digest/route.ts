@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { digestBody } from "./validation";
-import { DigestStatus } from "@/generated/prisma/enums";
-import type { Logger } from "@/utils/logger";
-import prisma from "@/utils/prisma";
-import { aiSummarizeEmailForDigest } from "@/utils/ai/digest/summarize-email-for-digest";
-import { getEmailAccountWithAi } from "@/utils/user/get";
 import type { StoredDigestContent } from "@/app/api/resend/digest/validation";
-import { withError } from "@/utils/middleware";
-import { isAssistantEmail } from "@/utils/assistant/is-assistant-email";
 import { env } from "@/env";
+import { DigestStatus } from "@/generated/prisma/enums";
+import { aiSummarizeEmailForDigest } from "@/utils/ai/digest/summarize-email-for-digest";
+import { isAssistantEmail } from "@/utils/assistant/is-assistant-email";
+import type { Logger } from "@/utils/logger";
+import { withError } from "@/utils/middleware";
+import prisma from "@/utils/prisma";
 import { withQstashOrInternal } from "@/utils/qstash";
+import { getEmailAccountWithAi } from "@/utils/user/get";
+import { digestBody } from "./validation";
 
 export const POST = withError(
   "digest",
@@ -80,13 +80,13 @@ export const POST = withError(
       logger.error("Failed to process digest", { error });
       return new NextResponse("Internal Server Error", { status: 500 });
     }
-  }),
+  })
 );
 
 async function findOrCreateDigest(
   emailAccountId: string,
   messageId: string,
-  threadId: string,
+  threadId: string
 ) {
   const digestWithItem = await prisma.digest.findFirst({
     where: {
@@ -125,7 +125,7 @@ async function findOrCreateDigest(
 async function updateDigestItem(
   itemId: string,
   contentString: string,
-  actionId?: string,
+  actionId?: string
 ) {
   return await prisma.digestItem.update({
     where: { id: itemId },
@@ -190,7 +190,7 @@ async function upsertDigest({
     const digest = await findOrCreateDigest(
       emailAccountId,
       messageId,
-      threadId,
+      threadId
     );
     const existingItem = digest.items[0];
     const contentString = JSON.stringify(content);
@@ -215,7 +215,7 @@ async function upsertDigest({
 }
 
 async function getRuleNameByExecutedAction(
-  actionId: string,
+  actionId: string
 ): Promise<string | undefined> {
   const executedAction = await prisma.executedAction.findUnique({
     where: { id: actionId },

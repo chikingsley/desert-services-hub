@@ -1,6 +1,6 @@
 import { extractEmailAddress } from "@/utils/email";
-import { createScopedLogger } from "@/utils/logger";
 import type { EmailProvider } from "@/utils/email/types";
+import { createScopedLogger } from "@/utils/logger";
 
 const logger = createScopedLogger("reply-tracker/query");
 
@@ -15,7 +15,7 @@ const logger = createScopedLogger("reply-tracker/query");
 export async function checkSenderReplyHistory(
   emailProvider: EmailProvider,
   senderEmail: string,
-  receivedThreshold: number,
+  receivedThreshold: number
 ): Promise<{ hasReplied: boolean; receivedCount: number }> {
   const cleanSenderEmail = extractEmailAddress(senderEmail);
   if (!cleanSenderEmail) {

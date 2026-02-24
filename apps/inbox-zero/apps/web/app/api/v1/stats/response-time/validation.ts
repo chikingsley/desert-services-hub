@@ -32,7 +32,7 @@ export const responseTimeResponseSchema = z.object({
       periodDate: z.coerce.date(),
       medianResponseTime: z.number(),
       count: z.number(),
-    }),
+    })
   ),
   emailsAnalyzed: z.number(),
   maxEmailsCap: z.number(),

@@ -1,7 +1,8 @@
 "use client";
 
-import * as React from "react";
 import type { DropdownMenuCheckboxItemProps } from "@radix-ui/react-dropdown-menu";
+import { ChevronDown } from "lucide-react";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,9 +10,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/utils";
 import { Separator } from "@/components/ui/separator";
-import { ChevronDown } from "lucide-react";
+import { cn } from "@/utils";
 
 type Checked = DropdownMenuCheckboxItemProps["checked"];
 
@@ -32,20 +32,22 @@ export function DetailedStatsFilter(props: {
 
   return (
     <DropdownMenu
-      open={keepOpenOnSelect ? isOpen : undefined}
       onOpenChange={
         keepOpenOnSelect
           ? () => {
-              if (!isOpen) setIsOpen(true);
+              if (!isOpen) {
+                setIsOpen(true);
+              }
             }
           : undefined
       }
+      open={keepOpenOnSelect ? isOpen : undefined}
     >
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
-          size="sm"
           className={cn("h-10 whitespace-nowrap", className)}
+          size="sm"
+          variant="outline"
         >
           {props.icon}
           {props.label}
@@ -63,8 +65,8 @@ export function DetailedStatsFilter(props: {
           return (
             <React.Fragment key={column.label}>
               <DropdownMenuCheckboxItem
-                className="capitalize"
                 checked={column.checked}
+                className="capitalize"
                 onCheckedChange={column.setChecked}
               >
                 {column.label}

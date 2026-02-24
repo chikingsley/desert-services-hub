@@ -1,7 +1,7 @@
 import { z } from "zod";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { getModel } from "@/utils/llms/model";
 import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
 
 const system = `You are a document filing assistant. The user received a notification that we filed their document attachment to their Drive. They have replied to that email.
 
@@ -24,8 +24,8 @@ const schema = z.object({
 export type ParseFilingReplyResult = z.infer<typeof schema>;
 
 interface FilingContext {
-  filename: string;
   currentFolder: string;
+  filename: string;
 }
 
 type Message = { role: "user" | "assistant"; content: string };

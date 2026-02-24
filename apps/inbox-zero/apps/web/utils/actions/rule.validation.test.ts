@@ -1,12 +1,12 @@
-import { describe, it, expect } from "vitest";
-import {
-  delayInMinutesSchema,
-  createRuleBody,
-  type CreateRuleBody,
-} from "./rule.validation";
+import { describe, expect, it } from "vitest";
 import { ActionType, LogicalOperator } from "@/generated/prisma/enums";
 import { ConditionType } from "@/utils/config";
 import { NINETY_DAYS_MINUTES } from "@/utils/date";
+import {
+  type CreateRuleBody,
+  createRuleBody,
+  delayInMinutesSchema,
+} from "./rule.validation";
 
 describe("delayInMinutesSchema", () => {
   describe("valid values", () => {
@@ -133,7 +133,7 @@ describe("createRuleBody", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.issues[0].message).toContain(
-          "at least one condition",
+          "at least one condition"
         );
       }
     });

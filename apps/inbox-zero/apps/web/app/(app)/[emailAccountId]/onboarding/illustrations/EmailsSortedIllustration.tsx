@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Star, Square } from "lucide-react";
+import { Square, Star } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const emails = [
   {
@@ -49,7 +49,7 @@ export function EmailsSortedIllustration() {
             next[index] = true;
             return next;
           });
-        }, delay),
+        }, delay)
       );
     });
 
@@ -60,15 +60,15 @@ export function EmailsSortedIllustration() {
     <div className="flex h-[200px] w-full max-w-[360px] flex-col justify-center gap-2 sm:w-[420px] sm:max-w-none">
       {emails.map((email, index) => (
         <motion.div
-          key={email.id}
-          initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
+          className="flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm dark:border-gray-700 dark:bg-slate-800"
+          initial={{ opacity: 0, x: -20 }}
+          key={email.id}
           transition={{
             duration: 0.5,
             delay: index * 0.15,
             ease: [0.25, 0.46, 0.45, 0.94],
           }}
-          className="flex items-center rounded-lg border border-gray-200 bg-white px-3 py-2.5 shadow-sm dark:border-gray-700 dark:bg-slate-800"
         >
           <div className="flex shrink-0 items-center gap-1.5 pr-3">
             <Square className="h-4 w-4 text-gray-300 dark:text-gray-600" />
@@ -76,30 +76,30 @@ export function EmailsSortedIllustration() {
           </div>
 
           <div className="flex h-5 w-[90px] shrink-0 items-center">
-            <span className="truncate text-[12px] font-semibold leading-none text-gray-900 dark:text-gray-100">
+            <span className="truncate font-semibold text-[12px] text-gray-900 leading-none dark:text-gray-100">
               {email.from}
             </span>
           </div>
 
-          <div className="flex h-5 shrink-0 items-center px-2 ml-auto sm:ml-0">
+          <div className="ml-auto flex h-5 shrink-0 items-center px-2 sm:ml-0">
             <motion.span
-              initial={{ opacity: 0, scale: 0.8 }}
               animate={{
                 opacity: showLabels[index] ? 1 : 0,
                 scale: showLabels[index] ? 1 : 0.8,
               }}
+              className={`inline-block whitespace-nowrap rounded px-2 py-1 font-medium text-[9px] text-white leading-none ${email.labelColor}`}
+              initial={{ opacity: 0, scale: 0.8 }}
               transition={{
                 duration: 0.4,
                 ease: [0.25, 0.46, 0.45, 0.94],
               }}
-              className={`inline-block whitespace-nowrap rounded px-2 py-1 text-[9px] font-medium leading-none text-white ${email.labelColor}`}
             >
               {email.label}
             </motion.span>
           </div>
 
           <div className="hidden h-5 min-w-0 flex-1 items-center truncate sm:flex">
-            <span className="text-[12px] font-medium text-gray-900 dark:text-gray-100">
+            <span className="font-medium text-[12px] text-gray-900 dark:text-gray-100">
               {email.subject}
             </span>
             <span className="text-[12px] text-gray-500 dark:text-gray-400">

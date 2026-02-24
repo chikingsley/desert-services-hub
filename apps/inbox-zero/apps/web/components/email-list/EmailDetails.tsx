@@ -19,11 +19,11 @@ export function EmailDetails({ message }: { message: ThreadMessage }) {
         {details.map(
           ({ label, value }) =>
             value && (
-              <div key={label} className="grid grid-cols-[auto,1fr] gap-2">
+              <div className="grid grid-cols-[auto,1fr] gap-2" key={label}>
                 <span className="font-medium text-foreground">{label}:</span>
                 <span className="text-muted-foreground">{value}</span>
               </div>
-            ),
+            )
         )}
       </div>
     </div>

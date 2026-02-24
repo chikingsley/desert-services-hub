@@ -1,3 +1,4 @@
+import { db } from "@lib/db/client";
 import { validateCreateEstimatePayload } from "@/packages/estimates/estimating/estimate-payload-validation";
 import {
   getEstimate,
@@ -9,7 +10,6 @@ import type {
   Estimate,
   UpdateEstimateInput,
 } from "@/packages/estimates/estimating/types";
-import { db } from "@lib/db/client";
 
 function mapCreateLineItemToValidationInput(
   item: NonNullable<CreateEstimateInput["line_items"]>[number]
@@ -265,7 +265,9 @@ export async function updateEstimate(
   values.push(id);
 
   await db
-    .query(`UPDATE estimates SET ${updates.join(", ")} WHERE id = $${paramIndex}`)
+    .query(
+      `UPDATE estimates SET ${updates.join(", ")} WHERE id = $${paramIndex}`
+    )
     .run(...values);
 
   return await getEstimate(id);

@@ -27,22 +27,22 @@ const contractsQuerySchema = paginationSchema.extend({
 });
 
 interface ContractRow {
-  id: number;
-  monday_item_id: string | null;
-  name: string;
-  estimate_number: string | null;
-  contractor: string | null;
-  group_id: string | null;
+  awarded_value: number | null;
   bid_status: string | null;
   bid_value: number | null;
-  awarded_value: number | null;
+  contract_status: string | null;
+  contractor: string | null;
+  created_at: string;
   due_date: string | null;
+  dust_permit_status: string | null;
+  estimate_number: string | null;
+  group_id: string | null;
+  id: number;
   location: string | null;
+  monday_item_id: string | null;
+  name: string;
   project_id: number | null;
   project_name: string | null;
-  contract_status: string | null;
-  dust_permit_status: string | null;
-  created_at: string;
   updated_at: string;
 }
 

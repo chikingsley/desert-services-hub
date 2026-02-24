@@ -1,6 +1,17 @@
 "use client";
 
+import {
+  ArrowLeftIcon,
+  CheckCircle2Icon,
+  LightbulbIcon,
+  PlusIcon,
+} from "lucide-react";
+import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useState } from "react";
+import { getPersonas } from "@/app/(app)/[emailAccountId]/assistant/examples";
+import { ButtonList } from "@/components/ButtonList";
+import { Tooltip } from "@/components/Tooltip";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,30 +19,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  LightbulbIcon,
-  ArrowLeftIcon,
-  PlusIcon,
-  CheckCircle2Icon,
-} from "lucide-react";
-import { getPersonas } from "@/app/(app)/[emailAccountId]/assistant/examples";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { cn } from "@/utils";
 import {
   convertLabelsToDisplay,
   convertMentionsToLabels,
 } from "@/utils/mention";
-import { Tooltip } from "@/components/Tooltip";
-import { ButtonList } from "@/components/ButtonList";
-import { parseAsStringEnum, useQueryState } from "nuqs";
-import { cn } from "@/utils";
-import { useAccount } from "@/providers/EmailAccountProvider";
 
 interface ExamplesDialogProps {
-  setInput: (input: string) => void;
   children?: React.ReactNode;
-  open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  open?: boolean;
+  setInput: (input: string) => void;
 }
 
 export function ExamplesDialog({
@@ -52,14 +52,15 @@ export function ExamplesDialog({
     setSelectedExamples((prev) => {
       if (prev.includes(index)) {
         return prev.filter((i) => i !== index);
-      } else {
-        return [...prev, index];
       }
+      return [...prev, index];
     });
   };
 
   const handleAddSelected = () => {
-    if (!selectedPersona || selectedExamples.length === 0) return;
+    if (!selectedPersona || selectedExamples.length === 0) {
+      return;
+    }
 
     const persona = personas[selectedPersona as keyof typeof personas];
 
@@ -70,7 +71,7 @@ export function ExamplesDialog({
     } else {
       // Multiple selections - format as "add the following rules:"
       const selectedRules = selectedExamples.map((index) =>
-        convertMentionsToLabels(persona.promptArray[index]),
+        convertMentionsToLabels(persona.promptArray[index])
       );
       const formattedPrompt = `Add the following rules:\n${selectedRules.map((rule) => `- ${rule}`).join("\n")}`;
       setInput(formattedPrompt);
@@ -82,7 +83,7 @@ export function ExamplesDialog({
 
   const [selectedPersona, setSelectedPersona] = useQueryState(
     "persona",
-    parseAsStringEnum(Object.keys(personas)),
+    parseAsStringEnum(Object.keys(personas))
   );
 
   const handleBackToPersonas = () => {
@@ -91,13 +92,13 @@ export function ExamplesDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
       {children ? (
         <DialogTrigger asChild>{children}</DialogTrigger>
       ) : (
         <Tooltip content="Choose from examples">
           <DialogTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button size="icon" variant="ghost">
               <LightbulbIcon className="size-5" />
               <span className="sr-only">Show Examples</span>
             </Button>
@@ -109,10 +110,10 @@ export function ExamplesDialog({
           <div className="flex items-center gap-2">
             {selectedPersona && (
               <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleBackToPersonas}
                 className="h-8 w-8"
+                onClick={handleBackToPersonas}
+                size="icon"
+                variant="ghost"
               >
                 <ArrowLeftIcon className="size-4" />
                 <span className="sr-only">Back to personas</span>
@@ -134,14 +135,14 @@ export function ExamplesDialog({
                   const isSelected = selectedExamples.includes(index);
                   return (
                     <Button
-                      key={index}
-                      variant="outline"
                       className={cn(
                         "relative h-auto min-h-[2.5rem] w-full justify-start text-wrap px-4 py-3 text-left text-sm leading-relaxed",
                         isSelected &&
-                          "border-green-500 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 dark:hover:bg-green-950/30",
+                          "border-green-500 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 dark:hover:bg-green-950/30"
                       )}
+                      key={index}
                       onClick={() => handleExampleToggle(index)}
+                      variant="outline"
                     >
                       <div className="flex w-full items-start gap-3">
                         {isSelected && (
@@ -162,8 +163,8 @@ export function ExamplesDialog({
             {selectedExamples.length > 0 && (
               <div className="flex justify-end pt-4">
                 <Button
-                  onClick={handleAddSelected}
                   className="gap-2"
+                  onClick={handleAddSelected}
                   variant="default"
                 >
                   <PlusIcon className="size-4" />
@@ -174,13 +175,13 @@ export function ExamplesDialog({
           </div>
         ) : (
           <ButtonList
+            columns={3}
+            emptyMessage=""
             items={Object.entries(personas).map(([id, persona]) => ({
               id,
               name: persona.label,
             }))}
             onSelect={(id) => setSelectedPersona(id as keyof typeof personas)}
-            emptyMessage=""
-            columns={3}
           />
         )}
       </DialogContent>

@@ -19,7 +19,7 @@ const KEY_LENGTH = 32; // 32 bytes for AES-256
 const key = scryptSync(
   env.EMAIL_ENCRYPT_SECRET,
   env.EMAIL_ENCRYPT_SALT,
-  KEY_LENGTH,
+  KEY_LENGTH
 );
 
 /**
@@ -27,7 +27,9 @@ const key = scryptSync(
  * Returns a hex string containing: IV + Auth Tag + Encrypted content
  */
 export function encryptToken(text: string | null): string | null {
-  if (text === null || text === undefined) return null;
+  if (text === null || text === undefined) {
+    return null;
+  }
 
   try {
     // Generate a random IV for each encryption
@@ -55,7 +57,9 @@ export function encryptToken(text: string | null): string | null {
  * Expects a hex string containing: IV + Auth Tag + Encrypted content
  */
 export function decryptToken(encryptedText: string | null): string | null {
-  if (encryptedText === null || encryptedText === undefined) return null;
+  if (encryptedText === null || encryptedText === undefined) {
+    return null;
+  }
 
   try {
     const buffer = Buffer.from(encryptedText, "hex");

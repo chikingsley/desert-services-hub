@@ -1,5 +1,5 @@
 import { Prisma } from "@/generated/prisma/client";
-import { encryptToken, decryptToken } from "@/utils/encryption";
+import { decryptToken, encryptToken } from "@/utils/encryption";
 
 export const encryptedTokens = Prisma.defineExtension((client) => {
   return client.$extends({
@@ -98,7 +98,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.access_token = encryptToken(args.data.access_token);
             } else if (args.data.access_token.set) {
               args.data.access_token.set = encryptToken(
-                args.data.access_token.set,
+                args.data.access_token.set
               );
             }
           }
@@ -107,7 +107,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.refresh_token = encryptToken(args.data.refresh_token);
             } else if (args.data.refresh_token.set) {
               args.data.refresh_token.set = encryptToken(
-                args.data.refresh_token.set,
+                args.data.refresh_token.set
               );
             }
           }
@@ -119,7 +119,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.access_token = encryptToken(args.data.access_token);
             } else if (args.data.access_token.set) {
               args.data.access_token.set = encryptToken(
-                args.data.access_token.set,
+                args.data.access_token.set
               );
             }
           }
@@ -128,7 +128,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.refresh_token = encryptToken(args.data.refresh_token);
             } else if (args.data.refresh_token.set) {
               args.data.refresh_token.set = encryptToken(
-                args.data.refresh_token.set,
+                args.data.refresh_token.set
               );
             }
           }
@@ -146,18 +146,18 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.update.access_token = encryptToken(args.update.access_token);
             } else if (args.update.access_token.set) {
               args.update.access_token.set = encryptToken(
-                args.update.access_token.set,
+                args.update.access_token.set
               );
             }
           }
           if (args.update.refresh_token) {
             if (typeof args.update.refresh_token === "string") {
               args.update.refresh_token = encryptToken(
-                args.update.refresh_token,
+                args.update.refresh_token
               );
             } else if (args.update.refresh_token.set) {
               args.update.refresh_token.set = encryptToken(
-                args.update.refresh_token.set,
+                args.update.refresh_token.set
               );
             }
           }
@@ -180,7 +180,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.accessToken = encryptToken(args.data.accessToken);
             } else if (args.data.accessToken.set) {
               args.data.accessToken.set = encryptToken(
-                args.data.accessToken.set,
+                args.data.accessToken.set
               );
             }
           }
@@ -189,7 +189,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.refreshToken = encryptToken(args.data.refreshToken);
             } else if (args.data.refreshToken.set) {
               args.data.refreshToken.set = encryptToken(
-                args.data.refreshToken.set,
+                args.data.refreshToken.set
               );
             }
           }
@@ -201,7 +201,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.accessToken = encryptToken(args.data.accessToken);
             } else if (args.data.accessToken.set) {
               args.data.accessToken.set = encryptToken(
-                args.data.accessToken.set,
+                args.data.accessToken.set
               );
             }
           }
@@ -210,7 +210,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.refreshToken = encryptToken(args.data.refreshToken);
             } else if (args.data.refreshToken.set) {
               args.data.refreshToken.set = encryptToken(
-                args.data.refreshToken.set,
+                args.data.refreshToken.set
               );
             }
           }
@@ -228,7 +228,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.update.accessToken = encryptToken(args.update.accessToken);
             } else if (args.update.accessToken.set) {
               args.update.accessToken.set = encryptToken(
-                args.update.accessToken.set,
+                args.update.accessToken.set
               );
             }
           }
@@ -237,7 +237,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.update.refreshToken = encryptToken(args.update.refreshToken);
             } else if (args.update.refreshToken.set) {
               args.update.refreshToken.set = encryptToken(
-                args.update.refreshToken.set,
+                args.update.refreshToken.set
               );
             }
           }
@@ -263,7 +263,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.accessToken = encryptToken(args.data.accessToken);
             } else if (args.data.accessToken.set) {
               args.data.accessToken.set = encryptToken(
-                args.data.accessToken.set,
+                args.data.accessToken.set
               );
             }
           }
@@ -272,7 +272,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.refreshToken = encryptToken(args.data.refreshToken);
             } else if (args.data.refreshToken.set) {
               args.data.refreshToken.set = encryptToken(
-                args.data.refreshToken.set,
+                args.data.refreshToken.set
               );
             }
           }
@@ -291,7 +291,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.accessToken = encryptToken(args.data.accessToken);
             } else if (args.data.accessToken.set) {
               args.data.accessToken.set = encryptToken(
-                args.data.accessToken.set,
+                args.data.accessToken.set
               );
             }
           }
@@ -300,7 +300,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.refreshToken = encryptToken(args.data.refreshToken);
             } else if (args.data.refreshToken.set) {
               args.data.refreshToken.set = encryptToken(
-                args.data.refreshToken.set,
+                args.data.refreshToken.set
               );
             }
           }
@@ -328,7 +328,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.update.accessToken = encryptToken(args.update.accessToken);
             } else if (args.update.accessToken.set) {
               args.update.accessToken.set = encryptToken(
-                args.update.accessToken.set,
+                args.update.accessToken.set
               );
             }
           }
@@ -337,7 +337,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.update.refreshToken = encryptToken(args.update.refreshToken);
             } else if (args.update.refreshToken.set) {
               args.update.refreshToken.set = encryptToken(
-                args.update.refreshToken.set,
+                args.update.refreshToken.set
               );
             }
           }
@@ -367,7 +367,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.accessToken = encryptToken(args.data.accessToken);
             } else if (args.data.accessToken.set) {
               args.data.accessToken.set = encryptToken(
-                args.data.accessToken.set,
+                args.data.accessToken.set
               );
             }
           }
@@ -376,7 +376,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.refreshToken = encryptToken(args.data.refreshToken);
             } else if (args.data.refreshToken.set) {
               args.data.refreshToken.set = encryptToken(
-                args.data.refreshToken.set,
+                args.data.refreshToken.set
               );
             }
           }
@@ -388,7 +388,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.accessToken = encryptToken(args.data.accessToken);
             } else if (args.data.accessToken.set) {
               args.data.accessToken.set = encryptToken(
-                args.data.accessToken.set,
+                args.data.accessToken.set
               );
             }
           }
@@ -397,7 +397,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.refreshToken = encryptToken(args.data.refreshToken);
             } else if (args.data.refreshToken.set) {
               args.data.refreshToken.set = encryptToken(
-                args.data.refreshToken.set,
+                args.data.refreshToken.set
               );
             }
           }
@@ -415,7 +415,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.update.accessToken = encryptToken(args.update.accessToken);
             } else if (args.update.accessToken.set) {
               args.update.accessToken.set = encryptToken(
-                args.update.accessToken.set,
+                args.update.accessToken.set
               );
             }
           }
@@ -424,7 +424,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.update.refreshToken = encryptToken(args.update.refreshToken);
             } else if (args.update.refreshToken.set) {
               args.update.refreshToken.set = encryptToken(
-                args.update.refreshToken.set,
+                args.update.refreshToken.set
               );
             }
           }
@@ -447,7 +447,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.accessToken = encryptToken(args.data.accessToken);
             } else if (args.data.accessToken.set) {
               args.data.accessToken.set = encryptToken(
-                args.data.accessToken.set,
+                args.data.accessToken.set
               );
             }
           }
@@ -456,7 +456,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.refreshToken = encryptToken(args.data.refreshToken);
             } else if (args.data.refreshToken.set) {
               args.data.refreshToken.set = encryptToken(
-                args.data.refreshToken.set,
+                args.data.refreshToken.set
               );
             }
           }
@@ -468,7 +468,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.accessToken = encryptToken(args.data.accessToken);
             } else if (args.data.accessToken.set) {
               args.data.accessToken.set = encryptToken(
-                args.data.accessToken.set,
+                args.data.accessToken.set
               );
             }
           }
@@ -477,7 +477,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.data.refreshToken = encryptToken(args.data.refreshToken);
             } else if (args.data.refreshToken.set) {
               args.data.refreshToken.set = encryptToken(
-                args.data.refreshToken.set,
+                args.data.refreshToken.set
               );
             }
           }
@@ -495,7 +495,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.update.accessToken = encryptToken(args.update.accessToken);
             } else if (args.update.accessToken.set) {
               args.update.accessToken.set = encryptToken(
-                args.update.accessToken.set,
+                args.update.accessToken.set
               );
             }
           }
@@ -504,7 +504,7 @@ export const encryptedTokens = Prisma.defineExtension((client) => {
               args.update.refreshToken = encryptToken(args.update.refreshToken);
             } else if (args.update.refreshToken.set) {
               args.update.refreshToken.set = encryptToken(
-                args.update.refreshToken.set,
+                args.update.refreshToken.set
               );
             }
           }

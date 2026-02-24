@@ -5,20 +5,20 @@
  * conditions are met, with configurable timeouts.
  */
 
-import prisma from "@/utils/prisma";
+import type { ThreadTrackerType } from "@/generated/prisma/enums";
+import { extractEmailAddress } from "@/utils/email";
 import type { EmailProvider } from "@/utils/email/types";
+import { getOrCreateFollowUpLabel } from "@/utils/follow-up/labels";
+import prisma from "@/utils/prisma";
+import { sleep } from "@/utils/sleep";
 import type { ParsedMessage } from "@/utils/types";
 import { TIMEOUTS } from "../config";
 import { logStep } from "./logging";
-import { sleep } from "@/utils/sleep";
-import { extractEmailAddress } from "@/utils/email";
-import { getOrCreateFollowUpLabel } from "@/utils/follow-up/labels";
-import type { ThreadTrackerType } from "@/generated/prisma/enums";
 
 interface PollOptions {
-  timeout?: number;
-  interval?: number;
   description?: string;
+  interval?: number;
+  timeout?: number;
 }
 
 /**
@@ -26,7 +26,7 @@ interface PollOptions {
  */
 export async function pollUntil<T>(
   condition: () => Promise<T | null | undefined>,
-  options: PollOptions = {},
+  options: PollOptions = {}
 ): Promise<T> {
   const {
     timeout = TIMEOUTS.WEBHOOK_PROCESSING,
@@ -56,7 +56,7 @@ export async function pollUntil<T>(
   const elapsed = Date.now() - startTime;
   throw new Error(
     `Timeout waiting for ${description} after ${elapsed}ms` +
-      (lastError ? `: ${lastError.message}` : ""),
+      (lastError ? `: ${lastError.message}` : "")
   );
 }
 
@@ -153,14 +153,14 @@ export async function waitForExecutedRule(options: {
       {
         timeout,
         description: `ExecutedRule for thread ${threadId} to reach terminal status`,
-      },
+      }
     );
   } catch (_error) {
     const elapsed = Date.now() - startTime;
     throw new Error(
       `Timeout waiting for ExecutedRule after ${elapsed}ms. ` +
         "This usually means webhooks are not being delivered. " +
-        "Check WEBHOOK_URL and Pub/Sub configuration in README.md.",
+        "Check WEBHOOK_URL and Pub/Sub configuration in README.md."
     );
   }
 }
@@ -216,7 +216,7 @@ export async function waitForDraft(options: {
     {
       timeout,
       description: `Draft for thread ${threadId}`,
-    },
+    }
   );
 }
 
@@ -242,14 +242,14 @@ export async function waitForLabel(options: {
     async () => {
       const message = await provider.getMessage(messageId);
       const hasLabel = message.labelIds?.some(
-        (id) => id.toLowerCase() === labelName.toLowerCase(),
+        (id) => id.toLowerCase() === labelName.toLowerCase()
       );
       return hasLabel ? true : null;
     },
     {
       timeout,
       description: `Label "${labelName}" on message ${messageId}`,
-    },
+    }
   );
 }
 
@@ -287,7 +287,7 @@ export async function waitForFollowUpLabel(options: {
     {
       timeout,
       description: `Follow-up label on message ${messageId}`,
-    },
+    }
   );
 }
 
@@ -317,11 +317,15 @@ export async function waitForSentMessage(options: {
     async () => {
       const messages = await provider.getSentMessages(20);
       const found = messages.find((msg) => {
-        if (!msg.subject?.includes(subjectContains)) return false;
+        if (!msg.subject?.includes(subjectContains)) {
+          return false;
+        }
         // Filter by sent time if specified
         if (sentAfter && msg.date) {
           const msgDate = new Date(msg.date);
-          if (msgDate < sentAfter) return false;
+          if (msgDate < sentAfter) {
+            return false;
+          }
         }
         return true;
       });
@@ -337,7 +341,7 @@ export async function waitForSentMessage(options: {
     {
       timeout,
       description: `Sent message with subject containing "${subjectContains}"`,
-    },
+    }
   );
 }
 
@@ -364,7 +368,9 @@ export async function waitForMessageInInbox(options: {
     async () => {
       const messages = await provider.getInboxMessages(20);
       const found = messages.find((msg) => {
-        if (!msg.subject?.includes(subjectContains)) return false;
+        if (!msg.subject?.includes(subjectContains)) {
+          return false;
+        }
         // Apply optional filter (e.g., to exclude already-seen messages)
         if (filter && msg.id && msg.threadId) {
           return filter({ id: msg.id, threadId: msg.threadId });
@@ -383,7 +389,7 @@ export async function waitForMessageInInbox(options: {
     {
       timeout,
       description: `Message with subject containing "${subjectContains}"`,
-    },
+    }
   );
 }
 
@@ -413,12 +419,16 @@ export async function waitForReplyInInbox(options: {
       const found = messages.find((msg) => {
         // Must be from the expected sender - extract and compare email addresses
         const msgFromEmail = extractEmailAddress(
-          msg.headers?.from || "",
+          msg.headers?.from || ""
         ).toLowerCase();
-        if (msgFromEmail !== fromEmail.toLowerCase()) return false;
+        if (msgFromEmail !== fromEmail.toLowerCase()) {
+          return false;
+        }
 
         // Must contain the subject (including Re: variants)
-        if (!msg.subject?.includes(subjectContains)) return false;
+        if (!msg.subject?.includes(subjectContains)) {
+          return false;
+        }
 
         return true;
       });
@@ -435,7 +445,7 @@ export async function waitForReplyInInbox(options: {
     {
       timeout,
       description: `Reply from ${fromEmail} with subject containing "${subjectContains}"`,
-    },
+    }
   );
 }
 
@@ -465,7 +475,7 @@ export async function waitForDraftDeleted(options: {
     {
       timeout,
       description: `Draft ${draftId} to be deleted`,
-    },
+    }
   );
 }
 
@@ -498,7 +508,7 @@ export async function waitForNoThreadDrafts(options: {
     {
       timeout,
       description: `All drafts for thread ${threadId} to be cleared`,
-    },
+    }
   );
 }
 
@@ -552,7 +562,9 @@ export async function waitForDraftSendLog(options: {
         },
       });
 
-      if (!log) return null;
+      if (!log) {
+        return null;
+      }
 
       return {
         id: log.id,
@@ -565,7 +577,7 @@ export async function waitForDraftSendLog(options: {
     {
       timeout,
       description: `DraftSendLog for thread ${threadId}`,
-    },
+    }
   );
 }
 
@@ -642,7 +654,7 @@ export async function waitForThreadTracker(options: {
       {
         timeout,
         description: `ThreadTracker${type ? ` (${type})` : ""} for thread ${threadId}`,
-      },
+      }
     );
   } catch (_error) {
     const elapsed = Date.now() - startTime;
@@ -670,7 +682,7 @@ export async function waitForThreadTracker(options: {
     throw new Error(
       `Timeout waiting for ThreadTracker${type ? ` (${type})` : ""} after ${elapsed}ms. ` +
         "This usually means webhooks are not being delivered to trigger the message processing." +
-        hint,
+        hint
     );
   }
 }
@@ -713,6 +725,6 @@ export async function waitForThreadMessageCount(options: {
     {
       timeout,
       description: `Thread ${threadId} to have at least ${minCount} messages`,
-    },
+    }
   );
 }

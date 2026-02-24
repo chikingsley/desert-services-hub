@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import * as ProgressPrimitive from "@radix-ui/react-progress";
+import * as React from "react";
 import { cn } from "@/utils/index";
 
 const Progress = React.forwardRef<
@@ -11,11 +11,11 @@ const Progress = React.forwardRef<
   }
 >(({ className, value, innerClassName = "bg-blue-500", ...props }, ref) => (
   <ProgressPrimitive.Root
-    ref={ref}
     className={cn(
       "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
-      className,
+      className
     )}
+    ref={ref}
     {...props}
   >
     <ProgressPrimitive.Indicator

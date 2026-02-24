@@ -1,6 +1,6 @@
+import { cva, type VariantProps } from "class-variance-authority";
 import Link from "next/link";
 import { forwardRef } from "react";
-import { cva, type VariantProps } from "class-variance-authority";
 import { ButtonLoader } from "@/components/Loading";
 
 export interface ButtonProps
@@ -10,7 +10,7 @@ export interface ButtonProps
 }
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap text-center font-semibold transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black disabled:cursor-default disabled:opacity-70",
+  "inline-flex items-center justify-center whitespace-nowrap text-center font-semibold transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-black focus-visible:outline-offset-2 disabled:cursor-default disabled:opacity-70",
   {
     variants: {
       size: {
@@ -19,7 +19,7 @@ const buttonVariants = cva(
         md: "px-2.5 py-1.5 text-sm",
         lg: "px-3 py-2 text-sm",
         xl: "px-3.5 py-2.5 text-sm",
-        "2xl": "px-6 py-3 text-base font-medium",
+        "2xl": "px-6 py-3 font-medium text-base",
         circle: "",
       },
       roundedSize: {
@@ -54,7 +54,7 @@ const buttonVariants = cva(
       roundedSize: "md",
       color: "primary",
     },
-  },
+  }
 );
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -66,7 +66,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <Component
-        type="button"
         className={buttonVariants({
           color,
           size,
@@ -75,6 +74,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           loading,
           className,
         })}
+        type="button"
         {...rest}
         disabled={loading || props.disabled}
         ref={ref}
@@ -83,7 +83,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {rest.children}
       </Component>
     );
-  },
+  }
 );
 Button.displayName = "Button";
 
@@ -104,8 +104,8 @@ const BasicLink = (props: {
   } = props;
 
   return (
-    // @ts-ignore
-    <Link href={href} target={target} rel={rel} {...rest}>
+    // @ts-expect-error
+    <Link href={href} rel={rel} target={target} {...rest}>
       {children}
     </Link>
   );

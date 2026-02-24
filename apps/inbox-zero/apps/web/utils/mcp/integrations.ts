@@ -138,7 +138,7 @@ export const MCP_INTEGRATIONS: Record<
 export type IntegrationKey = keyof typeof MCP_INTEGRATIONS;
 
 export function getIntegration(
-  name: string,
+  name: string
 ): (typeof MCP_INTEGRATIONS)[IntegrationKey] {
   const integration = MCP_INTEGRATIONS[name];
   if (!integration) {
@@ -148,7 +148,7 @@ export function getIntegration(
 }
 
 export function getStaticCredentials(
-  integration: IntegrationKey,
+  integration: IntegrationKey
 ): { clientId?: string; clientSecret?: string } | undefined {
   switch (integration) {
     // case "hubspot":

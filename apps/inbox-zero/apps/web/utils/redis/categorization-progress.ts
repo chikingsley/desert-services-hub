@@ -19,7 +19,9 @@ export async function getCategorizationProgress({
   const key = getKey({ emailAccountId });
   try {
     const progress = await redis.get<RedisCategorizationProgress>(key);
-    if (!progress) return null;
+    if (!progress) {
+      return null;
+    }
     return progress;
   } catch {
     return null;
@@ -42,7 +44,7 @@ export async function saveCategorizationTotalItems({
         ...existingProgress,
         totalItems: (existingProgress?.totalItems || 0) + totalItems,
       },
-      { ex: 2 * 60 },
+      { ex: 2 * 60 }
     );
   } catch {
     // no-op for self-hosted mode without Redis
@@ -57,7 +59,9 @@ export async function saveCategorizationProgress({
   incrementCompleted: number;
 }) {
   const existingProgress = await getCategorizationProgress({ emailAccountId });
-  if (!existingProgress) return null;
+  if (!existingProgress) {
+    return null;
+  }
 
   const key = getKey({ emailAccountId });
   const updatedProgress: RedisCategorizationProgress = {

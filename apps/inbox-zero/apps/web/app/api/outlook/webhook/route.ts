@@ -1,12 +1,12 @@
-import type { z } from "zod";
 import { after, NextResponse } from "next/server";
-import { withError } from "@/utils/middleware";
+import type { z } from "zod";
 import { processHistoryForUser } from "@/app/api/outlook/webhook/process-history";
-import type { Logger } from "@/utils/logger";
-import { env } from "@/env";
 import { webhookBodySchema } from "@/app/api/outlook/webhook/types";
-import { handleWebhookError } from "@/utils/webhook/error-handler";
+import { env } from "@/env";
+import type { Logger } from "@/utils/logger";
 import { runWithBackgroundLoggerFlush } from "@/utils/logger-flush";
+import { withError } from "@/utils/middleware";
+import { handleWebhookError } from "@/utils/webhook/error-handler";
 import { getWebhookEmailAccount } from "@/utils/webhook/validate-webhook-account";
 
 export const maxDuration = 300;
@@ -38,7 +38,7 @@ export const POST = withError("outlook/webhook", async (request) => {
         error: "Invalid webhook payload",
         details: parseResult.error.errors,
       },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -51,7 +51,7 @@ export const POST = withError("outlook/webhook", async (request) => {
     logger.error("MICROSOFT_WEBHOOK_CLIENT_STATE not configured");
     return NextResponse.json(
       { error: "Webhook not configured" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 
@@ -62,7 +62,7 @@ export const POST = withError("outlook/webhook", async (request) => {
       });
       return NextResponse.json(
         { error: "Unauthorized webhook request" },
-        { status: 403 },
+        { status: 403 }
       );
     }
   }
@@ -81,7 +81,7 @@ export const POST = withError("outlook/webhook", async (request) => {
       logger,
       task: () => processNotificationsAsync(notifications, logger),
       extra: { url: "/api/outlook/webhook" },
-    }),
+    })
   );
 
   return NextResponse.json({ ok: true });
@@ -89,7 +89,7 @@ export const POST = withError("outlook/webhook", async (request) => {
 
 async function processNotificationsAsync(
   notifications: z.infer<typeof webhookBodySchema>["value"],
-  log: Logger,
+  log: Logger
 ) {
   for (const notification of notifications) {
     const { subscriptionId, resourceData } = notification;
@@ -108,7 +108,7 @@ async function processNotificationsAsync(
     } catch (error) {
       const emailAccount = await getWebhookEmailAccount(
         { watchEmailsSubscriptionId: subscriptionId },
-        logger,
+        logger
       ).catch((error) => {
         logger.error("Error getting email account", { error });
         return null;

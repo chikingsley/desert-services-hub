@@ -1,16 +1,16 @@
-import type { KnownBlock, Block } from "@slack/types";
+import type { Block, KnownBlock } from "@slack/types";
 import type { WebClient } from "@slack/web-api";
 import { createSlackClient } from "./client";
+import {
+  buildDocumentAskBlocks,
+  buildDocumentFiledBlocks,
+  type DocumentAskBlocksParams,
+  type DocumentFiledBlocksParams,
+} from "./messages/document-filing";
 import {
   buildMeetingBriefingBlocks,
   type MeetingBriefingBlocksParams,
 } from "./messages/meeting-briefing";
-import {
-  buildDocumentFiledBlocks,
-  buildDocumentAskBlocks,
-  type DocumentFiledBlocksParams,
-  type DocumentAskBlocksParams,
-} from "./messages/document-filing";
 
 export type SlackBriefingParams = MeetingBriefingBlocksParams & {
   accessToken: string;
@@ -106,7 +106,7 @@ type Blocks = (KnownBlock | Block)[];
 async function postMessageWithJoin(
   client: WebClient,
   channelId: string,
-  message: { text: string; blocks?: Blocks },
+  message: { text: string; blocks?: Blocks }
 ): Promise<void> {
   const args = message.blocks
     ? { channel: channelId, blocks: message.blocks, text: message.text }
@@ -124,7 +124,7 @@ async function postMessageWithJoin(
           joinError.data?.error === "missing_scope"
         ) {
           throw new Error(
-            "Bot lacks channels:join scope. Please reconnect Slack in Settings to update permissions.",
+            "Bot lacks channels:join scope. Please reconnect Slack in Settings to update permissions."
           );
         }
         throw joinError;
@@ -137,7 +137,7 @@ async function postMessageWithJoin(
 }
 
 function isSlackError(
-  error: unknown,
+  error: unknown
 ): error is Error & { data?: { error?: string } } {
   return error instanceof Error && "data" in error;
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import { memo, useEffect } from "react";
-import { resetTotalThreads, useQueueState } from "@/store/archive-queue";
 import { ProgressPanel } from "@/components/ProgressPanel";
+import { resetTotalThreads, useQueueState } from "@/store/archive-queue";
 
 export const ArchiveProgress = memo(() => {
   const { totalThreads, activeThreads } = useQueueState();
@@ -23,11 +23,11 @@ export const ArchiveProgress = memo(() => {
 
   return (
     <ProgressPanel
-      totalItems={totalThreads}
-      remainingItems={threadsRemaining}
-      inProgressText="Archiving emails..."
       completedText="Archiving complete!"
+      inProgressText="Archiving emails..."
       itemLabel="emails"
+      remainingItems={threadsRemaining}
+      totalItems={totalThreads}
     />
   );
 });

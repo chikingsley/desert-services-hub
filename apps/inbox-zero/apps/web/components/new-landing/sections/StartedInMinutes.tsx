@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Badge } from "@/components/new-landing/common/Badge";
 import { BlurFade } from "@/components/new-landing/common/BlurFade";
 import { Card } from "@/components/new-landing/common/Card";
@@ -24,11 +25,10 @@ import { Outlook } from "@/components/new-landing/icons/Outlook";
 import { SnowFlake } from "@/components/new-landing/icons/SnowFlake";
 import { SparkleBlue } from "@/components/new-landing/icons/SparkleBlue";
 import { Team } from "@/components/new-landing/icons/Team";
-import Image from "next/image";
 
 interface StartedInMinutesProps {
-  title: React.ReactNode;
   subtitle: React.ReactNode;
+  title: React.ReactNode;
 }
 
 export function StartedInMinutes({ title, subtitle }: StartedInMinutesProps) {
@@ -37,31 +37,31 @@ export function StartedInMinutes({ title, subtitle }: StartedInMinutesProps) {
       <SectionHeading>{title}</SectionHeading>
       <SectionSubtitle>{subtitle}</SectionSubtitle>
       <SectionContent className="sm:mx-10 md:mx-40 lg:mx-0">
-        <CardWrapper className="w-full grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <CardWrapper className="grid w-full grid-cols-1 gap-5 lg:grid-cols-3">
           <BlurFade inView>
             <DisplayCard
-              title="Connect your Google or Microsoft email"
+              centerContent={true}
+              className="h-full"
               description="Link your Gmail or Outlook in two clicks to get started."
               icon={
-                <Badge variant="dark-gray" size="sm" icon={<Connect />}>
+                <Badge icon={<Connect />} size="sm" variant="dark-gray">
                   STEP 1
                 </Badge>
               }
-              centerContent={true}
-              className="h-full"
+              title="Connect your Google or Microsoft email"
             >
               <div className="flex gap-4">
                 <CardWrapper padding="xs-2" rounded="full">
                   <Card variant="circle">
-                    <div className="p-2 translate-y-1">
-                      <Gmail width="64" height="64" />
+                    <div className="translate-y-1 p-2">
+                      <Gmail height="64" width="64" />
                     </div>
                   </Card>
                 </CardWrapper>
                 <CardWrapper padding="xs-2" rounded="full">
                   <Card variant="circle">
-                    <div className="p-2 translate-y-1">
-                      <Outlook width="64" height="64" />
+                    <div className="translate-y-1 p-2">
+                      <Outlook height="64" width="64" />
                     </div>
                   </Card>
                 </CardWrapper>
@@ -70,42 +70,42 @@ export function StartedInMinutes({ title, subtitle }: StartedInMinutesProps) {
           </BlurFade>
           <BlurFade delay={0.25} inView>
             <DisplayCard
-              title="Organizes your inbox exactly how you want it"
+              centerContent
+              className="h-full"
               description="Smart categories set up automatically. Use our categories or create your own."
               icon={
-                <Badge variant="dark-gray" size="sm" icon={<AutoOrganize />}>
+                <Badge icon={<AutoOrganize />} size="sm" variant="dark-gray">
                   STEP 2
                 </Badge>
               }
-              centerContent
-              className="h-full"
+              title="Organizes your inbox exactly how you want it"
             >
-              <div className="flex flex-col gap-2 scale-[110%]">
+              <div className="flex scale-[110%] flex-col gap-2">
                 <div className="flex gap-2">
-                  <Badge variant="purple" icon={<Newsletter />}>
+                  <Badge icon={<Newsletter />} variant="purple">
                     Newsletter
                   </Badge>
-                  <Badge variant="dark-blue" icon={<Envelope />}>
+                  <Badge icon={<Envelope />} variant="dark-blue">
                     To Reply
                   </Badge>
-                  <Badge variant="green" icon={<Megaphone />}>
+                  <Badge icon={<Megaphone />} variant="green">
                     Marketing
                   </Badge>
-                  <Badge variant="yellow" icon={<Calendar />}>
+                  <Badge icon={<Calendar />} variant="yellow">
                     Calendar
                   </Badge>
                 </div>
                 <div className="flex gap-2">
-                  <Badge variant="red" icon={<Bell />}>
+                  <Badge icon={<Bell />} variant="red">
                     Notification
                   </Badge>
-                  <Badge variant="light-blue" icon={<SnowFlake />}>
+                  <Badge icon={<SnowFlake />} variant="light-blue">
                     Cold Email
                   </Badge>
-                  <Badge variant="orange" icon={<Team />}>
+                  <Badge icon={<Team />} variant="orange">
                     Team
                   </Badge>
-                  <Badge variant="pink" icon={<Fire />}>
+                  <Badge icon={<Fire />} variant="pink">
                     Urgent
                   </Badge>
                 </div>
@@ -114,20 +114,20 @@ export function StartedInMinutes({ title, subtitle }: StartedInMinutesProps) {
           </BlurFade>
           <BlurFade delay={0.25 * 2} inView>
             <DisplayCard
-              title="Pre-drafted replies based on your email history and calendar"
               description="Every email you get needing a reply will have a pre-written draft."
               icon={
-                <Badge variant="dark-gray" size="sm" icon={<SparkleBlue />}>
+                <Badge icon={<SparkleBlue />} size="sm" variant="dark-gray">
                   STEP 3
                 </Badge>
               }
+              title="Pre-drafted replies based on your email history and calendar"
             >
               <div className="pt-6 pl-6">
                 <Image
-                  src="/images/new-landing/new-message.png"
                   alt="Pre-drafted replies"
-                  width={1000}
                   height={400}
+                  src="/images/new-landing/new-message.png"
+                  width={1000}
                 />
               </div>
             </DisplayCard>

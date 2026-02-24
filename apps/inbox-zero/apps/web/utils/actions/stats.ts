@@ -1,20 +1,20 @@
 "use server";
 
-import { actionClient } from "@/utils/actions/safe-action";
 import { z } from "zod";
-import { createEmailProvider } from "@/utils/email/provider";
-import { isDefined } from "@/utils/types";
+import { actionClient } from "@/utils/actions/safe-action";
+import { internalDateToDate } from "@/utils/date";
 import {
   extractDomainFromEmail,
   extractEmailAddress,
   extractNameFromEmail,
 } from "@/utils/email";
-import { findUnsubscribeLink } from "@/utils/parse/parseHtml.server";
-import { internalDateToDate } from "@/utils/date";
-import prisma from "@/utils/prisma";
+import { createEmailProvider } from "@/utils/email/provider";
+import type { EmailProvider } from "@/utils/email/types";
 import { SafeError } from "@/utils/error";
 import type { Logger } from "@/utils/logger";
-import type { EmailProvider } from "@/utils/email/types";
+import { findUnsubscribeLink } from "@/utils/parse/parseHtml.server";
+import prisma from "@/utils/prisma";
+import { isDefined } from "@/utils/types";
 
 const PAGE_SIZE = 20; // avoid setting too high because it will hit the rate limit
 // const PAUSE_AFTER_RATE_LIMIT = 10_000;
@@ -56,9 +56,9 @@ export const loadEmailStatsAction = actionClient
         },
         {
           loadBefore,
-        },
+        }
       );
-    },
+    }
   );
 
 async function loadEmails(
@@ -71,7 +71,7 @@ async function loadEmails(
     emailProvider: EmailProvider;
     logger: Logger;
   },
-  { loadBefore }: { loadBefore: boolean },
+  { loadBefore }: { loadBefore: boolean }
 ) {
   let pages = 0;
 
@@ -98,16 +98,22 @@ async function loadEmails(
 
     nextPageToken = res.data.nextPageToken ?? undefined;
 
-    if (!res.data.messages || res.data.messages.length < PAGE_SIZE) break;
+    if (!res.data.messages || res.data.messages.length < PAGE_SIZE) {
+      break;
+    }
 
     pages++;
 
-    if (!nextPageToken) break;
+    if (!nextPageToken) {
+      break;
+    }
   }
 
   logger.info("Completed emails after", { after, pages });
 
-  if (!loadBefore || !newestEmailSaved) return { pages };
+  if (!(loadBefore && newestEmailSaved)) {
+    return { pages };
+  }
 
   const oldestEmailSaved = await prisma.emailMessage.findFirst({
     where: { emailAccountId },
@@ -118,7 +124,9 @@ async function loadEmails(
   logger.info("Loading emails before", { before });
 
   // shouldn't happen, but prevents TS errors
-  if (!before) return { pages };
+  if (!before) {
+    return { pages };
+  }
 
   // Second pagination loop - load emails before the oldest saved email
   // Reset nextPageToken for this new pagination sequence
@@ -136,11 +144,15 @@ async function loadEmails(
 
     nextPageToken = res.data.nextPageToken ?? undefined;
 
-    if (!res.data.messages || res.data.messages.length < PAGE_SIZE) break;
+    if (!res.data.messages || res.data.messages.length < PAGE_SIZE) {
+      break;
+    }
 
     pages++;
 
-    if (!nextPageToken) break;
+    if (!nextPageToken) {
+      break;
+    }
   }
 
   logger.info("Completed emails before", { before, pages });
@@ -173,7 +185,7 @@ async function saveBatch({
   });
 
   const messages = await emailProvider.getMessagesBatch(
-    res.messages?.map((m) => m.id).filter(isDefined) || [],
+    res.messages?.map((m) => m.id).filter(isDefined) || []
   );
 
   const emailsToSave = messages

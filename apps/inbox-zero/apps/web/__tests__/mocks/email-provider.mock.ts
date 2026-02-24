@@ -6,7 +6,7 @@ import type { ParsedMessage } from "@/utils/types";
  * Creates a mock ParsedMessage for testing
  */
 export function getMockParsedMessage(
-  overrides: Partial<ParsedMessage> = {},
+  overrides: Partial<ParsedMessage> = {}
 ): ParsedMessage {
   const { headers: headerOverrides, ...rest } = overrides;
   return {
@@ -38,7 +38,7 @@ export function getMockParsedMessage(
  * All methods are vi.fn() mocks that can be customized via overrides.
  */
 export function createMockEmailProvider(
-  overrides: Partial<Record<keyof EmailProvider, unknown>> = {},
+  overrides: Partial<Record<keyof EmailProvider, unknown>> = {}
 ): EmailProvider {
   const defaultMessage = getMockParsedMessage();
 
@@ -189,8 +189,8 @@ export const ErrorProviders = {
           new Error("The specified object was not found in the store."),
           {
             code: "ErrorItemNotFound",
-          },
-        ),
+          }
+        )
       ),
     }),
 
@@ -204,7 +204,7 @@ export const ErrorProviders = {
           errors: [
             { reason: "rateLimitExceeded", message: "Rate Limit Exceeded" },
           ],
-        }),
+        })
       ),
     }),
 
@@ -216,7 +216,7 @@ export const ErrorProviders = {
       getMessage: vi.fn().mockRejectedValue(
         Object.assign(new Error("Quota exceeded"), {
           errors: [{ reason: "quotaExceeded", message: "Quota Exceeded" }],
-        }),
+        })
       ),
     }),
 
@@ -230,7 +230,7 @@ export const ErrorProviders = {
         Object.assign(new Error("Too many requests"), {
           statusCode: 429,
           code: "TooManyRequests",
-        }),
+        })
       ),
     }),
 

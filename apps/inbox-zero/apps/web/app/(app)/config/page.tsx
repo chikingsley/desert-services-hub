@@ -1,14 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
+import { PageHeader } from "@/components/PageHeader";
+import { PageWrapper } from "@/components/PageWrapper";
 import { env } from "@/env";
-import { auth } from "@/utils/auth";
 import { isAdmin } from "@/utils/admin";
+import { auth } from "@/utils/auth";
 import {
   hasGoogleOauthConfig,
   hasMicrosoftOauthConfig,
 } from "@/utils/oauth/provider-config";
-import { PageWrapper } from "@/components/PageWrapper";
-import { PageHeader } from "@/components/PageHeader";
 
 export default async function AdminConfigPage() {
   const session = await auth();
@@ -52,10 +52,10 @@ export default async function AdminConfigPage() {
   };
 
   return (
-    <PageWrapper className="max-w-2xl mx-auto">
+    <PageWrapper className="mx-auto max-w-2xl">
       <PageHeader title="App Configuration" />
 
-      <div className="space-y-4 mt-4">
+      <div className="mt-4 space-y-4">
         <Section title="Application">
           <Row label="Version" value={info.version} />
           <Row label="Environment" value={info.environment} />
@@ -167,7 +167,7 @@ function Section({
 }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white">
-      <h2 className="border-b border-slate-200 px-4 py-3 font-semibold text-slate-900">
+      <h2 className="border-slate-200 border-b px-4 py-3 font-semibold text-slate-900">
         {title}
       </h2>
       <div className="divide-y divide-slate-100">{children}</div>
@@ -182,7 +182,7 @@ function Row({ label, value }: { label: string; value: string | boolean }) {
   return (
     <div className="flex justify-between px-4 py-2">
       <span className="text-slate-600">{label}</span>
-      <span className="font-mono text-sm text-slate-900">{displayValue}</span>
+      <span className="font-mono text-slate-900 text-sm">{displayValue}</span>
     </div>
   );
 }

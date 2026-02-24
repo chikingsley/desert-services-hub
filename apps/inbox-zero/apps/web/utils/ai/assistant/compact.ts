@@ -1,8 +1,8 @@
 import type { ModelMessage } from "ai";
 import { z } from "zod";
+import { createGenerateObject, createGenerateText } from "@/utils/llms";
 import { Provider } from "@/utils/llms/config";
 import { getModel } from "@/utils/llms/model";
-import { createGenerateText, createGenerateObject } from "@/utils/llms";
 import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { Logger } from "@/utils/logger";
 
@@ -46,7 +46,7 @@ export function estimateTokens(messages: ModelMessage[]): number {
 
 export function shouldCompact(
   messages: ModelMessage[],
-  provider: string,
+  provider: string
 ): boolean {
   const threshold =
     COMPACTION_THRESHOLDS[provider] ?? DEFAULT_COMPACTION_THRESHOLD;
@@ -87,7 +87,7 @@ export async function compactMessages({
 
   const messagesToCompact = conversationMessages.slice(
     0,
-    -RECENT_MESSAGES_TO_KEEP,
+    -RECENT_MESSAGES_TO_KEEP
   );
   const recentMessages = conversationMessages.slice(-RECENT_MESSAGES_TO_KEEP);
 
@@ -139,7 +139,7 @@ const memoriesSchema = z.object({
   memories: z.array(
     z.object({
       content: z.string(),
-    }),
+    })
   ),
 });
 
@@ -151,7 +151,9 @@ export async function extractMemories({
   user: EmailAccountWithAI;
 }): Promise<z.infer<typeof memoriesSchema>["memories"]> {
   const conversationMessages = messages.filter((m) => m.role !== "system");
-  if (conversationMessages.length === 0) return [];
+  if (conversationMessages.length === 0) {
+    return [];
+  }
 
   const serialized = serializeMessages(conversationMessages);
 
@@ -196,9 +198,13 @@ function serializeMessages(messages: ModelMessage[]): string {
 }
 
 function serializeContent(content: ModelMessage["content"]): string {
-  if (typeof content === "string") return content;
+  if (typeof content === "string") {
+    return content;
+  }
 
-  if (!Array.isArray(content)) return String(content);
+  if (!Array.isArray(content)) {
+    return String(content);
+  }
 
   const parts: string[] = [];
 

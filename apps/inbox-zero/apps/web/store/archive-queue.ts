@@ -1,14 +1,14 @@
+import { useAtomValue } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import pRetry from "p-retry";
 import { jotaiStore } from "@/store";
-import { emailActionQueue } from "@/utils/queue/email-action-queue";
 import {
   archiveThreadAction,
-  trashThreadAction,
   markReadThreadAction,
+  trashThreadAction,
 } from "@/utils/actions/mail";
+import { emailActionQueue } from "@/utils/queue/email-action-queue";
 import { exponentialBackoff, sleep } from "@/utils/sleep";
-import { useAtomValue } from "jotai";
 
 type ActionType = "archive" | "delete" | "markRead";
 
@@ -25,7 +25,9 @@ type QueueState = {
 
 // some users were somehow getting null for activeThreads, this should fix it
 const createStorage = () => {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
   const storage = createJSONStorage<QueueState>(() => localStorage);
   return {
     ...storage,
@@ -44,7 +46,7 @@ const queueAtom = atomWithStorage(
   "gmailActionQueue",
   { activeThreads: {}, totalThreads: 0 },
   createStorage(),
-  { getOnInit: true },
+  { getOnInit: true }
 );
 
 export function useQueueState() {
@@ -78,7 +80,7 @@ const addThreadsToQueue = ({
     threadIds.map((threadId) => [
       `${actionType}-${threadId}`,
       { threadId, actionType, labelId },
-    ]),
+    ])
   );
 
   jotaiStore.set(queueAtom, (prev) => ({
@@ -160,8 +162,8 @@ function removeThreadFromQueue(threadId: string, actionType: ActionType) {
     const remainingThreads = Object.fromEntries(
       Object.entries(prev.activeThreads).filter(
         ([_key, value]) =>
-          !(value.threadId === threadId && value.actionType === actionType),
-      ),
+          !(value.threadId === threadId && value.actionType === actionType)
+      )
     );
 
     return {
@@ -199,7 +201,7 @@ export function processQueue({
               async (attemptCount) => {
                 // biome-ignore lint/suspicious/noConsole: frontend
                 console.log(
-                  `Queue: ${actionType}. Processing ${threadId}${attemptCount > 1 ? ` (attempt ${attemptCount})` : ""}`,
+                  `Queue: ${actionType}. Processing ${threadId}${attemptCount > 1 ? ` (attempt ${attemptCount})` : ""}`
                 );
 
                 const result = await actionMap[actionType]({
@@ -214,7 +216,7 @@ export function processQueue({
                 }
                 onSuccess?.(threadId);
               },
-              { retries: 3 },
+              { retries: 3 }
             );
           } catch {
             // all retries failed
@@ -223,8 +225,8 @@ export function processQueue({
 
           // remove completed thread from activeThreads
           removeThreadFromQueue(threadId, actionType);
-        },
-    ),
+        }
+    )
   );
 }
 

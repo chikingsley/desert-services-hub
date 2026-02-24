@@ -23,7 +23,7 @@ export async function markMessageAsProcessing({
     {
       ex: 60 * 5, // 5 minutes
       nx: true, // Only set if key doesn't exist
-    },
+    }
   );
 
   // Redis returns "OK" if the key was set, and null if it was already set

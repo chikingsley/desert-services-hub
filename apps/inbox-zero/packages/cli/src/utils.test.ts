@@ -1,13 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  generateSecret,
+  type EnvConfig,
   generateEnvFile,
+  generateSecret,
   isSensitiveKey,
   parseEnvFile,
   parsePortConflict,
-  updateEnvValue,
   redactValue,
-  type EnvConfig,
+  updateEnvValue,
 } from "./utils";
 
 describe("generateSecret", () => {
@@ -71,7 +71,7 @@ ANTHROPIC_API_KEY=
     });
 
     expect(result).toContain(
-      'DATABASE_URL="postgresql://user:pass@db:5432/test"',
+      'DATABASE_URL="postgresql://user:pass@db:5432/test"'
     );
     expect(result).toContain("AUTH_SECRET=secret123");
     expect(result).toContain("GOOGLE_CLIENT_ID=google-id");
@@ -231,7 +231,7 @@ AUTH_SECRET=
 
     // Should preserve section headers
     expect(result).toContain(
-      "# =============================================================================",
+      "# ============================================================================="
     );
     expect(result).toContain("# Database Configuration");
     expect(result).toContain("# Auth");
@@ -515,7 +515,7 @@ describe("redactValue", () => {
 
   it("should show placeholder values as not configured", () => {
     expect(redactValue("GOOGLE_CLIENT_ID", "your-google-client-id")).toBe(
-      "(not configured)",
+      "(not configured)"
     );
     expect(redactValue("GOOGLE_CLIENT_ID", "skipped")).toBe("(not configured)");
   });
@@ -523,14 +523,14 @@ describe("redactValue", () => {
   it("should show non-sensitive values in full", () => {
     expect(redactValue("DEFAULT_LLM_PROVIDER", "anthropic")).toBe("anthropic");
     expect(redactValue("NEXT_PUBLIC_BASE_URL", "http://localhost:3000")).toBe(
-      "http://localhost:3000",
+      "http://localhost:3000"
     );
   });
 
   it("should redact passwords in database URLs", () => {
     const result = redactValue(
       "DATABASE_URL",
-      "postgresql://postgres:secretpass@db:5432/inboxzero",
+      "postgresql://postgres:secretpass@db:5432/inboxzero"
     );
     expect(result).toContain("****@");
     expect(result).not.toContain("secretpass");
@@ -566,19 +566,19 @@ describe("parsePortConflict", () => {
       "driver failed programming external connectivity on endpoint " +
       "inbox-zero-services-redis-1 (abc123): Bind for 0.0.0.0:6380 failed: port is already allocated";
     expect(parsePortConflict(stderr)).toBe(
-      "Port 6380 is already in use by another process.",
+      "Port 6380 is already in use by another process."
     );
   });
 
   it("should detect 'address already in use' errors", () => {
     expect(
-      parsePortConflict("listen tcp 0.0.0.0:3000: address already in use"),
+      parsePortConflict("listen tcp 0.0.0.0:3000: address already in use")
     ).toBe("Port 3000 is already in use by another process.");
     expect(
-      parsePortConflict("listen tcp 127.0.0.1:8080: address already in use"),
+      parsePortConflict("listen tcp 127.0.0.1:8080: address already in use")
     ).toBe("Port 8080 is already in use by another process.");
     expect(parsePortConflict("listen tcp :5432: address already in use")).toBe(
-      "Port 5432 is already in use by another process.",
+      "Port 5432 is already in use by another process."
     );
   });
 

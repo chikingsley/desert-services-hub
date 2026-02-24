@@ -1,10 +1,10 @@
 "use client";
 
-import { MailIcon, LightbulbIcon, UserSearchIcon } from "lucide-react";
+import { LightbulbIcon, MailIcon, UserSearchIcon } from "lucide-react";
+import { ConnectCalendar } from "@/app/(app)/[emailAccountId]/calendars/ConnectCalendar";
 import { SetupCard } from "@/components/SetupCard";
 import { MessageText } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
-import { ConnectCalendar } from "@/app/(app)/[emailAccountId]/calendars/ConnectCalendar";
 
 const features = [
   {
@@ -37,18 +37,18 @@ export function BriefsOnboarding({
 }) {
   return (
     <SetupCard
-      imageSrc="/images/illustrations/communication.svg"
-      imageAlt="Meeting Briefs"
-      title="Meeting Briefs"
       description="Receive briefings via email or Slack before meetings with external guests."
       features={features}
+      imageAlt="Meeting Briefs"
+      imageSrc="/images/illustrations/communication.svg"
+      title="Meeting Briefs"
     >
       {hasCalendarConnected ? (
         <>
           <MessageText>
             You're all set! Enable meeting briefs to get started:
           </MessageText>
-          <Button onClick={onEnable} loading={isEnabling}>
+          <Button loading={isEnabling} onClick={onEnable}>
             Enable Meeting Briefs
           </Button>
         </>

@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
 import { subDays } from "date-fns/subDays";
-import prisma from "@/utils/prisma";
-import { withError } from "@/utils/middleware";
+import { NextResponse } from "next/server";
 import { hasCronSecret, hasPostCronSecret } from "@/utils/cron";
 import { captureException } from "@/utils/error";
 import type { Logger } from "@/utils/logger";
-import { publishToQstashQueue } from "@/utils/upstash";
+import { withError } from "@/utils/middleware";
 import { getPremiumUserFilter } from "@/utils/premium";
+import prisma from "@/utils/prisma";
+import { publishToQstashQueue } from "@/utils/upstash";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -25,7 +25,7 @@ export const GET = withError("cron/resend/digest/all", async (request) => {
 export const POST = withError("cron/resend/digest/all", async (request) => {
   if (!(await hasPostCronSecret(request))) {
     captureException(
-      new Error("Unauthorized cron request: api/resend/digest/all"),
+      new Error("Unauthorized cron request: api/resend/digest/all")
     );
     return new Response("Unauthorized", { status: 401 });
   }

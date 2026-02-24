@@ -1,6 +1,6 @@
 import { RuleForm } from "@/app/(app)/[emailAccountId]/assistant/RuleForm";
-import { getEmptyCondition } from "@/utils/condition";
 import { ActionType } from "@/generated/prisma/enums";
+import { getEmptyCondition } from "@/utils/condition";
 import type { CoreConditionType } from "@/utils/config";
 
 export default async function CreateRulePage(props: {
@@ -14,6 +14,7 @@ export default async function CreateRulePage(props: {
   return (
     <div className="content-container">
       <RuleForm
+        alwaysEditMode
         rule={{
           name: searchParams.label ? `Label ${searchParams.label}` : "",
           actions: searchParams.label
@@ -29,7 +30,6 @@ export default async function CreateRulePage(props: {
             : [],
           runOnThreads: true,
         }}
-        alwaysEditMode
       />
     </div>
   );

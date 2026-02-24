@@ -1,11 +1,11 @@
 import { TZDate } from "@date-fns/tz";
-import { startOfDay, endOfDay, format } from "date-fns";
+import { endOfDay, format, startOfDay } from "date-fns";
+import { isGoogleProvider } from "@/utils/email/provider-types";
 import type { Logger } from "@/utils/logger";
 import prisma from "@/utils/prisma";
 import type { BusyPeriod } from "./availability-types";
 import { createGoogleAvailabilityProvider } from "./providers/google-availability";
 import { createMicrosoftAvailabilityProvider } from "./providers/microsoft-availability";
-import { isGoogleProvider } from "@/utils/email/provider-types";
 
 /**
  * Fetch calendar availability across all connected calendars (Google and Microsoft)
@@ -63,10 +63,10 @@ export async function getUnifiedCalendarAvailability({
 
   // Group calendars by provider
   const googleConnections = calendarConnections.filter((conn) =>
-    isGoogleProvider(conn.provider),
+    isGoogleProvider(conn.provider)
   );
   const microsoftConnections = calendarConnections.filter(
-    (conn) => conn.provider === "microsoft",
+    (conn) => conn.provider === "microsoft"
   );
 
   const promises: Promise<BusyPeriod[]>[] = [];
@@ -74,7 +74,9 @@ export async function getUnifiedCalendarAvailability({
   // Fetch Google calendar availability
   for (const connection of googleConnections) {
     const calendarIds = connection.calendars.map((cal) => cal.calendarId);
-    if (!calendarIds.length) continue;
+    if (!calendarIds.length) {
+      continue;
+    }
 
     const googleAvailabilityProvider = createGoogleAvailabilityProvider(logger);
 
@@ -95,7 +97,7 @@ export async function getUnifiedCalendarAvailability({
             connectionId: connection.id,
           });
           return []; // Return empty array on error
-        }),
+        })
     );
   }
 
@@ -130,7 +132,7 @@ export async function getUnifiedCalendarAvailability({
             connectionId: connection.id,
           });
           return []; // Return empty array on error
-        }),
+        })
     );
   }
 
@@ -143,7 +145,7 @@ export async function getUnifiedCalendarAvailability({
   // Convert all busy periods from UTC to user timezone
   const convertedBusyPeriods = convertBusyPeriodsToTimezone(
     allBusyPeriods,
-    timezone,
+    timezone
   );
 
   logger.trace("Unified calendar availability results", {
@@ -160,7 +162,7 @@ export async function getUnifiedCalendarAvailability({
  */
 function convertBusyPeriodsToTimezone(
   busyPeriods: BusyPeriod[],
-  timezone: string,
+  timezone: string
 ): BusyPeriod[] {
   return busyPeriods.map((period) => {
     const startInTZ = new TZDate(period.start, timezone);
@@ -180,7 +182,7 @@ function convertBusyPeriodsToTimezone(
  */
 function parseDateInTimezone(
   dateInput: string | Date,
-  timezone: string,
+  timezone: string
 ): TZDate {
   if (dateInput instanceof Date) {
     // For backwards compatibility: if a Date object is passed, use its UTC date components

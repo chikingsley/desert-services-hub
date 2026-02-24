@@ -1,9 +1,9 @@
 import { z } from "zod";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
 import type { Category } from "@/generated/prisma/client";
 import { formatCategoriesForPrompt } from "@/utils/ai/categorize-sender/format-categories";
-import { getModel } from "@/utils/llms/model";
 import { createGenerateObject } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
 
 export async function aiCategorizeSender({
   emailAccount,
@@ -28,7 +28,7 @@ ${previousEmails
   .slice(0, 3)
   .map(
     (email) =>
-      `<email><subject>${email.subject}</subject><snippet>${email.snippet}</snippet></email>`,
+      `<email><subject>${email.subject}</subject><snippet>${email.snippet}</snippet></email>`
   )
   .join("\n")}
 ${previousEmails.length === 0 ? "No previous emails found" : ""}
@@ -64,8 +64,9 @@ ${formatCategoriesForPrompt(categories)}
     }),
   });
 
-  if (!categories.find((c) => c.name === aiResponse.object.category))
+  if (!categories.find((c) => c.name === aiResponse.object.category)) {
     return null;
+  }
 
   return aiResponse.object;
 }

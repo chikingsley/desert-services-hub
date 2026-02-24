@@ -1,16 +1,16 @@
-import { useCallback, useMemo, useState } from "react";
 import {
   ArchiveIcon,
-  Trash2Icon,
   ExternalLinkIcon,
   SparklesIcon,
+  Trash2Icon,
 } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { ButtonGroup } from "@/components/ButtonGroup";
 import { LoadingMiniSpinner } from "@/components/Loading";
-import { getGmailUrl } from "@/utils/url";
-import { onTrashThread } from "@/utils/actions/client";
 import { useAccount } from "@/providers/EmailAccountProvider";
+import { onTrashThread } from "@/utils/actions/client";
 import { isGoogleProvider } from "@/utils/email/provider-types";
+import { getGmailUrl } from "@/utils/url";
 
 export function ActionButtons({
   threadId,
@@ -53,7 +53,7 @@ export function ActionButtons({
             {
               tooltip: "Open in Gmail",
               onClick: openInGmail,
-              icon: <ExternalLinkIcon className="size-4" aria-hidden="true" />,
+              icon: <ExternalLinkIcon aria-hidden="true" className="size-4" />,
             },
           ]
         : []),
@@ -63,13 +63,13 @@ export function ActionButtons({
         icon: isPlanning ? (
           <LoadingMiniSpinner />
         ) : (
-          <SparklesIcon className="size-4" aria-hidden="true" />
+          <SparklesIcon aria-hidden="true" className="size-4" />
         ),
       },
       {
         tooltip: "Archive",
         onClick: onArchive,
-        icon: <ArchiveIcon className="size-4" aria-hidden="true" />,
+        icon: <ArchiveIcon aria-hidden="true" className="size-4" />,
       },
       // may remove later
       {
@@ -78,7 +78,7 @@ export function ActionButtons({
         icon: isTrashing ? (
           <LoadingMiniSpinner />
         ) : (
-          <Trash2Icon className="size-4" aria-hidden="true" />
+          <Trash2Icon aria-hidden="true" className="size-4" />
         ),
       },
     ],
@@ -90,7 +90,7 @@ export function ActionButtons({
       isPlanning,
       openInGmail,
       provider,
-    ],
+    ]
   );
 
   return <ButtonGroup buttons={buttons} shadow={shadow} />;

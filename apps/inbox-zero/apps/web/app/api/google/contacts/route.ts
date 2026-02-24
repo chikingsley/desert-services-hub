@@ -1,10 +1,10 @@
 import type { people_v1 } from "@googleapis/people";
-import { z } from "zod";
 import { NextResponse } from "next/server";
-import { withEmailAccount } from "@/utils/middleware";
+import { z } from "zod";
+import { env } from "@/env";
 import { getContactsClient } from "@/utils/gmail/client";
 import { searchContacts } from "@/utils/gmail/contact";
-import { env } from "@/env";
+import { withEmailAccount } from "@/utils/middleware";
 import prisma from "@/utils/prisma";
 
 const contactsQuery = z.object({ query: z.string() });
@@ -17,8 +17,9 @@ async function getContacts(client: people_v1.People, query: string) {
 }
 
 export const GET = withEmailAccount("google/contacts", async (request) => {
-  if (!env.NEXT_PUBLIC_CONTACTS_ENABLED)
+  if (!env.NEXT_PUBLIC_CONTACTS_ENABLED) {
     return NextResponse.json({ error: "Contacts API not enabled" });
+  }
 
   const emailAccountId = request.auth.emailAccountId;
 

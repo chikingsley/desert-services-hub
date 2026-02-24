@@ -1,15 +1,15 @@
 import { format } from "date-fns/format";
 import sumBy from "lodash/sumBy";
-import prisma from "@/utils/prisma";
-import { Prisma } from "@/generated/prisma/client";
 import type { StatsByPeriodQuery } from "@/app/api/user/stats/by-period/validation";
+import { Prisma } from "@/generated/prisma/client";
+import prisma from "@/utils/prisma";
 
 export type StatsByPeriodResponse = Awaited<
   ReturnType<typeof getStatsByPeriod>
 >;
 
 async function getEmailStatsByPeriod(
-  options: StatsByPeriodQuery & { emailAccountId: string },
+  options: StatsByPeriodQuery & { emailAccountId: string }
 ) {
   const { period, fromDate, toDate, emailAccountId } = options;
 
@@ -60,7 +60,7 @@ async function getEmailStatsByPeriod(
 export async function getStatsByPeriod(
   options: StatsByPeriodQuery & {
     emailAccountId: string;
-  },
+  }
 ) {
   // Get all stats in a single query
   const stats = await getEmailStatsByPeriod(options);

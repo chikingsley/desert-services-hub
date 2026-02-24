@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { checkSenderRuleHistory } from "@/utils/rule/check-sender-rule-history";
-import prisma from "@/utils/__mocks__/prisma";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getMockExecutedRule, getMockMessage } from "@/__tests__/helpers";
 import { createMockEmailProvider } from "@/utils/__mocks__/email-provider";
-import { getMockMessage, getMockExecutedRule } from "@/__tests__/helpers";
+import prisma from "@/utils/__mocks__/prisma";
 import { createScopedLogger } from "@/utils/logger";
+import { checkSenderRuleHistory } from "@/utils/rule/check-sender-rule-history";
 
 const logger = createScopedLogger("test");
 
@@ -238,7 +238,7 @@ describe("checkSenderRuleHistory", () => {
   it("should handle getMessagesFromSender errors gracefully", async () => {
     // Mock getMessagesFromSender to throw an error
     vi.mocked(mockProvider.getMessagesFromSender).mockRejectedValue(
-      new Error("Failed to fetch messages from provider"),
+      new Error("Failed to fetch messages from provider")
     );
 
     await expect(
@@ -247,7 +247,7 @@ describe("checkSenderRuleHistory", () => {
         from: "test@example.com",
         provider: mockProvider,
         logger,
-      }),
+      })
     ).rejects.toThrow("Failed to fetch messages from provider");
   });
 
@@ -261,7 +261,7 @@ describe("checkSenderRuleHistory", () => {
 
     // Mock database error
     prisma.executedRule.findMany.mockRejectedValue(
-      new Error("Database connection failed"),
+      new Error("Database connection failed")
     );
 
     await expect(
@@ -270,7 +270,7 @@ describe("checkSenderRuleHistory", () => {
         from: "test@example.com",
         provider: mockProvider,
         logger,
-      }),
+      })
     ).rejects.toThrow("Database connection failed");
   });
 

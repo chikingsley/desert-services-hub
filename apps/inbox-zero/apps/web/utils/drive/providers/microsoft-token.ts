@@ -1,26 +1,26 @@
-import type { DriveConnection } from "@/generated/prisma/client";
 import { env } from "@/env";
-import type { Logger } from "@/utils/logger";
-import { SafeError } from "@/utils/error";
-import { MICROSOFT_DRIVE_SCOPES } from "@/utils/drive/scopes";
+import type { DriveConnection } from "@/generated/prisma/client";
 import {
-  saveDriveTokens,
   markDriveConnectionAsDisconnected,
+  saveDriveTokens,
 } from "@/utils/drive/providers/token-helpers";
+import { MICROSOFT_DRIVE_SCOPES } from "@/utils/drive/scopes";
+import { SafeError } from "@/utils/error";
+import type { Logger } from "@/utils/logger";
 
 export async function refreshMicrosoftDriveToken(
   connection: Pick<DriveConnection, "id" | "refreshToken">,
-  logger: Logger,
+  logger: Logger
 ): Promise<string> {
   const { id: connectionId, refreshToken } = connection;
 
   if (!refreshToken) {
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 
-  if (!env.MICROSOFT_CLIENT_ID || !env.MICROSOFT_CLIENT_SECRET) {
+  if (!(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET)) {
     throw new Error("Microsoft login not enabled - missing credentials");
   }
 
@@ -38,7 +38,7 @@ export async function refreshMicrosoftDriveToken(
         grant_type: "refresh_token",
         scope: MICROSOFT_DRIVE_SCOPES.join(" "),
       }),
-    },
+    }
   );
 
   const tokens = await response.json();
@@ -51,7 +51,7 @@ export async function refreshMicrosoftDriveToken(
     });
     await markDriveConnectionAsDisconnected(connectionId);
     throw new SafeError(
-      "Unable to access your drive. Please reconnect your drive and try again.",
+      "Unable to access your drive. Please reconnect your drive and try again."
     );
   }
 

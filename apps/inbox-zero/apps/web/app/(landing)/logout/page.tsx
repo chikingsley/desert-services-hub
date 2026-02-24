@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { logOut } from "@/utils/user";
 import { Loading } from "@/components/Loading";
 import { BasicLayout } from "@/components/layouts/BasicLayout";
+import { logOut } from "@/utils/user";
 
 export default function LogoutPage() {
   useEffect(() => {

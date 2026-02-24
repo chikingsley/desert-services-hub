@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { toastError } from "@/components/Toast";
 import Image from "next/image";
+import { useState } from "react";
+import { toastError } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import { getAccountLinkingUrl } from "@/utils/account-linking";
 import { isGoogleProvider } from "@/utils/email/provider-types";
 
@@ -31,37 +31,37 @@ export function AddAccount() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-3 min-h-[90px]">
+    <div className="flex min-h-[90px] flex-col items-center justify-center gap-3">
       <div className="flex items-center gap-2">
         <Button
-          variant="outline"
           className="w-full"
-          onClick={() => handleAddAccount("google")}
-          loading={isLoadingGoogle}
           disabled={isLoadingGoogle || isLoadingMicrosoft}
+          loading={isLoadingGoogle}
+          onClick={() => handleAddAccount("google")}
+          variant="outline"
         >
           <Image
-            src="/images/google.svg"
             alt=""
-            width={24}
             height={24}
+            src="/images/google.svg"
             unoptimized
+            width={24}
           />
           <span className="ml-2">Add Google</span>
         </Button>
         <Button
-          variant="outline"
           className="w-full"
-          onClick={() => handleAddAccount("microsoft")}
-          loading={isLoadingMicrosoft}
           disabled={isLoadingGoogle || isLoadingMicrosoft}
+          loading={isLoadingMicrosoft}
+          onClick={() => handleAddAccount("microsoft")}
+          variant="outline"
         >
           <Image
-            src="/images/microsoft.svg"
             alt=""
-            width={24}
             height={24}
+            src="/images/microsoft.svg"
             unoptimized
+            width={24}
           />
           <span className="ml-2">Add Microsoft</span>
         </Button>

@@ -33,15 +33,15 @@ export const ClassificationResultSchema = z.object({
 export type ClassificationResult = z.infer<typeof ClassificationResultSchema>;
 
 export interface EmailInput {
-  subject: string;
-  from: string;
   body: string;
+  from: string;
+  subject: string;
 }
 
 export interface ClassifierConfig {
   endpoint: string;
-  model?: string;
   maxTokens?: number;
+  model?: string;
   temperature?: number;
 }
 

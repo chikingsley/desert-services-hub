@@ -1,12 +1,12 @@
-import { sso } from "@better-auth/sso";
 import { expo } from "@better-auth/expo";
-import { oAuthProxy } from "better-auth/plugins";
+import { sso } from "@better-auth/sso";
 import { createContact as createLoopsContact } from "@inboxzero/loops";
 import { createContact as createResendContact } from "@inboxzero/resend";
 import type { Account, AuthContext } from "better-auth";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { oAuthProxy } from "better-auth/plugins";
 import { headers } from "next/headers";
 import { env } from "@/env";
 import { trackDubSignUp } from "@/utils/dub";
@@ -16,6 +16,7 @@ import {
 } from "@/utils/email/provider-types";
 import { encryptToken } from "@/utils/encryption";
 import { captureException } from "@/utils/error";
+import { clearSpecificErrorMessages, ErrorType } from "@/utils/error-messages";
 import { getContactsClient as getGoogleContactsClient } from "@/utils/gmail/client";
 import { SCOPES as GMAIL_SCOPES } from "@/utils/gmail/scopes";
 import { createScopedLogger } from "@/utils/logger";
@@ -29,7 +30,6 @@ import {
   claimPendingPremiumInvite,
   updateAccountSeats,
 } from "@/utils/premium/server";
-import { clearSpecificErrorMessages, ErrorType } from "@/utils/error-messages";
 import prisma from "@/utils/prisma";
 
 const logger = createScopedLogger("auth");
@@ -221,7 +221,7 @@ async function postSignUp({
     await createLoopsContact(
       email,
       name?.split(" ")?.[0],
-      account?.provider,
+      account?.provider
     ).catch((error) => {
       const alreadyExists =
         error instanceof Error && error.message.includes("409");
@@ -250,7 +250,7 @@ async function postSignUp({
         error,
       });
       captureException(error, { userEmail: email });
-    },
+    }
   );
 
   await Promise.all([
@@ -368,13 +368,13 @@ async function handleLinkAccount(account: Account) {
   try {
     if (!account.accessToken) {
       logger.error(
-        "[linkAccount] No access_token found in data, cannot fetch profile.",
+        "[linkAccount] No access_token found in data, cannot fetch profile."
       );
       throw new Error("Missing access token during account linking.");
     }
     const profileData = await getProfileData(
       account.providerId,
-      account.accessToken,
+      account.accessToken
     );
 
     if (!profileData?.email) {
@@ -387,7 +387,7 @@ async function handleLinkAccount(account: Account) {
 
     if (!primaryEmail) {
       logger.error(
-        "[linkAccount] Primary email could not be determined from profile.",
+        "[linkAccount] Primary email could not be determined from profile."
       );
       throw new Error("Primary email not found for linked account.");
     }
@@ -521,10 +521,12 @@ export async function saveTokens({
     // Encrypt tokens in data directly
     // Usually we do this in prisma-extensions.ts but we need to do it here because we're updating the account via the emailAccount
     // We could also edit prisma-extensions.ts to handle this case but this is easier for now
-    if (data.access_token)
+    if (data.access_token) {
       data.access_token = encryptToken(data.access_token) || undefined;
-    if (data.refresh_token)
+    }
+    if (data.refresh_token) {
       data.refresh_token = encryptToken(data.refresh_token) || "";
+    }
 
     const emailAccount = await prisma.emailAccount.update({
       where: { id: emailAccountId },
@@ -577,7 +579,9 @@ export async function auth(): Promise<AuthSession> {
     headers: await headers(),
   });
 
-  if (session?.user || !isBypassAuthEnabled()) return session;
+  if (session?.user || !isBypassAuthEnabled()) {
+    return session;
+  }
 
   return getBypassAuthSession();
 }
@@ -630,10 +634,14 @@ async function getBypassAuthSession(): Promise<AuthSession> {
 }
 
 async function ensureBypassAppOnlyMailboxes(userId: string) {
-  if (process.env.INBOXZERO_OUTLOOK_APP_ONLY !== "true") return;
+  if (process.env.INBOXZERO_OUTLOOK_APP_ONLY !== "true") {
+    return;
+  }
 
   const mailboxes = getConfiguredAppOnlyMailboxes();
-  if (!mailboxes.length) return;
+  if (!mailboxes.length) {
+    return;
+  }
 
   for (const mailboxEmail of mailboxes) {
     await ensureBypassAppOnlyMailbox({
@@ -732,7 +740,9 @@ function getConfiguredAppOnlyMailboxes() {
   }
 
   const single = process.env.INBOXZERO_APP_MAILBOX?.trim().toLowerCase();
-  if (!single) return [];
+  if (!single) {
+    return [];
+  }
 
   return [single];
 }

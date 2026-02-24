@@ -1,18 +1,18 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { format } from "date-fns";
-import { Send, CheckIcon, CalendarIcon, Building2 } from "lucide-react";
+import { Building2, CalendarIcon, CheckIcon, Send } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
+import { useCallback, useState } from "react";
+import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
+import { LoadingContent } from "@/components/LoadingContent";
+import { toastError, toastSuccess } from "@/components/Toast";
 import { PageHeading, TypographyP } from "@/components/Typography";
 import { Button } from "@/components/ui/button";
-import { LoadingContent } from "@/components/LoadingContent";
-import { toastSuccess, toastError } from "@/components/Toast";
-import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
-import { useAccount } from "@/providers/EmailAccountProvider";
 import { useCalendarUpcomingEvents } from "@/hooks/useCalendarUpcomingEvents";
-import { sendBriefAction } from "@/utils/actions/meeting-briefs";
+import { useAccount } from "@/providers/EmailAccountProvider";
 import { cn } from "@/utils";
+import { sendBriefAction } from "@/utils/actions/meeting-briefs";
 import { extractDomainFromEmail } from "@/utils/email";
 import { sleep } from "@/utils/sleep";
 
@@ -38,12 +38,14 @@ export function StepSendTestBrief({ onNext }: { onNext: () => void }) {
           description: err.serverError || "Failed to send brief",
         });
       },
-    },
+    }
   );
 
   const handleSendTestBrief = useCallback(() => {
     const event = data?.events.find((e) => e.id === selectedEventId);
-    if (!event) return;
+    if (!event) {
+      return;
+    }
 
     execute({
       event: {
@@ -70,44 +72,31 @@ export function StepSendTestBrief({ onNext }: { onNext: () => void }) {
 
       <div className="text-center">
         <PageHeading className="mt-4">Send a Test Brief</PageHeading>
-        <TypographyP className="mt-2 max-w-lg mx-auto">
+        <TypographyP className="mx-auto mt-2 max-w-lg">
           Pick an upcoming meeting and we'll send you a sample brief so you can
           see exactly what you'll receive.
         </TypographyP>
       </div>
 
       <div className="mt-8">
-        <LoadingContent loading={isLoading} error={error}>
-          {!data?.events.length ? (
-            <div className="flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center">
-              <CalendarIcon className="h-8 w-8 text-muted-foreground" />
-              <div>
-                <p className="font-medium">No upcoming meetings found</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  We couldn't find any upcoming meetings with external guests.
-                </p>
-              </div>
-              <Button onClick={onNext} variant="outline">
-                Skip for now
-              </Button>
-            </div>
-          ) : (
+        <LoadingContent error={error} loading={isLoading}>
+          {data?.events.length ? (
             <div className="flex flex-col gap-2">
               {data.events.map((event) => {
                 const isSelected = selectedEventId === event.id;
                 const companyDomain = extractDomainFromEmail(
-                  event.attendees[0]?.email || "",
+                  event.attendees[0]?.email || ""
                 );
 
                 return (
                   <button
-                    key={event.id}
-                    type="button"
-                    onClick={() => setSelectedEventId(event.id)}
                     className={cn(
-                      "flex items-center justify-between gap-4 rounded-xl border bg-card p-4 text-left transition-all hover:border-border/80 hover:translate-x-1",
-                      isSelected && "border-blue-600 ring-2 ring-blue-100",
+                      "flex items-center justify-between gap-4 rounded-xl border bg-card p-4 text-left transition-all hover:translate-x-1 hover:border-border/80",
+                      isSelected && "border-blue-600 ring-2 ring-blue-100"
                     )}
+                    key={event.id}
+                    onClick={() => setSelectedEventId(event.id)}
+                    type="button"
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <div
@@ -115,7 +104,7 @@ export function StepSendTestBrief({ onNext }: { onNext: () => void }) {
                           "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
                           isSelected
                             ? "bg-blue-600 text-white"
-                            : "bg-muted text-muted-foreground",
+                            : "bg-muted text-muted-foreground"
                         )}
                       >
                         <Building2 className="h-5 w-5" />
@@ -124,11 +113,11 @@ export function StepSendTestBrief({ onNext }: { onNext: () => void }) {
                         <p className="truncate font-medium text-foreground">
                           {event.title}
                         </p>
-                        <p className="truncate text-sm text-muted-foreground">
+                        <p className="truncate text-muted-foreground text-sm">
                           {companyDomain && `${companyDomain} · `}
                           {format(
                             new Date(event.startTime),
-                            "EEE, MMM d 'at' h:mm a",
+                            "EEE, MMM d 'at' h:mm a"
                           )}
                         </p>
                       </div>
@@ -138,7 +127,7 @@ export function StepSendTestBrief({ onNext }: { onNext: () => void }) {
                         "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
                         isSelected
                           ? "border-blue-600 bg-blue-600"
-                          : "border-muted-foreground/30",
+                          : "border-muted-foreground/30"
                       )}
                     >
                       {isSelected && (
@@ -149,16 +138,29 @@ export function StepSendTestBrief({ onNext }: { onNext: () => void }) {
                 );
               })}
             </div>
+          ) : (
+            <div className="flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center">
+              <CalendarIcon className="h-8 w-8 text-muted-foreground" />
+              <div>
+                <p className="font-medium">No upcoming meetings found</p>
+                <p className="mt-1 text-muted-foreground text-sm">
+                  We couldn't find any upcoming meetings with external guests.
+                </p>
+              </div>
+              <Button onClick={onNext} variant="outline">
+                Skip for now
+              </Button>
+            </div>
           )}
         </LoadingContent>
       </div>
 
       {data?.events.length ? (
-        <div className="flex justify-center mt-8">
+        <div className="mt-8 flex justify-center">
           <Button
-            onClick={handleSendTestBrief}
             disabled={!selectedEventId || isExecuting || briefSent}
             loading={isExecuting}
+            onClick={handleSendTestBrief}
             size="lg"
             variant={briefSent ? "green" : "default"}
           >

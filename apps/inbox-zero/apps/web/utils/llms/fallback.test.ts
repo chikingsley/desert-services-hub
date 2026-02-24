@@ -48,10 +48,10 @@ describe("createGenerateText fallback chain", () => {
     vi.clearAllMocks();
 
     mockWithLLMRetry.mockImplementation(
-      async (operation: () => Promise<unknown>) => operation(),
+      async (operation: () => Promise<unknown>) => operation()
     );
     mockWithNetworkRetry.mockImplementation(
-      async (operation: () => Promise<unknown>) => operation(),
+      async (operation: () => Promise<unknown>) => operation()
     );
     mockExtractLLMErrorInfo.mockReturnValue({
       retryable: false,
@@ -120,7 +120,7 @@ describe("createGenerateText fallback chain", () => {
       expect.objectContaining({
         provider: "openrouter",
         model: "fallback",
-      }),
+      })
     );
   });
 });

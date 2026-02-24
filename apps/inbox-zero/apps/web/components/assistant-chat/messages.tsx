@@ -1,26 +1,26 @@
-import { Fragment, useMemo, type ReactNode } from "react";
-import { Overview } from "./overview";
-import { MessagePart } from "./message-part";
-import { MessagingChannelHint } from "./messaging-channel-hint";
 import type { UseChatHelpers } from "@ai-sdk/react";
-import type { ChatMessage } from "@/components/assistant-chat/types";
-import type { ThreadLookup } from "@/components/assistant-chat/tools";
+import { Fragment, type ReactNode, useMemo } from "react";
 import {
   Conversation,
   ConversationContent,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import { Message, MessageContent } from "@/components/ai-elements/message";
 import { Loader } from "@/components/ai-elements/loader";
+import { Message, MessageContent } from "@/components/ai-elements/message";
+import type { ThreadLookup } from "@/components/assistant-chat/tools";
+import type { ChatMessage } from "@/components/assistant-chat/types";
+import { MessagePart } from "./message-part";
+import { MessagingChannelHint } from "./messaging-channel-hint";
+import { Overview } from "./overview";
 
 interface MessagesProps {
-  status: UseChatHelpers<ChatMessage>["status"];
-  messages: Array<ChatMessage>;
-  setMessages: UseChatHelpers<ChatMessage>["setMessages"];
-  regenerate: UseChatHelpers<ChatMessage>["regenerate"];
-  isArtifactVisible: boolean;
-  setInput: (input: string) => void;
   footer?: ReactNode;
+  isArtifactVisible: boolean;
+  messages: Array<ChatMessage>;
+  regenerate: UseChatHelpers<ChatMessage>["regenerate"];
+  setInput: (input: string) => void;
+  setMessages: UseChatHelpers<ChatMessage>["setMessages"];
+  status: UseChatHelpers<ChatMessage>["status"];
 }
 
 export function Messages({
@@ -32,13 +32,13 @@ export function Messages({
   const threadLookup = useMemo(() => buildThreadLookup(messages), [messages]);
   const firstAssistantIndex = useMemo(
     () => messages.findIndex((m) => m.role === "assistant"),
-    [messages],
+    [messages]
   );
 
   return (
     <Conversation className="flex min-w-0 flex-1">
       <ConversationContent
-        className="mx-auto flex min-h-full flex-col max-w-[calc(var(--chat-max-w)+var(--chat-px)*2)] px-[var(--chat-px)] pt-0 pb-0"
+        className="mx-auto flex min-h-full max-w-[calc(var(--chat-max-w)+var(--chat-px)*2)] flex-col px-[var(--chat-px)] pt-0 pb-0"
         scrollClassName="![scrollbar-gutter:auto] scrollbar-thin"
       >
         <div className="flex flex-1 flex-col gap-6">
@@ -50,10 +50,10 @@ export function Messages({
                 <MessageContent variant="flat">
                   {message.parts?.map((part, partIndex) => (
                     <MessagePart
-                      key={`${message.id}-${partIndex}`}
-                      part={part}
                       isStreaming={status === "streaming"}
+                      key={`${message.id}-${partIndex}`}
                       messageId={message.id}
+                      part={part}
                       partIndex={partIndex}
                       threadLookup={threadLookup}
                     />
@@ -79,7 +79,7 @@ export function Messages({
         </div>
 
         {footer && (
-          <div className="sticky bottom-0 z-10 pb-4 md:pb-6 pointer-events-none [&>*]:pointer-events-auto relative">
+          <div className="pointer-events-none relative sticky bottom-0 z-10 pb-4 md:pb-6 [&>*]:pointer-events-auto">
             <ConversationScrollButton wrapperClassName="absolute bottom-full left-1/2 -translate-x-1/2 mb-2" />
             {footer}
           </div>
@@ -106,7 +106,9 @@ function buildThreadLookup(messages: Array<ChatMessage>): ThreadLookup {
               snippet: string;
             }>
           | undefined;
-        if (!items) continue;
+        if (!items) {
+          continue;
+        }
         for (const item of items) {
           if (!lookup.has(item.threadId)) {
             lookup.set(item.threadId, {

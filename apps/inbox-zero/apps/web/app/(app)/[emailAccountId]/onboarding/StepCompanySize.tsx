@@ -1,20 +1,20 @@
 "use client";
 
 import {
-  Building2,
-  Users,
   Building,
+  Building2,
   Factory,
   Landmark,
   User,
+  Users,
 } from "lucide-react";
-import { PageHeading, TypographyP } from "@/components/Typography";
-import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
-import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
 import { useCallback } from "react";
-import { saveOnboardingAnswersAction } from "@/utils/actions/onboarding";
-import { toastError } from "@/components/Toast";
+import { IconCircle } from "@/app/(app)/[emailAccountId]/onboarding/IconCircle";
 import { OnboardingButton } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingButton";
+import { OnboardingWrapper } from "@/app/(app)/[emailAccountId]/onboarding/OnboardingWrapper";
+import { toastError } from "@/components/Toast";
+import { PageHeading, TypographyP } from "@/components/Typography";
+import { saveOnboardingAnswersAction } from "@/utils/actions/onboarding";
 
 const COMPANY_SIZES = [
   {
@@ -63,18 +63,18 @@ export function StepCompanySize({ onNext }: { onNext: () => void }) {
         });
       }
     },
-    [onNext],
+    [onNext]
   );
 
   return (
     <OnboardingWrapper className="py-0">
-      <IconCircle size="lg" className="mx-auto">
+      <IconCircle className="mx-auto" size="lg">
         <Building2 className="size-6" />
       </IconCircle>
 
-      <div className="text-center mt-4">
+      <div className="mt-4 text-center">
         <PageHeading>What's the size of your company?</PageHeading>
-        <TypographyP className="mt-2 max-w-lg mx-auto">
+        <TypographyP className="mx-auto mt-2 max-w-lg">
           This helps us tailor the experience to your organization's needs.
         </TypographyP>
       </div>
@@ -82,10 +82,10 @@ export function StepCompanySize({ onNext }: { onNext: () => void }) {
       <div className="mt-6 grid gap-3">
         {COMPANY_SIZES.map((size) => (
           <OnboardingButton
-            key={size.value}
-            text={size.label}
             icon={size.icon}
+            key={size.value}
             onClick={() => onSelectCompanySize(size.value)}
+            text={size.label}
           />
         ))}
       </div>

@@ -1,19 +1,19 @@
-import { findItem } from "@/packages/estimates/catalog/catalog";
 import type { Content, TableCell } from "pdfmake/interfaces";
+import { findItem } from "@/packages/estimates/catalog/catalog";
 import { COMPANY } from "../shared/brand";
 import { borderedLayout, noBordersLayout } from "../shared/layouts";
 
 interface BackPageServiceItem {
-  label: string;
   catalogCode: string;
+  label: string;
   pricePrefix?: string;
   priceSuffix?: string;
 }
 
 interface BackPageService {
-  title: string;
   items: BackPageServiceItem[];
   note?: string;
+  title: string;
 }
 
 const BACK_PAGE_SERVICES: BackPageService[] = [

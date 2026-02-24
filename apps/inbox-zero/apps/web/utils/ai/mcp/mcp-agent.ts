@@ -1,11 +1,11 @@
 import { stepCountIs, type ToolSet } from "ai";
-import { createGenerateText } from "@/utils/llms";
-import type { EmailAccountWithAI } from "@/utils/llms/types";
-import { createMcpToolsForAgent } from "@/utils/ai/mcp/mcp-tools";
-import { getModel } from "@/utils/llms/model";
-import type { EmailForLLM } from "@/utils/types";
 import { getEmailListPrompt, getUserInfoPrompt } from "@/utils/ai/helpers";
+import { createMcpToolsForAgent } from "@/utils/ai/mcp/mcp-tools";
+import { createGenerateText } from "@/utils/llms";
+import { getModel } from "@/utils/llms/model";
+import type { EmailAccountWithAI } from "@/utils/llms/types";
 import { createScopedLogger } from "@/utils/logger";
+import type { EmailForLLM } from "@/utils/types";
 
 const logger = createScopedLogger("mcp-agent");
 
@@ -27,7 +27,7 @@ const NO_RELEVANT_INFO_FOUND = "NO_RELEVANT_INFO_FOUND";
 
 async function runMcpAgent(
   options: McpAgentOptions,
-  mcpTools: ToolSet,
+  mcpTools: ToolSet
 ): Promise<McpAgentResponse> {
   const { emailAccount, messages } = options;
 
@@ -89,7 +89,7 @@ ${getEmailListPrompt({ messages, messageMaxLength: 1000, maxMessages: 5 })}
       const allToolCallsWithResults = result.steps.flatMap((step) =>
         step.toolCalls.map((call) => {
           const toolResult = step.toolResults?.find(
-            (result) => result.toolCallId === call.toolCallId,
+            (result) => result.toolCallId === call.toolCallId
           );
           return {
             toolName: call.toolName,
@@ -98,7 +98,7 @@ ${getEmailListPrompt({ messages, messageMaxLength: 1000, maxMessages: 5 })}
               ? `${JSON.stringify(toolResult.output).slice(0, 200)}...`
               : "No result",
           };
-        }),
+        })
       );
       return allToolCallsWithResults;
     },
@@ -106,16 +106,20 @@ ${getEmailListPrompt({ messages, messageMaxLength: 1000, maxMessages: 5 })}
 }
 
 export async function mcpAgent(
-  options: McpAgentOptions,
+  options: McpAgentOptions
 ): Promise<McpAgentResponse | null> {
   const { emailAccount, messages } = options;
 
-  if (!messages || messages.length === 0) return null;
+  if (!messages || messages.length === 0) {
+    return null;
+  }
 
   const { tools, cleanup } = await createMcpToolsForAgent(emailAccount.id);
   const hasTools = Object.keys(tools).length > 0;
 
-  if (!hasTools) return null;
+  if (!hasTools) {
+    return null;
+  }
 
   try {
     return await runMcpAgent(options, tools as ToolSet);

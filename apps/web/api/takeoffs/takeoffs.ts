@@ -30,13 +30,13 @@ const createTakeoffSchema = z.object({
 });
 
 interface TakeoffRow {
+  annotations: string;
+  created_at: string;
   id: string;
   name: string;
-  pdf_url: string | null;
-  annotations: string;
   page_scales: string;
+  pdf_url: string | null;
   status: string;
-  created_at: string;
   updated_at: string;
 }
 

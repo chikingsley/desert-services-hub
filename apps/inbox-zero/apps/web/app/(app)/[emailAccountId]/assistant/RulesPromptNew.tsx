@@ -1,39 +1,39 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef } from "react";
-import { useLocalStorage } from "usehooks-ts";
 import { PlusIcon, UserPenIcon } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { createRulesAction } from "@/utils/actions/ai-rule";
+import { useLocalStorage } from "usehooks-ts";
+import { AvailableActionsPanel } from "@/app/(app)/[emailAccountId]/assistant/AvailableActionsPanel";
+import { CreatedRulesModal } from "@/app/(app)/[emailAccountId]/assistant/CreatedRulesModal";
+import { ExamplesGrid } from "@/app/(app)/[emailAccountId]/assistant/ExamplesList";
+import { getPersonas } from "@/app/(app)/[emailAccountId]/assistant/examples";
+import { PersonaDialog } from "@/app/(app)/[emailAccountId]/assistant/PersonaDialog";
+import { ProcessingPromptFileDialog } from "@/app/(app)/[emailAccountId]/assistant/ProcessingPromptFileDialog";
+import { RuleDialog } from "@/app/(app)/[emailAccountId]/assistant/RuleDialog";
 import {
   SimpleRichTextEditor,
   type SimpleRichTextEditorRef,
 } from "@/components/editor/SimpleRichTextEditor";
 import { LoadingContent } from "@/components/LoadingContent";
-import { getPersonas } from "@/app/(app)/[emailAccountId]/assistant/examples";
-import { PersonaDialog } from "@/app/(app)/[emailAccountId]/assistant/PersonaDialog";
-import { useModal } from "@/hooks/useModal";
-import { ProcessingPromptFileDialog } from "@/app/(app)/[emailAccountId]/assistant/ProcessingPromptFileDialog";
-import { useAccount } from "@/providers/EmailAccountProvider";
+import { toastError } from "@/components/Toast";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useLabels } from "@/hooks/useLabels";
-import { RuleDialog } from "@/app/(app)/[emailAccountId]/assistant/RuleDialog";
 import { useDialogState } from "@/hooks/useDialogState";
+import { useLabels } from "@/hooks/useLabels";
+import { useModal } from "@/hooks/useModal";
 import { useRules } from "@/hooks/useRules";
-import { ExamplesGrid } from "@/app/(app)/[emailAccountId]/assistant/ExamplesList";
-import { CreatedRulesModal } from "@/app/(app)/[emailAccountId]/assistant/CreatedRulesModal";
+import { useAccount } from "@/providers/EmailAccountProvider";
+import { createRulesAction } from "@/utils/actions/ai-rule";
 import type { CreateRuleResult } from "@/utils/rule/types";
-import { toastError } from "@/components/Toast";
-import { AvailableActionsPanel } from "@/app/(app)/[emailAccountId]/assistant/AvailableActionsPanel";
 
 export function RulesPrompt() {
   const { emailAccountId, provider } = useAccount();
   const { isModalOpen, setIsModalOpen } = useModal();
   const onOpenPersonaDialog = useCallback(
     () => setIsModalOpen(true),
-    [setIsModalOpen],
+    [setIsModalOpen]
   );
 
   const [persona, setPersona] = useState<string | null>(null);
@@ -47,16 +47,16 @@ export function RulesPrompt() {
     <>
       <RulesPromptForm
         emailAccountId={emailAccountId}
-        provider={provider}
         examples={examples}
-        onOpenPersonaDialog={onOpenPersonaDialog}
         onHideExamples={() => setPersona(null)}
+        onOpenPersonaDialog={onOpenPersonaDialog}
+        provider={provider}
       />
       <PersonaDialog
         isOpen={isModalOpen}
-        setIsOpen={setIsModalOpen}
         onSelect={setPersona}
         personas={personas}
+        setIsOpen={setIsModalOpen}
       />
     </>
   );
@@ -81,7 +81,7 @@ function RulesPromptForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProcessingDialogOpen, setIsProcessingDialogOpen] = useState(false);
   const [createdRules, setCreatedRules] = useState<CreateRuleResult[] | null>(
-    null,
+    null
   );
   const [showCreatedRulesModal, setShowCreatedRulesModal] = useState(false);
   const [
@@ -95,7 +95,9 @@ function RulesPromptForm({
 
   const onSubmit = useCallback(async () => {
     const markdown = editorRef.current?.getMarkdown();
-    if (typeof markdown !== "string") return;
+    if (typeof markdown !== "string") {
+      return;
+    }
     if (markdown.trim() === "") {
       toastError({
         description: "Please enter a prompt to create rules",
@@ -104,7 +106,9 @@ function RulesPromptForm({
     }
 
     setIsSubmitting(true);
-    if (!viewedProcessingPromptFileDialog) setIsProcessingDialogOpen(true);
+    if (!viewedProcessingPromptFileDialog) {
+      setIsProcessingDialogOpen(true);
+    }
     setCreatedRules(null);
 
     toast.promise(
@@ -115,7 +119,9 @@ function RulesPromptForm({
           setIsSubmitting(false);
         });
 
-        if (result?.serverError) throw new Error(result.serverError);
+        if (result?.serverError) {
+          throw new Error(result.serverError);
+        }
 
         mutate();
 
@@ -139,7 +145,7 @@ function RulesPromptForm({
         error: (err) => {
           return `Error creating rules: ${err.message}`;
         },
-      },
+      }
     );
   }, [mutate, viewedProcessingPromptFileDialog, emailAccountId]);
 
@@ -155,7 +161,7 @@ function RulesPromptForm({
 
   return (
     <div>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr,250px] gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr,250px]">
         <div className="grid gap-4">
           <form
             onSubmit={(e) => {
@@ -173,24 +179,24 @@ function RulesPromptForm({
                 loadingComponent={<Skeleton className="min-h-[180px] w-full" />}
               >
                 <SimpleRichTextEditor
-                  ref={editorRef}
                   defaultValue={undefined}
                   minHeight={180}
-                  userLabels={userLabels}
                   placeholder={`* Label urgent emails as "Urgent"
 * Forward receipts to jane@accounting.com`}
+                  ref={editorRef}
+                  userLabels={userLabels}
                 />
               </LoadingContent>
 
-              <div className="flex flex-col sm:flex-row flex-wrap gap-2">
-                <Button type="submit" size="sm" loading={isSubmitting}>
+              <div className="flex flex-col flex-wrap gap-2 sm:flex-row">
+                <Button loading={isSubmitting} size="sm" type="submit">
                   Create rules
                 </Button>
 
                 <Button
-                  variant="outline"
-                  size="sm"
                   onClick={examples ? onHideExamples : onOpenPersonaDialog}
+                  size="sm"
+                  variant="outline"
                 >
                   <UserPenIcon className="mr-2 size-4" />
                   {examples ? "Hide examples" : "Choose from examples"}
@@ -198,10 +204,10 @@ function RulesPromptForm({
 
                 <Button
                   className="ml-auto w-full sm:w-auto"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => ruleDialog.onOpen()}
                   Icon={PlusIcon}
+                  onClick={() => ruleDialog.onOpen()}
+                  size="sm"
+                  variant="outline"
                 >
                   Add rule manually
                 </Button>
@@ -229,26 +235,25 @@ function RulesPromptForm({
       )}
 
       <RuleDialog
+        editMode={false}
         isOpen={ruleDialog.isOpen}
         onClose={ruleDialog.onClose}
         onSuccess={() => {
           mutate();
           ruleDialog.onClose();
         }}
-        editMode={false}
       />
 
       <ProcessingPromptFileDialog
+        onOpenChange={setIsProcessingDialogOpen}
         open={isProcessingDialogOpen}
         result={createdRules}
-        onOpenChange={setIsProcessingDialogOpen}
         setViewedProcessingPromptFileDialog={
           setViewedProcessingPromptFileDialog
         }
       />
 
       <CreatedRulesModal
-        open={showCreatedRulesModal}
         onOpenChange={(open) => {
           setShowCreatedRulesModal(open);
 
@@ -257,6 +262,7 @@ function RulesPromptForm({
             setCreatedRules(null);
           }
         }}
+        open={showCreatedRulesModal}
         rules={createdRules}
       />
     </div>

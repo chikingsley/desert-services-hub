@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/Combobox";
-import { createLabelAction } from "@/utils/actions/mail";
+import { Button } from "@/components/ui/button";
 import type { EmailLabel } from "@/providers/EmailProvider";
+import { createLabelAction } from "@/utils/actions/mail";
 
 export function LabelCombobox({
   value,
@@ -28,27 +28,17 @@ export function LabelCombobox({
   const [search, setSearch] = useState("");
 
   const selectedLabel = userLabels.find(
-    (label) => label.id === value.id || label.name === value.name,
+    (label) => label.id === value.id || label.name === value.name
   );
 
   return (
     <Combobox
-      options={userLabels.map((label) => ({
-        value: label.id || "",
-        label: label.name || "",
-      }))}
-      value={value.id || ""}
-      onChangeValue={onChangeValue}
-      search={search}
-      onSearch={setSearch}
-      placeholder={selectedLabel?.name || "Select a label"}
       emptyText={
         <div>
           <div>No labels</div>
           {search && (
             <Button
               className="mt-2"
-              variant="outline"
               onClick={() => {
                 const searchValue = search;
 
@@ -57,7 +47,9 @@ export function LabelCombobox({
                     const res = await createLabelAction(emailAccountId, {
                       name: searchValue,
                     });
-                    if (res?.serverError) throw new Error(res.serverError);
+                    if (res?.serverError) {
+                      throw new Error(res.serverError);
+                    }
 
                     await mutate();
 
@@ -75,9 +67,10 @@ export function LabelCombobox({
                     success: `Created label "${searchValue}"`,
                     error: (errorMessage) =>
                       `Error creating label "${searchValue}": ${errorMessage}`,
-                  },
+                  }
                 );
               }}
+              variant="outline"
             >
               {`Create "${search}" label`}
             </Button>
@@ -85,6 +78,15 @@ export function LabelCombobox({
         </div>
       }
       loading={isLoading}
+      onChangeValue={onChangeValue}
+      onSearch={setSearch}
+      options={userLabels.map((label) => ({
+        value: label.id || "",
+        label: label.name || "",
+      }))}
+      placeholder={selectedLabel?.name || "Select a label"}
+      search={search}
+      value={value.id || ""}
     />
   );
 }

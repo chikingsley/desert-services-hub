@@ -5,17 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 interface TabsProps {
-  tabs: Tab[];
-  selected: string;
   breakpoint?: "xs" | "sm" | "md" | "lg" | "xl";
   onClickTab?: (tab: Tab) => void;
+  selected: string;
   shallow?: boolean;
+  tabs: Tab[];
 }
 
 interface Tab {
+  href?: string;
   label: string;
   value: string;
-  href?: string;
 }
 
 export function Tabs(props: TabsProps) {
@@ -33,21 +33,23 @@ export function Tabs(props: TabsProps) {
           "xl:hidden": breakpoint === "xl",
         })}
       >
-        <label htmlFor="tabs" className="sr-only">
+        <label className="sr-only" htmlFor="tabs">
           Select a tab
         </label>
         <select
-          id="tabs"
-          name="tabs"
           className="block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
           defaultValue={selected}
+          id="tabs"
+          name="tabs"
           onChange={(e) => {
             const label = e.target.value;
             const tab = tabs.find((t) => t.label === label);
             if (tab) {
               onClickTab?.(tab);
-              // @ts-ignore
-              if (tab.href) router.push(tab.href);
+              // @ts-expect-error
+              if (tab.href) {
+                router.push(tab.href);
+              }
             }
           }}
         >
@@ -65,22 +67,22 @@ export function Tabs(props: TabsProps) {
           "hidden xl:block": breakpoint === "xl",
         })}
       >
-        <nav className="flex space-x-4" aria-label="Tabs">
+        <nav aria-label="Tabs" className="flex space-x-4">
           {tabs.map((tab) => {
             const isSelected = tab.value === selected;
 
             return (
               <Link
-                key={tab.value}
-                // @ts-ignore
-                href={tab.href || "#"}
+                aria-current={isSelected ? "page" : undefined}
+                // @ts-expect-error
                 className={clsx(
-                  "whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium",
+                  "whitespace-nowrap rounded-md px-3 py-2 font-medium text-sm",
                   isSelected
                     ? "bg-blue-100 text-blue-700"
-                    : "text-muted-foreground hover:text-gray-700",
+                    : "text-muted-foreground hover:text-gray-700"
                 )}
-                aria-current={isSelected ? "page" : undefined}
+                href={tab.href || "#"}
+                key={tab.value}
                 onClick={onClickTab ? () => onClickTab(tab) : undefined}
                 shallow={props.shallow}
               >

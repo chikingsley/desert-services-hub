@@ -30,10 +30,10 @@ export interface BrowserInstance {
  * Basic information about an application from a results table.
  */
 export interface ApplicationLinkInfo {
+  companyName?: string;
   id: string;
   index: number;
   projectName?: string;
-  companyName?: string;
 }
 
 // ============================================================================
@@ -45,25 +45,25 @@ export interface ApplicationLinkInfo {
  * Provide one of: permitId, projectName, or companyName.
  */
 export interface SearchCriteria {
+  /** Company name - autocomplete search */
+  companyName?: string;
   /** Permit ID (D#) - exact match */
   permitId?: string;
   /** Project name - wildcard search */
   projectName?: string;
-  /** Company name - autocomplete search */
-  companyName?: string;
 }
 
 /**
  * Result of a search operation.
  */
 export interface SearchResult {
-  success: boolean;
   /** Number of results found */
   count: number;
   /** Error message if search failed */
   error?: string;
   /** Permit IDs found in results */
   permitIds: string[];
+  success: boolean;
 }
 
 // ============================================================================
@@ -77,12 +77,12 @@ export interface PermitLocation {
   address: string;
   city: string;
   county: string;
-  state: string;
-  zip: string;
-  parcel: string;
+  isSelected: boolean;
   latitude: string;
   longitude: string;
-  isSelected: boolean;
+  parcel: string;
+  state: string;
+  zip: string;
 }
 
 /**
@@ -112,21 +112,7 @@ export interface AccessPoint {
  * - Water methods
  */
 export interface PermitData {
-  // Header
-  applicationId: string;
-  projectName: string;
-  companyName: string;
-  status: string;
-  createdDate: string;
-  issueDate: string;
-  expirationDate: string;
-
-  // Contact (where permit is sent)
-  contact: {
-    email: string;
-    name: string;
-    phone: string;
-  };
+  accessPoints: AccessPoint[];
 
   // Applicant Company
   applicantCompany: {
@@ -153,26 +139,26 @@ export interface PermitData {
     phone: string;
     email: string;
   };
+  // Header
+  applicationId: string;
+  companyName: string;
+
+  // Contact (where permit is sent)
+  contact: {
+    email: string;
+    name: string;
+    phone: string;
+  };
+  createdDate: string;
+
+  // Site Location
+  disturbedArea: string;
+  expirationDate: string;
 
   // Is Applicant Owner/Developer (Yes/No)
   isOwnerDeveloper: boolean | null;
-
-  // Property Owner/Developer (only present when isOwnerDeveloper = false)
-  propertyOwnerDeveloper: {
-    entityType: string;
-    name: string;
-    address1: string;
-    address2: string;
-    city: string;
-    state: string;
-    zip: string;
-    phone: string;
-    fax: string;
-    contactFirstName: string;
-    contactLastName: string;
-    contactPhone: string;
-    contactEmail: string;
-  } | null;
+  issueDate: string;
+  locations: PermitLocation[];
 
   // Primary Project Contact
   primaryContact: {
@@ -193,15 +179,25 @@ export interface PermitData {
     startDate: string;
     endDate: string;
   };
+  projectName: string;
 
-  // Site Location
-  disturbedArea: string;
-  locations: PermitLocation[];
-  accessPoints: AccessPoint[];
-
-  // Trackout Control Devices (E1)
-  // E1 answer: true = "Yes" (has 2+ acres or 100+ cubic yards), false = "No", null = not found
-  trackoutE1Answer: boolean | null;
+  // Property Owner/Developer (only present when isOwnerDeveloper = false)
+  propertyOwnerDeveloper: {
+    entityType: string;
+    name: string;
+    address1: string;
+    address2: string;
+    city: string;
+    state: string;
+    zip: string;
+    phone: string;
+    fax: string;
+    contactFirstName: string;
+    contactLastName: string;
+    contactPhone: string;
+    contactEmail: string;
+  } | null;
+  status: string;
   trackoutDevices: {
     gravelPad: boolean;
     grizzlyRumbleGrate: boolean;
@@ -209,6 +205,10 @@ export interface PermitData {
     pavedArea: boolean;
     other: boolean;
   };
+
+  // Trackout Control Devices (E1)
+  // E1 answer: true = "Yes" (has 2+ acres or 100+ cubic yards), false = "No", null = not found
+  trackoutE1Answer: boolean | null;
 
   // Water Methods
   waterMethods: {
@@ -228,24 +228,24 @@ export interface PermitData {
  * Configuration for the scrape flow.
  */
 export interface ScrapeFlowConfig {
-  /** Number of NEW applications to scrape (not already in DB) */
-  targetCount: number;
-  /** Statuses to filter by */
-  statuses?: ("Active" | "Closed" | "Rejected" | "Submitted" | "Superseded")[];
   /** Callback to check if permit exists in DB */
   existsInDb: (permitId: string) => boolean | Promise<boolean>;
   /** Callback to save permit to DB */
   saveToDb: (data: PermitData) => void | Promise<void>;
+  /** Statuses to filter by */
+  statuses?: ("Active" | "Closed" | "Rejected" | "Submitted" | "Superseded")[];
+  /** Number of NEW applications to scrape (not already in DB) */
+  targetCount: number;
 }
 
 /**
  * Result of a scrape flow execution.
  */
 export interface ScrapeFlowResult {
-  success: boolean;
+  errors: { permitId: string; error: string }[];
   scraped: string[];
   skipped: string[];
-  errors: { permitId: string; error: string }[];
+  success: boolean;
 }
 
 // ============================================================================
@@ -279,9 +279,9 @@ export type ApplicationFlow =
  * Options for the new application popup handler (create/copy-from flows).
  */
 export interface NewAppPopupOptions {
+  companyName?: string;
   copyFromApp: string;
   flow: "new-company" | "existing-company";
-  companyName?: string;
 }
 
 /**
@@ -300,9 +300,9 @@ export interface ReviseAppPopupOptions {
  * Result of creating a new application.
  */
 export interface CreateResult {
-  success: boolean;
   applicationId: string | null;
   error?: string;
+  success: boolean;
 }
 
 /**
@@ -320,38 +320,38 @@ export interface FullCreateResult extends CreateResult {
  * Result of clicking "Submit Application" on Page 5.
  */
 export interface SubmitResult {
-  success: boolean;
   applicationId: string | null;
-  /** Whether we were redirected to Point & Pay */
-  redirectedToPayment: boolean;
+  error?: string;
   /** Current URL after submit */
   finalUrl?: string;
-  error?: string;
+  /** Whether we were redirected to Point & Pay */
+  redirectedToPayment: boolean;
+  success: boolean;
 }
 
 /**
  * Result of completing payment on Point & Pay.
  */
 export interface PaymentResult {
-  success: boolean;
   /** Total amount displayed (e.g. "$4,120.00") */
   amount?: string;
-  convenienceFee?: string;
-  totalPaid?: string;
   /** Last 4 digits of card used */
   cardLastFour?: string;
+  convenienceFee?: string;
   /** Whether this was a dry run (stopped before clicking Pay) */
   dryRun: boolean;
   error?: string;
+  success: boolean;
+  totalPaid?: string;
 }
 
 /**
  * Detailed report of which payment fields were filled successfully.
  */
 export interface PaymentFillReport {
-  success: boolean;
-  filledFields: string[];
   failedFields: string[];
+  filledFields: string[];
+  success: boolean;
 }
 
 // Re-export from form-data.ts (canonical location for all form data + page states)

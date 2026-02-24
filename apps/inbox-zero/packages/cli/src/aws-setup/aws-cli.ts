@@ -1,14 +1,14 @@
 import { spawnSync } from "node:child_process";
 
 export interface AwsCommandResult {
-  success: boolean;
-  stdout: string;
   stderr: string;
+  stdout: string;
+  success: boolean;
 }
 
 export function runAwsCommand(
   env: NodeJS.ProcessEnv,
-  args: string[],
+  args: string[]
 ): AwsCommandResult {
   const result = spawnSync("aws", args, { stdio: "pipe", env });
   return {
@@ -20,7 +20,7 @@ export function runAwsCommand(
 
 export function parseJson<T>(
   value: string,
-  errorMessage: string,
+  errorMessage: string
 ): { success: true; value: T } | { success: false; error: string } {
   try {
     return { success: true, value: JSON.parse(value) as T };
@@ -33,7 +33,7 @@ export function addSsmParameterTags(
   env: NodeJS.ProcessEnv,
   appName: string,
   envName: string,
-  paramName: string,
+  paramName: string
 ): void {
   runAwsCommand(env, [
     "ssm",
@@ -79,7 +79,7 @@ export function putSsmParameterWithTags(params: {
 export function readSecretJson<T extends Record<string, string | undefined>>(
   env: NodeJS.ProcessEnv,
   secretId: string,
-  errorMessage: string,
+  errorMessage: string
 ): { success: true; secret: T } | { success: false; error: string } {
   const result = runAwsCommand(env, [
     "secretsmanager",

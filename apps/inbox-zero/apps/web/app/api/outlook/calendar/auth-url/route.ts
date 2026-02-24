@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { withEmailAccount } from "@/utils/middleware";
-import { getCalendarOAuth2Url } from "@/utils/outlook/calendar-client";
 import { CALENDAR_STATE_COOKIE_NAME } from "@/utils/calendar/constants";
+import { withEmailAccount } from "@/utils/middleware";
 import {
   generateOAuthState,
   oauthStateCookieOptions,
 } from "@/utils/oauth/state";
+import { getCalendarOAuth2Url } from "@/utils/outlook/calendar-client";
 
 export type GetCalendarAuthUrlResponse = { url: string };
 
@@ -30,7 +30,7 @@ export const GET = withEmailAccount(async (request) => {
   response.cookies.set(
     CALENDAR_STATE_COOKIE_NAME,
     state,
-    oauthStateCookieOptions,
+    oauthStateCookieOptions
   );
 
   return response;

@@ -21,14 +21,14 @@ import {
 } from "@/apps/web/frontend/components/ui/select";
 
 interface CategoryDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   category?: {
     id: string;
     name: string;
     selectionMode: string;
   };
+  onOpenChange: (open: boolean) => void;
   onSave: (data: { name: string; selectionMode: string }) => Promise<void>;
+  open: boolean;
 }
 
 export function CategoryDialog({

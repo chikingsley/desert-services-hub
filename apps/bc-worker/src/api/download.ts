@@ -1,23 +1,17 @@
 /**
- * BuildingConnected file download via Playwright.
+ * BuildingConnected file download using the persistent browser session.
  *
- * Uses the stored auth state (from bc-worker auth bootstrap) to
- * download files from BuildingConnected's authenticated portal.
- * Called by the Trigger.dev body-link-intake task.
+ * Opens a new tab in the singleton session's context (reuses cookies).
+ * No cold-start overhead, no ephemeral browsers.
  */
-import { existsSync } from "node:fs";
 import { readFile, unlink } from "node:fs/promises";
-import { chromium, type Download, type Page } from "playwright";
-
-const STATE_PATH =
-  process.env.EMAIL_BODY_LINK_PLAYWRIGHT_STORAGE_STATE_PATH?.trim() ||
-  "/app/data/attachments/body-links-auth/state.json";
+import type { Download, Page } from "playwright";
+import { bcSession } from "../lib/browser";
 
 const PAGE_TIMEOUT_MS = 45_000;
 const DOWNLOAD_WAIT_MS = 15_000;
 const AUTO_DOWNLOAD_SETTLE_MS = 3000;
 
-/** Selectors to find download buttons on BuildingConnected pages. */
 const DOWNLOAD_SELECTORS = [
   'button:has-text("Download")',
   'a:has-text("Download")',
@@ -52,97 +46,101 @@ async function tryClickDownload(page: Page): Promise<Download | null> {
         return await downloadPromise;
       }
     } catch {
-      // Selector not found or click failed — try next selector.
+      // Try next selector
     }
   }
   return null;
 }
 
-async function downloadFile(
-  url: string
-): Promise<DownloadResult | DownloadError> {
-  const hasState = existsSync(STATE_PATH);
-  const browser = await chromium.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+function downloadFile(url: string): Promise<DownloadResult | DownloadError> {
+  return bcSession.withOperation("download", async (session) => {
+    const page = await session.instance.context.newPage();
 
-  try {
-    const context = await browser.newContext({
-      storageState: hasState ? STATE_PATH : undefined,
-      acceptDownloads: true,
-      userAgent:
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    });
-
-    const page = await context.newPage();
-
-    // Listen for download event from the start (some URLs auto-download on navigation)
-    const autoDownloadPromise = page
-      .waitForEvent("download", { timeout: PAGE_TIMEOUT_MS })
-      .catch(() => null);
-
-    await page.goto(url, {
-      timeout: PAGE_TIMEOUT_MS,
-      waitUntil: "domcontentloaded",
-    });
-
-    // Wait briefly for auto-download (some BC /goto/ URLs redirect to direct downloads)
-    let download = await Promise.race([
-      autoDownloadPromise,
-      new Promise<null>((resolve) =>
-        setTimeout(() => resolve(null), AUTO_DOWNLOAD_SETTLE_MS)
-      ),
-    ]);
-
-    // If no auto-download, try clicking download buttons
-    if (!download) {
-      download = await tryClickDownload(page);
-    }
-
-    if (!download) {
-      const title = await page.title().catch(() => "unknown");
-      await context.close();
-      return {
-        error:
-          "No download triggered. Page may require authentication or CAPTCHA.",
-        pageTitle: title,
-        success: false,
-      };
-    }
-
-    // Read downloaded file
-    const tmpPath = await download.path();
-    if (!tmpPath) {
-      await context.close();
-      return { error: "Download path not available", success: false };
-    }
-
-    const filename = download.suggestedFilename();
-    const buffer = await readFile(tmpPath);
-    await context.close();
-
-    // Clean up temp file
     try {
-      await unlink(tmpPath);
-    } catch {
-      // Non-fatal
-    }
+      const autoDownloadPromise = page
+        .waitForEvent("download", { timeout: PAGE_TIMEOUT_MS })
+        .catch(() => null);
 
-    return {
-      data: buffer.toString("base64"),
-      name: filename,
-      size: buffer.byteLength,
-      success: true,
-    };
-  } finally {
-    await browser.close();
-  }
+      await page.goto(url, {
+        timeout: PAGE_TIMEOUT_MS,
+        waitUntil: "domcontentloaded",
+      });
+
+      let download = await Promise.race([
+        autoDownloadPromise,
+        new Promise<null>((resolve) =>
+          setTimeout(() => resolve(null), AUTO_DOWNLOAD_SETTLE_MS)
+        ),
+      ]);
+
+      if (!download) {
+        download = await tryClickDownload(page);
+      }
+
+      if (!download) {
+        const title = await page.title().catch(() => "unknown");
+        return {
+          error:
+            "No download triggered. Session may have expired or page requires CAPTCHA.",
+          pageTitle: title,
+          success: false as const,
+        };
+      }
+
+      const tmpPath = await download.path();
+      if (!tmpPath) {
+        return {
+          error: "Download path not available",
+          success: false as const,
+        };
+      }
+
+      const filename = download.suggestedFilename();
+      const buffer = await readFile(tmpPath);
+
+      try {
+        await unlink(tmpPath);
+      } catch {
+        // Non-fatal
+      }
+
+      return {
+        data: buffer.toString("base64"),
+        name: filename,
+        size: buffer.byteLength,
+        success: true as const,
+      };
+    } finally {
+      await page.close().catch(() => {
+        // Non-fatal: page may already be closed
+      });
+    }
+  });
 }
 
 export async function handleBuildingConnectedDownload(
   req: Request
 ): Promise<Response> {
+  const status = bcSession.getStatus();
+  if (!status.active) {
+    return Response.json(
+      {
+        error: "No active browser session",
+        success: false,
+      },
+      { status: 503 }
+    );
+  }
+  if (!status.isLoggedIn) {
+    return Response.json(
+      {
+        error: "Not logged in. Run auth bootstrap via VNC first.",
+        success: false,
+      },
+      { status: 401 }
+    );
+  }
+
   let body: { url?: string };
   try {
     body = (await req.json()) as { url?: string };

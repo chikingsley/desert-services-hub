@@ -5,24 +5,26 @@ const RETRY_COOLDOWN_HOURS = 6;
 
 export interface IntakeAttachmentRow {
   attachment_id_pk: number;
-  graph_attachment_id: string | null;
-  name: string;
   content_type: string | null;
-  size: number | null;
-  storage_path: string | null;
-  source: string;
-  email_id: number | null;
-  message_id: string | null;
-  internet_message_id: string | null;
-  thread_id: string | null;
   conversation_id: string | null;
-  project_id: number | null;
-  subject: string | null;
-  from_email: string | null;
-  mailbox_email: string | null;
-  monday_column_id: string | null;
+  email_id: number | null;
   estimate_id: number | null;
+  from_email: string | null;
+  graph_attachment_id: string | null;
+  internet_message_id: string | null;
   local_path: string | null;
+  mailbox_email: string | null;
+  message_id: string | null;
+  monday_asset_id: string | null;
+  monday_column_id: string | null;
+  monday_item_id: string | null;
+  name: string;
+  project_id: number | null;
+  size: number | null;
+  source: string;
+  storage_path: string | null;
+  subject: string | null;
+  thread_id: string | null;
 }
 
 const getIntakeAttachmentRowsStmt = db.query<IntakeAttachmentRow, [number]>(`
@@ -34,7 +36,9 @@ const getIntakeAttachmentRowsStmt = db.query<IntakeAttachmentRow, [number]>(`
     d.file_size as size,
     d.storage_path,
     d.source,
+    d.monday_asset_id,
     d.monday_column_id,
+    d.monday_item_id,
     d.estimate_id,
     d.local_path,
     e.id as email_id,
@@ -156,7 +160,9 @@ const getIntakeAttachmentRowsByEmailStmt = db.query<
     d.file_size as size,
     d.storage_path,
     d.source,
+    d.monday_asset_id,
     d.monday_column_id,
+    d.monday_item_id,
     d.estimate_id,
     d.local_path,
     e.id as email_id,

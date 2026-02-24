@@ -4,12 +4,6 @@ import { join } from "node:path";
 import { shouldSkipByContentType } from "@documents-intake/attachment-policy";
 import { processFilesIntake } from "@documents-intake/files-intake";
 import { processMondayAssetDocument } from "@documents-intake/processors/monday-asset";
-import {
-  createGraphClient,
-  createGroupsClient,
-  type GraphEmailClient,
-  type GraphGroupsClient,
-} from "@lib/graph/client";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
 import {
   clearAttachmentLocalPath,
@@ -24,6 +18,12 @@ import {
   setAttachmentContentHash,
   updateDocumentBackfillLinks,
 } from "@lib/db/repositories/intake-attachments";
+import {
+  createGraphClient,
+  createGroupsClient,
+  type GraphEmailClient,
+  type GraphGroupsClient,
+} from "@lib/graph/client";
 import { COLUMN_HINTS } from "@monday/sync/pipeline-config";
 
 const BACKFILL_DIR = "/app/data/backfill";
@@ -32,14 +32,14 @@ const IC_GROUP_EMAIL = "internalcontracts@desertservices.net";
 const IC_GROUP_ID = "962f9440-9bde-4178-b538-edc7f8d3ecce";
 
 export interface IntakeAttachmentsResult {
+  attachmentsPerMinute: number;
+  deduped: number;
+  elapsedMs: number;
+  errors: string[];
+  failed: number;
   processed: number;
   skipped: number;
-  deduped: number;
   succeeded: number;
-  failed: number;
-  elapsedMs: number;
-  attachmentsPerMinute: number;
-  errors: string[];
 }
 
 export interface IntakeAttachmentsOptions {
@@ -150,6 +150,27 @@ async function cleanupMondayAssetFile(
   }
 }
 
+/** Download a Monday asset file from the API by fetching a fresh public_url. */
+async function downloadMondayAssetFromApi(
+  mondayItemId: string,
+  mondayAssetId: string
+): Promise<Buffer | null> {
+  const { getItemAssets } = await import("@monday/client/assets");
+  const assets = await getItemAssets(mondayItemId);
+  const asset = assets.find((a) => a.id === mondayAssetId);
+
+  if (!asset?.public_url) {
+    return null;
+  }
+
+  const response = await fetch(asset.public_url);
+  if (!response.ok) {
+    return null;
+  }
+
+  return Buffer.from(await response.arrayBuffer());
+}
+
 async function processMondayAsset(
   att: IntakeAttachmentRow
 ): Promise<AttachmentOutcome> {
@@ -157,9 +178,29 @@ async function processMondayAsset(
     ? (COLUMN_HINTS[att.monday_column_id] ?? undefined)
     : undefined;
 
+  // Try local file first, fall back to downloading from Monday API
+  let fileBuffer: ArrayBuffer | null = null;
+  let tempPath: string | null = null;
   const filePath = att.local_path;
-  if (!(filePath && existsSync(filePath))) {
-    const errMsg = `Monday asset file not found: ${filePath ?? "no local_path"}`;
+
+  if (filePath && existsSync(filePath)) {
+    fileBuffer = await Bun.file(filePath).arrayBuffer();
+  } else if (att.monday_item_id && att.monday_asset_id) {
+    const downloaded = await downloadMondayAssetFromApi(
+      att.monday_item_id,
+      att.monday_asset_id
+    );
+    if (downloaded) {
+      fileBuffer = downloaded;
+      // Write to temp file for extraction (nativeExtract needs a file path)
+      const { tmpdir } = await import("node:os");
+      tempPath = `${tmpdir()}/monday-asset-${att.monday_asset_id}-${att.name}`;
+      await Bun.write(tempPath, downloaded);
+    }
+  }
+
+  if (!fileBuffer) {
+    const errMsg = `Monday asset not available: local_path=${filePath ?? "none"}, item=${att.monday_item_id ?? "none"}, asset=${att.monday_asset_id ?? "none"}`;
     await updateAttachmentExtraction(
       att.attachment_id_pk,
       "failed",
@@ -169,7 +210,6 @@ async function processMondayAsset(
     return { type: "failed", error: `${att.name}: ${errMsg}` };
   }
 
-  const fileBuffer = await Bun.file(filePath).arrayBuffer();
   const contentHash = computeHash(Buffer.from(fileBuffer));
   await setAttachmentContentHash(att.attachment_id_pk, contentHash);
   const hashDupe = await findContentHashAttachmentDuplicate(
@@ -178,12 +218,18 @@ async function processMondayAsset(
   );
   if (hashDupe) {
     await markAttachmentDeduped(att.attachment_id_pk);
-    await cleanupMondayAssetFile(filePath, att.attachment_id_pk);
+    if (filePath) {
+      await cleanupMondayAssetFile(filePath, att.attachment_id_pk);
+    }
+    if (tempPath) {
+      await safeUnlink(tempPath);
+    }
     return { type: "deduped" };
   }
 
+  const extractPath = tempPath ?? filePath;
   const outcome = await processMondayAssetDocument({
-    filePath,
+    filePath: extractPath as string,
     columnHint,
   });
 
@@ -192,8 +238,21 @@ async function processMondayAsset(
     outcome.documentType,
     outcome.summary
   );
-  await cleanupMondayAssetFile(filePath, att.attachment_id_pk);
+  if (filePath) {
+    await cleanupMondayAssetFile(filePath, att.attachment_id_pk);
+  }
+  if (tempPath) {
+    await safeUnlink(tempPath);
+  }
   return { type: "succeeded" };
+}
+
+async function safeUnlink(path: string): Promise<void> {
+  try {
+    await unlink(path);
+  } catch {
+    // Non-fatal cleanup failure.
+  }
 }
 
 async function processEmailAttachment(
@@ -423,7 +482,12 @@ export async function processIntakeAttachmentBackfill(
 export async function processAttachmentsForEmail(
   emailId: number,
   client: GraphEmailClient
-): Promise<{ extracted: number; skipped: number; failed: number; deduped: number }> {
+): Promise<{
+  extracted: number;
+  skipped: number;
+  failed: number;
+  deduped: number;
+}> {
   const result = { extracted: 0, skipped: 0, failed: 0, deduped: 0 };
 
   const attachments = await getIntakeAttachmentRowsByEmail(emailId);

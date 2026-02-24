@@ -59,6 +59,15 @@ interface BuildingConnectedAuthStatus {
   manualAuthTimeoutMs: number;
   pid: number | null;
   running: boolean;
+  session: {
+    active: boolean;
+    busy: boolean;
+    currentOperation: string | null;
+    isLoggedIn: boolean;
+    lastError: string | null;
+    portalReady: boolean;
+    startedAt: string | null;
+  };
   startedAt: string | null;
   startUrl: string;
   stateExists: boolean;
@@ -122,13 +131,16 @@ function getBuildingConnectedSessionDisplay(
   if (!data) {
     return { label: "Checking", dotClass: "bg-red-500" };
   }
+  if (data.session?.portalReady) {
+    return { label: "Ready", dotClass: "bg-green-500" };
+  }
+  if (data.session?.active) {
+    return { label: "Login Needed", dotClass: "bg-amber-500" };
+  }
   if (data.running) {
     return { label: "Auth Running", dotClass: "bg-amber-500" };
   }
-  if (data.stateExists) {
-    return { label: "State Ready", dotClass: "bg-green-500" };
-  }
-  return { label: "Idle", dotClass: "bg-red-500" };
+  return { label: "Offline", dotClass: "bg-red-500" };
 }
 
 function getVncStatusLabel(
@@ -139,13 +151,16 @@ function getVncStatusLabel(
   if (portal === "maricopa") {
     return maricopa?.portalReady ? "Portal ready" : "Portal not ready";
   }
+  if (bc?.session?.portalReady) {
+    return "Portal ready";
+  }
+  if (bc?.session?.active) {
+    return "Session active — login needed";
+  }
   if (bc?.running) {
-    return "Auth run in progress";
+    return "Auth bootstrap in progress";
   }
-  if (bc?.stateExists) {
-    return "State file ready";
-  }
-  return "Auth session idle";
+  return "Session idle";
 }
 
 function deriveVncState(
@@ -160,7 +175,7 @@ function deriveVncState(
     wsUrl: isMaricopa ? maricopaWsUrl : bcWsUrl,
     healthy: isMaricopa
       ? (maricopa?.portalReady ?? false)
-      : Boolean(bc?.stateExists),
+      : (bc?.session?.portalReady ?? false),
     statusLabel: getVncStatusLabel(portal, maricopa, bc),
   };
 }

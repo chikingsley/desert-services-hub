@@ -7,6 +7,7 @@ import {
   handleBuildingConnectedAuthStop,
 } from "./api/auth";
 import { handleBuildingConnectedDownload } from "./api/download";
+import { bcSession } from "./lib/browser";
 
 const PORT = Number(process.env.PORT) || 47_824;
 
@@ -56,3 +57,8 @@ serve({
 });
 
 console.log(`BC Worker API running on http://localhost:${PORT}`);
+
+// Auto-start browser session — loads storageState if available
+bcSession.getOrCreateSession().catch((error) => {
+  console.error("[bc-worker] Failed to auto-start session:", error);
+});

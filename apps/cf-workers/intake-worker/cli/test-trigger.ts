@@ -1,33 +1,23 @@
 #!/usr/bin/env bun
 
 /**
- * Test Trigger — Manually fire the canonical intake pipeline.
+ * Test Trigger — Manually fire the document intake pipeline.
  *
  * Modes:
- *   webhook <file...>    Post file(s) directly to the local webhook endpoint (saves + enqueues job)
- *   process <file...>    Run the parse pipeline directly on file(s) (skip email/webhook)
- *   enqueue <file...>    Save files to intake dir and enqueue a job (skip webhook HTTP call)
+ *   webhook <file...>    Post file(s) to the local webhook endpoint
+ *   process <file...>    Run the parse pipeline directly on file(s)
  *
  * Examples:
  *   bun cli/test-trigger.ts webhook /tmp/contract.pdf
  *   bun cli/test-trigger.ts webhook /tmp/screenshot.png /tmp/po.pdf
  *   bun cli/test-trigger.ts process /tmp/contract.pdf
- *   bun cli/test-trigger.ts enqueue /tmp/contract.pdf
  */
 
 import { readFileSync } from "node:fs";
-import { mkdir } from "node:fs/promises";
-import { basename, extname, join } from "node:path";
+import { basename, extname } from "node:path";
 import { processFilesIntake } from "@documents-intake/files-intake";
-import { db } from "@lib/db/client";
 
 const LOG = "[test-trigger]";
-
-const enqueueStmt = db.query(
-  "SELECT public.enqueue_background_job('intake', ($1::text)::jsonb, NULL, 3, FALSE)::bigint AS id"
-);
-
-const INTAKE_DIR = join(import.meta.dir, "../../../../data/files-intake");
 
 const MIME_MAP: Record<string, string> = {
   ".pdf": "application/pdf",
@@ -44,10 +34,6 @@ const MIME_MAP: Record<string, string> = {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 };
-
-// ============================================================================
-// Commands
-// ============================================================================
 
 async function webhookMode(filePaths: string[]): Promise<void> {
   const webhookUrl =
@@ -113,54 +99,17 @@ async function processMode(filePaths: string[]): Promise<void> {
   }
 }
 
-async function enqueueMode(filePaths: string[]): Promise<void> {
-  const jobId = `${Date.now()}-test`;
-  const jobDir = join(INTAKE_DIR, jobId);
-  await mkdir(jobDir, { recursive: true });
-
-  const attachmentPaths: string[] = [];
-  for (const p of filePaths) {
-    const dest = join(jobDir, basename(p));
-    await Bun.write(dest, readFileSync(p));
-    attachmentPaths.push(dest);
-    console.log(`${LOG} Copied: ${basename(p)} → ${dest}`);
-  }
-
-  const payload = JSON.stringify({
-    originalSubject: "Test — Enqueued",
-    originalFrom: "test@example.com",
-    bodyText: "",
-    attachmentPaths,
-    forwarderEmail: "test@desertservices.app",
-  });
-
-  const row = (await enqueueStmt.get(payload)) as { id: number } | null;
-  console.log(
-    `${LOG} Enqueued job #${row?.id}: ${attachmentPaths.length} file(s)`
-  );
-  console.log(`${LOG} The background worker will pick this up automatically.`);
-}
-
-// ============================================================================
-// CLI Entry
-// ============================================================================
-
 const command = process.argv[2];
 const filePaths = process.argv.slice(3);
 
-if (!(command && ["webhook", "process", "enqueue"].includes(command))) {
-  console.log(
-    "Usage: bun cli/test-trigger.ts <webhook|process|enqueue> <file...>"
-  );
+if (!(command && ["webhook", "process"].includes(command))) {
+  console.log("Usage: bun cli/test-trigger.ts <webhook|process> <file...>");
   console.log("");
   console.log(
     "  webhook  — POST files as base64 to the local webhook endpoint"
   );
   console.log(
     "  process  — Run the parse pipeline directly (classify + parse → DB)"
-  );
-  console.log(
-    "  enqueue  — Save files and enqueue a job for the background worker"
   );
   process.exit(1);
 }
@@ -183,9 +132,6 @@ switch (command) {
     break;
   case "process":
     await processMode(filePaths);
-    break;
-  case "enqueue":
-    await enqueueMode(filePaths);
     break;
   default:
     throw new Error(`Unknown command: ${command}`);

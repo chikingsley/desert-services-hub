@@ -1,21 +1,4 @@
-/**
- * Job dispatch — dequeue jobs and route to the appropriate handler.
- *
- * NOTE: Many jobs have been migrated to Trigger.dev (src/trigger/):
- *   - email_notification → email-sync
- *   - mailbox_fallback_sync → mailbox-sync
- *   - body_link_backfill → body-link-intake
- *   - permit_sync → permit-sync
- *   - permit_detail_scrape → permit-detail-scrape
- *   - sync_full, sync_item, download_files, monday_status_sync → monday-sync / monday-sync-item
- *   - intake → document-intake
- *
- * Jobs removed because their dependencies were deleted:
- *   - contact_enrichment, email_triage_batch, folder_watcher_poll,
- *     estimate_linker_maintenance, link_estimate, sync_bc_file,
- *     account_linking, contact_linking, subscription_renewal,
- *     group_sync, notifications_tick
- */
+/** Job dispatch — dequeue jobs and route to the appropriate handler. */
 
 import type { ContractDocExtractPayload } from "@contract/types";
 import { runEstimateExtractionTriage } from "@lib/db/repositories/estimate";

@@ -1,6 +1,6 @@
 # Desert Services Hub — System Map
 
-Last updated: 2026-02-19
+Last updated: 2026-02-24
 
 ## Purpose
 
@@ -16,8 +16,8 @@ Scope boundary:
 - `docker-compose.yml`
 - `apps/background-jobs/webhooks.ts`
 - `apps/background-jobs/worker.ts`
+- `src/trigger/*.ts` (Trigger.dev task definitions)
 - `supabase/functions/README.md`
-- `supabase/migrations/20260219120000_pgmq_pgcron_atomic_rewrite.sql`
 - `Justfile`
 
 ## Runtime Topology
@@ -33,11 +33,32 @@ Scope boundary:
 | `aqdata-worker` | `apps/aqdata-worker/server.ts` | AQData sync/scrape service on `:47823` |
 | `tunnel` (optional) | Cloudflared | Public ingress |
 
+### Trigger.dev (Self-Hosted Background Jobs)
+
+Dashboard: `https://trigger.desertservices.app`
+
+Scheduled and on-demand tasks run as isolated containers via Trigger.dev.
+Task definitions live in `src/trigger/`.
+
+| Task ID | Type | Schedule | Purpose |
+|---------|------|----------|---------|
+| `permit-sync` | scheduled | `*/30 * * * *` | Company-level dust permit sync |
+| `permit-detail-scrape` | scheduled | `*/10 * * * *` | Scrape individual permit details |
+| `mailbox-sync` | scheduled | `*/5 * * * *` | Outlook mailbox delta sync |
+| `email-sync` | on-demand | — | Sync a single email by message ID |
+| `email-enrichment` | on-demand | — | Enrich email metadata (contacts, domains) |
+| `attachment-intake` | on-demand | — | Process email attachments through intake pipeline |
+| `body-link-intake` | on-demand | — | Download and process links found in email bodies |
+| `document-intake` | on-demand | — | Process forwarded files through classify + parse pipeline |
+| `monday-sync` | scheduled | `*/30 * * * *` | Full Monday.com board sync |
+| `monday-sync-item` | on-demand | — | Sync a single Monday item by ID |
+| `monday-sync-targeted` | on-demand | — | Sync specific Monday items by board + item IDs |
+| `mailbox-backfill` | on-demand | — | Backfill emails for a mailbox from a given date |
+
 ### Supabase Edge Functions (Webhook Ingress)
 
 - `monday-webhook`
 - `outlook-webhook`
-- `intake-webhook` (forwarder to `background-jobs` intake endpoint)
 
 ### Cloudflare Worker Deployments
 
@@ -45,48 +66,58 @@ Scope boundary:
 - `estimates-sync` (`apps/cf-workers/estimates-sync-worker`)
 - `inspection-router` (`apps/cf-workers/inspections-email-worker`)
 
-### Queue Runtime
+### pgmq Queue (Event-Driven Jobs)
+
+Event-driven jobs still use pgmq for dispatch. These are enqueued by email triage and webhook handlers.
 
 - Queue backend: `pgmq.q_background_jobs`
-- Scheduler: `pg_cron` jobs `bg_*`
 - Consumer/dispatcher: `apps/background-jobs/jobs/dispatch.ts`
 - Queue operations: `apps/background-jobs/jobs/queue.ts`
 
+Active job types:
+- `contract_doc_extract` — Extract data from contract documents
+- `contract_email_received` — Process incoming contract emails
+- `contract_won_bridge` — Classify/link contracts, mark Won/Lost
+- `dust_permit_payment` — Process permit payment confirmation emails
+- `dust_permit_issued_email` — Process permit issuance emails
+- `estimate_triage` — Run estimate extraction triage
+- `attachment_backfill` — Backfill missing email attachment records
+- `body_link_manual_followup` — Track links requiring manual download
+- `aqdata_sync` — Trigger AQData sync via aqdata-worker
+- `aqdata_detail_scrape` — Scrape individual AQData permit details
+
 ## Canonical Runtime Flows
 
-### Intake Flow (canonical)
+### Document Intake Flow
 
-1. Intake payload arrives from `apps/cf-workers/intake-worker` (or `supabase/functions/intake-webhook`).
-2. `apps/background-jobs/api/webhooks/intake.ts` saves attachments/linked files to local intake storage.
-3. Intake webhook enqueues `job_type=intake` via `public.enqueue_background_job`.
-4. `apps/background-jobs/jobs/dispatch.ts` routes to `processIntakeJob`.
+1. Intake payload arrives from `apps/cf-workers/intake-worker`.
+2. `apps/background-jobs/api/webhooks/intake.ts` saves files to local storage and triggers Trigger.dev `document-intake` task.
+3. Task writes files to temp directory, runs classify + parse pipeline, stores results in Postgres.
 
 ### Outlook Email Flow
 
 1. Microsoft Graph notifications hit `supabase/functions/outlook-webhook`.
-2. Edge function enqueues `email_notification` via `public.enqueue_background_job`.
-3. `apps/background-jobs/jobs/dispatch.ts` runs `processEmailNotificationJob`.
-4. Triage may enqueue follow-on jobs (`dust_permit_payment`, `dust_permit_issued_email`, `contract_email_received`).
-5. Periodic email/project enrichment runs through cron-driven jobs (`folder_watcher_poll`, `estimate_linker_maintenance`, `account_linking`, `contact_linking`, `contact_enrichment`).
+2. Edge function triggers Trigger.dev `mailbox-sync` which calls `email-sync` per message.
+3. `email-sync` enriches each email via `email-enrichment`, processes attachments via `attachment-intake`, and processes body links via `body-link-intake`.
+4. Email triage may enqueue pgmq follow-on jobs (`dust_permit_payment`, `dust_permit_issued_email`, `contract_email_received`).
 
 ### Monday Sync Flow
 
 1. Monday webhooks hit `supabase/functions/monday-webhook`.
-2. Edge function enqueues `sync_item`.
-3. `processSyncItemJob` syncs one item and may enqueue `download_files`.
-4. `sync_full` runs on schedule and orchestrates estimate sync, project seed sync, estimate file sweep, SharePoint sync, and document project propagation.
+2. Edge function triggers Trigger.dev `monday-sync-item` for the affected item.
+3. `monday-sync` runs on schedule (every 30 min) for full board sync — estimates, project seeds, file sweep, SharePoint sync, document propagation.
 
 ### Contract Won Bridge Flow
 
-1. `contract_won_bridge` runs on `pg_cron`.
+1. `contract_won_bridge` runs on pgmq schedule.
 2. Bridge pipeline classifies/links contract emails, enqueues `contract_doc_extract`, backfills docs, and marks Won/Lost.
-3. Winning estimate updates trigger downstream notifications logic.
+3. Winning estimate updates trigger project seed sync.
 
 ### Permit Flow
 
-1. Payment/issued jobs are enqueued by email triage.
-2. Handlers run permit sync orchestration via `@permits/client` (`apps/background-jobs/jobs/permit-sync.ts`).
-3. Notification drafts/events are emitted by `lib/notifications/*`.
+1. Payment/issued email jobs are enqueued by email triage via pgmq.
+2. Payment handler runs permit sync orchestration via `@permits/client`.
+3. Scheduled permit sync and detail scrape run via Trigger.dev.
 
 ## Operational Checks
 

@@ -1,16 +1,9 @@
-/**
- * Event-driven job handlers for background-jobs worker.
- *
- * NOTE: processEmailNotificationJob has been removed — email notifications
- * are now handled by the Trigger.dev email-sync task (src/trigger/email-sync.ts).
- */
+/** Event-driven job handlers for the background-jobs worker. */
 
 import { CONTRACT_EMAIL_PAYLOAD_SCHEMA } from "@contract/types";
-import { processFilesIntake } from "@documents-intake/files-intake";
 import { db } from "@lib/db/client";
 import {
   BODY_LINK_MANUAL_FOLLOWUP_PAYLOAD_SCHEMA,
-  INTAKE_PAYLOAD_SCHEMA,
   ISSUED_PAYLOAD_SCHEMA,
   PAYMENT_PAYLOAD_SCHEMA,
 } from "./job-schemas";
@@ -61,11 +54,6 @@ const upsertBodyLinkManualFollowup = db.query(
        ELSE body_link_manual_followups.status
      END`
 );
-
-export async function processIntakeJob(job: WebhookJob): Promise<void> {
-  const payload = parseJobPayload(job, INTAKE_PAYLOAD_SCHEMA);
-  await processFilesIntake(payload);
-}
 
 export async function processDustPermitPaymentJob(
   job: WebhookJob

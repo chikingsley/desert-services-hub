@@ -52,7 +52,7 @@ desert-services-hub/
 
   apps/
     dust-permits/           # Dust permit browser automation (Playwright, VNC, Maricopa portal)
-    background-jobs/        # Webhook receiver + pgmq worker + scheduled job dispatch
+    background-jobs/        # Webhook receiver + pgmq event-driven job consumer
     web/                    # Frontend SPA + API routes (Bun + React)
       api/                  # Domain-grouped API routes (thin data layer)
       frontend/             # React components and pages
@@ -69,6 +69,9 @@ desert-services-hub/
 
   supabase/
     migrations/             # Postgres migration files (applied in order)
+
+  src/
+    trigger/                # Trigger.dev task definitions (scheduled + on-demand)
 
   tests/                    # Top-level test suite (mirrored by source path)
     apps/                   # Tests for apps/*
@@ -258,9 +261,12 @@ Each Docker service maps to an entrypoint in the codebase.
 | `web` | `desert-web` | 3000 | `apps/web/server.ts` | `apps/web/` |
 | `background-jobs` | `desert-webhooks` | 4747 | `apps/background-jobs/webhooks.ts` | `apps/background-jobs/` |
 | `permit-worker` | `desert-permit-worker` | 47822 | `apps/dust-permits/src/index.ts` | `apps/dust-permits/` |
-| `notifications_tick` | `desert-webhooks` | -- | `apps/background-jobs/jobs/dispatch.ts` (`notifications_tick`) | `lib/notifications/` |
-| `swppp_master_sync` | `desert-webhooks` | -- | `apps/background-jobs/jobs/dispatch.ts` (`swppp_master_sync`) | `packages/sharepoint/src/swppp-sync/` |
 | `tunnel` | `desert-tunnel` | -- | Cloudflare tunnel config | -- |
+
+**Trigger.dev** (self-hosted at `trigger.desertservices.app`):
+
+Scheduled and on-demand tasks defined in `src/trigger/`. Run as isolated containers with full observability.
+See `SYSTEM-MAP.md` for the complete task table.
 
 **Cloudflare Workers** (deployed to Cloudflare edge, not Docker):
 
@@ -269,15 +275,6 @@ Each Docker service maps to an entrypoint in the codebase.
 | `intake-worker` | `apps/cf-workers/intake-worker/` | Email intake from Cloudflare email routing |
 | `inspections-email-worker` | `apps/cf-workers/inspections-email-worker/` | ComplianceGo → SharePoint |
 | `docusign-file-automation` | `apps/cf-workers/docusign-file-automation/` | DocuSign automation scripts/references (no deployed worker) |
-
-**In-process worker modules** (run inside the `background-jobs` container via timers/job queue):
-
-| Worker | Folder | Trigger |
-|--------|--------|---------|
-| `monday sync pipelines` | `packages/monday/src/sync/` | `sync_full`, `sync_item`, `monday_status_sync` jobs |
-| `estimate-email-linker` | `lib/linking/maintenance.ts` | `estimate_linker_maintenance` job (every minute) |
-| `outlook-folder-watcher` | `lib/graph/folder-watcher/` | `folder_watcher_poll` job (every minute) |
-| `buildingconnected-file-sync` | `packages/email/src/sync/bc-sync/` | `sync_bc_file` + `attachment_backfill` jobs |
 
 ---
 
@@ -304,9 +301,8 @@ Each Docker service maps to an entrypoint in the codebase.
 | `dust_permits_filed_by_desert_services` | Permits | Maricopa dust permits |
 | `documents` | Documents | Unified file store (email attachments, monday assets, parsed docs) |
 | `notifications` | Email | Notification event log |
-| `pgmq.q_background_jobs` | Infrastructure | Background job queue |
+| `pgmq.q_background_jobs` | Infrastructure | Event-driven job queue (contracts, permits, estimates) |
 | `swppp_work_orders` | SharePoint | SWPPP Master data (synced from SharePoint) |
-| `tracked_folders` | Email | Outlook folder watcher state |
 
 ---
 

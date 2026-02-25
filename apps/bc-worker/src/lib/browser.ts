@@ -5,7 +5,7 @@
  * Portal-specific behavior:
  * - Login detection: URL-based (redirect to /signin or autodesk.com)
  * - No auto-relogin (requires 2FA/CAPTCHA via VNC bootstrap)
- * - Keep-alive: navigate to BC home, check for redirect
+ * - Keep-alive: HTTP-only check via context.request (no page navigation)
  * - Always headed (VNC kiosk)
  */
 
@@ -83,22 +83,27 @@ export const bcSession = new BrowserSessionManager({
   },
 
   async keepAliveCheck(session) {
-    const page = session.instance.page;
-    const response = await page.goto(BC_HOME_URL, {
+    // Use HTTP-only request (context.request) — does NOT navigate the visible
+    // page, so the VNC view is never disrupted by keep-alive checks.
+    const response = await session.instance.context.request.get(BC_HOME_URL, {
+      failOnStatusCode: false,
       timeout: KEEPALIVE_TIMEOUT_MS,
-      waitUntil: "domcontentloaded",
+      maxRedirects: 0,
     });
-    const currentUrl = page.url();
-    const redirectedToLogin = isLoginUrl(currentUrl);
+    const status = response.status();
+    const finalUrl = response.url();
+    const locationHeader = response.headers().location ?? "";
+    const redirectedToLogin =
+      isLoginUrl(finalUrl) || isLoginUrl(locationHeader);
 
-    if (response?.ok() && !redirectedToLogin) {
+    if (status >= 200 && status < 400 && !redirectedToLogin) {
       return { alive: true };
     }
     return {
       alive: false,
       reason: redirectedToLogin
         ? "BC session expired (redirected to login)"
-        : `BC keepalive HTTP ${response?.status() ?? "unknown"}`,
+        : `BC keepalive HTTP ${status}`,
     };
   },
 

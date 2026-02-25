@@ -64,7 +64,11 @@ interface BuildingConnectedAuthStatus {
     busy: boolean;
     currentOperation: string | null;
     isLoggedIn: boolean;
+    keepAliveEnabled: boolean;
+    keepAliveIntervalMs: number;
     lastError: string | null;
+    lastKeepAliveAt: string | null;
+    lastLoginAt: string | null;
     portalReady: boolean;
     startedAt: string | null;
   };
@@ -189,7 +193,9 @@ interface TelemetryData {
   lastPinnedHome: string;
 }
 
-function deriveTelemetry(data: AutomationStatus | undefined): TelemetryData {
+function deriveMaricopaTelemetry(
+  data: AutomationStatus | undefined
+): TelemetryData {
   const homePinAvailable =
     (data?.lastPortalPinAt ?? null) !== null ||
     typeof data?.portalHomePinEnabled === "boolean";
@@ -212,6 +218,22 @@ function deriveTelemetry(data: AutomationStatus | undefined): TelemetryData {
       ? `On (${Math.round((data.keepAliveIntervalMs || 0) / 1000)}s)`
       : "Off",
     homePin: homePinLabel,
+  };
+}
+
+function deriveBcTelemetry(
+  data: BuildingConnectedAuthStatus | undefined
+): TelemetryData {
+  const s = data?.session;
+  return {
+    busy: s?.busy ? s.currentOperation || "Running" : "Idle",
+    lastLogin: formatTimestamp(s?.lastLoginAt ?? null),
+    lastKeepAlive: formatTimestamp(s?.lastKeepAliveAt ?? null),
+    lastPinnedHome: "N/A",
+    keepAlive: s?.keepAliveEnabled
+      ? `On (${Math.round((s.keepAliveIntervalMs || 0) / 1000)}s)`
+      : "Off",
+    homePin: "N/A",
   };
 }
 
@@ -444,7 +466,10 @@ export function AutomationPage({ visible = true }: AutomationPageProps) {
   const { label: bcSessionLabel, dotClass: bcSessionDotClass } =
     getBuildingConnectedSessionDisplay(bcStatus);
 
-  const telemetry = deriveTelemetry(data);
+  const telemetry =
+    activePortal === "buildingconnected"
+      ? deriveBcTelemetry(bcStatus)
+      : deriveMaricopaTelemetry(data);
 
   const actionPending = action !== null;
   const activeActionKey = action?.split("/").pop() ?? null;

@@ -1,0 +1,447 @@
+
+
+
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Content-Language" content="en">
+        <meta name="google-site-verification" content="Ah-HT9MBrEUnH_vVG-FO59z99Or49yMGqWRZXsKf7Sg" />
+
+        <title>City of Scottsdale - Document Search</title>
+
+    <!-- Favicons -->
+    <link rel="shortcut icon" href="/bldgresources/Content/images/favicon.ico">
+    <link rel="apple-touch-icon" sizes="57x57" href="/bldgresources/Content/images/CoS-icon-57x57.jpg">
+    <link rel="apple-touch-icon" sizes="72x72" href="/bldgresources/Content/images/CoS-icon-72x72.jpg">
+    <link rel="apple-touch-icon" sizes="114x114" href="/bldgresources/Content/images/CoS-icon-114x114.jpg">
+    <link rel="apple-touch-icon" sizes="144x144" href="/bldgresources/Content/images/CoS-icon-144x144.jpg">
+
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic">
+    <link rel="stylesheet" type="text/css" href="/bldgresources/Content/jqueryui/jquery-ui.min.css" />
+    <link rel="stylesheet" type="text/css" href="/bldgresources/Content/jqueryui/jquery-ui.structure.min.css" />
+    <link rel="stylesheet" type="text/css" href="/bldgresources/Content/jqueryui/jquery-ui.theme.min.css" />
+    <link rel="stylesheet" type="text/css" href="/bldgresources/Content/jqueryui/jquery-ui-timepicker-addon.min.css" />
+    <link rel="stylesheet" type="text/css" href="/bldgresources/Content/fonts/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="/bldgresources/Content/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/bldgresources/Content/cos.css" />
+    <link rel="stylesheet" type="text/css" href="/bldgresources/Content/eServices.css" />
+
+    <link href="/bldgresources/css/app?v=E50J5D6vJTDoVWtOC3dCS24V3lLZMLUIDEMMBNrobTw1" rel="stylesheet"/>
+
+
+    <script>
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date(); a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+
+        ga('create', 'UA-2223674-2', 'auto');
+        ga('send', 'pageview');
+    </script>
+</head>
+<body>
+    <header>
+        <div id="site-header" class="site-header site-header-general hidden-xs hidden-print">
+            <div class="site-header-caption">
+                <a href="https://www.scottsdaleaz.gov" title="Back to Home">
+                    <img src="/bldgresources/Content/images/CityHeaderLogo.png" alt="City of Scottsdale Logo" style="margin-top: 10px; margin-left: 20px;">
+                </a>
+                <div class="department-branding">
+                    <h3 style="margin-left: 20px;">eServices</h3>
+                </div>
+            </div>
+        </div>
+        <div class="cos-print-header visible-print">
+            <img src="/bldgresources/content/images/coslogoblack.png" />
+        </div>
+        <div class="cos-page-header">
+            <a href="https://www.scottsdaleaz.gov" class="hidden-sm hidden-md hidden-lg hidden-print">
+                <h3 class="branding-sm text-center">
+                    City of <strong>Scottsdale</strong>
+                </h3>
+            </a>
+        </div>
+        <div id="page-nav-large" class="page-nav-large breadcrumb-container hidden-print">
+            <div class="page-wrapper">
+                <div class="container">
+                    <div id="locationline" class="breadcrumb">
+                        <span>
+                            <span class="ipb-locationline-separator"></span><a href="https://www.scottsdaleaz.gov/home">Home Page</a>
+                            
+    <span class="ipb-locationline-separator">&nbsp;/&nbsp;</span>&nbsp;<a href="http://www.scottsdaleaz.gov/planning-development">Planning and Development</a>
+    <span class="ipb-locationline-separator">&nbsp;/&nbsp;</span>&nbsp;Document Search
+
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <section class="container cms-content">
+        <div class="page-content">
+            
+
+<link href="/bldgresources/content/dmsearch?v=mhtW1waDU44tCVrggvL3QNGh-C09jldXZVwWYrvTDG41" rel="stylesheet"/>
+
+<h2>Document Search</h2>
+<div id="intro" class="well well-sm">
+    <strong>Search documents in our public records database for Planning and Development. A property address search will deliver the best results.</strong>
+    <br /><br />
+    <ul>
+        <li>Enter any part of an address to begin the search.</li>
+        <li>Click a document link to download to your desktop or mobile device.</li>
+        <li>Click on Sort to list documents by Full Address, Case, Permit or Plan Number, Document Name, Description by the Sort button.</li>
+    </ul>
+</div>
+<div class="panel panel-default search-criteria-panel">
+    <div class="panel-heading" style="border-bottom: 0; padding-top: 5px; padding-bottom: 5px;" id="searchOptions">
+        <div class="row">
+            <div class="panel-title col-xs-6">
+                Document Search Criteria
+            </div>
+        </div>
+    </div>
+    <div class="panel-body other-search-criteria" id="AdditionalSearchCriteria" style="padding-bottom: 10px;">
+        <div class="row search-criteria-spacing">
+            <div class="col-sm-3 form-group">
+                <label for="StreetNum" class="control-label">Street Number&nbsp;<span data-id="street_num" class="fa fa-question-circle showHelp" style="cursor: pointer"></span></label>
+                <input id="StreetNum" name="StreetNum" class="form-control">
+            </div>
+            <div class="col-sm-4 form-group">
+                <label for="StreetName" class="control-label">Street Name&nbsp;<span data-id="street_name" class="fa fa-question-circle showHelp" style="cursor: pointer"></span></label>
+                <input id="StreetName" name="StreetName" class="form-control">
+            </div>
+            <div class="col-sm-2 form-group">
+                <label for="SuffixType" class="control-label">Type&nbsp;<span data-id="street_type" class="fa fa-question-circle showHelp" style="cursor: pointer"></span></label>
+                <input id="SuffixType" name="SuffixType" class="form-control">
+            </div>
+            <div class="col-sm-3 form-group">
+                <label for="SuffixNum" class="control-label">Unit Number&nbsp;<span data-id="unit_number" class="fa fa-question-circle showHelp" style="cursor: pointer"></span></label>
+                <input id="SuffixNum" name="SuffixNum" class="form-control">
+            </div>
+        </div>
+        <div class="row search-criteria-spacing">
+            <div class="col-sm-3 form-group">
+                <label for="CaseNum" class="control-label">Case Number&nbsp;<span data-id="case_num" class="fa fa-question-circle showHelp" style="cursor: pointer"></span></label>
+                <input id="CaseNum" name="CaseNum" class="form-control">
+            </div>
+            <div class="col-sm-3 form-group">
+                <label for="PlanNum" class="control-label">Plan Check Number&nbsp;<span data-id="plan_num" class="fa fa-question-circle showHelp" style="cursor: pointer"></span></label>
+                <input id="PlanNum" name="PlanNum" class="form-control">
+            </div>
+            <div class="col-sm-3 form-group">
+                <label for="PermitNum" class="control-label">Building Permit Number&nbsp;<span data-id="permit_num" class="fa fa-question-circle showHelp" style="cursor: pointer"></span></label>
+                <input id="PermitNum" name="PermitNum" class="form-control">
+            </div>
+            <div class="col-sm-3 form-group">
+                <label for="CivilNum" class="control-label">Civil Permit Number&nbsp;<span data-id="civil_num" class="fa fa-question-circle showHelp" style="cursor: pointer"></span></label>
+                <input id="CivilNum" name="CivilNum" class="form-control">
+            </div>
+        </div>
+        <div class="row search-criteria-spacing">
+            <div class="col-sm-3 form-group">
+                <label for="LotNum" class="control-label">Lot Number&nbsp;<span data-id="lot_num" class="fa fa-question-circle showHelp" style="cursor: pointer"></span></label>
+                <input id="LotNum" name="LotNum" class="form-control">
+            </div>
+            <div class="col-sm-3 form-group">
+                <label for="APNNum" class="control-label">Parcel Number&nbsp;<span data-id="parcel_num" class="fa fa-question-circle showHelp" style="cursor: pointer"></span></label>
+                <input id="APNNum" name="APNNum" class="form-control">
+            </div>
+            <div class="col-sm-6 form-group">
+                <label for="FullText" class="control-label">Full Text&nbsp;<span data-id="full_text" class="fa fa-question-circle showHelp" style="cursor: pointer"></span></label>
+                <input id="FullText" name="FullText" class="form-control">
+            </div>
+        </div>
+        <div class="col-sm-12 form-group">
+            <label class="control-label">Document Type&nbsp;<span data-id="doc_type" class="fa fa-question-circle showHelp" style="cursor: pointer"></span></label>
+            <div class="row">
+                <div class="col-xs-3">
+                    <input type="checkbox" id="option-1" name="DocType" value="FEMA" style="margin-top: 6px; display: inline-block; position: absolute;">
+                    <label for="options-1" style="padding-left: 1em;">Elevation Certificates</label>
+                </div>
+                <div class="col-xs-3">
+                    <input type="checkbox" id="option-2" name="DocType" value="CERT" style="margin-top: 6px; display: inline-block; position: absolute;">
+                    <label for="options-2" style="padding-left: 1em;">Certificate of Occupancy</label>
+                </div>
+                <div class="col-xs-3">
+                    <input type="checkbox" id="option-3" name="DocType" value="SITE" style="margin-top: 6px; display: inline-block; position: absolute;">
+                    <label for="options-3" style="padding-left: 1em;">Site Plans</label>
+                </div>
+                <div class="col-xs-3">
+                    <input type="checkbox" id="option-4" name="DocType" value="CASE" style="margin-top: 6px; display: inline-block; position: absolute;">
+                    <label for="options-4" style="padding-left: 1em;">Cases</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+<div class="row search-criteria-spacing">
+    <div class="col-sm-6">
+    </div>
+    <div class="col-xs-6 col-sm-3 form-group">
+        <a href="javascript:void(0)" class="btn btn-primary" style="display: block; margin-bottom: 15px;" onclick="Planning.DmSearch.SearchDocuments()"><span class="hide-icon-xs glyphicon glyphicon-search" aria-hidden="true"></span> Search</a>
+    </div>
+    <div class="col-xs-6 col-sm-3 form-group">
+        <a href="javascript:void(0)" class="btn btn-default" style="display: block;" onclick="Planning.DmSearch.ResetSearch()"><span class="hide-icon-xs glyphicon glyphicon-ban-circle" aria-hidden="true"></span> Reset</a>
+    </div>
+</div>
+<br />
+<div class="alert alert-warning bg-warning">
+    <strong class="text-warning"><em class="text-capitalize">The documents, maps, and data available through this web site are provided for general informational purposes only. The City of Scottsdale does not warrant their accuracy, completeness, or suitability for any purpose. They should not be relied upon without proper field verification.</em></strong>
+</div>
+<div id="loading"></div>
+<div>
+    <div class="list-group search-results" style="margin-bottom: 10px;">
+    </div>
+</div>
+
+<div id="search-progress" class="hidden">
+    <div class="progress">
+        <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+            Searching, please wait ...
+        </div>
+    </div>
+</div>
+<div id="searchResults">
+</div>
+<div style="text-align:center;">
+    <a class="btn btn-more" id="moreBtn" style="display:none;">
+        Show More
+    </a>
+</div>
+<input type="hidden" id="currentPage" name="currentPage" value="0" /><div class="modal fade" id="contextHelpModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body" style="padding-top: 0; margin-top: -10px;">
+<div id="context_help">
+    <div id="street_num" class="hidden">
+        <h3 class="help-title">Street Number</h3>
+        <p>Enter the numeric identifier for a land parcel, house, building or other feature, as defined by the official address authority for the given jurisdiction.</p>
+        <p>Example: <strong>1234</strong> Main Street, 100</p>
+    </div>
+    <div id="street_name" class="hidden">
+        <h3 class="help-title">Street Name</h3>
+        <p>Enter the official name of a street as assigned by a local governing authority, or an alternate (alias) name that is used and recognized, excluding street types, directionals, and modifiers..</p>
+        <p>Example: 1234 <strong>Main</strong> Street, 100</p>
+    </div>
+    <div id="street_type" class="hidden">
+        <h3 class="help-title">Street Post Type</h3>
+        <p>Enter the element of the complete street name following the street name element that indicates the type of street..</p>
+        <p>Example: 1234 Main <strong>ST</strong>, 100</p>
+        <table class="table table-condensed">
+            <caption><strong class="text-info">Other street types include:</strong></caption>
+            <thead>
+                <tr>
+                    <th>Abbreviation</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ST</td>
+                    <td>Street</td>
+                </tr>
+                <tr>
+                    <td>PL</td>
+                    <td>Place</td>
+                </tr>
+                <tr>
+                    <td>WY</td>
+                    <td>Way</td>
+                </tr>
+                <tr>
+                    <td>CT</td>
+                    <td>Court</td>
+                </tr>
+                <tr>
+                    <td>DR</td>
+                    <td>Drive</td>
+                </tr>
+                <tr>
+                    <td>PY</td>
+                    <td>Parkway</td>
+                </tr>
+                <tr>
+                    <td>RD</td>
+                    <td>Road</td>
+                </tr>
+                <tr>
+                    <td>AV</td>
+                    <td>Avenue</td>
+                </tr>
+                <tr>
+                    <td>HI</td>
+                    <td>Highway</td>
+                </tr>
+                <tr>
+                    <td>LN</td>
+                    <td>Lane</td>
+                </tr>
+                <tr>
+                    <td>TR</td>
+                    <td>Trail</td>
+                </tr>
+                <tr>
+                    <td>BL</td>
+                    <td>Boulevard</td>
+                </tr>
+                <tr>
+                    <td>CR</td>
+                    <td>Circle</td>
+                </tr>
+                <tr>
+                    <td>FY</td>
+                    <td>Freeway</td>
+                </tr>
+                <tr>
+                    <td>TE</td>
+                    <td>Terrace</td>
+                </tr>
+                <tr>
+                    <td>PZ</td>
+                    <td>Plaza</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="unit_number" class="hidden">
+        <h3 class="help-title">Unit Identifier</h3>
+        <p>Enter the numbers, letters, words, or combination thereof distinguishing one occupancy from another within a given address.</p>
+        <p>Example: 1234 Main Street, <strong> 100</strong></p>
+    </div>
+    <div id="lot_num" class="hidden">
+        <h3 class="help-title">Land Lot Number</h3>
+        <p>Enter the tract or parcel number unique to your address</p>
+        <p>Example: <strong> 100</strong></p>
+    </div>
+    <div id="case_num" class="hidden">
+        <h3 class="help-title">Planning and Development Case Number</h3>
+        <p>To search for a single case, enter the full number like <strong>15-ZN-2015</strong></p>
+    </div>
+    <div id="plan_num" class="hidden">
+        <h3 class="help-title">Planning and Development Plan Number</h3>
+        <p>To search for a single plan, enter the full number like <strong>123456-17</strong></p>
+    </div>
+    <div id="permit_num" class="hidden">
+        <h3 class="help-title">Planning and Development Building Permit Number</h3>
+        <p>To search for a single building permit, enter the full number like <strong>123456</strong></p>
+    </div>
+    <div id="civil_num" class="hidden">
+        <h3 class="help-title">Planning and Development Civil Permit Number</h3>
+        <p>To search for a single encroachment permit, enter the full number like <strong>123456</strong></p>
+    </div>
+    <div id="doc_type" class="hidden">
+        <h3 class="help-title">Document Type</h3>
+        <p>Document management contains all of the doucments related to your property. You can optionaly select to retrieve certain documents.</p>
+    </div>
+    <div id="parcel_num" class="hidden">
+        <h3 class="help-title">Parcel Number (APN)</h3>
+        <p>To search for a specific parcel, enter the full number like <strong>123-12-1234</strong></p>
+    </div>
+    <div id="full_text" class="hidden">
+        <h3 class="help-title">Full Text Search</h3>
+        <p>Any data entered into this field will perform an additional search of document text that has been OCR'd</p>
+    </div>
+</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+        </div>
+    </section>
+    
+    <footer class="footer-sticky">
+        <div class="app-contact-footer text-center">
+             <!-- NOTE: AppContactFooter section's html MUST be a div with class of 'container'. -->
+        </div>
+        <div class="container hidden-print">
+            <div class="row copyright">
+                <div class="col-sm-6 col-sm-push-6 copyright-citysymbol center-to-right">
+                    <a href="https://www.scottsdaleaz.gov">
+                        <img alt="City Logo" src="/bldgresources/Content/images/CityHeaderLogoStacked.png">
+                    </a>
+                </div>
+                <div class="col-sm-6 col-sm-pull-6 copyright-address center-to-left">
+                    <address>
+                        <small>
+                            3939 N. Drinkwater Blvd. <br>
+                            Scottsdale, AZ 85251 <br>
+                            P: <a href="tel:4803123111" title="Call City of Scottsdale">480-312-3111</a> <br>
+                            F: 480-312-2888 <br>
+                            <a href="https://eservices.scottsdaleaz.gov/ez/Request/Submit?group=MostCommon">Ask a question</a>
+                        </small>
+                    </address>
+                    <!-- End Contact Us -->
+                    <p>
+                        <small>
+                            Copyright ©
+                            <script language="JavaScript" type="text/javascript">
+                                document.write((new Date()).getFullYear());
+                            </script>
+                            City of Scottsdale. All Rights Reserved.
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <section class="site-tools hidden-print">
+            <div class="container">
+                <div class="row text-center">
+                    <ul class="list-inline">
+                        <li>
+                            <a href="https://www.scottsdaleaz.gov/policies">Legal Policies</a>
+                        </li>
+                        <li>·</li>
+                        <li>
+                            <a href="https://www.scottsdaleaz.gov/site-map">Site Map</a>
+                        </li>
+                        <li>·</li>
+                        <li>
+                            <a href="https://portal.office.com/">Staff Login</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </footer>
+    <a href="javascript:void(0)" class="scrollup hidden-print" title="Scroll to top" style="display: inline;">
+        <i class="fa fa-chevron-up"></i>
+    </a>
+    <script src="/bldgresources/js/vendor?v=stSzzUWvVNVLnrw7GROan83IOZk_vXNgjD4u7yiK9NY1"></script>
+
+    <script src="/bldgresources/js/eServices?v=ko72lfnD37aUJXrZP8hN0_4ad8DfnwH8ecalUXZyrOg1"></script>
+
+    <script src="/bldgresources/js/app?v=RRGZKyEh7O0rcCauvb5YQGHvZQT6Sbn_GWHdmZLFRm01"></script>
+
+    
+    <script src="/bldgresources/js/dmsearch?v=W1pDfwchqx6XsPzpDDeTj7E2A5V0LZN0lWIPvUXwNow1"></script>
+
+    <script src="/bldgresources/js/sortmodalshared?v=g_dnGyqmi-ugQkiXatGzMEvSYEvNVvUyoxXDCge1gJA1"></script>
+
+    <script src="/bldgresources/js/helpmodalshared?v=XMwRuZRbcUQPVHLqGnLRBNEqWjqvxXknEUP2_dNZOq41"></script>
+
+
+    <script type="text/javascript">
+        $(document).ready(
+            Planning.SortModal.Init(),
+            Planning.DmSearch.Init(),
+            Planning.HelpModal.Init()
+        );
+    </script>
+
+        <script async src="https://siteimproveanalytics.com/js/siteanalyze_8575.js"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d4165dc2fc8b941',t:'MTc3MjEyOTQxMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

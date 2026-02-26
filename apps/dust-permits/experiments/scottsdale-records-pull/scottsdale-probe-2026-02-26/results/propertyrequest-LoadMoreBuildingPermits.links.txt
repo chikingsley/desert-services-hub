@@ -1,0 +1,5 @@
+/bldgresources/BuildingPermit/Details/261251
+/bldgresources/BuildingPermit/Details/245097
+/bldgresources/BuildingPermit/Details/245095
+/bldgresources/BuildingPermit/Details/242418
+/bldgresources/BuildingPermit/Details/232471

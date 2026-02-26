@@ -23,9 +23,9 @@
   │  POST /functions/v1/outlook-webhook              │
   │  (Supabase Edge Function)                        │
   │                                                  │
-  │  ✅ Enqueues `email_notification` (pgmq)         │
-  │  ✅ background-jobs worker stores email/attachments │
-  │  ✅ Triage can classify + dispatch action jobs   │
+  │  ✅ Triggers Trigger.dev `email-sync`            │
+  │  ✅ Email + attachments stored in Postgres       │
+  │  ✅ Triage/classification runs in Trigger tasks  │
   │  ⚠️ Contract packet automation still has gaps    │
   └────────────┬────────────────────────────────────┘
                │
@@ -33,13 +33,12 @@
    Alternate/manual intake path (still supported):
 
   ┌─────────────────────────────────────────────────┐
-  │  Forward email → intake@desertservices.app       │
+  │  Manual/alternate intake submission              │
   │                                                  │
-  │  intake-worker (Cloudflare) receives it          │
-  │  → Extracts attachments + file-sharing links     │
+  │  Intake ingress receives payload                 │
   │  → Preserves original sender/subject             │
-  │  → POSTs to /api/webhooks/intake                 │
-  │  → Also forwards to chi@ (you still get it)     │
+  │  → POSTs to /functions/v1/intake-webhook         │
+  │  → Optional operator forwarding to chi@          │
   └────────────┬────────────────────────────────────┘
                │
                ▼
@@ -297,14 +296,13 @@ Templates exist in `packages/contracts/templates/` but aren't wired to any autom
 | Component | Path |
 |-----------|------|
 | Email webhook ingress | `supabase/functions/outlook-webhook/index.ts` |
-| Intake webhook | `apps/background-jobs/api/webhooks/intake.ts` |
+| Intake webhook | `supabase/functions/intake-webhook/index.ts` |
 | Intake pipeline | `packages/documents/intake/src/files-intake.ts` |
 | PDF analysis/classification | `packages/documents/intake/src/pdf_analysis/analysis/*.py` |
 | Intake DB + types | `lib/db/repositories/intake-document.ts` |
 | Post-processing/linking | `packages/documents/intake/src/attachment-backfill.ts` |
 | Document classifier | `packages/documents/intake/src/pdf_analysis/analysis/classify.py` |
-| Intake CF worker | `apps/cf-workers/intake-worker/src/index.ts` |
-| Email processing | `apps/background-jobs/jobs/email-processing.ts` |
+| Email processing | `apps/trigger-dev/src/trigger/mailbox-sync.ts` |
 | Project seed sync | `packages/monday/src/sync/project-seed/sync.ts` |
 | Folder watcher projects | `lib/graph/folder-watcher/projects.ts` |
 | Project matching | `lib/db/repositories/project-matching.ts` |
@@ -323,8 +321,6 @@ Templates exist in `packages/contracts/templates/` but aren't wired to any autom
 
 | Service | Container | What It Does For Contracts |
 |---------|-----------|---------------------------|
-| `background-jobs` | `desert-webhooks` | Queue consumer, intake processing, folder watcher, estimate sync |
 | `web` | `desert-web` | Contracts API, frontend UI, SOV endpoints |
 | `supabase edge` | Managed | Monday/Outlook/intake webhook ingress |
-| `intake-worker` | Cloudflare Edge | Receives forwarded emails, extracts attachments, posts to intake webhook |
-| `docusign-dispatcher` | Cloudflare Edge | Routes DocuSign signing links from contracts@ |
+| `docusign-dispatcher` | Cloudflare Edge | Routes DocuSign signing links from contract inbox aliases |

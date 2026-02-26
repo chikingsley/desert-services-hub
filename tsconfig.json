@@ -13,7 +13,6 @@
       "@/components/*": ["apps/web/frontend/components/*"],
       "@/pages/*": ["apps/web/frontend/pages/*"],
       "@/api/*": ["apps/web/api/*"],
-      "@background-jobs/*": ["apps/background-jobs/*"],
       "@contract/*": ["packages/contracts/src/*"],
       "@monday/*": ["packages/monday/src/*"],
       "@sharepoint/*": ["packages/sharepoint/src/*"],
@@ -24,6 +23,7 @@
       "@estimates/*": ["packages/estimates/src/*"],
       "@permits/*": ["apps/dust-permits-mcp/permits/src/*"],
       "@siteline/*": ["packages/siteline/src/*"],
+      "@triage/*": ["packages/archive/email/sync/triage/*"],
       "@lib/*": ["lib/*"]
     },
     "strictNullChecks": true

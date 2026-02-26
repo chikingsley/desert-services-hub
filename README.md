@@ -19,7 +19,7 @@ automation workers, and domain packages.
 
 - `apps/` — runtime applications and workers
 - `apps/web/` — frontend + API server
-- `apps/background-jobs/` — webhook ingress + job dispatch + timer workers
+- `apps/trigger-dev/` — Trigger.dev self-host stack + task definitions
 - `apps/dust-permits/` — permit automation runtime
 - `apps/cf-workers/` — Cloudflare worker deployments
 - `packages/` — domain packages (`email`, `monday`, `sharepoint`, `documents`, `contracts`, `estimates`, etc.)

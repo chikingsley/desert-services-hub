@@ -1,107 +1,101 @@
-# Trigger.dev Migration Plan
+# Trigger.dev Migration Status
 
-Migration from pgmq/pg_cron/worker.ts to Trigger.dev for observability, retries, and dashboard visibility.
+Last updated: 2026-02-26
 
 Dashboard: <https://trigger.desertservices.app>
 
-## Completed
+## Purpose
 
-| Old Job | Trigger.dev Task | File | Type |
-|---------|-----------------|------|------|
-| `permit_sync` | `permit-sync` | `src/trigger/permit-sync.ts` | `schedules.task` `*/30 * * * *` |
-| `permit_detail_scrape` | `permit-detail-scrape` | `src/trigger/permit-detail-scrape.ts` | `schedules.task` `*/10 * * * *` |
-| `email_notification` | `email-sync` | `src/trigger/email-sync.ts` | `schemaTask` (webhook) |
-| `sync_full` + `monday_status_sync` | `monday-sync` | `src/trigger/monday-sync.ts` | `schedules.task` `*/10 * * * *` |
-| `sync_item` + `download_files` | `monday-sync-item` | `src/trigger/monday-sync-item.ts` | `schemaTask` (webhook) |
+Track migration from legacy `pgmq` / `pg_cron` queue orchestration to Trigger.dev tasks, plus current cutover risks and next actions.
 
-## Remaining — Scheduled Jobs
+This is a present-state operational doc, not historical design.
 
-These run on cron via pg_cron today. Each becomes a `schedules.task()`.
+## Source of Truth
 
-| Old Job | What It Does | Priority |
-|---------|-------------|----------|
-| ~~`monday_status_sync`~~ | ~~Sync Monday.com board statuses~~ | **Done** → `monday-sync` |
-| ~~`sync_full`~~ | ~~Monday.com full board sync~~ | **Done** → `monday-sync` |
-| `folder_watcher_poll` | Watch Outlook folders for new project folders | Medium |
-| `estimate_linker_maintenance` | Link estimates to emails | Medium |
-| `mailbox_fallback_sync` | Fallback mailbox sync | Low |
-| `body_link_backfill` | Backfill body link scanning | Low |
-| `group_sync` | Outlook group sync | Low |
-| `subscription_renewal` | Subscription renewals | Low |
-| `account_linking` | Batch account linking | Low |
-| `contact_linking` | Batch contact linking | Low |
-| `swppp_master_sync` | SWPPP master sync | Low |
-| `attachment_backfill` | Backfill attachment parsing | Low |
-| `contract_won_bridge` | Bridge contract-won events | Low |
-| `aqdata_sync` | AQData export sync | Low |
-| `aqdata_detail_scrape` | AQData detail enrichment | Low |
-| `notifications_tick` | Notification timer tick | Low |
+- Task definitions: `apps/trigger-dev/src/trigger/*.ts`
+- Trigger config: `trigger.config.ts`
+- Runtime topology: `docker-compose.yml`
+- Webhook ingress: `supabase/functions/*-webhook/index.ts`
+- DB teardown migration: `supabase/migrations/20260226113000_remove_legacy_background_queue.sql`
 
-## Remaining — Event-Driven Jobs
+## Current Trigger Tasks
 
-These fire from webhooks or queue events. Each becomes a `task()` triggered via API.
+### Webhook-triggered / on-demand tasks
 
-| Old Job | Trigger Source | Priority |
-|---------|---------------|----------|
-| ~~`email_notification`~~ | ~~Outlook webhook~~ | **Done** → `email-sync` |
-| `intake` | Document intake | **High** |
-| ~~`sync_item`~~ | ~~Monday webhook~~ | **Done** → `monday-sync-item` |
-| ~~`download_files`~~ | ~~Monday webhook~~ | **Done** → `monday-sync-item` |
-| `dust_permit_payment` | Payment email detected | Medium |
-| `dust_permit_issued_email` | Permit issued email detected | Medium |
-| `contract_email_received` | Contract email detected | Medium |
-| `contract_doc_extract` | Document extraction | Medium |
-| `contact_enrichment` | On-demand enrichment | Medium |
-| `email_triage_batch` | Batch triage | Medium |
-| `estimate_triage` | Estimate classification | Medium |
-| `link_estimate` | Estimate linking | Medium |
-| `sync_bc_file` | BuildingConnected file | Medium |
-| `body_link_manual_followup` | Manual trigger | Low |
+| Task ID | Entry Source | File |
+|---|---|---|
+| `email-sync` | `outlook-webhook` | `apps/trigger-dev/src/trigger/mailbox-sync.ts` |
+| `document-intake` | `intake-webhook` | `apps/trigger-dev/src/trigger/document-intake.ts` |
+| `monday-sync-item` | `monday-webhook` | `apps/trigger-dev/src/trigger/monday-sync.ts` |
+| `monday-sync-targeted` | manual/API | `apps/trigger-dev/src/trigger/monday-sync.ts` |
+| `mailbox-backfill` | manual/API | `apps/trigger-dev/src/trigger/mailbox-sync.ts` |
+| `email-triage-one` | manual/API | `apps/trigger-dev/src/trigger/email-triage.ts` |
+| `email-triage-backfill` | manual/API | `apps/trigger-dev/src/trigger/email-triage.ts` |
+| `dust-permit-notification` | manual/API + triage routing | `apps/trigger-dev/src/trigger/dust-permit-notification.ts` |
 
-## Email Pipeline (Redesign Target)
+### Scheduled tasks
 
-The `email_notification` webhook is the entry point for all email processing. The current flow is fragmented across multiple loosely-coupled queue jobs. The target is a clean, observable pipeline:
+| Task ID | Schedule | File |
+|---|---|---|
+| `mailbox-sync` | `*/15 * * * *` | `apps/trigger-dev/src/trigger/mailbox-sync.ts` |
+| `email-triage` | `*/5 * * * *` | `apps/trigger-dev/src/trigger/email-triage.ts` |
+| `attachment-intake` | `*/5 * * * *` | `apps/trigger-dev/src/trigger/attachment-intake.ts` |
+| `body-link-intake` | `*/10 * * * *` | `apps/trigger-dev/src/trigger/body-link-intake.ts` |
+| `monday-sync-incremental` | `*/10 * * * *` | `apps/trigger-dev/src/trigger/monday-sync.ts` |
+| `monday-sync` | `0 */6 * * *` | `apps/trigger-dev/src/trigger/monday-sync.ts` |
+| `permit-sync` | `*/30 * * * *` | `apps/trigger-dev/src/trigger/permit-sync.ts` |
+| `permit-detail-scrape` | `*/10 * * * *` | `apps/trigger-dev/src/trigger/permit-detail-scrape.ts` |
+| `db-saturation-alert-monitor` | `*/1 * * * *` | `apps/trigger-dev/src/trigger/ops-alerts.ts` |
 
-```sql
-Outlook Webhook (new email)
-│
-├─► Step 1: Sync & Thread Link
-│   ├── Fetch email body/metadata from Graph API
-│   ├── Link to conversation thread (conversationId — idempotent)
-│   └── Cascade thread attachment to related records
-│
-├─► Step 2: Contact & Account (parallel)
-│   ├── Find or create contact from sender
-│   ├── Enrich contact if not already enriched (PDL)
-│   ├── Find or create account from sender domain
-│   └── Enrich account if not already enriched (PDL)
-│
-├─► Step 3: Content Extraction (after Step 1)
-│   ├── Scan email body + thread for links
-│   │   ├── BuildingConnected links → Playwright download flow
-│   │   └── Other downloadable links → HTTP fetch
-│   ├── Download Outlook attachments
-│   └── Process all files through document intake
-│       ├── PDF/Office/Image → raw text extraction
-│       └── LLM classification (existing, review needed)
-│
-└─► Step 4: Project/Estimate Matching (after Steps 2+3)
-    ├── Attempt to match email to existing project
-    ├── Attempt to match email to existing estimate
-    └── If ambiguous → queue for manual review
+### Non-production test tasks (still deployed)
 
-Thread Link Background Job (continuous):
-  - Watches for unlinked emails
-  - Links via conversationId
-  - Cascades project/account attachments through thread
-  - Triggers downstream steps for anything newly linked
-```
+| Task ID | File | Risk |
+|---|---|---|
+| `load-test-db-ping` | `apps/trigger-dev/src/trigger/load-test-db-ping.ts` | Can create large pending backlog if triggered repeatedly |
+| `load-test-db-saturation` | `apps/trigger-dev/src/trigger/load-test-db-saturation.ts` | Can intentionally exhaust Postgres slots |
 
-### Design Principles
+## Completed Migration Work
 
-- Each step is its own Trigger.dev task — visible, retriable, independently observable
-- Steps 1 and 2 can run in parallel
-- Step 3 waits for Step 1 (needs email body)
-- Step 4 waits for Steps 2+3 (needs contacts + extracted content)
-- Thread linking runs as a separate background job that cascades automatically
-- All state in Supabase Postgres — Trigger.dev is orchestration only
+- Webhook ingress moved to Trigger task triggers:
+  - `outlook-webhook` -> `email-sync`
+  - `monday-webhook` -> `monday-sync-item`
+  - `intake-webhook` -> `document-intake`
+- Legacy `apps/background-jobs` runtime removed from active code paths.
+- Legacy intake CF worker removed.
+- Legacy queue DB objects teardown migration added:
+  - unschedules `bg_*` cron jobs
+  - drops `schedule_background_job` / `enqueue_background_job`
+  - drops `background_job_dead_letters`
+  - drops `pgmq` queue `background_jobs`
+
+## Current Operational Findings
+
+- Root-cause contributor for container pressure:
+  - high backlog from `load-test-db-ping` and `load-test-db-saturation`.
+- DB saturation errors occurred during backlog windows:
+  - `remaining connection slots are reserved for roles with the SUPERUSER attribute`.
+- `db-saturation-alert-monitor` is currently running successfully, but had earlier failures during saturation windows.
+
+## Remaining Work
+
+1. Prevent recurrence of load-test backlog in production:
+   - gate test task triggers to non-prod only, or remove from deployed Trigger project.
+2. Add explicit queue/concurrency hard limits for high-volume tasks where needed.
+3. Harden failure visibility:
+   - keep Discord alerts active
+   - add email alert channel verification
+   - monitor all critical task failures, not only DB-slot pattern.
+4. Keep docs aligned:
+   - `SYSTEM-MAP.md` and this file should reflect actual schedules and task IDs from code.
+
+## Immediate Operator Checks
+
+- Task health in dashboard: `https://trigger.desertservices.app`
+- Local Trigger stack status:
+  - `just trigger-ps`
+  - `just trigger-health`
+- Local runtime check:
+  - `just check`
+- DB teardown verification (local Supabase):
+  - `to_regclass('pgmq.q_background_jobs') IS NULL`
+  - no `bg_%` entries in `cron.job`

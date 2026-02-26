@@ -15,7 +15,8 @@ Set for edge runtime:
 - `OUTLOOK_WEBHOOK_SECRET` (for Outlook validation)
 - `MONDAY_WEBHOOK_BOARD_IDS` (comma-separated board IDs, optional)
 - `MONDAY_ESTIMATING_BOARD_ID` (optional; defaults to `7943937851`)
-- `BACKGROUND_JOBS_WEBHOOK_URL` (used by `intake-webhook` to forward payloads)
+- `TRIGGER_API_URL` (used by webhook ingress to trigger Trigger.dev tasks)
+- `TRIGGER_SECRET_KEY` (used by webhook ingress auth to Trigger.dev)
 
 ## Endpoints
 
@@ -26,10 +27,8 @@ Set for edge runtime:
 ## Monday Runtime Behavior
 
 - Webhook ingress (`monday-webhook`) always responds to Monday challenge verification payloads.
-- Webhook ingress enqueues `sync_item` only for ESTIMATING-board events (when `pulseId` is present).
-- Webhook ingress also enqueues `monday_status_sync` with queue dedupe enabled for fast post-change convergence.
-- Periodic reconciliation remains in `pg_cron` with `bg_sync_full` every 10 minutes.
-- Periodic status reconciliation remains in `pg_cron` with `bg_monday_status_sync` hourly.
+- Webhook ingress triggers Trigger.dev task `monday-sync-item` for ESTIMATING-board events (when `pulseId` is present).
+- Periodic reconciliation runs from Trigger.dev schedules (`monday-sync-incremental` and `monday-sync`), not `pg_cron`.
 
 ## Monday Webhook Registration
 

@@ -15,11 +15,30 @@ up:
     @echo
     @just check
 
+# Full project startup including Trigger.dev self-host stack.
+up-all:
+    @echo "Bringing up core Docker services..."
+    docker compose up -d --build
+    @echo
+    @echo "Bringing up Trigger.dev stack..."
+    docker compose --profile trigger up -d webapp supervisor postgres redis electric clickhouse registry minio docker-proxy
+    @echo
+    @just check
+
 # Human-readable health snapshot.
 status:
     @just _health "0"
     @echo
     @just _cf_check "0"
+
+# Trigger.dev compose status snapshot.
+trigger-ps:
+    @docker compose ps webapp supervisor postgres redis electric clickhouse registry minio docker-proxy
+
+# Trigger.dev dashboard health check.
+trigger-health:
+    @curl -fsS --max-time 10 "http://localhost:8030/healthcheck"
+    @echo
 
 # Strict local-runtime health gate (non-zero if core runtime is down or legacy overlap exists).
 check:
@@ -32,7 +51,28 @@ services-install:
     @echo "No user systemd pollers to install. Pollers run as Docker Compose services."
 
 services-status:
-    @docker compose ps background-jobs
+    @docker compose ps web permit-worker aqdata-worker
+
+# Trigger.dev stack lifecycle.
+trigger-up:
+    @docker compose --profile trigger up -d webapp supervisor postgres redis electric clickhouse registry minio docker-proxy
+
+trigger-down:
+    @docker compose stop webapp supervisor postgres redis electric clickhouse registry minio docker-proxy
+    @docker compose rm -f webapp supervisor postgres redis electric clickhouse registry minio docker-proxy
+
+trigger-restart service="webapp":
+    @docker compose --profile trigger up -d --force-recreate {{service}}
+
+trigger-logs service="webapp":
+    @docker compose logs -f --tail 200 {{service}}
+
+# Monday queue guardrail: trips and pauses Monday queues when thresholds are hit.
+# Example:
+#   just monday-killswitch 150 500 1800 pause
+monday-killswitch run_limit="150" pending_limit="0" max_seconds="1800" mode="pause":
+    @RUNNER_LIMIT={{run_limit}} MONDAY_PENDING_LIMIT={{pending_limit}} MAX_SECONDS={{max_seconds}} ACTION_MODE={{mode}} \
+      bash ops/trigger/monday-killswitch-monitor.sh
 
 # Cloudflare worker deployment checks (best effort; requires token scope for deployments list).
 cf-check:
@@ -73,27 +113,19 @@ aqdata-health:
     @echo "AQData worker:"
     @curl -fsS --max-time 10 "http://localhost:47823/health"
     @echo
-    @echo "Background jobs:"
-    @curl -fsS --max-time 10 "http://localhost:4000/api/health"
-    @echo
 
 aqdata-sync-now:
-    @curl -fsS --max-time 30 -X POST "http://localhost:4000/api/aqdata/sync"
+    @curl -fsS --max-time 30 -X POST "http://localhost:47823/api/sync"
     @echo
 
 aqdata-scrape-now limit="10":
-    @curl -fsS --max-time 30 -X POST "http://localhost:4000/api/aqdata/scrape" \
+    @curl -fsS --max-time 30 -X POST "http://localhost:47823/api/scrape" \
       -H "content-type: application/json" \
       -d '{"limit": {{limit}}}'
     @echo
 
 aqdata-status:
     @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "SELECT COUNT(*) AS total_rows, COUNT(*) FILTER (WHERE detail_scraped_at IS NOT NULL) AS detail_scraped_rows FROM aqdata_permits;"
-    @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "SELECT msg_id, message->>'job_type' AS job_type, read_ct, vt FROM pgmq.q_background_jobs WHERE message->>'job_type' LIKE 'aqdata%' ORDER BY msg_id;"
-    @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "SELECT job_type, COUNT(*) AS dead_letters FROM background_job_dead_letters WHERE job_type LIKE 'aqdata%' GROUP BY job_type ORDER BY job_type;"
-
-aqdata-deadletters-clear:
-    @docker exec supabase_db_desert-services-hub psql -U postgres -d postgres -c "DELETE FROM background_job_dead_letters WHERE job_type LIKE 'aqdata%';"
 
 # Code Quality (repo-level)
 lint:
@@ -123,10 +155,10 @@ folder-size-check:
 #   just project-seed-sync
 #   just project-seed-sync-dry limit=250 stale_days=45
 project-seed-sync stale_days="45":
-    @{{BUN}} apps/background-jobs/workers/estimate-poller/cli/project-seed-sync.ts --stale-days {{stale_days}}
+    @{{BUN}} packages/monday/cli/project-seed-sync.ts --stale-days {{stale_days}}
 
 project-seed-sync-dry limit="250" stale_days="45":
-    @{{BUN}} apps/background-jobs/workers/estimate-poller/cli/project-seed-sync.ts --dry-run --limit {{limit}} --stale-days {{stale_days}}
+    @{{BUN}} packages/monday/cli/project-seed-sync.ts --dry-run --limit {{limit}} --stale-days {{stale_days}}
 
 # Refresh deduplicated project-email materialized view.
 email-dedup-refresh:
@@ -256,7 +288,7 @@ _health strict:
     echo "== Docker Compose =="
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
       running_services="$(docker compose ps --status running --services 2>/dev/null || true)"
-      required_docker_services=(web background-jobs permit-worker)
+      required_docker_services=(web permit-worker)
       optional_docker_services=(tunnel)
 
       for service in "${required_docker_services[@]}"; do
@@ -281,7 +313,6 @@ _health strict:
     echo
     echo "== HTTP Health Endpoints =="
     check_http_health "web" "http://localhost:3000/api/health" required
-    check_http_health "background-jobs" "http://localhost:4747/api/health" required
     check_http_health "permit-worker" "http://localhost:47822/health" required
 
     echo
@@ -383,7 +414,6 @@ _cf_check strict:
     fi
 
     workers=(
-      "apps/cf-workers/intake-worker|intake-worker|https://intake-worker.cheez2012.workers.dev/health"
       "apps/cf-workers/estimates-sync-worker|estimates-sync|https://estimates-sync.cheez2012.workers.dev/"
       "apps/cf-workers/inspections-email-worker|inspection-router|https://inspection-router.cheez2012.workers.dev/"
     )

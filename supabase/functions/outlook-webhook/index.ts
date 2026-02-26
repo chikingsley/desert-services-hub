@@ -7,8 +7,7 @@
  * Validates the notification, deduplicates, then triggers the
  * Trigger.dev `email-sync` task via REST API.
  *
- * Previously enqueued to pgmq → background-jobs worker. Now goes
- * directly to Trigger.dev for observability and retry management.
+ * Triggers Trigger.dev directly for observability and retry management.
  */
 
 interface OutlookNotification {

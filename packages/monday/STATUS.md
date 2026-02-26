@@ -114,8 +114,8 @@ Additionally, **non-canonical estimates** on these 882 won projects should be re
 
 ## 9) Structure Cleanup (2026-02-19)
 
-- Legacy shell folders `apps/background-jobs/workers/monday-status-sync` and `apps/background-jobs/workers/estimates-sync-worker` were removed.
+- Legacy shell folders `workers/monday-status-sync` and `workers/estimates-sync-worker` were removed.
 - Canonical Monday docs now live in `packages/monday/` (`SYNC-KNOWLEDGE.md`, `MONDAY_COLUMNS_CURRENT.md`, `STATUS.md`).
-- Project-seed lifecycle logic moved into `packages/monday/src/sync/project-seed/*`; background-jobs now calls package exports directly.
+- Project-seed lifecycle logic moved into `packages/monday/src/sync/project-seed/*`; sync runtime now calls package exports directly.
 - Manual Monday backfill and project-seed CLIs live in `packages/monday/cli/` (`backfill-files.ts`, `project-seed-sync.ts`).
 - `backfill-files.ts` is a file-asset recovery command (`processItemFiles`) and does not duplicate project-seed lifecycle logic.

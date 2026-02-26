@@ -4,7 +4,7 @@
 # Desert Services Hub - BC Worker Dockerfile
 # =============================================================================
 # BuildingConnected auth bootstrap: headed Playwright + VNC + Bun.
-# Manual 2FA / CAPTCHA completion via noVNC, saves auth state for background-jobs.
+# Manual 2FA / CAPTCHA completion via noVNC, saves auth state for hub pipelines.
 # =============================================================================
 
 # -----------------------------------------------------------------------------

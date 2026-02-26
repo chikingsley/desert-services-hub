@@ -14,9 +14,8 @@ Scope boundary:
 ## Runtime Sources of Truth
 
 - `docker-compose.yml`
-- `apps/background-jobs/webhooks.ts`
-- `apps/background-jobs/worker.ts`
-- `src/trigger/*.ts` (Trigger.dev task definitions)
+- `apps/trigger-dev/hosting/docker/.env`
+- `apps/trigger-dev/src/trigger/*.ts` (Trigger.dev task definitions)
 - `supabase/functions/README.md`
 - `Justfile`
 
@@ -27,10 +26,9 @@ Scope boundary:
 | Service | Entry | Responsibility |
 |---|---|---|
 | `web` | `apps/web/server.ts` | Frontend + API server on `:3000` |
-| `background-jobs` | `apps/background-jobs/webhooks.ts` | AQData endpoints, intake webhook adapter, pgmq queue consumer on `:4747` |
 | `pdf-analysis` | `packages/documents/intake/src/pdf_analysis/server.py` | PDF extraction/classification/OCR service on `:4848` |
 | `permit-worker` | `apps/dust-permits` | Permit automation API + VNC |
-| `aqdata-worker` | `apps/aqdata-worker/server.ts` | AQData sync/scrape service on `:47823` |
+| `aqdata-worker` | `apps/aqdata-worker/src/index.ts` | AQData sync/scrape service on `:47823` |
 | `tunnel` (optional) | Cloudflared | Public ingress |
 
 ### Trigger.dev (Self-Hosted Background Jobs)
@@ -38,86 +36,62 @@ Scope boundary:
 Dashboard: `https://trigger.desertservices.app`
 
 Scheduled and on-demand tasks run as isolated containers via Trigger.dev.
-Task definitions live in `src/trigger/`.
+Task definitions live in `apps/trigger-dev/src/trigger/`.
 
 | Task ID | Type | Schedule | Purpose |
 |---------|------|----------|---------|
 | `permit-sync` | scheduled | `*/30 * * * *` | Company-level dust permit sync |
 | `permit-detail-scrape` | scheduled | `*/10 * * * *` | Scrape individual permit details |
-| `mailbox-sync` | scheduled | `*/5 * * * *` | Outlook mailbox delta sync |
+| `mailbox-sync` | scheduled | `*/15 * * * *` | Outlook mailbox delta sync |
 | `email-sync` | on-demand | — | Sync a single email by message ID |
-| `email-enrichment` | on-demand | — | Enrich email metadata (contacts, domains) |
-| `attachment-intake` | on-demand | — | Process email attachments through intake pipeline |
-| `body-link-intake` | on-demand | — | Download and process links found in email bodies |
+| `attachment-intake` | scheduled | `*/5 * * * *` | Process queued attachment stubs through intake pipeline |
+| `body-link-intake` | scheduled | `*/10 * * * *` | Download/process links found in email bodies |
 | `document-intake` | on-demand | — | Process forwarded files through classify + parse pipeline |
-| `monday-sync` | scheduled | `*/30 * * * *` | Full Monday.com board sync |
+| `email-triage` | scheduled | `*/5 * * * *` | Classify pending emails |
+| `monday-sync-incremental` | scheduled | `*/10 * * * *` | Monday incremental sync via activity log |
+| `monday-sync` | scheduled | `0 */6 * * *` | Monday full safety-net sync |
 | `monday-sync-item` | on-demand | — | Sync a single Monday item by ID |
 | `monday-sync-targeted` | on-demand | — | Sync specific Monday items by board + item IDs |
 | `mailbox-backfill` | on-demand | — | Backfill emails for a mailbox from a given date |
+| `db-saturation-alert-monitor` | scheduled | `*/1 * * * *` | Detect/post DB slot saturation alerts |
 
 ### Supabase Edge Functions (Webhook Ingress)
 
+- `intake-webhook`
 - `monday-webhook`
 - `outlook-webhook`
 
 ### Cloudflare Worker Deployments
 
-- `intake-worker` (`apps/cf-workers/intake-worker`)
 - `estimates-sync` (`apps/cf-workers/estimates-sync-worker`)
 - `inspection-router` (`apps/cf-workers/inspections-email-worker`)
-
-### pgmq Queue (Event-Driven Jobs)
-
-Event-driven jobs still use pgmq for dispatch. These are enqueued by email triage and webhook handlers.
-
-- Queue backend: `pgmq.q_background_jobs`
-- Consumer/dispatcher: `apps/background-jobs/jobs/dispatch.ts`
-- Queue operations: `apps/background-jobs/jobs/queue.ts`
-
-Active job types:
-- `contract_doc_extract` — Extract data from contract documents
-- `contract_email_received` — Process incoming contract emails
-- `contract_won_bridge` — Classify/link contracts, mark Won/Lost
-- `dust_permit_payment` — Process permit payment confirmation emails
-- `dust_permit_issued_email` — Process permit issuance emails
-- `estimate_triage` — Run estimate extraction triage
-- `attachment_backfill` — Backfill missing email attachment records
-- `body_link_manual_followup` — Track links requiring manual download
-- `aqdata_sync` — Trigger AQData sync via aqdata-worker
-- `aqdata_detail_scrape` — Scrape individual AQData permit details
 
 ## Canonical Runtime Flows
 
 ### Document Intake Flow
 
-1. Intake payload arrives from `apps/cf-workers/intake-worker`.
-2. `apps/background-jobs/api/webhooks/intake.ts` saves files to local storage and triggers Trigger.dev `document-intake` task.
+1. Intake payload arrives at `supabase/functions/intake-webhook`.
+2. Edge function validates payload and triggers Trigger.dev `document-intake`.
 3. Task writes files to temp directory, runs classify + parse pipeline, stores results in Postgres.
 
 ### Outlook Email Flow
 
 1. Microsoft Graph notifications hit `supabase/functions/outlook-webhook`.
-2. Edge function triggers Trigger.dev `mailbox-sync` which calls `email-sync` per message.
-3. `email-sync` enriches each email via `email-enrichment`, processes attachments via `attachment-intake`, and processes body links via `body-link-intake`.
-4. Email triage may enqueue pgmq follow-on jobs (`dust_permit_payment`, `dust_permit_issued_email`, `contract_email_received`).
+2. Edge function triggers Trigger.dev `email-sync` for the changed message.
+3. `email-sync` stores/enriches email + attachment stubs.
+4. Scheduled tasks `attachment-intake`, `body-link-intake`, and `email-triage` process downstream work with run-level observability.
 
 ### Monday Sync Flow
 
 1. Monday webhooks hit `supabase/functions/monday-webhook`.
 2. Edge function triggers Trigger.dev `monday-sync-item` for the affected item.
-3. `monday-sync` runs on schedule (every 30 min) for full board sync — estimates, project seeds, file sweep, SharePoint sync, document propagation.
-
-### Contract Won Bridge Flow
-
-1. `contract_won_bridge` runs on pgmq schedule.
-2. Bridge pipeline classifies/links contract emails, enqueues `contract_doc_extract`, backfills docs, and marks Won/Lost.
-3. Winning estimate updates trigger project seed sync.
+3. `monday-sync-incremental` runs every 10 minutes for activity-log deltas.
+4. `monday-sync` runs every 6 hours for full board safety-net sync — estimates, project seeds, file sweep, SharePoint sync, document propagation.
 
 ### Permit Flow
 
-1. Payment/issued email jobs are enqueued by email triage via pgmq.
-2. Payment handler runs permit sync orchestration via `@permits/client`.
-3. Scheduled permit sync and detail scrape run via Trigger.dev.
+1. Payment/issued permit signals are handled in Trigger task flows.
+2. Permit sync and detail scrape run via Trigger.dev schedules.
 
 ## Operational Checks
 

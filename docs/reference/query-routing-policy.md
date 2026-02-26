@@ -19,10 +19,6 @@ Historical benchmark snapshots live in `docs/_archive/reference/query-performanc
 - Must use the normalized expression query in `lib/db/repositories/estimate-email.ts`.
 - This query is paired with `idx_estimates_fuzzy_text_trgm`; do not revert to multi-column OR-ILIKE builders for this path.
 
-4. Queue/dequeue (`pgmq.q_background_jobs`):
-- Reuse queue operations in `apps/background-jobs/jobs/queue.ts`.
-- Do not create alternate dequeue scans without profile evidence.
-
 ## Change Checklist (Required in PR/agent output)
 
 For any DB query change:
@@ -35,7 +31,6 @@ For any DB query change:
 
 - `apps/web/api/emails.ts` for email listing/search behavior.
 - `lib/db/repositories/estimate-email.ts` for estimate candidate matching.
-- `apps/background-jobs/jobs/queue.ts` for background job queue behavior.
 
 ## Escalation Rule
 

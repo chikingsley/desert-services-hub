@@ -53,14 +53,10 @@ COPY package.json tsconfig.json tsconfig.base.json bunfig.toml ./
 # Web server + API routes
 COPY apps/web ./apps/web
 
-# Background jobs — webhook receiver + job queue + sync timers + notifications
-COPY apps/background-jobs ./apps/background-jobs
-RUN chmod +x /app/apps/background-jobs/start-stack.sh
-
-# CF Workers — shared modules referenced by background-jobs workers
+# CF Workers
 COPY apps/cf-workers ./apps/cf-workers
 
-# Dust permit MCP — client + types used by background-jobs permit-sync
+# Dust permit MCP
 COPY apps/dust-permits-mcp/client.ts apps/dust-permits-mcp/types.ts ./apps/dust-permits-mcp/
 
 # Packages
@@ -84,7 +80,7 @@ RUN if [ -d packages/contracts/langextract ]; then cd packages/contracts/langext
 # Data + temp directories
 RUN mkdir -p /app/data /app/tmp
 
-EXPOSE 3000 4747
+EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"

@@ -51,15 +51,14 @@ desert-services-hub/
       src/takeoff-to-estimate.ts  # Annotation → estimate line item conversion
 
   apps/
+    trigger-dev/            # Trigger.dev self-host infra (compose/env) for trigger.desertservices.app
     dust-permits/           # Dust permit browser automation (Playwright, VNC, Maricopa portal)
-    background-jobs/        # Webhook receiver + pgmq event-driven job consumer
     web/                    # Frontend SPA + API routes (Bun + React)
       api/                  # Domain-grouped API routes (thin data layer)
       frontend/             # React components and pages
       server.ts             # Web server entrypoint
       webhooks.ts           # Webhook receiver entrypoint
     cf-workers/             # Cloudflare edge workers
-      intake-worker/                 # Email intake processing (Cloudflare Worker)
       inspections-email-worker/      # ComplianceGo inspections (Cloudflare Worker)
 
   lib/                      # Cross-cutting shared infrastructure (not domain-specific)
@@ -82,7 +81,7 @@ desert-services-hub/
     _archive/               # Legacy/archived materials (MinIO, old SOPs, onboarding)
     reference/              # Cross-domain standards and shared runbooks (domain docs are co-located)
 
-  docker-compose.yml        # All Docker service definitions
+  docker-compose.yml        # Runtime Docker services (core stack + Trigger profile)
   tsconfig.json             # TypeScript config with path aliases
   biome.jsonc               # Ultracite lint configuration (shared rule config)
 ```
@@ -185,6 +184,8 @@ db.query("SELECT * FROM projects WHERE id = $1", [id]);
 
 **Repositories stay centralized** in `lib/db/repositories/` (future: `db/repositories/`).
 The database is its own domain. Every package imports from it; no package duplicates it.
+Type-layer rules for schema rows, repository mappings, and boundary validation are defined in
+`docs/reference/db-type-strategy.md`.
 
 ---
 
@@ -259,20 +260,18 @@ Each Docker service maps to an entrypoint in the codebase.
 | Service | Container | Port | Entrypoint | Package |
 |---------|-----------|------|-----------|---------|
 | `web` | `desert-web` | 3000 | `apps/web/server.ts` | `apps/web/` |
-| `background-jobs` | `desert-webhooks` | 4747 | `apps/background-jobs/webhooks.ts` | `apps/background-jobs/` |
 | `permit-worker` | `desert-permit-worker` | 47822 | `apps/dust-permits/src/index.ts` | `apps/dust-permits/` |
 | `tunnel` | `desert-tunnel` | -- | Cloudflare tunnel config | -- |
 
 **Trigger.dev** (self-hosted at `trigger.desertservices.app`):
 
-Scheduled and on-demand tasks defined in `src/trigger/`. Run as isolated containers with full observability.
+Scheduled and on-demand tasks defined in `apps/trigger-dev/src/trigger/`. Run as isolated containers with full observability.
 See `SYSTEM-MAP.md` for the complete task table.
 
 **Cloudflare Workers** (deployed to Cloudflare edge, not Docker):
 
 | Worker | Folder | Purpose |
 |--------|--------|---------|
-| `intake-worker` | `apps/cf-workers/intake-worker/` | Email intake from Cloudflare email routing |
 | `inspections-email-worker` | `apps/cf-workers/inspections-email-worker/` | ComplianceGo → SharePoint |
 | `docusign-file-automation` | `apps/cf-workers/docusign-file-automation/` | DocuSign automation scripts/references (no deployed worker) |
 
@@ -301,7 +300,6 @@ See `SYSTEM-MAP.md` for the complete task table.
 | `dust_permits_filed_by_desert_services` | Permits | Maricopa dust permits |
 | `documents` | Documents | Unified file store (email attachments, monday assets, parsed docs) |
 | `notifications` | Email | Notification event log |
-| `pgmq.q_background_jobs` | Infrastructure | Event-driven job queue (contracts, permits, estimates) |
 | `swppp_work_orders` | SharePoint | SWPPP Master data (synced from SharePoint) |
 
 ---
@@ -313,7 +311,6 @@ Defined in `tsconfig.json`. These must be updated as packages migrate.
 | Alias | Path |
 |-------|------|
 | `@lib/*` | `lib/*` |
-| `@background-jobs/*` | `apps/background-jobs/*` |
 | `@sharepoint/*` | `packages/sharepoint/src/*` |
 | `@email/*` | `packages/email/src/*` |
 | `@monday/*` | `packages/monday/src/*` |
@@ -397,7 +394,7 @@ In-process worker modules and sync pipelines migration status:
 
 | Worker | Current Location | Target Package | Notes |
 |--------|-----------------|---------------|-------|
-| `notifications` | `lib/notifications/` | In shared lib | Consumed by background-jobs notifications tick |
+| `notifications` | `lib/notifications/` | In shared lib | Consumed by trigger-driven notification flows |
 | `monday sync + project seed` | `packages/monday/src/sync/` | In package | Completed migration from legacy `estimate-poller` / `estimates-sync-worker` |
 | `outlook-folder-watcher` | `lib/graph/folder-watcher/` | In shared lib | Uses Graph + project matching repos |
 | `estimate-email-linker` | `lib/linking/` | In shared lib | Shared linking logic used by scheduled maintenance |

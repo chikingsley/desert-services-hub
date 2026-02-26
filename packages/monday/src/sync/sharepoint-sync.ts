@@ -1,7 +1,8 @@
 /**
  * SharePoint folder sync for Monday ESTIMATING board items.
  *
- * This is the canonical runtime implementation used by background jobs.
+ * This is the canonical runtime implementation used by Trigger.dev tasks
+ * and maintenance scripts.
  * It is intentionally package-level logic so runners stay as thin adapters.
  */
 

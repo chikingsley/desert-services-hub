@@ -26,7 +26,7 @@ import {
   persistDraftPermitRecord,
 } from "@/lib/permit-records";
 import type { Permit as DashboardPermit } from "@/lib/types";
-import { closePermit } from "@/portal/close";
+import { closePermit, DEFAULT_PERMIT_CLOSE_REASON } from "@/portal/close";
 import { createApplicationFull, renewPermitFull } from "@/portal/create";
 import {
   checkExpedited,
@@ -118,7 +118,12 @@ export const renewAndPayBodySchema = z.object({
 });
 
 const closeBodySchema = z.object({
-  reason: z.string().optional().describe("Reason for closing"),
+  reason: z
+    .string()
+    .optional()
+    .describe(
+      "Optional custom reason. If omitted/empty, the hardcoded default reason is used."
+    ),
 });
 
 // ─── DB → API transform ─────────────────────────────────────────────
@@ -590,6 +595,13 @@ export async function handleClosePermit(
     return jsonError(parsed.error.issues[0]?.message || "Invalid input");
   }
 
+  const normalizedReason =
+    typeof parsed.data.reason === "string" ? parsed.data.reason.trim() : "";
+  const closeReason =
+    normalizedReason.length > 0
+      ? normalizedReason
+      : DEFAULT_PERMIT_CLOSE_REASON;
+
   try {
     const sessionResult = await ensureBrowserSession();
     if (sessionResult.success === false) {
@@ -599,8 +611,7 @@ export async function handleClosePermit(
     const ctx = sessionResult.page;
     const result = await withBrowserSessionOperation(
       `close:${id}`,
-      async () =>
-        await closePermit(ctx.page, ctx.context, id, parsed.data.reason)
+      async () => await closePermit(ctx.page, ctx.context, id, closeReason)
     );
 
     if (!result.success) {

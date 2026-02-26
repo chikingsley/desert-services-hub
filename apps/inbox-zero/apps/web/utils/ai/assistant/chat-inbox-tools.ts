@@ -11,17 +11,14 @@ import { getRuleLabel } from "@/utils/rule/consts";
 import type { ParsedMessage } from "@/utils/types";
 
 const emptyInputSchema = z.object({}).describe("No parameters required");
-const sendEmailToolInputSchema = z
-  .object({
+const sendEmailToolInputSchema = z.strictObject({
     to: z.string().trim().min(1),
     cc: z.string().trim().min(1).optional(),
     bcc: z.string().trim().min(1).optional(),
     subject: z.string().trim().min(1).max(300),
     messageHtml: z.string().trim().min(1),
-  })
-  .strict();
-const replyEmailToolInputSchema = z
-  .object({
+  });
+const replyEmailToolInputSchema = z.strictObject({
     messageId: z
       .string()
       .trim()
@@ -30,17 +27,14 @@ const replyEmailToolInputSchema = z
         "Message ID to reply to. Use a messageId returned by searchInbox."
       ),
     content: z.string().trim().min(1).max(10_000),
-  })
-  .strict();
-const forwardEmailToolInputSchema = z
-  .object({
+  });
+const forwardEmailToolInputSchema = z.strictObject({
     messageId: z.string().trim().min(1),
     to: z.string().trim().min(1),
     cc: z.string().trim().min(1).optional(),
     bcc: z.string().trim().min(1).optional(),
     content: z.string().trim().max(5000).optional(),
-  })
-  .strict();
+  });
 
 export const getAccountOverviewTool = ({
   email,

@@ -538,10 +538,10 @@ export const dustPermitNotification = schemaTask({
       billingType: z
         .enum(["billing", "billing-renewed", "billing-revised"])
         .optional(),
-      cc: z.array(z.string().email()).optional(),
+      cc: z.array(z.email()).optional(),
       draft: z.boolean().default(true),
       extraVars: z.record(z.string(), z.string()).optional(),
-      recipients: z.array(z.string().email()).optional(),
+      recipients: z.array(z.email()).optional(),
       scheduleValue: z.string().optional(),
     })
     .refine((d) => d.emailId || (d.permitId && d.type), {
@@ -579,12 +579,18 @@ export const dustPermitNotification = schemaTask({
         subject: email.subject,
       });
 
-      // Parse payment details
+      // Parse payment details — only Point and Pay confirmations have IV###### format
       const invoiceNumber = bodyText.match(PAP_ACCOUNT_RE)?.[1];
       if (!invoiceNumber) {
-        throw new Error(
-          `No invoice number (IV######) in email ${input.emailId}. Is this a Point and Pay confirmation?`
-        );
+        logger.info("Not a Point and Pay confirmation — skipping", {
+          emailId: input.emailId,
+          subject: email.subject,
+        });
+        return {
+          status: "skipped",
+          reason: "not_point_and_pay",
+          emailId: input.emailId,
+        };
       }
 
       const permitCost = bodyText.match(PAP_AMOUNT_RE)?.[1] ?? "Unknown";

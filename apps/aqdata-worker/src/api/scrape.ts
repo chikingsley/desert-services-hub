@@ -1,5 +1,9 @@
 import { AQDataClient } from "../aqdata/client";
 import { FORMS } from "../aqdata/constants";
+import {
+  fetchDustApplicationDetailViaCrawl4Ai,
+  getAQDetailFetchBackend,
+} from "../aqdata/crawl4ai";
 import { parseDustApplicationDetail } from "../aqdata/parsers/dust-application-detail";
 import { mergePermitPdfIntoDetail } from "../aqdata/parsers/dust-application-detail-enrichment";
 import { evaluateDustApplicationDetailQA } from "../aqdata/parsers/dust-application-detail-qa";
@@ -77,7 +81,23 @@ export async function handleScrapePermit(id: string): Promise<Response> {
   try {
     const client = new AQDataClient();
     await client.connect();
-    const detailHtml = await openDetailWithStatusFallback(client, id);
+    const backend = getAQDetailFetchBackend();
+    let detailHtml: string | null = null;
+
+    if (backend !== "client") {
+      detailHtml = await fetchDustApplicationDetailViaCrawl4Ai(
+        id,
+        DUST_STATUS_SEARCH_ORDER
+      );
+    }
+
+    if (!detailHtml && backend !== "crawl4ai") {
+      detailHtml = await openDetailWithStatusFallback(client, id);
+    }
+    if (!detailHtml) {
+      throw new Error(`Detail page was not returned for ${id}.`);
+    }
+
     const summary = await findSummaryRow(client, id);
 
     let detail = parseDustApplicationDetail(detailHtml, id);
@@ -142,7 +162,7 @@ async function openDetailWithStatusFallback(
       statuses: [status],
     });
     try {
-      const html = await client.openDustApplicationDetail(permitId);
+      const html = await client.openRecordDetail(permitId);
       if (DUST_DETAIL_TITLE_REGEX.test(html)) {
         return html;
       }

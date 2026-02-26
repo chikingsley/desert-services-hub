@@ -8,6 +8,7 @@
 
 import { existsSync } from "node:fs";
 import type {
+  AbortOperationResult,
   BrowserInstance,
   BrowserSession,
   KeepAliveResult,
@@ -32,10 +33,6 @@ export interface BrowserOptions {
   keepOpenTimeoutMs?: number;
   operation: keyof typeof config.scripts;
 }
-
-// Permit-worker specific API response types (kept for backward compat)
-export type BrowserSessionStatus = SessionStatus;
-export type BrowserKeepAliveResult = KeepAliveResult;
 
 export interface BrowserClipboardWriteResult {
   inserted: boolean;
@@ -249,7 +246,7 @@ export async function withBrowserSessionOperation<T>(
 export function keepBrowserSessionAlive(_options?: {
   allowRelogin?: boolean;
   force?: boolean;
-}): Promise<BrowserKeepAliveResult> {
+}): Promise<KeepAliveResult> {
   return sessionManager.keepAlive();
 }
 
@@ -261,9 +258,20 @@ export function closeBrowserSession(): Promise<void> {
 }
 
 /**
+ * Emergency kill switch for in-flight operations.
+ *
+ * Force-closes the current browser session to interrupt any running operation.
+ */
+export function abortBrowserSessionOperation(
+  reason?: string
+): Promise<AbortOperationResult> {
+  return sessionManager.abortCurrentOperation(reason ?? "Operation aborted");
+}
+
+/**
  * Get current session status (for API response).
  */
-export function getSessionStatus(): BrowserSessionStatus {
+export function getSessionStatus(): SessionStatus {
   return sessionManager.getStatus();
 }
 

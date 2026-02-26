@@ -146,7 +146,7 @@ function Row({
     <TableRow key={row.id}>
       <TableCell className="text-center">
         <Checkbox
-          checked={selected.get(row.id)}
+          checked={selected.get(row.id) ?? false}
           onChange={() => onToggleSelect(row.id)}
         />
       </TableCell>

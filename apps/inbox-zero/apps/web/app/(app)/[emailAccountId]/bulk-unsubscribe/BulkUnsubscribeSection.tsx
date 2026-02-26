@@ -281,7 +281,7 @@ export function BulkUnsubscribe() {
       <RowComponent
         archivedEmails={archivedEmails}
         archivedPercentage={archivedPercentage}
-        checked={selected.get(item.name)}
+        checked={selected.get(item.name) ?? false}
         emailAccountId={emailAccountId}
         filter={filter}
         hasUnsubscribeAccess={hasUnsubscribeAccess}

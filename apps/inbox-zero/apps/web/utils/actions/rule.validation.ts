@@ -80,6 +80,19 @@ const zodCondition = z.object({
 });
 export type ZodCondition = z.infer<typeof zodCondition>;
 
+function addCustomIssue(
+  payload: z.core.ParsePayload<unknown>,
+  path: Array<string | number>,
+  message: string
+): void {
+  payload.issues.push({
+    code: "custom",
+    input: payload.value,
+    message,
+    path,
+  });
+}
+
 const zodField = z
   .object({
     value: z.string().nullish(),
@@ -106,53 +119,39 @@ const zodAction = z
     folderId: zodField,
     delayInMinutes: delayInMinutesSchema,
   })
-  .superRefine((data, ctx) => {
+  .check((payload) => {
+    const data = payload.value;
+
     if (data.type === ActionType.LABEL) {
       const labelValue =
         data.labelId?.value?.trim() || data.labelId?.name?.trim();
 
       if (!labelValue) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Please enter a label name for the Label action",
-          path: ["labelId"],
-        });
+        addCustomIssue(
+          payload,
+          ["labelId"],
+          "Please enter a label name for the Label action"
+        );
         return;
       }
 
       const validation = validateLabelNameBasic(labelValue);
       if (!validation.valid) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: validation.error!,
-          path: ["labelId"],
-        });
+        addCustomIssue(payload, ["labelId"], validation.error!);
       }
     }
 
     if (data.type === ActionType.FORWARD && !data.to?.value?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please enter an email address to forward to",
-        path: ["to"],
-      });
+      addCustomIssue(payload, ["to"], "Please enter an email address to forward to");
     }
     if (data.type === ActionType.CALL_WEBHOOK && !data.url?.value?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please enter a webhook URL",
-        path: ["url"],
-      });
+      addCustomIssue(payload, ["url"], "Please enter a webhook URL");
     }
     if (
       data.type === ActionType.MOVE_FOLDER &&
       !(data.folderName?.value?.trim() && data.folderId?.value?.trim())
     ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please select a folder from the list",
-        path: ["folderName"],
-      });
+      addCustomIssue(payload, ["folderName"], "Please select a folder from the list");
     }
   });
 
@@ -319,51 +318,37 @@ const importedAction = z
     url: z.string().nullish(),
     delayInMinutes: delayInMinutesSchema,
   })
-  .superRefine((data, ctx) => {
+  .check((payload) => {
+    const data = payload.value;
+
     if (data.type === ActionType.LABEL) {
       const labelValue = data.label?.trim();
 
       if (!labelValue) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Label action requires a label name",
-          path: ["label"],
-        });
+        addCustomIssue(payload, ["label"], "Label action requires a label name");
         return;
       }
 
       const validation = validateLabelNameBasic(labelValue);
       if (!validation.valid) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: validation.error!,
-          path: ["label"],
-        });
+        addCustomIssue(payload, ["label"], validation.error!);
       }
     }
 
     if (data.type === ActionType.FORWARD && !data.to?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Forward action requires a recipient email address",
-        path: ["to"],
-      });
+      addCustomIssue(
+        payload,
+        ["to"],
+        "Forward action requires a recipient email address"
+      );
     }
 
     if (data.type === ActionType.CALL_WEBHOOK && !data.url?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Webhook action requires a URL",
-        path: ["url"],
-      });
+      addCustomIssue(payload, ["url"], "Webhook action requires a URL");
     }
 
     if (data.type === ActionType.MOVE_FOLDER && !data.folderName?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Move folder action requires a folder name",
-        path: ["folderName"],
-      });
+      addCustomIssue(payload, ["folderName"], "Move folder action requires a folder name");
     }
   });
 

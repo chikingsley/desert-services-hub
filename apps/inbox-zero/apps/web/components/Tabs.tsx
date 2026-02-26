@@ -46,7 +46,6 @@ export function Tabs(props: TabsProps) {
             const tab = tabs.find((t) => t.label === label);
             if (tab) {
               onClickTab?.(tab);
-              // @ts-expect-error
               if (tab.href) {
                 router.push(tab.href);
               }
@@ -74,7 +73,6 @@ export function Tabs(props: TabsProps) {
             return (
               <Link
                 aria-current={isSelected ? "page" : undefined}
-                // @ts-expect-error
                 className={clsx(
                   "whitespace-nowrap rounded-md px-3 py-2 font-medium text-sm",
                   isSelected

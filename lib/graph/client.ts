@@ -3,7 +3,7 @@
  *
  * Provides typed methods for email attachment downloads and group
  * conversation access. Uses Azure client credentials (application-level)
- * auth — same as src/trigger/graph.ts.
+ * auth — same as apps/trigger-dev/src/trigger/graph.ts.
  *
  * Replaces the massive GraphEmailClient class from the deleted
  * packages/email package with only the subset that attachment-backfill

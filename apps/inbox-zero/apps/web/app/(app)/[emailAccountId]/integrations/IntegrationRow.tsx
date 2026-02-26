@@ -44,7 +44,7 @@ export function IntegrationRow({
   const conn = integration.connection;
 
   const connected = !!conn;
-  const isActive = conn?.isActive;
+  const isActive = conn?.isActive ?? false;
   const toolsCount = conn?.tools?.filter((t) => t.isEnabled).length || 0;
   const totalTools = conn?.tools?.length || 0;
   const connectionId = conn?.id;

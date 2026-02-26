@@ -1,4 +1,5 @@
 import { db } from "../../../../lib/db/client";
+import type { AQDetailFetchSource } from "../aqdata/crawl4ai";
 import type { DustApplicationDetail } from "../aqdata/parsers/dust-application-detail";
 import type { DustApplicationDetailQAResult } from "../aqdata/parsers/dust-application-detail-qa";
 import type { AQPermitRecord } from "./types";
@@ -112,7 +113,8 @@ export async function savePermitDetail(
   permitId: string,
   detailHtml: string,
   detail: DustApplicationDetail,
-  qa: DustApplicationDetailQAResult
+  qa: DustApplicationDetailQAResult,
+  detailSource: AQDetailFetchSource = "client"
 ): Promise<void> {
   await db.run(
     `UPDATE aqdata_permits
@@ -120,13 +122,14 @@ export async function savePermitDetail(
          detail_fields = $2::jsonb,
          detail_scraped_at = now()
      WHERE id = $3`,
-    [detailHtml, buildDetailPayload(detail, qa), permitId]
+    [detailHtml, buildDetailPayload(detail, qa, detailSource), permitId]
   );
 }
 
 function buildDetailPayload(
   detail: DustApplicationDetail,
-  qa: DustApplicationDetailQAResult
+  qa: DustApplicationDetailQAResult,
+  detailSource: AQDetailFetchSource
 ): Record<string, unknown> {
   return {
     attachments: detail.attachments,
@@ -135,7 +138,10 @@ function buildDetailPayload(
     documentLinks: detail.documentLinks,
     permitDocument: detail.permitDocument,
     permitPdf: detail.permitPdf,
-    qa,
+    qa: {
+      ...qa,
+      backend: detailSource,
+    },
     structured: detail.structured,
   };
 }

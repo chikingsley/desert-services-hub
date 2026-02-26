@@ -48,7 +48,7 @@ export function EmailMessage({
   onSendSuccess: (messageId: string, threadId: string) => void;
   generateNudge?: boolean;
 }) {
-  const [showReply, setShowReply] = useState(defaultShowReply);
+  const [showReply, setShowReply] = useState(defaultShowReply ?? false);
   const [showDetails, setShowDetails] = useState(false);
 
   const onReply = useCallback(() => setShowReply(true), []);

@@ -15,7 +15,6 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://postgres.pooler-dev:postgres@host.docker.internal:54329/postgres
       MONDAY_FILES_DIR: /app/data/monday-files
-      BACKGROUND_JOBS_BASE_URL: ${BACKGROUND_JOBS_BASE_URL:-http://background-jobs:4747}
       BC_WORKER_BASE_URL: ${BC_WORKER_BASE_URL:-http://bc-worker:47824}
       BUILDINGCONNECTED_AUTH_VNC_PORT: ${BUILDINGCONNECTED_AUTH_VNC_PORT:-6081}
       BUILDINGCONNECTED_AUTH_VNC_URL: ${BUILDINGCONNECTED_AUTH_VNC_URL:-https://buildingconnected-vnc.desertservices.app/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true}
@@ -32,65 +31,6 @@ services:
       start_period: 5s
     restart: unless-stopped
     command: ["bun", "run", "apps/web/server.ts"]
-
-  # ==========================================================================
-  # Background Jobs — webhook receiver + job queue + sync timers
-  # ==========================================================================
-  background-jobs:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: desert-webhooks
-    ports:
-      - "4000:4747"
-    env_file: .env
-    environment:
-      NODE_ENV: production
-      WEBHOOK_PORT: 4747
-      WEBHOOK_IDLE_TIMEOUT_S: ${WEBHOOK_IDLE_TIMEOUT_S:-255}
-      DATABASE_URL: postgresql://postgres.pooler-dev:postgres@host.docker.internal:54329/postgres
-      MONDAY_FILES_DIR: /app/data/monday-files
-      # LLM — two tiers: fast for classification, smart for routing/extraction
-      GEMINI_FAST_MODEL: ${GEMINI_FAST_MODEL:-gemini-2.5-flash-lite}
-      GEMINI_SMART_MODEL: ${GEMINI_SMART_MODEL:-gemini-2.5-flash-lite}
-      # PDF analysis service
-      PDF_ANALYSIS_URL: http://pdf-analysis:4848
-      # Email triage
-      EMAIL_TRIAGE_MODE: ${EMAIL_TRIAGE_MODE:-active}
-      EMAIL_TRIAGE_PROVIDER: ${EMAIL_TRIAGE_PROVIDER:-local}
-      # Local LLM (Ollama) for triage backfill
-      LOCAL_LLM_BASE_URL: http://host.docker.internal:11434/v1
-      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-granite4:latest}
-      # Notifications
-      NOTIFICATIONS_DELIVERY_MODE: ${NOTIFICATIONS_DELIVERY_MODE:-log}
-      NOTIFICATIONS_MAILBOX: ${NOTIFICATIONS_MAILBOX:-chi@desertservices.net}
-      # Attachment backfill
-      ATTACHMENT_BACKFILL_BATCH_SIZE: ${ATTACHMENT_BACKFILL_BATCH_SIZE:-200}
-      ATTACHMENT_BACKFILL_CONCURRENCY: ${ATTACHMENT_BACKFILL_CONCURRENCY:-15}
-      EMAIL_BODY_LINK_PLAYWRIGHT: ${EMAIL_BODY_LINK_PLAYWRIGHT:-1}
-      EMAIL_BODY_LINK_PLAYWRIGHT_HEADLESS: ${EMAIL_BODY_LINK_PLAYWRIGHT_HEADLESS:-1}
-      EMAIL_BODY_LINK_PLAYWRIGHT_STORAGE_STATE_PATH: ${EMAIL_BODY_LINK_PLAYWRIGHT_STORAGE_STATE_PATH:-/app/data/attachments/body-links-auth/state.json}
-      EMAIL_BODY_LINK_PLAYWRIGHT_DEBUG_DIR: ${EMAIL_BODY_LINK_PLAYWRIGHT_DEBUG_DIR:-/app/data/attachments/body-links-debug}
-      BUILDINGCONNECTED_SYNC_ENABLED: ${BUILDINGCONNECTED_SYNC_ENABLED:-1}
-      BUILDINGCONNECTED_SYNC_BATCH_SIZE: ${BUILDINGCONNECTED_SYNC_BATCH_SIZE:-50}
-      BUILDINGCONNECTED_SYNC_DOWNLOAD_TIMEOUT_MS: ${BUILDINGCONNECTED_SYNC_DOWNLOAD_TIMEOUT_MS:-20000}
-      AQDATA_WORKER_URL: ${AQDATA_WORKER_URL:-http://aqdata-worker:47823}
-      AQDATA_SYNC_ENABLED: ${AQDATA_SYNC_ENABLED:-1}
-      AQDATA_DETAIL_SCRAPE_ENABLED: ${AQDATA_DETAIL_SCRAPE_ENABLED:-1}
-      AQDATA_DETAIL_SCRAPE_BATCH_SIZE: ${AQDATA_DETAIL_SCRAPE_BATCH_SIZE:-10}
-      DOCKER_CONTAINER: "true"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    volumes:
-      - webhooks-data:/app/data
-    healthcheck:
-      test: ["CMD", "bun", "-e", "const r = await fetch('http://localhost:4747/api/health'); if (!r.ok) process.exit(1);"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
-    restart: unless-stopped
-    command: ["/app/apps/background-jobs/start-stack.sh"]
 
   # ==========================================================================
   # PDF Analysis — FastAPI service for PDF extraction, classification, OCR
@@ -166,6 +106,20 @@ services:
   # ==========================================================================
   # AQData Worker — HTTP sync + continuous AQ data scrape snapshots
   # ==========================================================================
+  crawl4ai:
+    image: unclecode/crawl4ai:latest
+    container_name: desert-crawl4ai
+    shm_size: "1gb"
+    ports:
+      - "11235:11235"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:11235/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
   aqdata-worker:
     build:
       context: .
@@ -182,8 +136,15 @@ services:
       AQDATA_OUTPUT_DIR: /app/data/aqdata
       AQDATA_SCRAPE_INTERVAL_MS: ${AQDATA_SCRAPE_INTERVAL_MS:-900000}
       AQDATA_DETAIL_SCRAPE_BATCH_SIZE: ${AQDATA_DETAIL_SCRAPE_BATCH_SIZE:-10}
+      AQDATA_DETAIL_FETCH_BACKEND: ${AQDATA_DETAIL_FETCH_BACKEND:-client}
+      AQDATA_CRAWL4AI_BASE_URL: ${AQDATA_CRAWL4AI_BASE_URL:-http://crawl4ai:11235}
+      AQDATA_CRAWL4AI_TIMEOUT_MS: ${AQDATA_CRAWL4AI_TIMEOUT_MS:-120000}
+      AQDATA_CRAWL4AI_BEARER_TOKEN: ${AQDATA_CRAWL4AI_BEARER_TOKEN:-}
       AQDATA_COMPANY_NAME: ${AQDATA_COMPANY_NAME:-Desert Services}
       AQDATA_COORDINATES_API_URL: ${AQDATA_COORDINATES_API_URL:-}
+    depends_on:
+      crawl4ai:
+        condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -237,10 +198,259 @@ services:
       start_period: 20s
     restart: unless-stopped
 
+  # ==========================================================================
+  # Trigger.dev Self-Host — Orchestration UI + Worker Runtime (Profile: trigger)
+  # ==========================================================================
+  webapp:
+    profiles: ["trigger"]
+    image: ghcr.io/triggerdotdev/trigger.dev:v4-beta
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:8030:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    volumes:
+      - trigger-shared:/home/node/shared
+    user: root
+    command: >-
+      sh -c "chown -R node:node /home/node/shared &&
+      if [ \"$$SKIP_CLICKHOUSE_MIGRATIONS\" != '1' ] && [ -n \"$$CLICKHOUSE_URL\" ]; then
+        export GOOSE_DRIVER=clickhouse &&
+        export GOOSE_DBSTRING=\"$${CLICKHOUSE_URL}?secure=false\" &&
+        export GOOSE_MIGRATION_DIR=/triggerdotdev/internal-packages/clickhouse/schema &&
+        /usr/local/bin/goose up &&
+        echo 'ClickHouse migrations complete.' ;
+      fi &&
+      export SKIP_CLICKHOUSE_MIGRATIONS=1 &&
+      exec ./scripts/entrypoint.sh"
+    env_file:
+      - ./apps/trigger-dev/hosting/docker/.env
+    environment:
+      ELECTRIC_ORIGIN: http://electric:3000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_TLS_DISABLED: "true"
+      APP_LOG_LEVEL: info
+      DEPLOY_REGISTRY_HOST: 172.17.0.1:5000
+      DEPLOY_REGISTRY_NAMESPACE: trigger
+      GRACEFUL_SHUTDOWN_TIMEOUT: 1000
+      TRIGGER_BOOTSTRAP_ENABLED: "1"
+      TRIGGER_BOOTSTRAP_WORKER_GROUP_NAME: bootstrap
+      TRIGGER_BOOTSTRAP_WORKER_TOKEN_PATH: /home/node/shared/worker_token
+      RUN_REPLICATION_ENABLED: "1"
+      CLICKHOUSE_LOG_LEVEL: info
+      RUN_REPLICATION_LOG_LEVEL: info
+      INTERNAL_OTEL_TRACE_LOGGING_ENABLED: "0"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "http.get('http://localhost:3000/healthcheck', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  postgres:
+    profiles: ["trigger"]
+    image: postgres:14
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - trigger-postgres:/var/lib/postgresql/data/
+    command:
+      - -c
+      - wal_level=logical
+    env_file:
+      - ./apps/trigger-dev/hosting/docker/.env
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    profiles: ["trigger"]
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6389:6379"
+    volumes:
+      - trigger-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  electric:
+    profiles: ["trigger"]
+    image: electricsql/electric:1.2.4
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./apps/trigger-dev/hosting/docker/.env
+    environment:
+      ELECTRIC_INSECURE: "true"
+      ELECTRIC_USAGE_REPORTING: "false"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  clickhouse:
+    profiles: ["trigger"]
+    image: bitnamilegacy/clickhouse:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9123:8123"
+      - "127.0.0.1:9090:9000"
+    volumes:
+      - trigger-clickhouse:/bitnami/clickhouse
+      - ./apps/trigger-dev/hosting/docker/clickhouse/override.xml:/bitnami/clickhouse/etc/config.d/override.xml:ro
+    env_file:
+      - ./apps/trigger-dev/hosting/docker/.env
+    environment:
+      CLICKHOUSE_ADMIN_USER: default
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "clickhouse-client --host localhost --port 9000 --user default --password \"$$CLICKHOUSE_ADMIN_PASSWORD\" --query \"SELECT 1\"",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  registry:
+    profiles: ["trigger"]
+    image: registry:2
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:5000:5000"
+    volumes:
+      - ./apps/trigger-dev/hosting/docker/registry/auth.htpasswd:/auth/htpasswd:ro
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  minio:
+    profiles: ["trigger"]
+    image: bitnamilegacy/minio:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - trigger-minio:/bitnami/minio/data
+    env_file:
+      - ./apps/trigger-dev/hosting/docker/.env
+    environment:
+      MINIO_DEFAULT_BUCKETS: packets
+      MINIO_BROWSER: "on"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  supervisor:
+    profiles: ["trigger"]
+    image: ghcr.io/triggerdotdev/supervisor:v4-beta
+    restart: unless-stopped
+    depends_on:
+      docker-proxy:
+        condition: service_healthy
+    volumes:
+      - trigger-shared:/home/node/shared
+    deploy:
+      replicas: 4
+    user: root
+    command: sh -c "chown -R node:node /home/node/shared && exec /usr/bin/dumb-init -- pnpm run --filter supervisor start"
+    env_file:
+      - ./apps/trigger-dev/hosting/docker/.env
+    environment:
+      TRIGGER_WORKER_TOKEN: file:///home/node/shared/worker_token
+      TRIGGER_API_URL: http://webapp:3000
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://webapp:3000/otel
+      TRIGGER_WORKLOAD_API_DOMAIN: supervisor
+      TRIGGER_WORKLOAD_API_PORT_EXTERNAL: 8020
+      DEBUG: "1"
+      ENFORCE_MACHINE_PRESETS: "1"
+      TRIGGER_DEQUEUE_INTERVAL_MS: 1000
+      DOCKER_HOST: tcp://docker-proxy:2375
+      DOCKER_RUNNER_NETWORKS: desert-services-hub_default
+      DOCKER_AUTOREMOVE_EXITED_CONTAINERS: "1"
+    healthcheck:
+      test: ["CMD", "node", "-e", "http.get('http://localhost:8020/health', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  docker-proxy:
+    profiles: ["trigger"]
+    image: tecnativa/docker-socket-proxy:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      LOG_LEVEL: info
+      POST: "1"
+      CONTAINERS: "1"
+      IMAGES: "1"
+      INFO: "1"
+      NETWORKS: "1"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "2375"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
 volumes:
   webhooks-data:
   permit-data:
   aqdata-data:
+  trigger-shared:
+    name: trigger_shared
+    external: true
+  trigger-postgres:
+    name: trigger_postgres
+    external: true
+  trigger-redis:
+    name: trigger_redis
+    external: true
+  trigger-clickhouse:
+    name: trigger_clickhouse
+    external: true
+  trigger-minio:
+    name: trigger_minio
+    external: true
 
 # =============================================================================
 # Usage
@@ -250,14 +460,14 @@ volumes:
 #   docker compose up -d
 #
 # Web app:        http://localhost:3000
-# Background Jobs: http://localhost:4747 (tunneled to webhooks.desertservices.app)
 # BC Worker API:  http://localhost:47824
 # BC Auth VNC:    http://localhost:6081 (buildingconnected-vnc.desertservices.app)
 # Permit Worker:  http://localhost:47822 (API + Dashboard)
 # Permit VNC:     http://localhost:6080 (watch browser automation / maricopa-vnc.desertservices.app)
 #
 # Logs:           docker compose logs -f web
-#                 docker compose logs -f background-jobs
 #                 docker compose logs -f permit-worker
+# Trigger up:     docker compose --profile trigger up -d
+# Trigger logs:   docker compose logs -f webapp supervisor
 # Rebuild:        docker compose build && docker compose up -d
 # =============================================================================

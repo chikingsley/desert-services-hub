@@ -24,7 +24,7 @@ export const messageContextSchema = z.object({
   results: z.array(
     z.object({
       ruleName: z.string().nullable(),
-      systemType: z.nativeEnum(SystemType).nullable().optional(),
+      systemType: z.enum(SystemType).nullable().optional(),
       reason: z.string(),
     })
   ),

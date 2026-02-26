@@ -178,6 +178,10 @@ export interface ReviseRequest {
 }
 
 export interface CloseRequest {
+  /**
+   * Custom close reason.
+   * Optional. If omitted, worker uses hardcoded default reason.
+   */
   reason?: string;
 }
 
@@ -188,6 +192,10 @@ export interface InvoicePdfRequest {
 
 export interface ClipboardPasteRequest {
   text: string;
+}
+
+export interface BrowserAbortRequest {
+  reason?: string;
 }
 
 // ============================================================================
@@ -306,6 +314,17 @@ export interface ClipboardResponse extends BaseResponse {
   clipboard?: Record<string, unknown>;
   status?: Record<string, unknown>;
   text?: string;
+}
+
+export interface BrowserAbortResponse extends BaseResponse {
+  aborted?: {
+    activeBeforeAbort: boolean;
+    busyBeforeAbort: boolean;
+    operation: string | null;
+    reason: string;
+    stopped: boolean;
+  };
+  status?: Record<string, unknown>;
 }
 
 export interface HealthResponse {

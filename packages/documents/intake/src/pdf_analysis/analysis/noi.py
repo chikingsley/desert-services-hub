@@ -297,7 +297,3 @@ def extract_noi(text: str) -> NOIExtraction:
             },
         }
     )
-
-
-# Backward-compatible alias for older imports.
-Noi = NOIExtraction

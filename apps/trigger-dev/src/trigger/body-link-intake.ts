@@ -17,7 +17,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { unlink } from "node:fs/promises";
+import { mkdir, unlink } from "node:fs/promises";
 import { db } from "@lib/db/client";
 import { insertAttachment } from "@lib/db/repositories/attachment";
 import {
@@ -33,6 +33,9 @@ const BATCH_SIZE = 500;
 const SCAN_VERSION = 1;
 const MAX_LINKS_PER_EMAIL = 12;
 const DOWNLOAD_TIMEOUT_MS = 120_000;
+const BODY_LINK_STORAGE_DIR =
+  process.env.EMAIL_BODY_LINK_STORAGE_DIR?.trim() ||
+  "/app/data/attachments/body-links";
 
 const BC_WORKER_BASE_URL =
   process.env.BC_WORKER_BASE_URL?.trim() || "http://bc-worker:47824";
@@ -358,7 +361,8 @@ async function downloadAndInsertLink(
   const ext = file.name.includes(".")
     ? (file.name.split(".").pop()?.toLowerCase() ?? "bin")
     : "bin";
-  const tmpPath = `/tmp/bodylink-${emailId}-${attId.slice(-12)}.${ext}`;
+  await mkdir(BODY_LINK_STORAGE_DIR, { recursive: true });
+  const tmpPath = `${BODY_LINK_STORAGE_DIR}/bodylink-${emailId}-${attId.slice(-12)}.${ext}`;
   await Bun.write(tmpPath, file.buffer);
 
   try {

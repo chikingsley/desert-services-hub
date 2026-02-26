@@ -90,6 +90,29 @@ export function registerPermitTools(
     async () => wrap(() => client.browserStatus())
   );
 
+  server.registerTool(
+    "permit_browser_abort",
+    {
+      title: "Emergency Abort Permit Operation",
+      description:
+        "Emergency kill switch for permit automation. Force-stops any in-flight browser operation by tearing down the current browser session. Use when an operation was started by mistake or appears stuck.",
+      inputSchema: {
+        reason: z
+          .string()
+          .optional()
+          .describe(
+            "Optional reason recorded with the abort (e.g., 'operator requested stop')"
+          ),
+      },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
+    },
+    async ({ reason }) => wrap(() => client.browserAbort({ reason }))
+  );
+
   // --------------------------------------------------------------------------
   // Read Operations
   // --------------------------------------------------------------------------
@@ -397,14 +420,14 @@ export function registerPermitTools(
     {
       title: "Close Permit",
       description:
-        "Close/terminate a dust permit. Use when a construction project is completed and the permit is no longer needed, or when the permit should be closed for any other reason.",
+        "Close/terminate a dust permit. Primary use: project has been completed. The worker uses a hardcoded default close reason unless a custom reason is explicitly provided.",
       inputSchema: {
         permitId: z.string().describe(PERMIT_ID_DESC),
         reason: z
           .string()
           .optional()
           .describe(
-            "Reason for closing (e.g., 'project completed', 'permit no longer needed')"
+            "Optional custom reason. Default reason is hardcoded to 'Project has been completed.'"
           ),
       },
       annotations: {

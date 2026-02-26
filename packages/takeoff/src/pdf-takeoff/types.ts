@@ -150,10 +150,8 @@ export type HighlightType =
  */
 export interface Highlight {
   /**
-   * @deprecated If you want your highlight to store content after being a
-   * GhostHighlight, you should create your own interface extended off this. If
-   * you are currently using this property to determine what kind of highlight
-   * to render, please use {@link type}.
+   * Optional content payload.
+   * Use {@link type} to determine how a highlight should be rendered.
    */
   content?: Content;
   id: string;

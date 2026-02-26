@@ -1,9 +1,9 @@
-import { nativeExtract, nativeExtractFromBuffer } from "@lib/pdf-analysis";
+import { nativeExtract, nativeExtractMultipart } from "@lib/pdf-analysis";
 
 export interface MondayAssetProcessInput {
-  /** Buffer content — when provided, sends base64 to pdf-analysis instead of a
-   *  local path. Use when the caller can't share its filesystem with the
-   *  pdf-analysis service (e.g. Trigger.dev runner containers). */
+  /** Buffer content — when provided, sends via multipart upload to pdf-analysis
+   *  instead of a local path. Use when the caller can't share its filesystem
+   *  with the pdf-analysis service (e.g. Trigger.dev runner containers). */
   buffer?: Buffer;
   columnHint?: string;
   filePath: string;
@@ -19,7 +19,7 @@ export async function processMondayAssetDocument(
 ): Promise<MondayAssetProcessOutcome> {
   const fileName = input.filePath.split("/").pop() ?? input.filePath;
   const ingestResult = input.buffer
-    ? await nativeExtractFromBuffer(input.buffer, fileName)
+    ? await nativeExtractMultipart(input.buffer, fileName)
     : await nativeExtract(input.filePath);
 
   const documentType =

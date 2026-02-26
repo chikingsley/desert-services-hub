@@ -170,20 +170,35 @@ export function nativeExtract(
 }
 
 /**
- * Like nativeExtract but sends file content as base64 instead of a local path.
- * Use when the caller and the pdf-analysis service don't share a filesystem
- * (e.g. Trigger.dev runner containers).
+ * Send file content to pdf-analysis via multipart/form-data upload.
+ *
+ * This sends raw bytes directly without base64-in-JSON overhead and is the
+ * only supported in-memory upload path for Trigger.dev runner containers.
  */
-export function nativeExtractFromBuffer(
+export async function nativeExtractMultipart(
   buffer: Buffer,
   filename: string,
   provider = "auto"
 ): Promise<ExtractionResult> {
-  return post<ExtractionResult>("/native-text-extraction", {
-    path: filename,
-    content_base64: buffer.toString("base64"),
-    provider,
-  });
+  const form = new FormData();
+  // Normalize Buffer to Uint8Array so TypeScript can treat this as BlobPart.
+  const bytes = new Uint8Array(buffer);
+  form.append("file", new Blob([bytes]), filename);
+  form.append("provider", provider);
+
+  const response = await fetch(
+    `${PDF_ANALYSIS_URL}/native-text-extraction/upload`,
+    { method: "POST", body: form }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(
+      `pdf-analysis /native-text-extraction/upload failed (${response.status}): ${text}`
+    );
+  }
+
+  return (await response.json()) as ExtractionResult;
 }
 
 /** GLM-OCR vision + LLM classify. For scanned/image docs or explicit OCR pass. */

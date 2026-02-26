@@ -4,7 +4,7 @@
 
 **Goal:** Create a Trigger.dev task that sends dust permit email notifications (8 types) using TypeScript templates and Microsoft Graph API.
 
-**Architecture:** TypeScript template functions in `lib/email/permit-templates.ts` produce `{ subject, body }` for each notification type. A `schemaTask` in `src/trigger/permit-notifications.ts` looks up permit data from Postgres, renders the template, and creates/sends an Outlook draft via Graph API. Draft mode is default (configurable).
+**Architecture:** TypeScript template functions in `lib/email/permit-templates.ts` produce `{ subject, body }` for each notification type. A `schemaTask` in `apps/trigger-dev/src/trigger/permit-notifications.ts` looks up permit data from Postgres, renders the template, and creates/sends an Outlook draft via Graph API. Draft mode is default (configurable).
 
 **Tech Stack:** Trigger.dev v3 (`schemaTask`), Zod, Microsoft Graph API (`lib/graph/client.ts` — `createComposeClient`), Bun.sql (Postgres)
 
@@ -498,7 +498,7 @@ git commit -m "feat: add TypeScript dust permit email templates (8 types)"
 ### Task 2: Create the Trigger.dev permit-notification task
 
 **Files:**
-- Create: `src/trigger/permit-notifications.ts`
+- Create: `apps/trigger-dev/src/trigger/permit-notifications.ts`
 
 **Dependencies:** Task 1 (templates must exist)
 
@@ -643,7 +643,7 @@ Expected: No errors (or only pre-existing errors unrelated to this file)
 **Step 3: Commit**
 
 ```bash
-git add src/trigger/permit-notifications.ts
+git add apps/trigger-dev/src/trigger/permit-notifications.ts
 git commit -m "feat: add permit-notification Trigger.dev task (draft/send via Graph API)"
 ```
 

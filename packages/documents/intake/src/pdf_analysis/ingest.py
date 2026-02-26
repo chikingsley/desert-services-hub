@@ -62,7 +62,7 @@ def extract_text(pdf_path: Path, max_pages: int = 0) -> TextResult:
     """Extract text from a PDF using kreuzberg. No LLM calls.
 
     Uses kreuzberg for fast, reliable text extraction with automatic OCR fallback
-    for scanned documents. Extracts with page markers for compatibility with
+    for scanned documents. Extracts with page markers for downstream
     chunking/parsing logic.
 
     Args:

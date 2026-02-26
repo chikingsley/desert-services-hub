@@ -14,7 +14,7 @@ import { Input } from "@/components/Input";
 import { toastError, toastSuccess } from "@/components/Toast";
 
 const ssoLoginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  email: z.email("Please enter a valid email address"),
   organizationSlug: z
     .string()
     .regex(

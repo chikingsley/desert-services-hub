@@ -69,9 +69,7 @@ export async function getAccessToken(): Promise<string> {
   return token.access_token;
 }
 
-/**
- * Loads token cache (for backwards compat - now auto-fetches)
- */
+/** Loads token cache, fetching one if needed. */
 export async function loadTokenCache(): Promise<CachedToken | null> {
   if (!cachedToken) {
     try {
@@ -81,13 +79,6 @@ export async function loadTokenCache(): Promise<CachedToken | null> {
     }
   }
   return cachedToken;
-}
-
-/**
- * No-op for backwards compat
- */
-export function saveTokenCache(): boolean {
-  return true;
 }
 
 /**
@@ -103,7 +94,6 @@ export function createTestTokens(): CachedToken {
 
 export default {
   loadTokenCache,
-  saveTokenCache,
   getAccessToken,
   createTestTokens,
 };

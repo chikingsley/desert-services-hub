@@ -4,8 +4,7 @@ import type { CatalogItem } from "@/packages/estimates/catalog/types";
 
 const stringOrNullSchema = z.union([z.string(), z.null()]);
 
-export const lineItemSchema = z
-  .object({
+export const lineItemSchema = z.looseObject({
     section_id: stringOrNullSchema.optional(),
     code: z.string().trim().optional(),
     item_name: z.string().trim().optional(),
@@ -17,8 +16,7 @@ export const lineItemSchema = z
     is_excluded: z.union([z.boolean(), z.literal(0), z.literal(1)]).optional(),
     allow_description_override: z.boolean().optional(),
     allow_unit_override: z.boolean().optional(),
-  })
-  .passthrough();
+  });
 
 export type RawCatalogLineItem = z.infer<typeof lineItemSchema>;
 

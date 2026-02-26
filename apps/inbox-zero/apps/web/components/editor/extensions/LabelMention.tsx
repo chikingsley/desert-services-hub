@@ -87,8 +87,8 @@ export const createLabelMentionExtension = (labels: EmailLabel[]) => {
         return filteredLabels;
       },
       render: () => {
-        let component: ReactRenderer<MentionListRef>;
-        let popup: HTMLElement;
+        let component: ReactRenderer<MentionListRef> | null = null;
+        let popup: HTMLElement | null = null;
 
         // Cleanup function to ensure proper cleanup
         const cleanup = () => {
@@ -99,6 +99,8 @@ export const createLabelMentionExtension = (labels: EmailLabel[]) => {
             if (component) {
               component.destroy();
             }
+            component = null;
+            popup = null;
           } catch (error) {
             // Silently handle cleanup errors to prevent crashes
             console.warn("Error during mention cleanup:", error);
@@ -132,7 +134,7 @@ export const createLabelMentionExtension = (labels: EmailLabel[]) => {
           onUpdate(props) {
             try {
               // More defensive checks to prevent race conditions
-              if (!(component?.updateProps && popup)) {
+              if (!(component && popup)) {
                 console.warn("Mention component or popup not ready for update");
                 return;
               }
@@ -161,7 +163,7 @@ export const createLabelMentionExtension = (labels: EmailLabel[]) => {
             }
 
             try {
-              return component.ref?.onKeyDown(props) ?? false;
+              return component?.ref?.onKeyDown(props) ?? false;
             } catch (error) {
               console.error("Error during mention keydown:", error);
               cleanup();

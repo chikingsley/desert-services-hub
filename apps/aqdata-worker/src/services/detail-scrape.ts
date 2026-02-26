@@ -1,4 +1,10 @@
 import { AQDataClient } from "../aqdata/client";
+import {
+  type AQDetailFetchBackend,
+  type AQDetailFetchSource,
+  fetchDustApplicationDetailViaCrawl4Ai,
+  getAQDetailFetchBackend,
+} from "../aqdata/crawl4ai";
 import { parseDustApplicationDetail } from "../aqdata/parsers/dust-application-detail";
 import { mergePermitPdfIntoDetail } from "../aqdata/parsers/dust-application-detail-enrichment";
 import { evaluateDustApplicationDetailQA } from "../aqdata/parsers/dust-application-detail-qa";
@@ -29,6 +35,11 @@ interface RunDetailScrapeOptions {
   retryBackoffMs?: number;
 }
 
+interface DetailFetchResult {
+  html: string;
+  source: AQDetailFetchSource;
+}
+
 export async function runAQDetailScrape(
   options: RunDetailScrapeOptions = {}
 ): Promise<DetailScrapeResult> {
@@ -43,6 +54,7 @@ export async function runAQDetailScrape(
     DEFAULT_RETRY_BACKOFF_MS,
     30_000
   );
+  const detailFetchBackend = getAQDetailFetchBackend();
 
   try {
     const pending = await listPermitsNeedingDetailScrape(limit);
@@ -76,19 +88,21 @@ export async function runAQDetailScrape(
 
     for (const row of pending) {
       try {
-        const html = await fetchDetailWithRetries(
+        const detailFetchResult = await fetchDetailWithRetries(
           row,
           getClient,
           resetClient,
           retryAttempts,
-          retryBackoffMs
+          retryBackoffMs,
+          detailFetchBackend
         );
 
-        if (!html) {
+        if (!detailFetchResult) {
           failed++;
           continue;
         }
 
+        const { html, source } = detailFetchResult;
         let detail = parseDustApplicationDetail(html, row.id);
         detail = await enrichWithPermitPdf(detail, row.id, getClient);
 
@@ -97,7 +111,7 @@ export async function runAQDetailScrape(
           expectedStatus: row.status ?? null,
         });
 
-        await savePermitDetail(row.id, html, detail, qa);
+        await savePermitDetail(row.id, html, detail, qa, source);
         scraped++;
       } catch (error) {
         failed++;
@@ -136,15 +150,21 @@ async function fetchDetailWithRetries(
   getClient: () => Promise<AQDataClient>,
   resetClient: () => void,
   retryAttempts: number,
-  retryBackoffMs: number
-): Promise<string | null> {
+  retryBackoffMs: number,
+  detailFetchBackend: AQDetailFetchBackend
+): Promise<DetailFetchResult | null> {
   const statusHint = normalizeStatus(row.status);
 
   for (let attempt = 1; attempt <= retryAttempts; attempt++) {
     try {
-      const html = await fetchDetailWithFallback(row.id, statusHint, getClient);
-      if (html) {
-        return html;
+      const result = await fetchDetailForBackend(
+        row.id,
+        statusHint,
+        getClient,
+        detailFetchBackend
+      );
+      if (result) {
+        return result;
       }
       console.warn(
         `[aqdata] detail missing for ${row.id}, attempt=${attempt}/${retryAttempts}`
@@ -164,6 +184,42 @@ async function fetchDetailWithRetries(
   return null;
 }
 
+async function fetchDetailForBackend(
+  applicationId: string,
+  statusHint: DustAppStatus | null,
+  getClient: () => Promise<AQDataClient>,
+  backend: AQDetailFetchBackend
+): Promise<DetailFetchResult | null> {
+  if (backend === "crawl4ai") {
+    const html = await fetchDetailWithCrawl4Ai(applicationId, statusHint);
+    return html ? { html, source: "crawl4ai" } : null;
+  }
+
+  if (backend === "hybrid") {
+    const crawlHtml = await fetchDetailWithCrawl4Ai(applicationId, statusHint);
+    if (crawlHtml) {
+      return { html: crawlHtml, source: "crawl4ai" };
+    }
+
+    const clientHtml = await fetchDetailWithFallback(
+      applicationId,
+      statusHint,
+      getClient
+    );
+    if (clientHtml) {
+      return { html: clientHtml, source: "client" };
+    }
+    return null;
+  }
+
+  const html = await fetchDetailWithFallback(
+    applicationId,
+    statusHint,
+    getClient
+  );
+  return html ? { html, source: "client" } : null;
+}
+
 async function fetchDetailWithFallback(
   applicationId: string,
   statusHint: DustAppStatus | null,
@@ -178,7 +234,7 @@ async function fetchDetailWithFallback(
       statuses: [status],
     });
     try {
-      const html = await client.openDustApplicationDetail(applicationId);
+      const html = await client.openRecordDetail(applicationId);
       if (DUST_DETAIL_TITLE_REGEX.test(html)) {
         return html;
       }
@@ -194,7 +250,7 @@ async function fetchDetailWithFallback(
     statuses: [...DEFAULT_STATUS_SEARCH_ORDER],
   });
   try {
-    const html = await client.openDustApplicationDetail(applicationId);
+    const html = await client.openRecordDetail(applicationId);
     if (DUST_DETAIL_TITLE_REGEX.test(html)) {
       return html;
     }
@@ -203,6 +259,14 @@ async function fetchDetailWithFallback(
   }
 
   return null;
+}
+
+async function fetchDetailWithCrawl4Ai(
+  applicationId: string,
+  statusHint: DustAppStatus | null
+): Promise<string | null> {
+  const statuses = buildStatusAttemptOrder(statusHint);
+  return await fetchDustApplicationDetailViaCrawl4Ai(applicationId, statuses);
 }
 
 async function enrichWithPermitPdf(

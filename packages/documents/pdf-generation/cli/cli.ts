@@ -99,13 +99,11 @@ async function handleSafetyInit(
   console.log(`Wrote template JSON: ${outPath}`);
 }
 
-const ssspGenerateSchema = z
-  .object({
+const ssspGenerateSchema = z.strictObject({
     in: z.string().trim().min(1),
     out: z.string().trim().min(1),
     sections: z.string().trim().optional(),
-  })
-  .strict();
+  });
 
 async function handleSafetySsspGenerate(argv: string[]): Promise<void> {
   const { values } = parseArgs({
@@ -180,14 +178,12 @@ async function handleSafetyGenerate(
   await handleSafetySsspGenerate(argv);
 }
 
-const quotingEstimateGenerateSchema = z
-  .object({
+const quotingEstimateGenerateSchema = z.strictObject({
     backpage: z.boolean().optional(),
     id: z.string().trim().min(1),
     "include-back-page": z.boolean().optional(),
     output: z.string().trim().min(1).optional(),
-  })
-  .strict();
+  });
 
 async function handleQuotingEstimateGenerate(argv: string[]): Promise<void> {
   const { values } = parseArgs({

@@ -9,6 +9,7 @@ own package/app.
 - `SYSTEM-MAP.md` (root)
 - `docs/reference/CLI-CONVENTIONS.md`
 - `docs/reference/POSTGRES_MIGRATION.md`
+- `docs/reference/db-type-strategy.md`
 - `docs/reference/query-routing-policy.md`
 - `docs/reference/testing-methodology.md`
 - `docs/reference/azure-entra-permissions.md`

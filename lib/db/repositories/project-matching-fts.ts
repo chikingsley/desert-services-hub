@@ -178,7 +178,7 @@ export async function findProjectCandidatesFts(
       confidence: Math.min(1, score / 100),
       reasons: [
         {
-          code: "primary_token_overlap", // reuse existing code for compatibility
+          code: "primary_token_overlap", // reason code used by review tooling
           points: score,
           detail: "fts_multi_table",
         },
@@ -186,7 +186,7 @@ export async function findProjectCandidatesFts(
     });
   }
 
-  // Build context (minimal, for interface compat)
+  // Build minimal context expected by ProjectMatchResult
   const context: ProjectMatchContext = {
     primaryText: input.primaryText,
     aliasHints: input.aliasHints ?? [],

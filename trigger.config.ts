@@ -6,7 +6,7 @@ export default defineConfig({
   project: "proj_cebbbbrvbstcozdvvnri",
   runtime: "bun",
   maxDuration: 300,
-  dirs: ["./src/trigger"],
+  dirs: ["./apps/trigger-dev/src/trigger"],
   build: {
     external: ["bun"],
     extensions: [

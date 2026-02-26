@@ -3,6 +3,7 @@ import { db } from "@lib/db/client";
 import {
   findContentHashAttachmentDuplicate,
   findInternetMessageAttachmentDuplicate,
+  getIntakeAttachmentRows,
 } from "@lib/db/repositories/intake-attachments";
 
 /**
@@ -74,10 +75,25 @@ async function createDocument(params: {
   fileSize: number;
   extractionStatus: string;
   contentHash?: string;
+  outlookAttachmentId?: string | null;
+  storagePath?: string | null;
 }): Promise<number> {
   const rows = (await db.run(
-    `INSERT INTO documents (email_id, file_name, file_size, extraction_status, content_hash, source, created_at, updated_at, extraction_attempts, last_attempted_at)
-     VALUES ($1, $2, $3, $4, $5, 'email_attachment', now(), now(), 1, now())
+    `INSERT INTO documents (
+       email_id,
+       file_name,
+       file_size,
+       extraction_status,
+       content_hash,
+       source,
+       outlook_attachment_id,
+       storage_path,
+       created_at,
+       updated_at,
+       extraction_attempts,
+       last_attempted_at
+     )
+     VALUES ($1, $2, $3, $4, $5, 'email_attachment', $6, $7, now(), now(), 1, now())
      RETURNING id`,
     [
       params.emailId,
@@ -85,6 +101,8 @@ async function createDocument(params: {
       params.fileSize,
       params.extractionStatus,
       params.contentHash ?? null,
+      params.outlookAttachmentId ?? null,
+      params.storagePath ?? null,
     ]
   )) as Array<{ id: number }>;
   const id = rows[0]?.id;
@@ -93,6 +111,26 @@ async function createDocument(params: {
   }
   createdDocIds.push(id);
   return id;
+}
+
+async function findBodyLinkPreflightViolations(
+  attachmentIdLike: string
+): Promise<number[]> {
+  const rows = (await db.run(
+    `SELECT id
+     FROM documents
+     WHERE source = 'email_attachment'
+       AND outlook_attachment_id LIKE $1
+       AND extraction_status IN ('pending', 'downloaded')
+       AND (
+         storage_path IS NULL
+         OR storage_path NOT LIKE '/app/data/attachments/body-links/%'
+       )
+     ORDER BY id`,
+    [attachmentIdLike]
+  )) as Array<{ id: number }>;
+
+  return rows.map((r) => r.id);
 }
 
 afterAll(async () => {
@@ -220,6 +258,85 @@ describe("intake-attachments dedup queries", () => {
       );
 
       expect(result).toBe(successDocId);
+    });
+  });
+
+  describe("body-link preflight invariants", () => {
+    test("flags pending bodylink rows when storage_path is missing", async () => {
+      const emailId = await createEmail(`<bodylink-missing-${RUN_TAG}@test>`);
+      const attachmentId = `bodylink:onedrive:${RUN_TAG}-missing-path`;
+      const badDocId = await createDocument({
+        emailId,
+        fileName: `missing_${FILE_NAME}`,
+        fileSize: FILE_SIZE,
+        extractionStatus: "pending",
+        outlookAttachmentId: attachmentId,
+        storagePath: null,
+      });
+
+      const violations = await findBodyLinkPreflightViolations(
+        `${attachmentId}%`
+      );
+      expect(violations).toContain(badDocId);
+    });
+
+    test("flags pending bodylink rows when storage_path is /tmp", async () => {
+      const emailId = await createEmail(`<bodylink-tmp-${RUN_TAG}@test>`);
+      const attachmentId = `bodylink:dropbox:${RUN_TAG}-tmp-path`;
+      const badDocId = await createDocument({
+        emailId,
+        fileName: `tmp_${FILE_NAME}`,
+        fileSize: FILE_SIZE,
+        extractionStatus: "pending",
+        outlookAttachmentId: attachmentId,
+        storagePath: `/tmp/bodylink-${RUN_TAG}.pdf`,
+      });
+
+      const violations = await findBodyLinkPreflightViolations(
+        `${attachmentId}%`
+      );
+      expect(violations).toContain(badDocId);
+    });
+
+    test("does NOT flag pending bodylink rows with durable storage_path", async () => {
+      const emailId = await createEmail(`<bodylink-good-${RUN_TAG}@test>`);
+      const attachmentId = `bodylink:egnyte:${RUN_TAG}-durable-path`;
+      await createDocument({
+        emailId,
+        fileName: `good_${FILE_NAME}`,
+        fileSize: FILE_SIZE,
+        extractionStatus: "pending",
+        outlookAttachmentId: attachmentId,
+        storagePath: `/app/data/attachments/body-links/bodylink-${RUN_TAG}.pdf`,
+      });
+
+      const violations = await findBodyLinkPreflightViolations(
+        `${attachmentId}%`
+      );
+      expect(violations).toHaveLength(0);
+    });
+
+    test("intake rows include storage_path for bodylink attachments", async () => {
+      const emailId = await createEmail(
+        `<bodylink-intake-row-${RUN_TAG}@test>`
+      );
+      const attachmentId = `bodylink:buildingconnected:${RUN_TAG}-row-shape`;
+      const durablePath = `/app/data/attachments/body-links/bodylink-${RUN_TAG}-row-shape.zip`;
+      const docId = await createDocument({
+        emailId,
+        fileName: `row_${FILE_NAME}`,
+        fileSize: FILE_SIZE,
+        extractionStatus: "pending",
+        outlookAttachmentId: attachmentId,
+        storagePath: durablePath,
+      });
+
+      const rows = await getIntakeAttachmentRows(500);
+      const row = rows.find((r) => r.attachment_id_pk === docId);
+
+      expect(row).toBeTruthy();
+      expect(row?.graph_attachment_id).toBe(attachmentId);
+      expect(row?.storage_path).toBe(durablePath);
     });
   });
 });

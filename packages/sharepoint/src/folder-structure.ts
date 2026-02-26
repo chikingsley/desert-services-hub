@@ -104,7 +104,7 @@ export function buildProjectFolderName(
  * Legacy SharePoint paths - existing folder structure
  * Use these for reading/querying existing data
  *
- * @deprecated For new projects, use PROJECT_PATHS instead
+ * For new projects, use PROJECT_PATHS.
  * @see /docs/sharepoint-structure.md
  */
 export const LEGACY_PATHS = {

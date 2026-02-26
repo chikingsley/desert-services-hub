@@ -9,10 +9,11 @@
  * This task runs on a 5-minute schedule to process the backlog.
  *
  * IMPORTANT: Runner containers have ephemeral filesystems isolated from the
- * pdf-analysis service. All extraction sends file content as base64 via
- * nativeExtractFromBuffer — never local file paths.
+ * pdf-analysis service. All extraction sends file content via multipart upload
+ * (nativeExtractMultipart) — never local file paths, never base64-in-JSON.
  */
 
+import { existsSync } from "node:fs";
 import { shouldSkipAttachment } from "@documents-intake/attachment-policy";
 import { processFilesIntake } from "@documents-intake/files-intake";
 import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
@@ -90,6 +91,40 @@ async function downloadMondayAsset(
 
 type Outcome = "extracted" | "skipped" | "deduped" | "failed";
 
+export async function loadEmailAttachmentBuffer(
+  att: IntakeAttachmentRow
+): Promise<Buffer> {
+  if (att.storage_path && existsSync(att.storage_path)) {
+    return Buffer.from(await Bun.file(att.storage_path).arrayBuffer());
+  }
+
+  if (att.graph_attachment_id?.startsWith("bodylink:")) {
+    throw new Error(
+      "Body-link attachment missing local storage_path; re-run body-link-intake"
+    );
+  }
+
+  if (!(att.message_id && att.graph_attachment_id && att.mailbox_email)) {
+    throw new Error(
+      "Missing message_id, graph_attachment_id, mailbox_email, and local storage_path"
+    );
+  }
+
+  return await Promise.race([
+    downloadAttachment(
+      att.mailbox_email,
+      att.message_id,
+      att.graph_attachment_id
+    ),
+    new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error("Download timed out")),
+        DOWNLOAD_TIMEOUT_MS
+      )
+    ),
+  ]);
+}
+
 async function processMondayAsset(att: IntakeAttachmentRow): Promise<Outcome> {
   if (!(att.monday_item_id && att.monday_asset_id)) {
     await updateAttachmentExtraction(
@@ -129,7 +164,7 @@ async function processMondayAsset(att: IntakeAttachmentRow): Promise<Outcome> {
     return "deduped";
   }
 
-  // Extract via base64 — no temp files needed
+  // Extract via multipart upload — no temp files needed
   const { processMondayAssetDocument } = await import(
     "@documents-intake/processors/monday-asset"
   );
@@ -174,36 +209,21 @@ async function processEmailAttachment(
     }
   }
 
-  // Need Graph API coordinates to download
-  if (!(att.message_id && att.graph_attachment_id && att.mailbox_email)) {
-    await updateAttachmentExtraction(
-      att.attachment_id_pk,
-      "failed",
-      null,
-      "Missing message_id, graph_attachment_id, or mailbox_email for download"
-    );
-    return "failed";
-  }
-
   // Clean up any previously failed parsed docs for this attachment
   if (att.email_id && att.graph_attachment_id) {
     await deleteFailedParsedDocs(att.email_id, att.graph_attachment_id);
   }
 
-  // Download from Graph API with timeout
-  const buffer = await Promise.race([
-    downloadAttachment(
-      att.mailbox_email,
-      att.message_id,
-      att.graph_attachment_id
-    ),
-    new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error("Download timed out")),
-        DOWNLOAD_TIMEOUT_MS
-      )
-    ),
-  ]);
+  let buffer: Buffer;
+  try {
+    // Body-link downloads are pre-fetched by body-link-intake and loaded here
+    // from storage_path when available.
+    buffer = await loadEmailAttachmentBuffer(att);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await updateAttachmentExtraction(att.attachment_id_pk, "failed", null, msg);
+    return "failed";
+  }
 
   // Content hash dedup
   const hash = computeHash(buffer);
@@ -218,7 +238,8 @@ async function processEmailAttachment(
     return "deduped";
   }
 
-  // Extract via base64 — pass buffer alongside path for cross-container transport
+  // Extract via multipart upload — pass buffer alongside path for
+  // cross-container transport.
   const results = await processFilesIntake({
     attachmentPaths: [att.name],
     attachmentBuffers: [buffer],

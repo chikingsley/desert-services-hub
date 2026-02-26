@@ -34,6 +34,8 @@ import {
 } from "./utils/helpers";
 import { portal } from "./utils/selectors";
 
+export const DEFAULT_PERMIT_CLOSE_REASON = "Project has been completed.";
+
 /**
  * Search for a permit by ID and open its detail page.
  *
@@ -198,7 +200,7 @@ export interface ClosePermitFormState {
  * Does NOT submit the form - call confirmClosePermit for that.
  *
  * @param popupPage - The close permit popup Page instance
- * @param reason - Reason for closing the permit (default: "project closing")
+ * @param reason - Reason for closing the permit (default: "Project has been completed.")
  * @returns ClosePermitFormState indicating which fields were filled
  *
  * @example
@@ -209,7 +211,7 @@ export interface ClosePermitFormState {
  */
 export async function fillClosePermitDialog(
   popupPage: Page,
-  reason = "project closing"
+  reason = DEFAULT_PERMIT_CLOSE_REASON
 ): Promise<ClosePermitFormState> {
   console.log("\n[FILL CLOSE PERMIT DIALOG]");
   console.log(`  Popup URL: ${popupPage.url()}`);
@@ -402,7 +404,7 @@ export async function cancelClosePermit(popupPage: Page): Promise<boolean> {
  * @param page - Playwright Page instance (logged in)
  * @param context - Browser context for popup detection
  * @param permitId - Permit ID to close (e.g., "D0063581")
- * @param reason - Reason for closing (default: "Permit no longer needed")
+ * @param reason - Reason for closing (default: "Project has been completed.")
  * @returns Result with success flag and optional error message
  */
 export async function closePermit(
@@ -444,7 +446,7 @@ export async function closePermit(
 
   // 4. Fill and confirm
   console.log("[4/4] Filling and confirming...");
-  await fillClosePermitDialog(popup, reason || "Permit no longer needed");
+  await fillClosePermitDialog(popup, reason || DEFAULT_PERMIT_CLOSE_REASON);
   const confirmed = await confirmClosePermit(popup, context);
 
   if (confirmed) {

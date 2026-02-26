@@ -12,17 +12,14 @@ import {
 const stringOrNullSchema = z.union([z.string(), z.null()]);
 const LINE_ITEM_PREFIX_RE = /^Line item\s+\d+:/;
 
-const editorSectionSchema = z
-  .object({
+const editorSectionSchema = z.looseObject({
     id: z.string().trim().min(1, "Section id is required"),
     name: z.string().trim().min(1, "Section name is required"),
     title: z.string().trim().optional(),
     showSubtotal: z.boolean().optional(),
-  })
-  .passthrough();
+  });
 
-const editorLineItemSchema = z
-  .object({
+const editorLineItemSchema = z.looseObject({
     id: z.string().trim().optional(),
     item: z.string().trim().min(1, "Line item name is required"),
     description: z.string().optional(),
@@ -36,8 +33,7 @@ const editorLineItemSchema = z
     catalogCode: z.string().trim().optional(),
     allowDescriptionOverride: z.boolean().optional(),
     allowUnitOverride: z.boolean().optional(),
-  })
-  .passthrough();
+  });
 
 const ESTIMATOR_DIRECTORY = {
   "Jared Aiken": {
@@ -78,8 +74,7 @@ function resolveEstimatorContact(estimatorName: string): {
   return contact;
 }
 
-const editorEstimateSchema = z
-  .object({
+const editorEstimateSchema = z.looseObject({
     estimateNumber: z.string().trim().min(1, "estimateNumber is required"),
     date: z.string().trim().min(1, "date is required"),
     estimator: z.string().trim().min(1, "estimator is required"),
@@ -100,8 +95,7 @@ const editorEstimateSchema = z
       .array(editorLineItemSchema)
       .min(1, "lineItems must contain at least one row"),
     total: z.coerce.number().finite().nonnegative().optional(),
-  })
-  .passthrough();
+  });
 
 function toRawCatalogLineItem(
   lineItem: z.infer<typeof editorLineItemSchema>

@@ -360,8 +360,24 @@ export const FormDataOverridesSchema = baseOverridesSchema as z.ZodType<
 
 export const FormDataSchema = (
   baseFormDataSchema as z.ZodType<FormData>
-).superRefine((data, ctx) => {
-  validateConditionalRules(data, ctx as IssueCtx);
+).check((payload) => {
+  const data = payload.value;
+  if (!data || typeof data !== "object") {
+    return;
+  }
+
+  const issueCtx: IssueCtx = {
+    addIssue: ({ message, path }) => {
+      payload.issues.push({
+        code: "custom",
+        input: payload.value,
+        message,
+        path: path ?? [],
+      });
+    },
+  };
+
+  validateConditionalRules(data as FormData, issueCtx);
 });
 
 function formatValidationError(title: string, error: z.ZodError): string {

@@ -1826,7 +1826,7 @@ export class OutlookProvider implements EmailProvider {
 
   // we map this internally beforehand so that this works as expected
   isSentMessage(message: ParsedMessage): boolean {
-    return message.labelIds?.includes("SENT");
+    return message.labelIds?.includes("SENT") ?? false;
   }
 
   async moveThreadToFolder(

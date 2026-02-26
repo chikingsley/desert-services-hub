@@ -111,7 +111,9 @@ export function StepWho({
 
             // may deprecate this in the future, but to keep consistency with old data we're storing this too
             const saveOnboardingAnswersPromise = saveOnboardingAnswersAction({
-              answers: { role: roleToSave },
+              surveyId: "onboarding",
+              questions: [{ key: "role", type: "single_choice" }],
+              answers: { $survey_response: roleToSave },
             });
 
             await Promise.all([

@@ -34,6 +34,7 @@ Base URL: `http://localhost:47822`
 | `POST` | `/api/browser/ready` | Ensure portal session is ready |
 | `POST` | `/api/browser/keepalive` | Trigger keepalive |
 | `POST` | `/api/browser/stop` | Stop browser session |
+| `POST` | `/api/browser/abort` | Emergency kill switch for in-flight operations |
 | `POST` | `/api/browser/clipboard/paste` | Paste text from host clipboard |
 | `POST` | `/api/browser/clipboard/copy` | Copy text from page to host clipboard |
 
@@ -215,15 +216,15 @@ Close an active permit permanently.
 **Request Body:**
 ```typescript
 {
-  reason?: string;  // Optional - default: "Permit no longer needed"
+  // Hardcoded default reason used when reason is omitted/empty:
+  // "Project has been completed."
+  reason?: string; // Optional
 }
 ```
 
-**Example:**
+**Default Example (recommended):**
 ```json
-{
-  "reason": "Project completed successfully"
-}
+{}
 ```
 
 **Response:**
@@ -286,6 +287,31 @@ Stop browser session.
 ```json
 {
   "success": true
+}
+```
+
+### POST /api/browser/abort
+
+Emergency kill switch. Immediately tears down the current browser session and interrupts any in-flight automation operation.
+
+**Request Body (optional):**
+```json
+{
+  "reason": "operator requested stop"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "aborted": {
+    "activeBeforeAbort": true,
+    "busyBeforeAbort": true,
+    "operation": "close:D0057215",
+    "reason": "operator requested stop",
+    "stopped": true
+  }
 }
 ```
 

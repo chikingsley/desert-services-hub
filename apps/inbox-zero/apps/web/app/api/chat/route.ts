@@ -53,11 +53,12 @@ export const POST = withEmailAccount("chat", async (request) => {
   });
 
   const json = await request.json();
-  const { data, error } = assistantInputSchema.safeParse(json);
+  const parsedInput = assistantInputSchema.safeParse(json);
 
-  if (error) {
-    return NextResponse.json({ error: error.errors }, { status: 400 });
+  if (!parsedInput.success) {
+    return NextResponse.json({ error: parsedInput.error.issues }, { status: 400 });
   }
+  const data = parsedInput.data;
 
   const chat =
     (await getChatWithCompactions(data.id)) ||

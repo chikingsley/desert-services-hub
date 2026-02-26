@@ -7,6 +7,7 @@
 
 import { serve } from "bun";
 import {
+  handleBrowserAbort,
   handleBrowserClipboardCopy,
   handleBrowserClipboardPaste,
   handleBrowserKeepAlive,
@@ -167,6 +168,11 @@ serve({
     "/api/browser/stop": {
       POST() {
         return handleBrowserStop();
+      },
+    },
+    "/api/browser/abort": {
+      POST(req) {
+        return handleBrowserAbort(req);
       },
     },
     "/api/browser/clipboard/paste": {

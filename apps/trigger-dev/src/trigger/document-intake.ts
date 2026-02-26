@@ -11,7 +11,7 @@
  *   4. Clean up temp files
  *
  * Source flow:
- *   Email → CF intake-worker → webhook handler → this task
+ *   Email/document ingress → webhook handler → this task
  *
  * The webhook handler also saves files to data/intake/ for audit
  * purposes, but this task receives them directly as base64 to avoid

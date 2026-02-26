@@ -187,7 +187,7 @@ export const updateMultiAccountPremiumAction = actionClientUser
 
 // export const switchLemonPremiumPlanAction = actionClientUser
 //   .metadata({ name: "switchLemonPremiumPlan" })
-//   .inputSchema(z.object({ premiumTier: z.nativeEnum(PremiumTier) }))
+//   .inputSchema(z.object({ premiumTier: z.enum(PremiumTier) }))
 //   .action(async ({ ctx: { userId }, parsedInput: { premiumTier } }) => {
 //     const user = await prisma.user.findUnique({
 //       where: { id: userId },

@@ -1,5 +1,5 @@
 -- Migrate permit_sync and permit_detail_scrape from pg_cron/pgmq → Trigger.dev
--- These jobs now run as Trigger.dev scheduled tasks in src/trigger/
+-- These jobs now run as Trigger.dev scheduled tasks in apps/trigger-dev/src/trigger/
 -- Safe to run even if pg_cron is not installed.
 
 DO $$

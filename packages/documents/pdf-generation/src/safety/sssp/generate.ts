@@ -66,25 +66,20 @@ const ssspSectionSchema = z.enum([
   "portable-sanitation",
 ]);
 
-const ssspContactSchema = z
-  .object({
+const ssspContactSchema = z.strictObject({
     email: z.string().trim().optional(),
     name: z.string().trim().min(1),
     notes: z.string().trim().optional(),
     phone: z.string().trim().min(1),
     role: z.string().trim().min(1),
-  })
-  .strict();
+  });
 
-const ssspScopeItemSchema = z
-  .object({
+const ssspScopeItemSchema = z.strictObject({
     details: z.array(z.string().trim().min(1)).min(1),
     title: z.string().trim().min(1),
-  })
-  .strict();
+  });
 
-const ssspInputSchema = z
-  .object({
+const ssspInputSchema = z.looseObject({
     approvedBy: z.string().optional(),
     contacts: z.array(ssspContactSchema).min(5),
     date: z.string().optional(),
@@ -115,8 +110,7 @@ const ssspInputSchema = z
     title: z.string().optional(),
 
     workHours: z.string().optional(),
-  })
-  .passthrough();
+  });
 
 function deriveSectionsFromLegacyFields(doc: SsspDocument): SsspSection[] {
   const sections: SsspSection[] = [];

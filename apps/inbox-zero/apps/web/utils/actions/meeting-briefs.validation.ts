@@ -20,7 +20,7 @@ export type UpdateMeetingBriefsMinutesBeforeBody = z.infer<
 >;
 
 const attendeeSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   name: z.string().optional(),
 });
 

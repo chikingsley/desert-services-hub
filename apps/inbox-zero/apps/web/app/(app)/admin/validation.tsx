@@ -2,10 +2,10 @@ import { z } from "zod";
 import { PremiumTier } from "@/generated/prisma/enums";
 
 export const changePremiumStatusSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   lemonSqueezyCustomerId: z.coerce.number().optional(),
   emailAccountsAccess: z.coerce.number().optional(),
-  period: z.nativeEnum(PremiumTier),
+  period: z.enum(PremiumTier),
   count: z.coerce.number().optional(),
   upgrade: z.boolean(),
 });
@@ -14,7 +14,7 @@ export type ChangePremiumStatusOptions = z.infer<
 >;
 
 export const adminProcessHistorySchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   historyId: z.number().optional(),
   startHistoryId: z.number().optional(),
 });

@@ -15,6 +15,7 @@ import {
   getOrCreateMailbox,
   updateMailboxSyncState,
 } from "@lib/db/repositories/mailbox";
+import type { InsertEmailData } from "@lib/db/types";
 import { logger, schedules, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 import {
@@ -26,20 +27,129 @@ import {
   updateEmailEnrichment,
 } from "./email-enrichment";
 import { graphGet } from "./graph";
-import {
-  EMAIL_FIELDS,
-  type GraphAttachment,
-  type GraphEmail,
-  type GraphListResponse,
-  graphEmailToInsertData,
-} from "./graph-email";
 
 export const LOOKBACK_HOURS = 6;
-export const MAX_EMAILS_PER_MAILBOX = 200;
 
 // Graph API $top range 1–1000 per page. 250 reduces API calls 5x vs 50.
 // https://learn.microsoft.com/en-us/graph/api/user-list-messages
 const PAGE_SIZE = 250;
+
+const EMAIL_FIELDS = [
+  "id",
+  "conversationId",
+  "subject",
+  "from",
+  "toRecipients",
+  "ccRecipients",
+  "receivedDateTime",
+  "bodyPreview",
+  "body",
+  "hasAttachments",
+  "internetMessageHeaders",
+  "webLink",
+].join(",");
+
+interface GraphEmailAddress {
+  address: string;
+  name: string;
+}
+
+interface GraphRecipient {
+  emailAddress: GraphEmailAddress;
+}
+
+interface GraphEmailBody {
+  content: string;
+  contentType: "html" | "text";
+}
+
+interface GraphInternetHeader {
+  name: string;
+  value: string;
+}
+
+interface GraphEmail {
+  body?: GraphEmailBody;
+  bodyPreview?: string;
+  ccRecipients?: GraphRecipient[];
+  conversationId?: string;
+  from?: { emailAddress: GraphEmailAddress };
+  hasAttachments?: boolean;
+  id: string;
+  internetMessageHeaders?: GraphInternetHeader[];
+  receivedDateTime: string;
+  subject: string;
+  toRecipients?: GraphRecipient[];
+  webLink?: string;
+}
+
+interface GraphListResponse {
+  "@odata.nextLink"?: string;
+  value: GraphEmail[];
+}
+
+interface GraphAttachment {
+  contentType: string;
+  id: string;
+  isInline: boolean;
+  name: string;
+  size: number;
+}
+
+const HTML_TAG_RE = /<[^>]*>/g;
+
+function htmlToText(html: string): string {
+  return html.replace(HTML_TAG_RE, "").trim();
+}
+
+function extractRecipients(recipients: GraphRecipient[] | undefined): string[] {
+  if (!recipients) {
+    return [];
+  }
+  return recipients.map((r) => r.emailAddress.address);
+}
+
+function extractInternetMessageId(
+  headers: GraphInternetHeader[] | undefined
+): string | null {
+  if (!headers) {
+    return null;
+  }
+  const header = headers.find((h) => h.name.toLowerCase() === "message-id");
+  return header?.value ?? null;
+}
+
+function graphEmailToInsertData(
+  email: GraphEmail,
+  mailboxId: number
+): InsertEmailData {
+  const bodyHtml =
+    email.body?.contentType === "html" ? email.body.content : null;
+  let bodyText: string | null = null;
+  if (email.body?.contentType === "text") {
+    bodyText = email.body.content;
+  } else if (bodyHtml) {
+    bodyText = htmlToText(bodyHtml);
+  }
+
+  return {
+    messageId: email.id,
+    internetMessageId: extractInternetMessageId(email.internetMessageHeaders),
+    mailboxId,
+    conversationId: email.conversationId ?? null,
+    subject: email.subject,
+    fromEmail: email.from?.emailAddress.address ?? null,
+    fromName: email.from?.emailAddress.name ?? null,
+    toEmails: extractRecipients(email.toRecipients),
+    ccEmails: extractRecipients(email.ccRecipients),
+    receivedAt: email.receivedDateTime,
+    hasAttachments: email.hasAttachments ?? false,
+    bodyPreview: email.bodyPreview ?? null,
+    bodyFull: bodyText,
+    bodyHtml,
+    webUrl: email.webLink ?? null,
+  };
+}
 
 export function buildSinceFilter(hoursAgo: number): string {
   const since = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
@@ -60,30 +170,19 @@ async function getExistingMessageIds(
 }
 
 /** Yield email pages from Graph API one at a time via @odata.nextLink pagination.
- *  Each page holds up to PAGE_SIZE (250) emails — we never buffer the full result set.
- *  This keeps memory flat at ~250 emails regardless of maxEmails. */
+ *  Each page holds up to PAGE_SIZE (250) emails — we never buffer the full result set. */
 async function* fetchEmailPages(
   mailboxEmail: string,
-  sinceIso: string,
-  maxEmails: number
+  sinceIso: string
 ): AsyncGenerator<GraphEmail[]> {
   const filter = encodeURIComponent(`receivedDateTime ge ${sinceIso}`);
   const userPath = encodeURIComponent(mailboxEmail);
   let url = `users/${userPath}/messages?$filter=${filter}&$select=${EMAIL_FIELDS}&$orderby=receivedDateTime desc&$top=${PAGE_SIZE}`;
 
-  let yielded = 0;
-
-  while (url && yielded < maxEmails) {
+  while (url) {
     const response = await graphGet<GraphListResponse>(url);
-    const remaining = maxEmails - yielded;
-    const page =
-      response.value.length <= remaining
-        ? response.value
-        : response.value.slice(0, remaining);
-    yield page;
-    yielded += page.length;
+    yield response.value;
     url = response["@odata.nextLink"] ?? "";
-    // nextLink is a full URL — graphGet handles both full URLs and relative paths
   }
 }
 
@@ -275,8 +374,7 @@ async function processPage(
 export async function syncOneMailbox(
   mailboxEmail: string,
   mailboxId: number,
-  sinceIso: string,
-  maxEmails = MAX_EMAILS_PER_MAILBOX
+  sinceIso: string
 ): Promise<MailboxSyncResult> {
   const result: MailboxSyncResult = {
     attachments: 0,
@@ -292,11 +390,7 @@ export async function syncOneMailbox(
     const existing = await getExistingMessageIds(mailboxId, sinceIso);
 
     // Stream page-by-page — never more than PAGE_SIZE emails in memory
-    for await (const page of fetchEmailPages(
-      mailboxEmail,
-      sinceIso,
-      maxEmails
-    )) {
+    for await (const page of fetchEmailPages(mailboxEmail, sinceIso)) {
       result.fetched += page.length;
       await processPage(page, existing, mailboxEmail, mailboxId, result);
     }
@@ -488,26 +582,22 @@ export const emailSync = schemaTask({
 });
 
 // Child task — syncs a single mailbox. Runs in its own container.
-// concurrencyLimit: 10 — max 10 mailboxes synced in parallel.
-// https://trigger.dev/docs/queue-concurrency
 export const syncOneMailboxTask = schemaTask({
   id: "sync-one-mailbox",
   schema: z.object({
-    email: z.string().email(),
+    email: z.email(),
     mailboxId: z.number(),
     sinceIso: z.string(),
-    maxEmails: z.number().default(MAX_EMAILS_PER_MAILBOX),
   }),
-  queue: { concurrencyLimit: 10 },
-  maxDuration: 1800, // 30 min per mailbox
+  maxDuration: 3600, // 1 hour — large mailboxes may have 50k+ emails
   retry: { maxAttempts: 2 },
-  run: async ({ email, mailboxId, sinceIso, maxEmails }) => {
-    return await syncOneMailbox(email, mailboxId, sinceIso, maxEmails);
+  run: async ({ email, mailboxId, sinceIso }) => {
+    return syncOneMailbox(email, mailboxId, sinceIso);
   },
 });
 
 /** Fan out to syncOneMailboxTask for all mailboxes, aggregate results. */
-async function fanOutSync(label: string, sinceIso: string, maxEmails: number) {
+async function fanOutSync(label: string, sinceIso: string) {
   const mailboxes = await getAllMailboxes();
   if (mailboxes.length === 0) {
     logger.warn("No mailboxes found");
@@ -521,7 +611,7 @@ async function fanOutSync(label: string, sinceIso: string, maxEmails: number) {
 
   const batchResults = await syncOneMailboxTask.batchTriggerAndWait(
     mailboxes.map((m) => ({
-      payload: { email: m.email, mailboxId: m.id, sinceIso, maxEmails },
+      payload: { email: m.email, mailboxId: m.id, sinceIso },
     }))
   );
 
@@ -544,29 +634,19 @@ export const mailboxSync = schedules.task({
   id: "mailbox-sync",
   cron: "*/15 * * * *",
   maxDuration: 300,
-  run: () =>
-    fanOutSync(
-      "mailbox sync",
-      buildSinceFilter(LOOKBACK_HOURS),
-      MAX_EMAILS_PER_MAILBOX
-    ),
+  run: () => fanOutSync("mailbox sync", buildSinceFilter(LOOKBACK_HOURS)),
 });
 
-// On-demand backfill — configurable lookback and per-mailbox limit.
+// On-demand backfill — configurable lookback, no per-mailbox limit.
 // POST /api/v1/tasks/mailbox-backfill/trigger
-// {"payload":{"lookbackHours":40000,"maxEmailsPerMailbox":100000}}
+// {"payload":{"lookbackHours":40000}}
 export const mailboxBackfill = schemaTask({
   id: "mailbox-backfill",
   schema: z.object({
-    lookbackHours: z.number().min(1).max(50_000).default(96),
-    maxEmailsPerMailbox: z.number().min(1).max(100_000).default(1000),
+    lookbackHours: z.number().min(1).default(40_000),
   }),
-  maxDuration: 3600,
+  maxDuration: 7200,
   retry: { maxAttempts: 1 },
-  run: ({ lookbackHours, maxEmailsPerMailbox }) =>
-    fanOutSync(
-      "mailbox backfill",
-      buildSinceFilter(lookbackHours),
-      maxEmailsPerMailbox
-    ),
+  run: ({ lookbackHours }) =>
+    fanOutSync("mailbox backfill", buildSinceFilter(lookbackHours)),
 });

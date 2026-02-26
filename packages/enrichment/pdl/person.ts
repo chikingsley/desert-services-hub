@@ -336,12 +336,11 @@ export async function identifyPerson(
 }
 
 // ============================================================================
-// Legacy helper (for backwards compatibility)
+// Raw PDL payload helper
 // ============================================================================
 
 /**
- * Extract contact info from raw PDL person data
- * @deprecated Use the normalized `person` field from enrichment results instead
+ * Extract contact info from raw PDL person data.
  */
 export function extractContactInfo(data: PDLPersonData): {
   name: string | null;

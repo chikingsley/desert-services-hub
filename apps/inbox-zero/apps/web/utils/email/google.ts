@@ -1458,7 +1458,7 @@ export class GmailProvider implements EmailProvider {
   }
 
   isSentMessage(message: ParsedMessage): boolean {
-    return message.labelIds?.includes(GmailLabel.SENT);
+    return message.labelIds?.includes(GmailLabel.SENT) ?? false;
   }
 
   async getFolders() {

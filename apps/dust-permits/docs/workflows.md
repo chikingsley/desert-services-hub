@@ -455,7 +455,9 @@ POST /api/permits/:id/close
 
 ```typescript
 {
-  reason?: string;  // Default: "Permit no longer needed"
+  // Hardcoded default reason used when reason is omitted/empty:
+  // "Project has been completed."
+  reason?: string; // Optional
 }
 ```
 

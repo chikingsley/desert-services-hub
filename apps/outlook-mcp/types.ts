@@ -18,7 +18,7 @@ export interface AuthConfig {
   scopes: string[];
   /** Azure AD tenant ID */
   tenantId: string;
-  /** File path where tokens are stored (for backwards compat) */
+  /** File path where tokens are stored */
   tokenStorePath: string;
 }
 

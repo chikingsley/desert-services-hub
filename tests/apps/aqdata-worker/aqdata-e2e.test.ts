@@ -145,7 +145,7 @@ describeSuite("AQData Portal E2E", () => {
     }, 30_000);
 
     test("opens permit detail page via row link", async () => {
-      const html = await client.openDustApplicationDetail(samplePermitId);
+      const html = await client.openRecordDetail(samplePermitId);
 
       expect(html).toContain("Dust Application Detail");
       expect(html.length).toBeGreaterThan(10_000);
@@ -157,7 +157,7 @@ describeSuite("AQData Portal E2E", () => {
       await client.searchDustApplications({
         applicationId: samplePermitId,
       });
-      const html = await client.openDustApplicationDetail(samplePermitId);
+      const html = await client.openRecordDetail(samplePermitId);
       const detail = parseDustApplicationDetail(html, samplePermitId);
 
       expect(detail.applicationId).toBe(samplePermitId);
@@ -186,7 +186,7 @@ describeSuite("AQData Portal E2E", () => {
       await client.searchDustApplications({
         applicationId: samplePermitId,
       });
-      const html = await client.openDustApplicationDetail(samplePermitId);
+      const html = await client.openRecordDetail(samplePermitId);
       const detail = parseDustApplicationDetail(html, samplePermitId);
 
       // Most active permits have at least one attachment
@@ -209,7 +209,7 @@ describeSuite("AQData Portal E2E", () => {
       await client.searchDustApplications({
         applicationId: samplePermitId,
       });
-      const html = await client.openDustApplicationDetail(samplePermitId);
+      const html = await client.openRecordDetail(samplePermitId);
       const detail = parseDustApplicationDetail(html, samplePermitId);
 
       if (!detail.permitDocument?.url) {

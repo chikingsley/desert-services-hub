@@ -13,6 +13,7 @@
  * Lives alongside lib/vnc/ as shared container infrastructure.
  */
 
+// biome-ignore lint/nursery/noExcessiveLinesPerFile: Shared browser session manager is intentionally centralized.
 import { existsSync } from "node:fs";
 import type { Browser, BrowserContext, Page } from "playwright";
 import { chromium } from "playwright";
@@ -67,6 +68,14 @@ export interface KeepAliveResult {
   reloginSucceeded?: boolean;
   skipped: boolean;
   success: boolean;
+}
+
+export interface AbortOperationResult {
+  activeBeforeAbort: boolean;
+  busyBeforeAbort: boolean;
+  operation: string | null;
+  reason: string;
+  stopped: boolean;
 }
 
 /**
@@ -536,6 +545,52 @@ export class BrowserSessionManager {
     this.session = null;
     this.keepAliveInFlight = null;
     console.log(`${this.log} Browser closed`);
+  }
+
+  /**
+   * Emergency kill switch.
+   *
+   * Immediately tears down the current browser session without saving state,
+   * which interrupts in-flight Playwright operations.
+   */
+  async abortCurrentOperation(
+    reason = "Operation aborted"
+  ): Promise<AbortOperationResult> {
+    const session = this.session;
+    if (!session) {
+      this.clearKeepAliveLoop();
+      return {
+        activeBeforeAbort: false,
+        busyBeforeAbort: false,
+        operation: null,
+        reason,
+        stopped: false,
+      };
+    }
+
+    const operation = session.currentOperation;
+    const busyBeforeAbort = session.operationDepth > 0;
+    session.lastError = reason;
+
+    console.warn(
+      `${this.log} Emergency abort requested: operation=${operation ?? "none"}, reason=${reason}`
+    );
+
+    this.clearKeepAliveLoop();
+    this.session = null;
+    this.keepAliveInFlight = null;
+
+    await this.closeBrowserInstance(session.instance).catch(() => {
+      // Best effort: if close throws, we still consider the session torn down.
+    });
+
+    return {
+      activeBeforeAbort: true,
+      busyBeforeAbort,
+      operation,
+      reason,
+      stopped: true,
+    };
   }
 
   getStatus(): SessionStatus {

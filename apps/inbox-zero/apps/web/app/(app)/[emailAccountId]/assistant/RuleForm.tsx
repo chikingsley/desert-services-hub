@@ -496,7 +496,7 @@ export function RuleForm({
                 <div className="flex items-center space-x-2">
                   <Toggle
                     disabled={!allowMultipleConditions(rule.systemType)}
-                    enabled={watch("runOnThreads")}
+                    enabled={watch("runOnThreads") ?? false}
                     labelRight="Apply to threads"
                     name="runOnThreads"
                     onChange={(enabled) => {
@@ -510,7 +510,7 @@ export function RuleForm({
                 {env.NEXT_PUBLIC_DIGEST_ENABLED && (
                   <div className="flex items-center space-x-2">
                     <Toggle
-                      enabled={watch("digest")}
+                      enabled={watch("digest") ?? false}
                       labelRight="Include in daily digest"
                       name="digest"
                       onChange={(enabled) => {

@@ -1,5 +1,5 @@
 import { createPatch } from "diff";
-import z from "zod";
+import { z } from "zod";
 import { createGenerateObject } from "@/utils/llms";
 import { getModel } from "@/utils/llms/model";
 import type { EmailAccountWithAI } from "@/utils/llms/types";

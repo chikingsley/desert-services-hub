@@ -8,7 +8,7 @@ import {
   insertIntakeDocumentFailure,
   insertIntakeDocumentSuccess,
 } from "@lib/db/repositories/intake-document";
-import { nativeExtract, nativeExtractFromBuffer } from "@lib/pdf-analysis";
+import { nativeExtract, nativeExtractMultipart } from "@lib/pdf-analysis";
 
 export async function processFilesIntake(
   payload: ContractsEmailIntakePayload
@@ -41,7 +41,7 @@ export async function processFilesIntake(
 
     try {
       const ingestResult = buffer
-        ? await nativeExtractFromBuffer(buffer, fileName)
+        ? await nativeExtractMultipart(buffer, fileName)
         : await nativeExtract(filePath);
 
       const elapsed = Math.round(performance.now() - started);

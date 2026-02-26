@@ -42,16 +42,16 @@ export const POST = withError("resend/summary", async (request) => {
   }
 
   const json = await request.json();
-  const { success, data, error } = sendSummaryEmailBody.safeParse(json);
+  const parsed = sendSummaryEmailBody.safeParse(json);
 
-  if (!success) {
-    logger.error("Invalid request body", { error });
+  if (!parsed.success) {
+    logger.error("Invalid request body", { error: parsed.error });
     return NextResponse.json(
       { error: "Invalid request body" },
       { status: 400 }
     );
   }
-  const { emailAccountId } = data;
+  const { emailAccountId } = parsed.data;
 
   logger.info("Sending summary email to user POST", { emailAccountId });
 

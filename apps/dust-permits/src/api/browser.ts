@@ -5,6 +5,7 @@
  */
 
 import {
+  abortBrowserSessionOperation,
   closeBrowserSession,
   copyBrowserSelectionText,
   ensureBrowserSessionReady,
@@ -109,6 +110,28 @@ export async function handleBrowserStop(): Promise<Response> {
   try {
     await closeBrowserSession();
     return jsonSuccess({ status: getSessionStatus() });
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return jsonError(errorMsg);
+  }
+}
+
+/**
+ * POST /api/browser/abort - Emergency stop for in-flight browser operations
+ */
+export async function handleBrowserAbort(req: Request): Promise<Response> {
+  try {
+    const body = (await req.json().catch(() => ({}))) as { reason?: unknown };
+    const reason =
+      typeof body.reason === "string" && body.reason.trim().length > 0
+        ? body.reason.trim()
+        : "Operation aborted";
+
+    const aborted = await abortBrowserSessionOperation(reason);
+    return jsonSuccess({
+      aborted,
+      status: getSessionStatus(),
+    });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     return jsonError(errorMsg);

@@ -28,7 +28,7 @@ function getComposeClient(): GraphComposeClient {
 }
 
 const recipientSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   name: z.string().optional(),
 });
 
@@ -58,7 +58,7 @@ const sendSchema = z.object({
 
 function zodErrorResponse(error: z.ZodError): Response {
   return Response.json(
-    { error: "Invalid request", details: error.flatten() },
+    { error: "Invalid request", details: z.flattenError(error) },
     { status: 400 }
   );
 }

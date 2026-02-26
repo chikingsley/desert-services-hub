@@ -46,11 +46,11 @@ export interface SsspDocument {
   hazardsAndControls?: SsspHazardControl[];
   hospitalDirections?: string;
   incidentReportingChain?: string;
-  /** @deprecated Prefer `sections` for explicit section selection. */
+  /** Optional section toggle. Prefer `sections` for explicit section selection. */
   includePortableSanitationSection?: boolean | "auto";
-  /** @deprecated Prefer `sections` for explicit section selection. */
+  /** Optional section toggle. Prefer `sections` for explicit section selection. */
   includeStreetSweepingSection?: boolean | "auto";
-  /** @deprecated Prefer `sections` for explicit section selection. */
+  /** Optional section toggle. Prefer `sections` for explicit section selection. */
   includeWaterTruckSection?: boolean | "auto";
   jhaSubmission?: string;
   jobNumber?: string;

@@ -26,6 +26,31 @@ import { logger, schedules, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 
 const PROJECT_SEED_STALE_DAYS = 45;
+const MONDAY_SYNC_ITEM_QUEUE_NAME = "monday-sync-item";
+const MONDAY_SYNC_PIPELINE_QUEUE_NAME = "monday-sync-pipeline";
+
+function readPositiveIntEnv(key: string, fallback: number): number {
+  const raw = process.env[key]?.trim();
+  if (!raw) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (Number.isFinite(parsed) && parsed >= 1) {
+    return parsed;
+  }
+
+  return fallback;
+}
+
+const MONDAY_SYNC_ITEM_QUEUE_CONCURRENCY = readPositiveIntEnv(
+  "MONDAY_SYNC_ITEM_QUEUE_CONCURRENCY",
+  2
+);
+const MONDAY_SYNC_PIPELINE_QUEUE_CONCURRENCY = readPositiveIntEnv(
+  "MONDAY_SYNC_PIPELINE_QUEUE_CONCURRENCY",
+  1
+);
 
 /** Run a pipeline stage, logging failures without halting the pipeline. */
 async function safeStage<T>(
@@ -202,6 +227,10 @@ export async function runFullMondaySync(): Promise<MondayFullSyncResult> {
 /** Webhook-driven: sync a single Monday item when it changes. */
 export const mondaySyncItem = schemaTask({
   id: "monday-sync-item",
+  queue: {
+    name: MONDAY_SYNC_ITEM_QUEUE_NAME,
+    concurrencyLimit: MONDAY_SYNC_ITEM_QUEUE_CONCURRENCY,
+  },
   schema: z.object({ mondayItemId: z.string().min(1) }),
   maxDuration: 120,
   retry: { maxAttempts: 3 },
@@ -215,6 +244,10 @@ export const mondaySyncItem = schemaTask({
 /** On-demand: sync specific items or run the full pipeline. */
 export const mondaySyncTargeted = schemaTask({
   id: "monday-sync-targeted",
+  queue: {
+    name: MONDAY_SYNC_PIPELINE_QUEUE_NAME,
+    concurrencyLimit: MONDAY_SYNC_PIPELINE_QUEUE_CONCURRENCY,
+  },
   schema: z.object({
     itemIds: z
       .array(z.string().min(1))
@@ -260,6 +293,10 @@ export const mondaySyncTargeted = schemaTask({
 /** Incremental sync — every 10 minutes via activity log. */
 export const mondaySyncIncremental = schedules.task({
   id: "monday-sync-incremental",
+  queue: {
+    name: MONDAY_SYNC_PIPELINE_QUEUE_NAME,
+    concurrencyLimit: MONDAY_SYNC_PIPELINE_QUEUE_CONCURRENCY,
+  },
   cron: "*/10 * * * *",
   maxDuration: 300,
   retry: { maxAttempts: 1 },
@@ -301,6 +338,10 @@ export const mondaySyncIncremental = schedules.task({
 /** Full sync — every 6 hours as a safety net. */
 export const mondaySync = schedules.task({
   id: "monday-sync",
+  queue: {
+    name: MONDAY_SYNC_PIPELINE_QUEUE_NAME,
+    concurrencyLimit: MONDAY_SYNC_PIPELINE_QUEUE_CONCURRENCY,
+  },
   cron: "0 */6 * * *",
   maxDuration: 1200,
   retry: { maxAttempts: 1 },

@@ -261,13 +261,6 @@ export class AQDataClient extends AQSessionTransport {
     return this.postCurrentForm({ source });
   }
 
-  /**
-   * @deprecated Use `openRecordDetail(applicationId)` instead.
-   */
-  openDustApplicationDetail(applicationId: string): Promise<string> {
-    return this.openRecordDetail(applicationId);
-  }
-
   resolveAbsoluteUrl(url: string): string {
     const trimmed = url.trim();
     if (!trimmed) {

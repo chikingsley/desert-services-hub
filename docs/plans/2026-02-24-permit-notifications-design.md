@@ -31,7 +31,7 @@ Pure TypeScript email template functions. Each returns `{ subject: string; body:
 - Input types are per-template interfaces with only the vars that template needs
 - Output: `{ subject: string; body: string }` (body is HTML)
 
-### File 2: `src/trigger/permit-notifications.ts`
+### File 2: `apps/trigger-dev/src/trigger/permit-notifications.ts`
 
 A `schemaTask` with schema:
 ```ts

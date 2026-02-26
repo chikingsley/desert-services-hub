@@ -15,7 +15,7 @@ if (env.CORS_ORIGIN) {
 }
 
 const unsubscribeSchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
 });
 
 server.get("/", async () => {

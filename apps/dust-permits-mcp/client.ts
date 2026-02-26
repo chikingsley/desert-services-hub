@@ -6,6 +6,8 @@
  */
 
 import type {
+  BrowserAbortRequest,
+  BrowserAbortResponse,
   BrowserActionResponse,
   BrowserStatusResponse,
   ClipboardPasteRequest,
@@ -292,6 +294,10 @@ export class PermitClient {
 
   async browserStop(): Promise<BrowserActionResponse> {
     return await this.request("POST", "/api/browser/stop");
+  }
+
+  async browserAbort(req?: BrowserAbortRequest): Promise<BrowserAbortResponse> {
+    return await this.request("POST", "/api/browser/abort", req ?? {});
   }
 
   async clipboardPaste(req: ClipboardPasteRequest): Promise<ClipboardResponse> {

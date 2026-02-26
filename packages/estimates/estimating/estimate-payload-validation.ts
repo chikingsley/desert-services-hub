@@ -15,8 +15,7 @@ const sectionSchema = z.object({
   show_subtotal: z.boolean().optional(),
 });
 
-const createPayloadSchema = z
-  .object({
+const createPayloadSchema = z.looseObject({
     base_number: z.string().trim().optional(),
     takeoff_id: stringOrNullSchema.optional(),
     job_name: stringOrNullSchema.optional(),
@@ -33,11 +32,9 @@ const createPayloadSchema = z
     total: z.coerce.number().finite().nonnegative().optional(),
     sections: z.array(sectionSchema).optional(),
     line_items: z.array(lineItemSchema).optional(),
-  })
-  .passthrough();
+  });
 
-const updatePayloadSchema = z
-  .object({
+const updatePayloadSchema = z.looseObject({
     base_number: stringOrNullSchema.optional(),
     takeoff_id: stringOrNullSchema.optional(),
     job_name: stringOrNullSchema.optional(),
@@ -54,8 +51,7 @@ const updatePayloadSchema = z
     total: z.coerce.number().finite().nonnegative().optional(),
     sections: z.array(sectionSchema).optional(),
     line_items: z.array(lineItemSchema).optional(),
-  })
-  .passthrough();
+  });
 
 export interface NormalizedEstimateSection {
   id: string;

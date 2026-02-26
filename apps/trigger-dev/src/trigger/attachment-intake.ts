@@ -30,8 +30,62 @@ import {
 import { logger, schedules } from "@trigger.dev/sdk";
 import { graphGet, graphGetBinary } from "./graph";
 
-const BATCH_SIZE = 50;
-const DOWNLOAD_TIMEOUT_MS = 30_000;
+const DEFAULT_BATCH_SIZE = 20;
+const DEFAULT_DOWNLOAD_TIMEOUT_MS = 30_000;
+const DEFAULT_TASK_LOOP_BUDGET_MS = 240_000;
+const DEFAULT_MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS = 30_000;
+
+function readPositiveIntEnv(key: string, fallback: number): number {
+  const raw = process.env[key]?.trim();
+  if (!raw) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (Number.isFinite(parsed) && parsed >= 1) {
+    return parsed;
+  }
+
+  return fallback;
+}
+
+const BATCH_SIZE = readPositiveIntEnv(
+  "ATTACHMENT_INTAKE_BATCH_SIZE",
+  DEFAULT_BATCH_SIZE
+);
+const DOWNLOAD_TIMEOUT_MS = readPositiveIntEnv(
+  "ATTACHMENT_INTAKE_DOWNLOAD_TIMEOUT_MS",
+  DEFAULT_DOWNLOAD_TIMEOUT_MS
+);
+const MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS = readPositiveIntEnv(
+  "ATTACHMENT_INTAKE_MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS",
+  DEFAULT_MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS
+);
+const TASK_LOOP_BUDGET_MS = readPositiveIntEnv(
+  "ATTACHMENT_INTAKE_LOOP_BUDGET_MS",
+  DEFAULT_TASK_LOOP_BUDGET_MS
+);
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  timeoutMessage: string
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
 
 // ── Graph API attachment download ───────────────────────────────
 
@@ -79,12 +133,22 @@ async function downloadMondayAsset(
     return null;
   }
 
-  const response = await fetch(asset.public_url);
+  const response = await withTimeout(
+    fetch(asset.public_url),
+    MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS,
+    `Monday asset download timed out after ${MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS}ms`
+  );
   if (!response.ok) {
     return null;
   }
 
-  return Buffer.from(await response.arrayBuffer());
+  const bytes = await withTimeout(
+    response.arrayBuffer(),
+    MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS,
+    `Monday asset read timed out after ${MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS}ms`
+  );
+
+  return Buffer.from(bytes);
 }
 
 // ── Process one attachment ──────────────────────────────────────
@@ -110,19 +174,15 @@ export async function loadEmailAttachmentBuffer(
     );
   }
 
-  return await Promise.race([
+  return await withTimeout(
     downloadAttachment(
       att.mailbox_email,
       att.message_id,
       att.graph_attachment_id
     ),
-    new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error("Download timed out")),
-        DOWNLOAD_TIMEOUT_MS
-      )
-    ),
-  ]);
+    DOWNLOAD_TIMEOUT_MS,
+    `Download timed out after ${DOWNLOAD_TIMEOUT_MS}ms`
+  );
 }
 
 async function processMondayAsset(att: IntakeAttachmentRow): Promise<Outcome> {
@@ -312,8 +372,25 @@ export const attachmentIntake = schedules.task({
     logger.info("Processing attachments", { count: attachments.length });
 
     const counts = { extracted: 0, skipped: 0, deduped: 0, failed: 0 };
+    const startedAt = Date.now();
 
     for (const att of attachments) {
+      const processedSoFar =
+        counts.extracted + counts.skipped + counts.deduped + counts.failed;
+      const elapsedMs = Date.now() - startedAt;
+      if (elapsedMs >= TASK_LOOP_BUDGET_MS) {
+        logger.warn(
+          "Stopping attachment-intake early to avoid task timeout",
+          {
+            elapsedMs,
+            processedSoFar,
+            remaining: attachments.length - processedSoFar,
+            loopBudgetMs: TASK_LOOP_BUDGET_MS,
+          }
+        );
+        break;
+      }
+
       try {
         const outcome = await processOne(att);
         counts[outcome]++;

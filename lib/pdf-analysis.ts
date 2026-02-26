@@ -17,6 +17,46 @@
 const PDF_ANALYSIS_URL = (
   process.env.PDF_ANALYSIS_URL ?? "http://localhost:4848"
 ).replace(/\/$/, "");
+const DEFAULT_PDF_ANALYSIS_TIMEOUT_MS = 60_000;
+
+function readPositiveIntEnv(key: string, fallback: number): number {
+  const raw = process.env[key]?.trim();
+  if (!raw) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (Number.isFinite(parsed) && parsed >= 1) {
+    return parsed;
+  }
+
+  return fallback;
+}
+
+const PDF_ANALYSIS_TIMEOUT_MS = readPositiveIntEnv(
+  "PDF_ANALYSIS_TIMEOUT_MS",
+  DEFAULT_PDF_ANALYSIS_TIMEOUT_MS
+);
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs = PDF_ANALYSIS_TIMEOUT_MS
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`pdf-analysis request timed out after ${timeoutMs}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Shared extraction response (returned by all three extraction tiers)
@@ -138,7 +178,7 @@ async function post<T>(
   endpoint: string,
   body: Record<string, unknown>
 ): Promise<T> {
-  const response = await fetch(`${PDF_ANALYSIS_URL}${endpoint}`, {
+  const response = await fetchWithTimeout(`${PDF_ANALYSIS_URL}${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -186,9 +226,12 @@ export async function nativeExtractMultipart(
   form.append("file", new Blob([bytes]), filename);
   form.append("provider", provider);
 
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${PDF_ANALYSIS_URL}/native-text-extraction/upload`,
-    { method: "POST", body: form }
+    {
+      method: "POST",
+      body: form,
+    }
   );
 
   if (!response.ok) {
@@ -269,7 +312,9 @@ export function chat(prompt: string, provider = "auto"): Promise<ChatResult> {
 // ---------------------------------------------------------------------------
 
 export async function healthCheck(): Promise<{ status: string }> {
-  const response = await fetch(`${PDF_ANALYSIS_URL}/health`);
+  const response = await fetchWithTimeout(`${PDF_ANALYSIS_URL}/health`, {
+    method: "GET",
+  });
   if (!response.ok) {
     throw new Error(`pdf-analysis health check failed: ${response.status}`);
   }

@@ -35,6 +35,48 @@ export interface ProcessItemFilesOptions {
   forceAssetIds?: Iterable<string>;
 }
 
+const DEFAULT_MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS = 30_000;
+
+function readPositiveIntEnv(key: string, fallback: number): number {
+  const raw = process.env[key]?.trim();
+  if (!raw) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (Number.isFinite(parsed) && parsed >= 1) {
+    return parsed;
+  }
+
+  return fallback;
+}
+
+const MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS = readPositiveIntEnv(
+  "MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS",
+  DEFAULT_MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS
+);
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  timeoutMessage: string
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 function ensureDir(dir: string): void {
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
@@ -98,7 +140,11 @@ async function downloadSingleAsset(
     return false;
   }
 
-  const response = await fetch(assetData.public_url);
+  const response = await withTimeout(
+    fetch(assetData.public_url),
+    MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS,
+    `Asset request timed out after ${MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS}ms`
+  );
   if (!response.ok) {
     console.log(
       `[pipeline]   Failed ${toDownload.fileName}: HTTP ${response.status}`
@@ -106,7 +152,12 @@ async function downloadSingleAsset(
     return false;
   }
 
-  const buffer = new Uint8Array(await response.arrayBuffer());
+  const bytes = await withTimeout(
+    response.arrayBuffer(),
+    MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS,
+    `Asset body read timed out after ${MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS}ms`
+  );
+  const buffer = new Uint8Array(bytes);
   const ext = toDownload.fileName.includes(".")
     ? toDownload.fileName.slice(toDownload.fileName.lastIndexOf("."))
     : "";

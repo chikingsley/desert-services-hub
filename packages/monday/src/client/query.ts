@@ -7,6 +7,26 @@ const API_URL = "https://api.monday.com/v2";
 const API_VERSION = "2026-01";
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 3000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 20_000;
+
+function readPositiveIntEnv(key: string, fallback: number): number {
+  const raw = process.env[key]?.trim();
+  if (!raw) {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (Number.isFinite(parsed) && parsed >= 1) {
+    return parsed;
+  }
+
+  return fallback;
+}
+
+const REQUEST_TIMEOUT_MS = readPositiveIntEnv(
+  "MONDAY_API_TIMEOUT_MS",
+  DEFAULT_REQUEST_TIMEOUT_MS
+);
 
 function getApiKey(): string {
   const key = process.env.MONDAY_API_KEY;
@@ -34,6 +54,26 @@ const RETRYABLE_NETWORK_ERROR_MARKERS = [
 
 function sleep(delayMs: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, delayMs));
+}
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Monday API request timed out after ${timeoutMs}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function buildRequestOptions(graphqlQuery: string): RequestInit {
@@ -79,7 +119,11 @@ export async function query<T>(graphqlQuery: string): Promise<T> {
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const response = await fetch(API_URL, buildRequestOptions(graphqlQuery));
+      const response = await fetchWithTimeout(
+        API_URL,
+        buildRequestOptions(graphqlQuery),
+        REQUEST_TIMEOUT_MS
+      );
       const result = await parseGraphQLResponse<T>(response);
 
       const firstError = result.errors?.[0];

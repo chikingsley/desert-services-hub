@@ -6,6 +6,7 @@
  */
 
 import { db } from "@lib/db/client";
+import { parseBoolInt, parseJsonArray } from "@lib/db/parsers";
 
 // ============================================
 // Types
@@ -88,77 +89,115 @@ export interface RuleGroupWithItems extends RuleGroup {
 // Row Parsers
 // ============================================
 
-function parseRuleRow(row: Record<string, unknown>): Rule {
-  const rawClassification = row.condition_classification;
-  let classification: string[] = [];
-  if (Array.isArray(rawClassification)) {
-    classification = rawClassification.map(String);
-  } else if (
-    typeof rawClassification === "string" &&
-    rawClassification.length > 0
-  ) {
-    try {
-      classification = JSON.parse(rawClassification);
-    } catch {
-      classification = [];
-    }
-  }
+interface RuleRow {
+  condition_body: string | null;
+  condition_classification: unknown;
+  condition_from: string | null;
+  condition_operator: RuleConditionOperator | null;
+  condition_subject: string | null;
+  condition_to: string | null;
+  created_at: string;
+  enabled: boolean | number | null;
+  group_id: number | null;
+  id: number;
+  instructions: string | null;
+  name: string;
+  run_on_threads: boolean | number | null;
+  sort_order: number | null;
+  system_type: RuleSystemType;
+  updated_at: string;
+}
+
+interface RuleActionRow {
+  content_template: string | null;
+  created_at: string;
+  delay_minutes: number | null;
+  id: number;
+  job_type: string | null;
+  label: string | null;
+  rule_id: number;
+  sort_order: number | null;
+  subject_template: string | null;
+  to_address: string | null;
+  type: RuleActionType;
+  webhook_url: string | null;
+}
+
+interface RuleGroupRow {
+  created_at: string;
+  id: number;
+  name: string;
+  rule_id: number | null;
+}
+
+interface RuleGroupItemRow {
+  created_at: string;
+  group_id: number;
+  id: number;
+  is_exclusion: boolean | number | null;
+  type: "from" | "subject" | "domain";
+  value: string;
+}
+
+function parseRuleRow(row: RuleRow): Rule {
+  const classification = parseJsonArray(row.condition_classification)
+    .map((entry) => String(entry).trim())
+    .filter((entry) => entry.length > 0);
 
   return {
-    id: row.id as number,
-    name: row.name as string,
-    instructions: row.instructions as string | null,
-    conditionFrom: row.condition_from as string | null,
-    conditionTo: row.condition_to as string | null,
-    conditionSubject: row.condition_subject as string | null,
-    conditionBody: row.condition_body as string | null,
-    conditionOperator:
-      (row.condition_operator as RuleConditionOperator) ?? "AND",
+    id: row.id,
+    name: row.name,
+    instructions: row.instructions,
+    conditionFrom: row.condition_from,
+    conditionTo: row.condition_to,
+    conditionSubject: row.condition_subject,
+    conditionBody: row.condition_body,
+    conditionOperator: row.condition_operator ?? "AND",
     conditionClassification: classification,
-    runOnThreads: row.run_on_threads as boolean,
-    enabled: row.enabled as boolean,
-    sortOrder: row.sort_order as number,
-    groupId: row.group_id as number | null,
-    systemType: row.system_type as string | null,
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
+    runOnThreads: parseBoolInt(row.run_on_threads),
+    enabled: parseBoolInt(row.enabled),
+    sortOrder: Number(row.sort_order ?? 0),
+    groupId: row.group_id,
+    systemType: row.system_type,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
-function parseActionRow(row: Record<string, unknown>): RuleAction {
+function parseActionRow(row: RuleActionRow): RuleAction {
   return {
-    id: row.id as number,
-    ruleId: row.rule_id as number,
-    type: row.type as RuleActionType,
-    label: row.label as string | null,
-    toAddress: row.to_address as string | null,
-    subjectTemplate: row.subject_template as string | null,
-    contentTemplate: row.content_template as string | null,
-    webhookUrl: row.webhook_url as string | null,
-    jobType: row.job_type as string | null,
-    delayMinutes: (row.delay_minutes as number) ?? 0,
-    sortOrder: (row.sort_order as number) ?? 0,
-    createdAt: row.created_at as string,
+    id: row.id,
+    ruleId: row.rule_id,
+    type: row.type,
+    label: row.label,
+    toAddress: row.to_address,
+    subjectTemplate: row.subject_template,
+    contentTemplate: row.content_template,
+    webhookUrl: row.webhook_url,
+    jobType: row.job_type,
+    delayMinutes: Number(row.delay_minutes ?? 0),
+    sortOrder: Number(row.sort_order ?? 0),
+    createdAt: row.created_at,
   };
 }
 
-function parseGroupRow(row: Record<string, unknown>): RuleGroup {
+function parseGroupRow(row: RuleGroupRow): RuleGroup {
   return {
-    id: row.id as number,
-    name: row.name as string,
-    ruleId: row.rule_id as number | null,
-    createdAt: row.created_at as string,
+    id: row.id,
+    name: row.name,
+    ruleId: row.rule_id,
+    createdAt: row.created_at,
   };
 }
 
-function parseGroupItemRow(row: Record<string, unknown>): RuleGroupItem {
+function parseGroupItemRow(row: RuleGroupItemRow): RuleGroupItem {
   return {
-    id: row.id as number,
-    groupId: row.group_id as number,
-    type: row.type as "from" | "subject" | "domain",
-    value: row.value as string,
-    isExclusion: row.is_exclusion as boolean,
-    createdAt: row.created_at as string,
+    id: row.id,
+    groupId: row.group_id,
+    type: row.type,
+    value: row.value,
+    isExclusion: parseBoolInt(row.is_exclusion),
+    createdAt: row.created_at,
   };
 }
 
@@ -187,19 +226,17 @@ const GET_ACTIONS_FOR_RULES = `
 `;
 
 export async function listEnabledRules(): Promise<Rule[]> {
-  const rows = await db
-    .query<Record<string, unknown>>(LIST_ENABLED_RULES)
-    .all();
+  const rows = await db.query<RuleRow>(LIST_ENABLED_RULES).all();
   return rows.map(parseRuleRow);
 }
 
 export async function listAllRules(): Promise<Rule[]> {
-  const rows = await db.query<Record<string, unknown>>(LIST_ALL_RULES).all();
+  const rows = await db.query<RuleRow>(LIST_ALL_RULES).all();
   return rows.map(parseRuleRow);
 }
 
 export async function getRule(id: number): Promise<Rule | null> {
-  const row = await db.query<Record<string, unknown>>(GET_RULE).get(id);
+  const row = await db.query<RuleRow>(GET_RULE).get(id);
   return row ? parseRuleRow(row) : null;
 }
 
@@ -211,7 +248,7 @@ export async function getRuleWithActions(
     return null;
   }
   const actionRows = await db
-    .query<Record<string, unknown>>(GET_ACTIONS_FOR_RULE)
+    .query<RuleActionRow>(GET_ACTIONS_FOR_RULE)
     .all(id);
   return { ...rule, actions: actionRows.map(parseActionRow) };
 }
@@ -226,7 +263,7 @@ export async function listEnabledRulesWithActions(): Promise<
 
   const ruleIds = rules.map((r) => r.id);
   const actionRows = await db
-    .query<Record<string, unknown>>(GET_ACTIONS_FOR_RULES)
+    .query<RuleActionRow>(GET_ACTIONS_FOR_RULES)
     .all(ruleIds);
   const actions = actionRows.map(parseActionRow);
 
@@ -281,7 +318,7 @@ export async function createRule(input: CreateRuleInput): Promise<Rule> {
       input.systemType ?? null,
     ]
   );
-  return parseRuleRow(rows[0] as Record<string, unknown>);
+  return parseRuleRow(rows[0] as RuleRow);
 }
 
 export async function updateRule(
@@ -331,7 +368,7 @@ export async function updateRule(
   if (!rows[0]) {
     return null;
   }
-  return parseRuleRow(rows[0] as Record<string, unknown>);
+  return parseRuleRow(rows[0] as RuleRow);
 }
 
 export async function deleteRule(id: number): Promise<boolean> {
@@ -379,7 +416,7 @@ export async function createAction(
       input.sortOrder ?? 0,
     ]
   );
-  return parseActionRow(rows[0] as Record<string, unknown>);
+  return parseActionRow(rows[0] as RuleActionRow);
 }
 
 export async function deleteAction(id: number): Promise<boolean> {
@@ -410,21 +447,21 @@ export async function createGroup(
     "INSERT INTO rule_groups (name, rule_id) VALUES ($1, $2) RETURNING *",
     [name, ruleId ?? null]
   );
-  return parseGroupRow(rows[0] as Record<string, unknown>);
+  return parseGroupRow(rows[0] as RuleGroupRow);
 }
 
 export async function getGroupWithItems(
   groupId: number
 ): Promise<RuleGroupWithItems | null> {
   const groupRow = await db
-    .query<Record<string, unknown>>("SELECT * FROM rule_groups WHERE id = $1")
+    .query<RuleGroupRow>("SELECT * FROM rule_groups WHERE id = $1")
     .get(groupId);
   if (!groupRow) {
     return null;
   }
 
   const itemRows = await db
-    .query<Record<string, unknown>>(
+    .query<RuleGroupItemRow>(
       "SELECT * FROM rule_group_items WHERE group_id = $1 ORDER BY created_at"
     )
     .all(groupId);
@@ -437,15 +474,15 @@ export async function getGroupWithItems(
 
 export async function listGroupsWithItems(): Promise<RuleGroupWithItems[]> {
   const groupRows = await db
-    .query<Record<string, unknown>>("SELECT * FROM rule_groups ORDER BY id")
+    .query<RuleGroupRow>("SELECT * FROM rule_groups ORDER BY id")
     .all();
   if (groupRows.length === 0) {
     return [];
   }
 
-  const groupIds = groupRows.map((r) => r.id as number);
+  const groupIds = groupRows.map((row) => row.id);
   const itemRows = await db
-    .query<Record<string, unknown>>(
+    .query<RuleGroupItemRow>(
       "SELECT * FROM rule_group_items WHERE group_id = ANY($1) ORDER BY group_id, created_at"
     )
     .all(groupIds);
@@ -475,7 +512,7 @@ export async function addGroupItem(
     VALUES ($1, $2, $3, $4) RETURNING *`,
     [groupId, type, value, isExclusion]
   );
-  return parseGroupItemRow(rows[0] as Record<string, unknown>);
+  return parseGroupItemRow(rows[0] as RuleGroupItemRow);
 }
 
 export async function deleteGroupItem(id: number): Promise<boolean> {

@@ -33,17 +33,34 @@ export interface ThreadTracker {
 // Row Parser
 // ============================================
 
-function parseRow(row: Record<string, unknown>): ThreadTracker {
+interface ThreadTrackerRow {
+  assigned_to: string | null;
+  conversation_id: string;
+  created_at: string;
+  email_id: number;
+  id: number;
+  project_id: number | null;
+  resolved_at: string | null;
+  status: ThreadTrackerStatus;
+  updated_at: string;
+}
+
+interface ThreadTrackerStatusCountRow {
+  count: number;
+  status: ThreadTrackerStatus;
+}
+
+function parseRow(row: ThreadTrackerRow): ThreadTracker {
   return {
-    id: row.id as number,
-    emailId: row.email_id as number,
-    conversationId: row.conversation_id as string,
-    projectId: row.project_id as number | null,
-    status: row.status as ThreadTrackerStatus,
-    assignedTo: row.assigned_to as string | null,
-    resolvedAt: row.resolved_at as string | null,
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
+    id: row.id,
+    emailId: row.email_id,
+    conversationId: row.conversation_id,
+    projectId: row.project_id,
+    status: row.status,
+    assignedTo: row.assigned_to,
+    resolvedAt: row.resolved_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -75,7 +92,7 @@ export async function upsertTracker(input: {
       input.assignedTo ?? null,
     ]
   );
-  return parseRow(rows[0] as Record<string, unknown>);
+  return parseRow(rows[0] as ThreadTrackerRow);
 }
 
 export async function resolveTracker(conversationId: string): Promise<void> {
@@ -91,7 +108,7 @@ export async function getActiveTrackersForConversation(
   conversationId: string
 ): Promise<ThreadTracker[]> {
   const rows = await db
-    .query<Record<string, unknown>>(
+    .query<ThreadTrackerRow>(
       `SELECT * FROM thread_trackers
     WHERE conversation_id = $1 AND status != 'resolved'
     ORDER BY created_at DESC`
@@ -104,7 +121,7 @@ export async function getTrackersForProject(
   projectId: number
 ): Promise<ThreadTracker[]> {
   const rows = await db
-    .query<Record<string, unknown>>(
+    .query<ThreadTrackerRow>(
       `SELECT * FROM thread_trackers
     WHERE project_id = $1 AND status != 'resolved'
     ORDER BY updated_at DESC`
@@ -137,7 +154,7 @@ export async function listActiveTrackers(options?: {
   params.push(limit);
 
   const rows = await db
-    .query<Record<string, unknown>>(
+    .query<ThreadTrackerRow>(
       `SELECT * FROM thread_trackers
     WHERE ${conditions.join(" AND ")}
     ORDER BY updated_at DESC
@@ -151,7 +168,7 @@ export async function countActiveByStatus(): Promise<
   Record<ThreadTrackerStatus, number>
 > {
   const rows = await db
-    .query<Record<string, unknown>>(
+    .query<ThreadTrackerStatusCountRow>(
       `SELECT status, COUNT(*)::int AS count FROM thread_trackers
     WHERE status != 'resolved'
     GROUP BY status`
@@ -165,7 +182,7 @@ export async function countActiveByStatus(): Promise<
     resolved: 0,
   };
   for (const row of rows) {
-    counts[row.status as string] = row.count as number;
+    counts[row.status] = row.count;
   }
   return counts as Record<ThreadTrackerStatus, number>;
 }

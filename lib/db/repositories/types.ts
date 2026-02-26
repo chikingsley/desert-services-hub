@@ -1,3 +1,5 @@
+import { isJsonRecord, parseJsonArray, parseJsonRecord } from "@lib/db/parsers";
+
 export interface EstimateMatchEmailRow {
   attachment_names: string | null;
   body_preview: string | null;
@@ -191,13 +193,6 @@ export const COMMON_FREE_EMAIL_DOMAINS = new Set([
   "protonmail.com",
 ]);
 
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return null;
-  }
-  return value as Record<string, unknown>;
-}
-
 export function normalizeText(value: string | null | undefined): string {
   return (value ?? "").toLowerCase().replace(NON_ALPHA_NUMERIC_SPACE, " ");
 }
@@ -261,35 +256,13 @@ export function uniquePositiveInts(
 }
 
 export function parseJsonStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return uniqueStrings(value.map((entry) => String(entry)));
-  }
-  if (typeof value !== "string" || value.trim().length === 0) {
-    return [];
-  }
-  try {
-    const parsed = JSON.parse(value);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return uniqueStrings(parsed.map((entry) => String(entry)));
-  } catch {
-    return [];
-  }
+  return uniqueStrings(parseJsonArray(value).map((entry) => String(entry)));
 }
 
 export function parseRawExtraction(
   value: unknown
 ): Record<string, unknown> | null {
-  if (typeof value === "string" && value.trim().length > 0) {
-    try {
-      const parsed = JSON.parse(value);
-      return asRecord(parsed);
-    } catch {
-      return null;
-    }
-  }
-  return asRecord(value);
+  return parseJsonRecord(value);
 }
 
 export function getNestedString(
@@ -298,11 +271,10 @@ export function getNestedString(
 ): string | null {
   let current: unknown = source;
   for (const segment of path) {
-    const record = asRecord(current);
-    if (!record) {
+    if (!isJsonRecord(current)) {
       return null;
     }
-    current = record[segment];
+    current = current[segment];
   }
   if (typeof current !== "string") {
     return null;

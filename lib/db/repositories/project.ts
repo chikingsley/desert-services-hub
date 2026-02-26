@@ -2,38 +2,41 @@
  * Project Repository
  */
 import { db } from "@lib/db/client";
+import type { Database } from "@lib/db/generated/database.types";
 import { parseEmailRow } from "@lib/db/repositories/email";
 import { findProjectCandidates } from "@lib/db/repositories/project-matching";
 import { normalizeProjectNameKey } from "@lib/db/repositories/project-matching-utils";
 import type { ProjectMatchInput } from "@lib/db/repositories/types";
 import type { Email, Project } from "@lib/db/types";
 
-function parseProjectRow(row: Record<string, unknown>): Project {
+type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
+type EmailRow = Database["public"]["Tables"]["emails"]["Row"];
+
+function parseProjectRow(row: ProjectRow): Project {
   return {
-    id: row.id as number,
-    projectNumber: row.project_number as string | null,
-    accountId: row.account_id as number | null,
-    name: row.name as string,
-    normalizedName: row.normalized_name as string | null,
-    contractor: row.contractor as string | null,
-    awardedValue: row.awarded_value as number | null,
-    address: row.address as string | null,
-    locationCity: row.location_city as string | null,
-    locationState: row.location_state as string | null,
-    locationZip: row.location_zip as string | null,
-    status:
-      (row.lifecycle_state as string) ?? (row.status as string) ?? "active",
-    contractStatus: (row.contract_status as string) ?? "Pending",
-    dustPermitStatus: (row.dust_permit_status as string) ?? "Not Needed",
-    noiStatus: (row.noi_status as string) ?? "Not Needed",
-    swpppStatus: (row.swppp_status as string) ?? "Not Needed",
-    signsStatus: (row.signs_status as string) ?? "Not Needed",
-    outlookFolder: row.outlook_folder as string | null,
-    notes: row.notes as string | null,
-    emailCount: (row.email_count as number) ?? 0,
-    firstSeen: row.first_seen as string | null,
-    lastSeen: row.last_seen as string | null,
-    mondayItemId: row.monday_item_id as string | null,
+    id: row.id,
+    projectNumber: row.project_number,
+    accountId: row.account_id,
+    name: row.name,
+    normalizedName: row.normalized_name,
+    contractor: row.contractor,
+    awardedValue: row.awarded_value,
+    address: row.address,
+    locationCity: row.location_city,
+    locationState: row.location_state,
+    locationZip: row.location_zip,
+    status: row.lifecycle_state ?? "active",
+    contractStatus: row.contract_status ?? "Pending",
+    dustPermitStatus: row.dust_permit_status ?? "Not Needed",
+    noiStatus: row.noi_status ?? "Not Needed",
+    swpppStatus: row.swppp_status ?? "Not Needed",
+    signsStatus: row.signs_status ?? "Not Needed",
+    outlookFolder: row.outlook_folder,
+    notes: row.notes,
+    emailCount: Number(row.email_count ?? 0),
+    firstSeen: row.first_seen,
+    lastSeen: row.last_seen,
+    mondayItemId: row.monday_item_id,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -47,10 +50,7 @@ export async function createProject(
   const normalized = normalizeProjectNameKey(name);
 
   const row = await db
-    .query<
-      Record<string, unknown>,
-      [string, string, number | null, string | null]
-    >(
+    .query<ProjectRow, [string, string, number | null, string | null]>(
       `INSERT INTO projects (name, normalized_name, account_id, address)
        VALUES ($1, $2, $3, $4)
        RETURNING *`
@@ -65,9 +65,7 @@ export async function createProject(
 
 export async function getProjectById(id: number): Promise<Project | null> {
   const row = await db
-    .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM projects WHERE id = $1"
-    )
+    .query<ProjectRow, [number]>("SELECT * FROM projects WHERE id = $1")
     .get(id);
 
   return row ? parseProjectRow(row) : null;
@@ -77,7 +75,7 @@ export async function getProjectsForAccount(
   accountId: number
 ): Promise<Project[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
+    .query<ProjectRow, [number]>(
       "SELECT * FROM projects WHERE account_id = $1 ORDER BY last_seen DESC"
     )
     .all(accountId);
@@ -87,9 +85,7 @@ export async function getProjectsForAccount(
 
 export async function getAllProjects(): Promise<Project[]> {
   const rows = await db
-    .query<Record<string, unknown>, []>(
-      "SELECT * FROM projects ORDER BY last_seen DESC"
-    )
+    .query<ProjectRow, []>("SELECT * FROM projects ORDER BY last_seen DESC")
     .all();
 
   return rows.map(parseProjectRow);
@@ -143,7 +139,7 @@ export async function linkEmailToProject(
 
 export async function getEmailsForProject(projectId: number): Promise<Email[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
+    .query<EmailRow, [number]>(
       "SELECT * FROM emails WHERE project_id = $1 ORDER BY received_at ASC"
     )
     .all(projectId);
@@ -153,7 +149,7 @@ export async function getEmailsForProject(projectId: number): Promise<Email[]> {
 
 export async function getEmailsForAccount(accountId: number): Promise<Email[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
+    .query<EmailRow, [number]>(
       "SELECT * FROM emails WHERE account_id = $1 ORDER BY received_at DESC"
     )
     .all(accountId);
@@ -164,7 +160,7 @@ export async function getEmailsForAccount(accountId: number): Promise<Email[]> {
 export async function findProjectByText(text: string): Promise<Project | null> {
   const normalized = normalizeProjectNameKey(text);
   const row = await db
-    .query<Record<string, unknown>, [string]>(
+    .query<ProjectRow, [string]>(
       "SELECT * FROM projects WHERE normalized_name = $1"
     )
     .get(normalized);

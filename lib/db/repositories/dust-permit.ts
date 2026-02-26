@@ -4,33 +4,38 @@
  * CRUD and query operations for dust_permits_filed_by_desert_services.
  */
 import { db } from "@lib/db/client";
+import type { Database } from "@lib/db/generated/database.types";
+import { parseBoolInt } from "@lib/db/parsers";
 import type { Permit, PermitStatus, UpsertPermitData } from "@lib/db/types";
 
-function parsePermitRow(row: Record<string, unknown>): Permit {
+type PermitRow =
+  Database["public"]["Tables"]["dust_permits_filed_by_desert_services"]["Row"];
+
+function parsePermitRow(row: PermitRow): Permit {
   return {
-    id: row.id as string,
-    projectName: row.project_name as string | null,
-    facilityId: row.facility_id as string | null,
-    accountId: row.account_id as number | null,
-    projectId: row.project_id as number | null,
-    companyName: row.company_name as string | null,
-    portalCompanyId: row.portal_company_id as string | null,
+    id: row.id,
+    projectName: row.project_name,
+    facilityId: row.facility_id,
+    accountId: row.account_id,
+    projectId: row.project_id,
+    companyName: row.company_name,
+    portalCompanyId: row.portal_company_id,
     status: row.status as PermitStatus | null,
-    submittedDate: row.submitted_date as string | null,
-    effectiveDate: row.effective_date as string | null,
-    expirationDate: row.expiration_date as string | null,
-    closedDate: row.closed_date as string | null,
-    previousAppId: row.previous_app_id as string | null,
-    projectStartDate: row.project_start_date as string | null,
-    projectEndDate: row.project_end_date as string | null,
-    address: row.address as string | null,
-    city: row.city as string | null,
-    parcel: row.parcel as string | null,
-    isBlockPermit: row.is_block_permit === 1,
-    isAccelerated: row.is_accelerated === 1,
-    invoiceNumber: row.invoice_number as string | null,
-    invoiceCharges: row.invoice_charges as number | null,
-    invoiceBalance: row.invoice_balance as number | null,
+    submittedDate: row.submitted_date,
+    effectiveDate: row.effective_date,
+    expirationDate: row.expiration_date,
+    closedDate: row.closed_date,
+    previousAppId: row.previous_app_id,
+    projectStartDate: row.project_start_date,
+    projectEndDate: row.project_end_date,
+    address: row.address,
+    city: row.city,
+    parcel: row.parcel,
+    isBlockPermit: parseBoolInt(row.is_block_permit),
+    isAccelerated: parseBoolInt(row.is_accelerated),
+    invoiceNumber: row.invoice_number,
+    invoiceCharges: row.invoice_charges,
+    invoiceBalance: row.invoice_balance,
     createdAt: row.created_at as number,
     updatedAt: row.updated_at as number,
   };
@@ -103,7 +108,7 @@ export async function upsertPermit(data: UpsertPermitData): Promise<void> {
 
 export async function getPermitById(id: string): Promise<Permit | null> {
   const row = await db
-    .query<Record<string, unknown>, [string]>(
+    .query<PermitRow, [string]>(
       "SELECT * FROM dust_permits_filed_by_desert_services WHERE id = $1"
     )
     .get(id);
@@ -114,7 +119,7 @@ export async function getPermitsByProject(
   projectId: number
 ): Promise<Permit[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
+    .query<PermitRow, [number]>(
       "SELECT * FROM dust_permits_filed_by_desert_services WHERE project_id = $1 ORDER BY submitted_date DESC"
     )
     .all(projectId);
@@ -125,7 +130,7 @@ export async function getPermitsByAccount(
   accountId: number
 ): Promise<Permit[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
+    .query<PermitRow, [number]>(
       "SELECT * FROM dust_permits_filed_by_desert_services WHERE account_id = $1 ORDER BY submitted_date DESC"
     )
     .all(accountId);
@@ -134,7 +139,7 @@ export async function getPermitsByAccount(
 
 export async function getPermitsByStatus(status: string): Promise<Permit[]> {
   const rows = await db
-    .query<Record<string, unknown>, [string]>(
+    .query<PermitRow, [string]>(
       "SELECT * FROM dust_permits_filed_by_desert_services WHERE status = $1 ORDER BY submitted_date DESC"
     )
     .all(status);
@@ -147,7 +152,7 @@ export async function getActivePermits(): Promise<Permit[]> {
 
 export async function getUnlinkedPermits(): Promise<Permit[]> {
   const rows = await db
-    .query<Record<string, unknown>, []>(
+    .query<PermitRow, []>(
       `SELECT * FROM dust_permits_filed_by_desert_services
        WHERE account_id IS NULL OR project_id IS NULL
        ORDER BY submitted_date DESC`
@@ -181,7 +186,7 @@ export async function ftsSearchPermits(
   limit = 20
 ): Promise<Permit[]> {
   const rows = await db
-    .query<Record<string, unknown>>(
+    .query<PermitRow>(
       `SELECT *
        FROM dust_permits_filed_by_desert_services
        WHERE search_vector @@ plainto_tsquery('english', $1)
@@ -276,7 +281,7 @@ export async function permitExists(id: string): Promise<boolean> {
 
 export async function getExpiringPermits(withinDays = 30): Promise<Permit[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
+    .query<PermitRow, [number]>(
       `SELECT * FROM dust_permits_filed_by_desert_services
        WHERE status = 'Active'
          AND expiration_date IS NOT NULL
@@ -289,7 +294,7 @@ export async function getExpiringPermits(withinDays = 30): Promise<Permit[]> {
 
 export async function getPermitsNeedingScrape(limit = 100): Promise<Permit[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
+    .query<PermitRow, [number]>(
       `SELECT * FROM dust_permits_filed_by_desert_services
        WHERE updated_at = created_at
        ORDER BY created_at
@@ -328,7 +333,7 @@ export async function getPermitsByPortalCompany(
   portalCompanyId: string
 ): Promise<Permit[]> {
   const rows = await db
-    .query<Record<string, unknown>, [string]>(
+    .query<PermitRow, [string]>(
       `SELECT * FROM dust_permits_filed_by_desert_services
        WHERE portal_company_id = $1
        ORDER BY submitted_date DESC`

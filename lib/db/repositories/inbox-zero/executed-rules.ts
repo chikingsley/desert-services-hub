@@ -6,6 +6,7 @@
  */
 
 import { db } from "@lib/db/client";
+import { parseJsonRecord } from "@lib/db/parsers";
 
 // ============================================
 // Types
@@ -42,41 +43,57 @@ export interface ExecutedAction {
   type: string;
 }
 
+interface ExecutedRuleRow {
+  ai_reasoning: string | null;
+  created_at: string;
+  email_id: number;
+  id: number;
+  match_reason: MatchReason | null;
+  rule_id: number | null;
+  status: ExecutedRuleStatus;
+  thread_id: string | null;
+}
+
+interface ExecutedActionRow {
+  action_id: number | null;
+  created_at: string;
+  error_message: string | null;
+  executed_rule_id: number;
+  id: number;
+  result_data: unknown;
+  status: ExecutedActionStatus;
+  type: string;
+}
+
 // ============================================
 // Row Parsers
 // ============================================
 
-function parseExecutedRuleRow(row: Record<string, unknown>): ExecutedRule {
+function parseExecutedRuleRow(row: ExecutedRuleRow): ExecutedRule {
   return {
-    id: row.id as number,
-    emailId: row.email_id as number,
-    ruleId: row.rule_id as number | null,
-    threadId: row.thread_id as string | null,
-    status: row.status as ExecutedRuleStatus,
-    matchReason: row.match_reason as MatchReason | null,
-    aiReasoning: row.ai_reasoning as string | null,
-    createdAt: row.created_at as string,
+    id: row.id,
+    emailId: row.email_id,
+    ruleId: row.rule_id,
+    threadId: row.thread_id,
+    status: row.status,
+    matchReason: row.match_reason,
+    aiReasoning: row.ai_reasoning,
+    createdAt: row.created_at,
   };
 }
 
-function parseExecutedActionRow(row: Record<string, unknown>): ExecutedAction {
-  let resultData: Record<string, unknown> | null = null;
-  if (row.result_data) {
-    resultData =
-      typeof row.result_data === "string"
-        ? JSON.parse(row.result_data)
-        : (row.result_data as Record<string, unknown>);
-  }
+function parseExecutedActionRow(row: ExecutedActionRow): ExecutedAction {
+  const resultData = parseJsonRecord(row.result_data);
 
   return {
-    id: row.id as number,
-    executedRuleId: row.executed_rule_id as number,
-    actionId: row.action_id as number | null,
-    type: row.type as string,
-    status: row.status as ExecutedActionStatus,
+    id: row.id,
+    executedRuleId: row.executed_rule_id,
+    actionId: row.action_id,
+    type: row.type,
+    status: row.status,
     resultData,
-    errorMessage: row.error_message as string | null,
-    createdAt: row.created_at as string,
+    errorMessage: row.error_message,
+    createdAt: row.created_at,
   };
 }
 
@@ -105,7 +122,7 @@ export async function insertExecutedRule(input: {
       input.aiReasoning ?? null,
     ]
   );
-  return parseExecutedRuleRow(rows[0] as Record<string, unknown>);
+  return parseExecutedRuleRow(rows[0] as ExecutedRuleRow);
 }
 
 export async function updateExecutedRuleStatus(
@@ -122,7 +139,7 @@ export async function getExecutedRulesForEmail(
   emailId: number
 ): Promise<ExecutedRule[]> {
   const rows = await db
-    .query<Record<string, unknown>>(
+    .query<ExecutedRuleRow>(
       "SELECT * FROM executed_rules WHERE email_id = $1 ORDER BY created_at"
     )
     .all(emailId);
@@ -133,7 +150,7 @@ export async function getExecutedRulesForThread(
   threadId: string
 ): Promise<ExecutedRule[]> {
   const rows = await db
-    .query<Record<string, unknown>>(
+    .query<ExecutedRuleRow>(
       `SELECT * FROM executed_rules WHERE thread_id = $1 AND status = 'applied' ORDER BY created_at`
     )
     .all(threadId);
@@ -144,19 +161,19 @@ export async function getPreviouslyAppliedRuleIds(
   threadId: string
 ): Promise<Set<number>> {
   const rows = await db
-    .query<Record<string, unknown>>(
+    .query<{ rule_id: number }>(
       `SELECT DISTINCT rule_id FROM executed_rules
     WHERE thread_id = $1 AND status = 'applied' AND rule_id IS NOT NULL`
     )
     .all(threadId);
-  return new Set(rows.map((r) => r.rule_id as number));
+  return new Set(rows.map((r) => r.rule_id));
 }
 
 export async function listRecentExecutedRules(
   limit = 50
 ): Promise<ExecutedRule[]> {
   const rows = await db
-    .query<Record<string, unknown>>(
+    .query<ExecutedRuleRow>(
       "SELECT * FROM executed_rules ORDER BY created_at DESC LIMIT $1"
     )
     .all(limit);
@@ -188,7 +205,7 @@ export async function insertExecutedAction(input: {
       input.errorMessage ?? null,
     ]
   );
-  return parseExecutedActionRow(rows[0] as Record<string, unknown>);
+  return parseExecutedActionRow(rows[0] as ExecutedActionRow);
 }
 
 export async function updateExecutedActionStatus(
@@ -223,7 +240,7 @@ export async function getActionsForExecutedRule(
   executedRuleId: number
 ): Promise<ExecutedAction[]> {
   const rows = await db
-    .query<Record<string, unknown>>(
+    .query<ExecutedActionRow>(
       "SELECT * FROM executed_actions WHERE executed_rule_id = $1 ORDER BY created_at"
     )
     .all(executedRuleId);

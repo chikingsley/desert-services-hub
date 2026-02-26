@@ -24,6 +24,7 @@ From repo root:
 - Inbound webhooks trigger tasks through Trigger API:
   - `supabase/functions/outlook-webhook/index.ts`
   - `supabase/functions/monday-webhook/index.ts`
+- `outlook-webhook-subscriptions` (scheduled) keeps Graph subscriptions alive for all rows in `mailboxes`.
 - Trigger worker launches task-run containers through `docker-proxy`.
 - Task-run containers are attached to `desert-services-hub_default`.
 
@@ -42,3 +43,9 @@ That network is what allows task containers to call services in the main app com
   - `DEFAULT_ORG_EXECUTION_CONCURRENCY_LIMIT`
   - `TRIGGER_DEQUEUE_MAX_RUN_COUNT`
   - `TRIGGER_DEQUEUE_MAX_CONSUMER_COUNT`
+
+## Outlook webhook subscription config
+
+- Optional explicit URL: `OUTLOOK_WEBHOOK_URL`
+- Default fallback: `${WEBHOOK_BASE_URL}/functions/v1/outlook-webhook`
+- Current runtime bridge: `webhooks.desertservices.app` -> local `webhook-gateway` (`localhost:4000`) -> Supabase Kong (`localhost:54321`)

@@ -5,6 +5,8 @@
  */
 
 import { db } from "@lib/db/client";
+import type { Database } from "@lib/db/generated/database.types";
+import { parseJsonRecord } from "@lib/db/parsers";
 
 export const SIGN_ORDER_STATUSES = [
   "drafted",
@@ -66,26 +68,19 @@ export interface CreateSignOrderInput {
   vendorEmail: string;
 }
 
+type SignOrderRow = Omit<
+  Database["public"]["Tables"]["sign_orders"]["Row"],
+  "sign_type" | "status"
+> & {
+  sign_type: SignOrderType;
+  status: SignOrderStatus;
+};
+
 function parseMetadata(raw: unknown): Record<string, unknown> {
-  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
-    return raw as Record<string, unknown>;
-  }
-
-  if (typeof raw === "string" && raw.trim().length > 0) {
-    try {
-      const parsed = JSON.parse(raw) as unknown;
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        return parsed as Record<string, unknown>;
-      }
-    } catch {
-      return {};
-    }
-  }
-
-  return {};
+  return parseJsonRecord(raw) ?? {};
 }
 
-function parseRow(row: Record<string, unknown>): SignOrderRecord {
+function parseRow(row: SignOrderRow): SignOrderRecord {
   return {
     id: Number(row.id),
     projectId: (row.project_id as number | null) ?? null,
@@ -213,7 +208,7 @@ export async function listSignOrders(options?: {
   const limit = options?.limit ?? 25;
 
   const rows = await db
-    .query<Record<string, unknown>, unknown[]>(
+    .query<SignOrderRow, unknown[]>(
       `SELECT
         id,
         project_id,

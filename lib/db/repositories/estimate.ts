@@ -2,32 +2,36 @@
  * Estimate Repository
  */
 import { db } from "@lib/db/client";
+import type { Database } from "@lib/db/generated/database.types";
+import { parseBoolInt } from "@lib/db/parsers";
 import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
 import { likeSearch } from "@lib/db/search";
 import type { Estimate, UpsertEstimateData } from "@lib/db/types";
 
-function parseEstimateRow(row: Record<string, unknown>): Estimate {
+type EstimateDbRow = Database["public"]["Tables"]["estimates"]["Row"];
+
+function parseEstimateRow(row: EstimateDbRow): Estimate {
   return {
-    id: row.id as number,
+    id: row.id,
     mondayItemId: row.monday_item_id as string,
-    name: row.name as string,
-    estimateNumber: row.estimate_number as string | null,
-    contractor: row.contractor as string | null,
-    groupId: row.group_id as string | null,
-    groupTitle: row.group_title as string | null,
-    mondayUrl: row.monday_url as string | null,
-    accountMondayId: row.account_monday_id as string | null,
-    accountDomain: row.account_domain as string | null,
-    bidStatus: row.bid_status as string | null,
-    bidValue: row.bid_value as number | null,
-    awardedValue: row.awarded_value as number | null,
-    bidSource: row.bid_source as string | null,
-    awarded: row.awarded === 1,
-    dueDate: row.due_date as string | null,
-    location: row.location as string | null,
-    sharepointUrl: row.sharepoint_url as string | null,
-    estimateStoragePath: row.estimate_storage_path as string | null,
-    estimateFileName: row.estimate_file_name as string | null,
+    name: row.name,
+    estimateNumber: row.estimate_number,
+    contractor: row.contractor,
+    groupId: row.group_id,
+    groupTitle: row.group_title,
+    mondayUrl: row.monday_url,
+    accountMondayId: row.account_monday_id,
+    accountDomain: row.account_domain,
+    bidStatus: row.bid_status,
+    bidValue: row.bid_value,
+    awardedValue: row.awarded_value,
+    bidSource: row.bid_source,
+    awarded: parseBoolInt(row.awarded),
+    dueDate: row.due_date,
+    location: row.location,
+    sharepointUrl: row.sharepoint_url,
+    estimateStoragePath: row.estimate_storage_path,
+    estimateFileName: row.estimate_file_name,
     syncedAt: row.synced_at as string,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
@@ -141,7 +145,7 @@ export async function getEstimateByMondayId(
   mondayItemId: string
 ): Promise<Estimate | null> {
   const row = await db
-    .query<Record<string, unknown>, [string]>(
+    .query<EstimateDbRow, [string]>(
       "SELECT * FROM estimates WHERE monday_item_id = $1"
     )
     .get(mondayItemId);
@@ -151,9 +155,7 @@ export async function getEstimateByMondayId(
 
 export async function getEstimateById(id: number): Promise<Estimate | null> {
   const row = await db
-    .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM estimates WHERE id = $1"
-    )
+    .query<EstimateDbRow, [number]>("SELECT * FROM estimates WHERE id = $1")
     .get(id);
 
   return row ? parseEstimateRow(row) : null;
@@ -161,9 +163,7 @@ export async function getEstimateById(id: number): Promise<Estimate | null> {
 
 export async function getAllEstimates(): Promise<Estimate[]> {
   const rows = await db
-    .query<Record<string, unknown>, []>(
-      "SELECT * FROM estimates ORDER BY synced_at DESC"
-    )
+    .query<EstimateDbRow, []>("SELECT * FROM estimates ORDER BY synced_at DESC")
     .all();
 
   return rows.map(parseEstimateRow);
@@ -171,7 +171,7 @@ export async function getAllEstimates(): Promise<Estimate[]> {
 
 export async function getEstimatesWithoutFile(): Promise<Estimate[]> {
   const rows = await db
-    .query<Record<string, unknown>, []>(
+    .query<EstimateDbRow, []>(
       `SELECT * FROM estimates
        WHERE estimate_storage_path IS NULL
        ORDER BY synced_at DESC`
@@ -213,7 +213,7 @@ export async function searchEstimates(
   query: string,
   limit = 50
 ): Promise<Estimate[]> {
-  const rows = await likeSearch<Record<string, unknown>>({
+  const rows = await likeSearch<EstimateDbRow>({
     table: "estimates",
     columns: ["name", "estimate_number", "contractor"],
     query,

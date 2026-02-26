@@ -4,6 +4,7 @@
  * Operates on the unified `documents` table with source='email_attachment'.
  */
 import { db } from "@lib/db/client";
+import type { Database } from "@lib/db/generated/database.types";
 import { getEmailById, parseEmailRow } from "@lib/db/repositories/email";
 import { likeSearch, likeWhere } from "@lib/db/search";
 import type {
@@ -13,20 +14,23 @@ import type {
   InsertAttachmentData,
 } from "@lib/db/types";
 
-function parseAttachmentRow(row: Record<string, unknown>): Attachment {
+type AttachmentRow = Database["public"]["Tables"]["documents"]["Row"];
+type EmailRow = Database["public"]["Tables"]["emails"]["Row"];
+
+function parseAttachmentRow(row: AttachmentRow): Attachment {
   return {
-    id: row.id as number,
+    id: row.id,
     emailId: row.email_id as number,
     attachmentId: row.outlook_attachment_id as string,
     name: row.file_name as string,
-    contentType: row.content_type as string | null,
-    size: row.file_size as number | null,
-    storageBucket: row.storage_bucket as string | null,
-    storagePath: row.storage_path as string | null,
-    extractedText: row.extracted_text as string | null,
+    contentType: row.content_type,
+    size: row.file_size,
+    storageBucket: row.storage_bucket,
+    storagePath: row.storage_path,
+    extractedText: row.extracted_text,
     extractionStatus: (row.extraction_status as ExtractionStatus) ?? "pending",
-    extractionError: row.extraction_error as string | null,
-    extractedAt: row.extracted_at as string | null,
+    extractionError: row.extraction_error,
+    extractedAt: row.extracted_at,
     createdAt: row.created_at as string,
   };
 }
@@ -65,7 +69,7 @@ export async function getAttachmentsForEmail(
   emailId: number
 ): Promise<Attachment[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
+    .query<AttachmentRow, [number]>(
       `SELECT * FROM documents
        WHERE email_id = $1 AND source = 'email_attachment'
        ORDER BY file_name`
@@ -79,9 +83,7 @@ export async function getAttachmentById(
   id: number
 ): Promise<Attachment | null> {
   const row = await db
-    .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM documents WHERE id = $1"
-    )
+    .query<AttachmentRow, [number]>("SELECT * FROM documents WHERE id = $1")
     .get(id);
 
   return row ? parseAttachmentRow(row) : null;
@@ -91,7 +93,7 @@ export async function getPendingAttachments(
   limit = 100
 ): Promise<Attachment[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
+    .query<AttachmentRow, [number]>(
       `SELECT * FROM documents
        WHERE source = 'email_attachment'
          AND extraction_status = 'pending'
@@ -177,7 +179,7 @@ export async function searchAttachments(
   searchTerm: string,
   limit = 100
 ): Promise<Attachment[]> {
-  const rows = await likeSearch<Record<string, unknown>>({
+  const rows = await likeSearch<AttachmentRow>({
     table: "documents a",
     select: "a.*",
     joins: "JOIN emails e ON a.email_id = e.id",
@@ -204,7 +206,7 @@ export async function searchEmailsFullText(
   );
 
   const emailRows = await db
-    .query<Record<string, unknown> & { match_source: string }, unknown[]>(
+    .query<EmailRow & { match_source: "subject" | "body" }, unknown[]>(
       `SELECT *,
         CASE
           WHEN subject ILIKE $1 THEN 'subject'
@@ -224,7 +226,7 @@ export async function searchEmailsFullText(
   for (const row of emailRows) {
     results.push({
       ...parseEmailRow(row),
-      matchSource: row.match_source as "subject" | "body",
+      matchSource: row.match_source,
     });
   }
 

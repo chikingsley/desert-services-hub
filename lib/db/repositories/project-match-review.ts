@@ -1,4 +1,6 @@
 import { db } from "@lib/db/client";
+import type { Database } from "@lib/db/generated/database.types";
+import { parseJsonValue } from "@lib/db/parsers";
 import { normalizeProjectAlias } from "@lib/db/repositories/project-matching-utils";
 import type {
   ProjectMatchCandidate,
@@ -15,42 +17,15 @@ export type ProjectMatchReviewSource =
   | "dust_permit_intake"
   | "email_resolver";
 
-interface ReviewRow {
-  account_id_hint: number | null;
-  address_hint: string | null;
-  alias_hints: unknown;
-  candidates: unknown;
-  contractor_hint: string | null;
-  created_at: string;
-  decision: unknown;
-  id: number;
-  note: string | null;
-  primary_text: string;
-  resolution_note: string | null;
-  resolved_at: string | null;
-  selected_project_id: number | null;
-  source: string;
-  source_key: string;
+type ReviewRow = Omit<
+  Database["public"]["Tables"]["project_match_reviews"]["Row"],
+  "status"
+> & {
   status: ProjectMatchReviewStatus;
-  updated_at: string;
-}
+};
 
 function normalizeSourceKey(sourceKey: string): string {
   return normalizeProjectAlias(sourceKey).slice(0, 500);
-}
-
-function parseJson<T>(value: unknown, fallback: T): T {
-  if (value == null) {
-    return fallback;
-  }
-  if (typeof value === "string") {
-    try {
-      return JSON.parse(value) as T;
-    } catch {
-      return fallback;
-    }
-  }
-  return value as T;
 }
 
 function parseReviewRow(row: ReviewRow): ProjectMatchReview {
@@ -60,12 +35,12 @@ function parseReviewRow(row: ReviewRow): ProjectMatchReview {
     sourceKey: row.source_key,
     status: row.status,
     primaryText: row.primary_text,
-    aliasHints: parseJson<string[]>(row.alias_hints, []),
+    aliasHints: parseJsonValue<string[]>(row.alias_hints, []),
     contractorHint: row.contractor_hint,
     addressHint: row.address_hint,
     accountIdHint: row.account_id_hint,
-    candidates: parseJson<ProjectMatchCandidate[]>(row.candidates, []),
-    decision: parseJson<ProjectMatchDecision>(row.decision, {
+    candidates: parseJsonValue<ProjectMatchCandidate[]>(row.candidates, []),
+    decision: parseJsonValue<ProjectMatchDecision>(row.decision, {
       best: null,
       runnerUp: null,
       autoLink: false,

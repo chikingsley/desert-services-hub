@@ -27,15 +27,29 @@ export interface ScheduledAction {
 // Row Parser
 // ============================================
 
-function parseRow(row: Record<string, unknown>): ScheduledAction {
+interface ScheduledActionRow {
+  action_id: number;
+  created_at: string;
+  email_id: number;
+  executed_rule_id: number;
+  id: number;
+  scheduled_for: string;
+  status: ScheduledActionStatus;
+}
+
+interface ScheduledActionCountRow {
+  count: number;
+}
+
+function parseRow(row: ScheduledActionRow): ScheduledAction {
   return {
-    id: row.id as number,
-    executedRuleId: row.executed_rule_id as number,
-    actionId: row.action_id as number,
-    emailId: row.email_id as number,
-    scheduledFor: row.scheduled_for as string,
-    status: row.status as ScheduledActionStatus,
-    createdAt: row.created_at as string,
+    id: row.id,
+    executedRuleId: row.executed_rule_id,
+    actionId: row.action_id,
+    emailId: row.email_id,
+    scheduledFor: row.scheduled_for,
+    status: row.status,
+    createdAt: row.created_at,
   };
 }
 
@@ -60,12 +74,12 @@ export async function insertScheduledAction(input: {
       input.scheduledFor.toISOString(),
     ]
   );
-  return parseRow(rows[0] as Record<string, unknown>);
+  return parseRow(rows[0] as ScheduledActionRow);
 }
 
 export async function getDueActions(limit = 50): Promise<ScheduledAction[]> {
   const rows = await db
-    .query<Record<string, unknown>>(
+    .query<ScheduledActionRow>(
       `SELECT * FROM scheduled_actions
     WHERE status = 'pending' AND scheduled_for <= now()
     ORDER BY scheduled_for ASC
@@ -96,9 +110,9 @@ export async function cancelForExecutedRule(
 
 export async function countPending(): Promise<number> {
   const row = await db
-    .query<Record<string, unknown>>(
+    .query<ScheduledActionCountRow>(
       `SELECT COUNT(*)::int AS count FROM scheduled_actions WHERE status = 'pending'`
     )
     .get();
-  return (row?.count as number) ?? 0;
+  return row?.count ?? 0;
 }

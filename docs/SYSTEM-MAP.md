@@ -26,6 +26,7 @@ Scope boundary:
 | Service | Entry | Responsibility |
 |---|---|---|
 | `web` | `apps/web/server.ts` | Frontend + API server on `:3000` |
+| `webhook-gateway` | `ops/webhook-gateway/nginx.conf` | Cloudflare webhook ingress bridge on `:4000` -> Supabase Kong `:54321` |
 | `pdf-analysis` | `packages/documents/intake/src/pdf_analysis/server.py` | PDF extraction/classification/OCR service on `:4848` |
 | `permit-worker` | `apps/dust-permits` | Permit automation API + VNC |
 | `aqdata-worker` | `apps/aqdata-worker/src/index.ts` | AQData sync/scrape service on `:47823` |
@@ -43,6 +44,7 @@ Task definitions live in `apps/trigger-dev/src/trigger/`.
 | `permit-sync` | scheduled | `*/30 * * * *` | Company-level dust permit sync |
 | `permit-detail-scrape` | scheduled | `*/10 * * * *` | Scrape individual permit details |
 | `mailbox-sync` | scheduled | `*/15 * * * *` | Outlook mailbox delta sync |
+| `outlook-webhook-subscriptions` | scheduled | `*/30 * * * *` | Ensure Graph webhook subscriptions exist and renew before expiry |
 | `email-sync` | on-demand | — | Sync a single email by message ID |
 | `attachment-intake` | scheduled | `*/5 * * * *` | Process queued attachment stubs through intake pipeline |
 | `body-link-intake` | scheduled | `*/10 * * * *` | Download/process links found in email bodies |
@@ -76,6 +78,7 @@ Task definitions live in `apps/trigger-dev/src/trigger/`.
 
 ### Outlook Email Flow
 
+0. `outlook-webhook-subscriptions` keeps Microsoft Graph subscriptions renewed and mapped in `outlook_subscriptions`.
 1. Microsoft Graph notifications hit `supabase/functions/outlook-webhook`.
 2. Edge function triggers Trigger.dev `email-sync` for the changed message.
 3. `email-sync` stores/enriches email + attachment stubs.

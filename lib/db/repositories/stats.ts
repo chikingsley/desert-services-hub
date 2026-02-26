@@ -2,12 +2,15 @@
  * Statistics & Cleanup Functions
  */
 import { db } from "@lib/db/client";
+import type { Database } from "@lib/db/generated/database.types";
 import { parseEmailRow } from "@lib/db/repositories/email";
 import type {
   ClassificationStats,
   Email,
   EmailClassification,
 } from "@lib/db/types";
+
+type EmailRow = Database["public"]["Tables"]["emails"]["Row"];
 
 // ============================================
 // Statistics
@@ -36,7 +39,7 @@ export async function getLowConfidenceEmails(
   limit = 50
 ): Promise<Email[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number, number]>(
+    .query<EmailRow, [number, number]>(
       `SELECT * FROM emails
        WHERE classification IS NOT NULL
        AND classification_confidence < $1

@@ -3,6 +3,8 @@
  */
 
 import { db } from "@lib/db/client";
+import type { Database } from "@lib/db/generated/database.types";
+import { parseBoolInt, parseJsonArray } from "@lib/db/parsers";
 import type {
   BodyLinkScanStatus,
   ClassificationMethod,
@@ -16,67 +18,75 @@ import { isSpam } from "@lib/email/spam-filter";
 // Row Parser
 // ============================================
 
-export function parseEmailRow(row: Record<string, unknown>): Email {
+type EmailRow = Database["public"]["Tables"]["emails"]["Row"];
+
+function parseStringArray(value: unknown): string[] {
+  return parseJsonArray(value)
+    .map((entry) => String(entry).trim())
+    .filter((entry) => entry.length > 0);
+}
+
+export function parseEmailRow(row: EmailRow): Email {
   return {
-    id: row.id as number,
-    messageId: row.message_id as string,
-    internetMessageId: row.internet_message_id as string | null,
-    mailboxId: row.mailbox_id as number,
-    conversationId: row.conversation_id as string | null,
-    subject: row.subject as string | null,
-    normalizedSubject: row.normalized_subject as string | null,
-    fromEmail: row.from_email as string | null,
-    fromName: row.from_name as string | null,
-    fromDomain: row.from_domain as string | null,
-    toEmails: JSON.parse((row.to_emails as string) || "[]"),
-    ccEmails: JSON.parse((row.cc_emails as string) || "[]"),
-    receivedAt: row.received_at as string,
-    hasAttachments: (row.has_attachments as number) === 1,
-    attachmentNames: JSON.parse((row.attachment_names as string) || "[]"),
-    bodyPreview: row.body_preview as string | null,
-    bodyFull: row.body_full as string | null,
-    bodyHtml: row.body_html as string | null,
-    webUrl: row.web_url as string | null,
-    categories: JSON.parse((row.categories as string) || "[]"),
+    id: row.id,
+    messageId: row.message_id,
+    internetMessageId: row.internet_message_id,
+    mailboxId: row.mailbox_id,
+    conversationId: row.conversation_id,
+    subject: row.subject,
+    normalizedSubject: row.normalized_subject,
+    fromEmail: row.from_email,
+    fromName: row.from_name,
+    fromDomain: row.from_domain,
+    toEmails: parseStringArray(row.to_emails),
+    ccEmails: parseStringArray(row.cc_emails),
+    receivedAt: row.received_at,
+    hasAttachments: parseBoolInt(row.has_attachments),
+    attachmentNames: parseStringArray(row.attachment_names),
+    bodyPreview: row.body_preview,
+    bodyFull: row.body_full,
+    bodyHtml: row.body_html,
+    webUrl: row.web_url,
+    categories: parseStringArray(row.categories),
 
     // Classification
     classification: row.classification as EmailClassification | null,
-    classificationConfidence: row.classification_confidence as number | null,
+    classificationConfidence: row.classification_confidence,
     classificationMethod:
       row.classification_method as ClassificationMethod | null,
 
     // Linking text fields
-    projectName: row.project_name as string | null,
-    contractorName: row.contractor_name as string | null,
-    mondayEstimateId: row.monday_estimate_id as string | null,
-    notionProjectId: row.notion_project_id as string | null,
+    projectName: row.project_name,
+    contractorName: row.contractor_name,
+    mondayEstimateId: row.monday_estimate_id,
+    notionProjectId: row.notion_project_id,
 
     // Foreign key relationships
-    accountId: row.account_id as number | null,
-    projectId: row.project_id as number | null,
+    accountId: row.account_id,
+    projectId: row.project_id,
 
     // Threading
-    threadId: row.thread_id as string | null,
+    threadId: row.thread_id,
 
     // Internal/Forwarding flags
-    isInternal: (row.is_internal as number) === 1,
-    isForwarded: (row.is_forwarded as number) === 1,
-    originalSenderEmail: row.original_sender_email as string | null,
-    originalSenderDomain: row.original_sender_domain as string | null,
+    isInternal: parseBoolInt(row.is_internal),
+    isForwarded: parseBoolInt(row.is_forwarded),
+    originalSenderEmail: row.original_sender_email,
+    originalSenderDomain: row.original_sender_domain,
 
     // Platform extraction
-    isPlatformEmail: (row.is_platform_email as number) === 1,
-    platformName: row.platform_name as string | null,
-    realSenderName: row.real_sender_name as string | null,
-    realSenderCompany: row.real_sender_company as string | null,
-    realSenderEmail: row.real_sender_email as string | null,
-    realSenderDomain: row.real_sender_domain as string | null,
-    isExcluded: (row.is_excluded as number) === 1,
+    isPlatformEmail: parseBoolInt(row.is_platform_email),
+    platformName: row.platform_name,
+    realSenderName: row.real_sender_name,
+    realSenderCompany: row.real_sender_company,
+    realSenderEmail: row.real_sender_email,
+    realSenderDomain: row.real_sender_domain,
+    isExcluded: parseBoolInt(row.is_excluded),
 
     // Body-link scanning
     bodyLinkScanStatus: row.body_link_scan_status as BodyLinkScanStatus | null,
-    bodyLinkScannedAt: row.body_link_scanned_at as string | null,
-    bodyLinkScanError: row.body_link_scan_error as string | null,
+    bodyLinkScannedAt: row.body_link_scanned_at,
+    bodyLinkScanError: row.body_link_scan_error,
     bodyLinkScanLinksFound: Number(row.body_link_scan_links_found ?? 0),
     bodyLinkScanAttachmentsAdded: Number(
       row.body_link_scan_attachments_added ?? 0
@@ -84,7 +94,7 @@ export function parseEmailRow(row: Record<string, unknown>): Email {
     bodyLinkScanAttempts: Number(row.body_link_scan_attempts ?? 0),
     bodyLinkScanVersion: Number(row.body_link_scan_version ?? 0),
 
-    createdAt: row.created_at as string,
+    createdAt: row.created_at ?? "",
   };
 }
 
@@ -110,21 +120,8 @@ interface DomainRuleRow {
   is_excluded: boolean;
 }
 
-function parseAttachmentNamesJson(raw: string | null | undefined): string[] {
-  if (!raw) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed.filter((name): name is string => typeof name === "string");
-  } catch {
-    return [];
-  }
+function parseAttachmentNamesJson(raw: unknown): string[] {
+  return parseStringArray(raw);
 }
 
 function getSenderDomain(fromEmail: string | null | undefined): string {
@@ -138,12 +135,12 @@ async function getDomainRule(
     return null;
   }
 
-  return (await db
-    .query(
+  return await db
+    .query<DomainRuleRow, [string]>(
       `SELECT classification, is_excluded FROM domain_rules
        WHERE $1 LIKE '%' || domain ORDER BY length(domain) DESC LIMIT 1`
     )
-    .get(fromDomain)) as DomainRuleRow | null;
+    .get(fromDomain);
 }
 
 function resolveExclusion(
@@ -298,9 +295,7 @@ export async function getEmailByMessageId(
   messageId: string
 ): Promise<Email | null> {
   const row = await db
-    .query<Record<string, unknown>, [string]>(
-      "SELECT * FROM emails WHERE message_id = $1"
-    )
+    .query<EmailRow, [string]>("SELECT * FROM emails WHERE message_id = $1")
     .get(messageId);
 
   if (!row) {
@@ -312,9 +307,7 @@ export async function getEmailByMessageId(
 
 export async function getEmailById(id: number): Promise<Email | null> {
   const row = await db
-    .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM emails WHERE id = $1"
-    )
+    .query<EmailRow, [number]>("SELECT * FROM emails WHERE id = $1")
     .get(id);
 
   if (!row) {
@@ -540,7 +533,7 @@ export async function recordBodyLinkScanResult(params: {
 
 export async function getUnclassifiedEmails(limit = 1000): Promise<Email[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
+    .query<EmailRow, [number]>(
       `SELECT * FROM emails
        WHERE classification IS NULL
        ORDER BY received_at DESC
@@ -556,7 +549,7 @@ export async function getEmailsByClassification(
   limit = 100
 ): Promise<Email[]> {
   const rows = await db
-    .query<Record<string, unknown>, [string, number]>(
+    .query<EmailRow, [string, number]>(
       `SELECT * FROM emails
        WHERE classification = $1
        ORDER BY received_at DESC
@@ -574,7 +567,7 @@ export async function getEmailsWithoutProjectLink(
   const placeholders = classifications.map((_, i) => `$${i + 1}`).join(", ");
   const limitIndex = classifications.length + 1;
   const rows = await db
-    .query<Record<string, unknown>, (string | number)[]>(
+    .query<EmailRow, (string | number)[]>(
       `SELECT * FROM emails
        WHERE classification IN (${placeholders})
        AND monday_estimate_id IS NULL
@@ -588,16 +581,14 @@ export async function getEmailsWithoutProjectLink(
 
 export async function getRecentEmails(limit = 10): Promise<Email[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
-      "SELECT * FROM emails ORDER BY id DESC LIMIT $1"
-    )
+    .query<EmailRow, [number]>("SELECT * FROM emails ORDER BY id DESC LIMIT $1")
     .all(limit);
   return rows.map(parseEmailRow);
 }
 
 export async function getEmailsWithAttachments(limit = 100): Promise<Email[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
+    .query<EmailRow, [number]>(
       `SELECT * FROM emails
        WHERE has_attachments = 1
        ORDER BY received_at DESC

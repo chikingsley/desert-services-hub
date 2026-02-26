@@ -118,9 +118,9 @@ function extractBodyFileLinks(html: string, text: string): BodyFileLink[] {
 // ── Download helpers ────────────────────────────────────────────
 
 interface DownloadedFile {
-  buffer: Buffer;
   contentType: string | null;
   name: string;
+  size: number;
 }
 
 async function fetchWithTimeout(
@@ -173,10 +173,61 @@ function filenameFromResponse(response: Response, fallback: string): string {
   return fallback;
 }
 
+async function streamResponseToFile(
+  response: Response,
+  outputPath: string
+): Promise<number> {
+  const body = response.body;
+  if (!body) {
+    throw new Error("Download response had no body");
+  }
+
+  const reader = body.getReader();
+  const writer = Bun.file(outputPath).writer();
+  let size = 0;
+  let writeFailed = false;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      if (!(value && value.byteLength > 0)) {
+        continue;
+      }
+      size += value.byteLength;
+      await writer.write(value);
+    }
+  } catch (err) {
+    writeFailed = true;
+    throw err;
+  } finally {
+    try {
+      await writer.end();
+    } catch (closeErr) {
+      if (!writeFailed) {
+        logger.warn("Failed to close downloaded file writer", {
+          error:
+            closeErr instanceof Error ? closeErr.message : String(closeErr),
+          outputPath,
+        });
+      }
+    }
+  }
+
+  if (size === 0) {
+    throw new Error("Downloaded file is empty");
+  }
+
+  return size;
+}
+
 /** Download a file via direct HTTP. Rejects if response is HTML. */
 async function downloadDirect(
   url: string,
-  fallbackName: string
+  fallbackName: string,
+  outputPath: string
 ): Promise<DownloadedFile> {
   const response = await fetchWithTimeout(url);
   if (!response.ok) {
@@ -186,19 +237,20 @@ async function downloadDirect(
   if (isHtmlResponse(contentType)) {
     throw new Error("URL resolved to HTML page instead of downloadable file");
   }
-  const buffer = Buffer.from(await response.arrayBuffer());
-  if (buffer.byteLength === 0) {
-    throw new Error("Downloaded file is empty");
-  }
+  const size = await streamResponseToFile(response, outputPath);
+
   return {
-    buffer,
     contentType,
     name: filenameFromResponse(response, fallbackName),
+    size,
   };
 }
 
 /** Resolve a OneDrive/SharePoint share URL via Graph API → direct download. */
-async function downloadOneDrive(url: string): Promise<DownloadedFile> {
+async function downloadOneDrive(
+  url: string,
+  outputPath: string
+): Promise<DownloadedFile> {
   // Encode share URL for Graph API: u! + base64url(url)
   const encoded = `u!${Buffer.from(url).toString("base64url")}`;
   const item = await graphGet<{
@@ -215,14 +267,12 @@ async function downloadOneDrive(url: string): Promise<DownloadedFile> {
   if (!response.ok) {
     throw new Error(`OneDrive download HTTP ${response.status}`);
   }
-  const buffer = Buffer.from(await response.arrayBuffer());
-  if (buffer.byteLength === 0) {
-    throw new Error("OneDrive file is empty");
-  }
+  const size = await streamResponseToFile(response, outputPath);
+
   return {
-    buffer,
     contentType: response.headers.get("content-type"),
     name: item.name,
+    size,
   };
 }
 
@@ -240,7 +290,10 @@ function normalizeDropboxUrl(rawUrl: string): string {
 }
 
 /** Download from BuildingConnected via bc-worker's Playwright endpoint. */
-async function downloadBuildingConnected(url: string): Promise<DownloadedFile> {
+async function downloadBuildingConnected(
+  url: string,
+  outputPath: string
+): Promise<DownloadedFile> {
   const response = await fetch(
     `${BC_WORKER_BASE_URL}/api/buildingconnected/download`,
     {
@@ -266,24 +319,37 @@ async function downloadBuildingConnected(url: string): Promise<DownloadedFile> {
     throw new Error("bc-worker returned no file data");
   }
 
+  const buffer = Buffer.from(result.data, "base64");
+  if (buffer.byteLength === 0) {
+    throw new Error("bc-worker returned empty file");
+  }
+  await Bun.write(outputPath, buffer);
+
   return {
-    buffer: Buffer.from(result.data, "base64"),
     contentType: null,
     name: result.name,
+    size: buffer.byteLength,
   };
 }
 
 /** Download a body-link file using the appropriate strategy. */
-function downloadBodyLink(link: BodyFileLink): Promise<DownloadedFile> {
+function downloadBodyLink(
+  link: BodyFileLink,
+  outputPath: string
+): Promise<DownloadedFile> {
   switch (link.source) {
     case "onedrive":
-      return downloadOneDrive(link.url);
+      return downloadOneDrive(link.url, outputPath);
     case "dropbox":
-      return downloadDirect(normalizeDropboxUrl(link.url), "dropbox-file");
+      return downloadDirect(
+        normalizeDropboxUrl(link.url),
+        "dropbox-file",
+        outputPath
+      );
     case "egnyte":
-      return downloadDirect(link.url, "egnyte-file");
+      return downloadDirect(link.url, "egnyte-file", outputPath);
     case "buildingconnected":
-      return downloadBuildingConnected(link.url);
+      return downloadBuildingConnected(link.url, outputPath);
     default:
       throw new Error(`Unsupported body link source: ${link.source}`);
   }
@@ -355,15 +421,21 @@ async function downloadAndInsertLink(
   emailId: number,
   failures: LinkFailure[]
 ): Promise<boolean> {
-  const file = await downloadBodyLink(link);
   const attId = bodyLinkAttachmentId(link.source, link.url);
-
-  const ext = file.name.includes(".")
-    ? (file.name.split(".").pop()?.toLowerCase() ?? "bin")
-    : "bin";
   await mkdir(BODY_LINK_STORAGE_DIR, { recursive: true });
-  const tmpPath = `${BODY_LINK_STORAGE_DIR}/bodylink-${emailId}-${attId.slice(-12)}.${ext}`;
-  await Bun.write(tmpPath, file.buffer);
+  const tmpPath = `${BODY_LINK_STORAGE_DIR}/bodylink-${emailId}-${attId.slice(-12)}.bin`;
+
+  let file: DownloadedFile;
+  try {
+    file = await downloadBodyLink(link, tmpPath);
+  } catch (downloadErr) {
+    try {
+      await unlink(tmpPath);
+    } catch {
+      // Non-fatal cleanup failure.
+    }
+    throw downloadErr;
+  }
 
   try {
     await insertAttachment({
@@ -371,13 +443,13 @@ async function downloadAndInsertLink(
       contentType: file.contentType,
       emailId,
       name: file.name,
-      size: file.buffer.byteLength,
+      size: file.size,
       storagePath: tmpPath,
     });
     logger.info("Body link downloaded", {
       emailId,
       name: file.name,
-      size: file.buffer.byteLength,
+      size: file.size,
       source: link.source,
     });
     return true;

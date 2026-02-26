@@ -2,18 +2,21 @@
  * Account Repository
  */
 import { db } from "@lib/db/client";
+import type { Database } from "@lib/db/generated/database.types";
 import type { Account, AccountType } from "@lib/db/types";
 
-function parseAccountRow(row: Record<string, unknown>): Account {
+type AccountRow = Database["public"]["Tables"]["accounts"]["Row"];
+
+function parseAccountRow(row: AccountRow): Account {
   return {
-    id: row.id as number,
+    id: row.id,
     domain: row.domain as string,
-    name: row.name as string,
+    name: row.name,
     type: (row.type as AccountType) ?? "contractor",
-    contactCount: (row.contact_count as number) ?? 0,
-    emailCount: (row.email_count as number) ?? 0,
-    mondayAccountId: row.monday_account_id as string | null,
-    mondayName: row.monday_name as string | null,
+    contactCount: Number(row.contact_count ?? 0),
+    emailCount: Number(row.email_count ?? 0),
+    mondayAccountId: row.monday_account_id,
+    mondayName: row.monday_name,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -31,9 +34,7 @@ export async function createAccount(
   );
 
   const row = await db
-    .query<Record<string, unknown>, [string]>(
-      "SELECT * FROM accounts WHERE domain = $1"
-    )
+    .query<AccountRow, [string]>("SELECT * FROM accounts WHERE domain = $1")
     .get(domain);
 
   if (!row) {
@@ -46,9 +47,7 @@ export async function getAccountByDomain(
   domain: string
 ): Promise<Account | null> {
   const row = await db
-    .query<Record<string, unknown>, [string]>(
-      "SELECT * FROM accounts WHERE domain = $1"
-    )
+    .query<AccountRow, [string]>("SELECT * FROM accounts WHERE domain = $1")
     .get(domain);
 
   return row ? parseAccountRow(row) : null;
@@ -89,8 +88,8 @@ export async function getAllAccounts(type?: AccountType): Promise<Account[]> {
     : "SELECT * FROM accounts ORDER BY email_count DESC";
 
   const rows = type
-    ? await db.query<Record<string, unknown>, [string]>(query).all(type)
-    : await db.query<Record<string, unknown>, []>(query).all();
+    ? await db.query<AccountRow, [string]>(query).all(type)
+    : await db.query<AccountRow, []>(query).all();
 
   return rows.map(parseAccountRow);
 }

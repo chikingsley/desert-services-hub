@@ -5,40 +5,47 @@
  * Used for market intelligence and sales prospecting.
  */
 import { db } from "@lib/db/client";
+import type { Database } from "@lib/db/generated/database.types";
+import {
+  parseBoolInt,
+  parseJsonRecord,
+  parseNumberOrNull,
+} from "@lib/db/parsers";
 import type {
   MarketingPermit,
   PermitStatus,
   UpsertMarketingPermitData,
 } from "@lib/db/types";
 
-function parseMarketingPermitRow(
-  row: Record<string, unknown>
-): MarketingPermit {
+type MarketingPermitRow =
+  Database["public"]["Tables"]["marketing_permits"]["Row"];
+
+function parseMarketingPermitRow(row: MarketingPermitRow): MarketingPermit {
   return {
-    id: row.id as string,
-    projectName: row.project_name as string | null,
-    companyId: row.company_id as string | null,
-    companyName: row.company_name as string | null,
+    id: row.id,
+    projectName: row.project_name,
+    companyId: row.company_id,
+    companyName: row.company_name,
     status: row.status as PermitStatus | null,
-    submittedDate: row.submitted_date as string | null,
-    effectiveDate: row.effective_date as string | null,
-    expirationDate: row.expiration_date as string | null,
-    closedDate: row.closed_date as string | null,
-    previousAppId: row.previous_app_id as string | null,
-    projectStartDate: row.project_start_date as string | null,
-    projectEndDate: row.project_end_date as string | null,
-    address: row.address as string | null,
-    city: row.city as string | null,
-    parcel: row.parcel as string | null,
-    isBlockPermit: row.is_block_permit === 1,
-    isAccelerated: row.is_accelerated === 1,
-    invoiceNumber: row.invoice_number as string | null,
-    invoiceCharges: row.invoice_charges as number | null,
-    invoiceBalance: row.invoice_balance as number | null,
-    rawData: (row.raw_data as Record<string, unknown>) ?? null,
-    scrapedAt: row.scraped_at as number | null,
-    detailScrapedAt: row.detail_scraped_at as number | null,
-    createdAt: row.created_at as number,
+    submittedDate: row.submitted_date,
+    effectiveDate: row.effective_date,
+    expirationDate: row.expiration_date,
+    closedDate: row.closed_date,
+    previousAppId: row.previous_app_id,
+    projectStartDate: row.project_start_date,
+    projectEndDate: row.project_end_date,
+    address: row.address,
+    city: row.city,
+    parcel: row.parcel,
+    isBlockPermit: parseBoolInt(row.is_block_permit),
+    isAccelerated: parseBoolInt(row.is_accelerated),
+    invoiceNumber: row.invoice_number,
+    invoiceCharges: parseNumberOrNull(row.invoice_charges),
+    invoiceBalance: parseNumberOrNull(row.invoice_balance),
+    rawData: parseJsonRecord(row.raw_data),
+    scrapedAt: parseNumberOrNull(row.scraped_at),
+    detailScrapedAt: parseNumberOrNull(row.detail_scraped_at),
+    createdAt: parseNumberOrNull(row.created_at) ?? 0,
   };
 }
 
@@ -114,7 +121,7 @@ export async function getMarketingPermit(
   id: string
 ): Promise<MarketingPermit | null> {
   const row = await db
-    .query<Record<string, unknown>, [string]>(
+    .query<MarketingPermitRow, [string]>(
       "SELECT * FROM marketing_permits WHERE id = $1"
     )
     .get(id);
@@ -153,7 +160,7 @@ export async function getMarketingPermits(options?: {
     params.push(options.offset);
   }
 
-  const rows = await db.query<Record<string, unknown>>(sql).all(...params);
+  const rows = await db.query<MarketingPermitRow>(sql).all(...params);
   return rows.map(parseMarketingPermitRow);
 }
 
@@ -188,7 +195,7 @@ export async function getPermitsNeedingDetailScrape(
   limit = 100
 ): Promise<MarketingPermit[]> {
   const rows = await db
-    .query<Record<string, unknown>, [number]>(
+    .query<MarketingPermitRow, [number]>(
       `SELECT * FROM marketing_permits
        WHERE detail_scraped_at IS NULL
        ORDER BY scraped_at DESC NULLS LAST

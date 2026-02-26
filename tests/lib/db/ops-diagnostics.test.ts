@@ -23,9 +23,6 @@ type HealthState = "OK" | "WARN" | "FAIL" | "INFO";
 
 function classifyHealth(key: string, value: number): HealthState {
   switch (key) {
-    case "background_dead_letters_24h":
-      return value === 0 ? "OK" : "WARN";
-
     case "emails_1h_estimate_link_coverage_pct":
       if (value >= 99) {
         return "OK";
@@ -155,17 +152,6 @@ WITH m AS (
   FROM emails e
   WHERE e.created_at >= now() - interval '24 hours'
     AND EXISTS (SELECT 1 FROM estimate_emails ee WHERE ee.email_id = e.id)
-  UNION ALL
-  SELECT 'background_jobs_visible', COUNT(*)::numeric
-  FROM pgmq.q_background_jobs
-  WHERE vt <= now()
-  UNION ALL
-  SELECT 'background_dead_letters_total', COUNT(*)::numeric
-  FROM background_job_dead_letters
-  UNION ALL
-  SELECT 'background_dead_letters_24h', COUNT(*)::numeric
-  FROM background_job_dead_letters
-  WHERE failed_at >= now() - interval '24 hours'
   UNION ALL
   SELECT 'projects_total', COUNT(*)::numeric FROM projects
   UNION ALL
@@ -382,9 +368,6 @@ describe("ops health metrics", () => {
         "emails_with_project",
         "projects_total",
         "estimates_total",
-        "background_jobs_visible",
-        "background_dead_letters_total",
-        "background_dead_letters_24h",
       ];
       for (const key of expected) {
         expect(metrics.has(key)).toBe(true);
@@ -466,32 +449,6 @@ describe("ops health metrics", () => {
       expect(m("canonical_estimates_with_email")).toBeLessThanOrEqual(
         m("canonical_estimates_total")
       );
-    });
-  });
-
-  describe("background queue", () => {
-    test("queue counts are non-negative", () => {
-      expect(m("background_jobs_visible")).toBeGreaterThanOrEqual(0);
-      expect(m("background_dead_letters_total")).toBeGreaterThanOrEqual(0);
-      expect(m("background_dead_letters_24h")).toBeGreaterThanOrEqual(0);
-    });
-
-    test("pending jobs grouped by type returns expected columns", async () => {
-      const rows = await db
-        .query<{ job_type: string; count: number }>(
-          `SELECT
-             message->>'job_type' AS job_type,
-             COUNT(*)::int AS count
-           FROM pgmq.q_background_jobs
-           WHERE vt <= now()
-           GROUP BY message->>'job_type'
-           ORDER BY count DESC`
-        )
-        .all();
-      for (const row of rows) {
-        expect(typeof row.job_type).toBe("string");
-        expect(row.count).toBeGreaterThanOrEqual(0);
-      }
     });
   });
 
@@ -924,17 +881,6 @@ describe("contract status", () => {
 // ===========================================================================
 
 describe("health state classification", () => {
-  describe("background_dead_letters_24h", () => {
-    test("0 -> OK", () => {
-      expect(classifyHealth("background_dead_letters_24h", 0)).toBe("OK");
-    });
-
-    test("positive -> WARN", () => {
-      expect(classifyHealth("background_dead_letters_24h", 1)).toBe("WARN");
-      expect(classifyHealth("background_dead_letters_24h", 5)).toBe("WARN");
-    });
-  });
-
   describe("emails_1h_estimate_link_coverage_pct", () => {
     test("99+ -> OK", () => {
       expect(classifyHealth("emails_1h_estimate_link_coverage_pct", 99)).toBe(

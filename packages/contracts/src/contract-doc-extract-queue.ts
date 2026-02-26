@@ -49,14 +49,6 @@ const getDocsNeedingExtraction = db.query<DocToEnqueue>(
             THEN d.raw_extraction::jsonb ELSE '{}'::jsonb END,
        'contract_fields'
      )
-     -- Skip docs already queued
-     AND NOT EXISTS (
-       SELECT 1
-       FROM pgmq.q_background_jobs q
-       WHERE q.message->>'job_type' = 'contract_doc_extract'
-         AND q.message->'payload'->>'doc_id' = d.id::text
-         AND q.read_ct < COALESCE((q.message->>'max_attempts')::int, 3)
-     )
    ORDER BY e.id, length(d.summary) DESC
    LIMIT 200`
 );
@@ -82,14 +74,6 @@ const getExtractedButUnlinked = db.query<DocToEnqueue>(
        d.raw_extraction::jsonb->'contract_fields'->>'project_name',
        ''
      )) >= 5
-     -- Skip docs already queued for re-match
-     AND NOT EXISTS (
-       SELECT 1
-       FROM pgmq.q_background_jobs q
-       WHERE q.message->>'job_type' = 'contract_doc_extract'
-         AND q.message->'payload'->>'doc_id' = d.id::text
-         AND q.read_ct < COALESCE((q.message->>'max_attempts')::int, 3)
-     )
    ORDER BY e.id, length(d.summary) DESC
    LIMIT 50`
 );

@@ -4,6 +4,7 @@ import {
   fetchDustApplicationDetailViaCrawl4Ai,
   getAQDetailFetchBackend,
 } from "../aqdata/crawl4ai";
+import { isPermitIgnored } from "../aqdata/ignore-list";
 import { parseDustApplicationDetail } from "../aqdata/parsers/dust-application-detail";
 import { mergePermitPdfIntoDetail } from "../aqdata/parsers/dust-application-detail-enrichment";
 import { evaluateDustApplicationDetailQA } from "../aqdata/parsers/dust-application-detail-qa";
@@ -79,26 +80,52 @@ export async function handleScrapeRun(req: Request): Promise<Response> {
 
 export async function handleScrapePermit(id: string): Promise<Response> {
   try {
-    const client = new AQDataClient();
-    await client.connect();
-    const backend = getAQDetailFetchBackend();
-    let detailHtml: string | null = null;
-
-    if (backend !== "client") {
-      detailHtml = await fetchDustApplicationDetailViaCrawl4Ai(
-        id,
-        DUST_STATUS_SEARCH_ORDER
+    if (isPermitIgnored(id)) {
+      return Response.json(
+        {
+          success: false,
+          error: `Permit ${id} is configured to be ignored via AQDATA_IGNORE_PERMIT_IDS.`,
+          ignored: true,
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
       );
     }
 
+    const client = new AQDataClient();
+    await client.connect();
+    const summary = await findSummaryRow(client, id);
+    if (!summary) {
+      return Response.json(
+        {
+          success: false,
+          error: `Permit ${id} was not found in AQData dust application search.`,
+          timestamp: new Date().toISOString(),
+        },
+        { status: 404 }
+      );
+    }
+
+    const backend = getAQDetailFetchBackend();
+    let detailHtml: string | null = null;
+    const statusHint = toDustStatus(summary.status);
+    const searchOrder = statusHint
+      ? ([
+          statusHint,
+          ...DUST_STATUS_SEARCH_ORDER.filter((status) => status !== statusHint),
+        ] as const)
+      : DUST_STATUS_SEARCH_ORDER;
+
+    if (backend !== "client") {
+      detailHtml = await fetchDustApplicationDetailViaCrawl4Ai(id, searchOrder);
+    }
+
     if (!detailHtml && backend !== "crawl4ai") {
-      detailHtml = await openDetailWithStatusFallback(client, id);
+      detailHtml = await openDetailWithStatusFallback(client, id, searchOrder);
     }
     if (!detailHtml) {
       throw new Error(`Detail page was not returned for ${id}.`);
     }
-
-    const summary = await findSummaryRow(client, id);
 
     let detail = parseDustApplicationDetail(detailHtml, id);
     if (detail.permitDocument?.url) {
@@ -153,9 +180,10 @@ function isLikelyPdf(contentType: string | null, url: string): boolean {
 
 async function openDetailWithStatusFallback(
   client: AQDataClient,
-  permitId: string
+  permitId: string,
+  searchOrder: readonly DustAppStatus[] = DUST_STATUS_SEARCH_ORDER
 ): Promise<string> {
-  for (const status of DUST_STATUS_SEARCH_ORDER) {
+  for (const status of searchOrder) {
     await client.navigateToDustApplicationSearch();
     await client.searchDustApplications({
       applicationId: permitId,
@@ -172,6 +200,15 @@ async function openDetailWithStatusFallback(
   }
 
   throw new Error(`Detail page was not returned for ${permitId}.`);
+}
+
+function toDustStatus(value: string | null | undefined): DustAppStatus | null {
+  if (!value) {
+    return null;
+  }
+  return DUST_STATUS_SEARCH_ORDER.includes(value as DustAppStatus)
+    ? (value as DustAppStatus)
+    : null;
 }
 
 async function findSummaryRow(client: AQDataClient, permitId: string) {

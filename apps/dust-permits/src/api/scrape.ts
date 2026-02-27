@@ -2,7 +2,7 @@
  * Scrape API Handlers
  *
  * HTTP handlers for scraping permits and generating PDFs.
- * Uses shared browser session for performance.
+ * Detail scrape routes through aqdata-worker; PDF still uses shared browser session.
  */
 
 import { existsSync, mkdirSync } from "node:fs";
@@ -28,6 +28,14 @@ import { login } from "@/portal/utils/login";
 import { searchPermits } from "@/portal/utils/search";
 
 const log = (msg: string) => process.stderr.write(`${msg}\n`);
+const DEFAULT_AQDATA_WORKER_URL =
+  process.env.DOCKER_CONTAINER === "true"
+    ? "http://aqdata-worker:47823"
+    : "http://localhost:47823";
+const DEFAULT_AQDATA_TIMEOUT_MS = 180_000;
+const MIN_AQDATA_TIMEOUT_MS = 5000;
+const MAX_AQDATA_TIMEOUT_MS = 300_000;
+const TRAILING_SLASHES_REGEX = /\/+$/;
 
 // ============================================
 // Schemas
@@ -51,6 +59,107 @@ export interface ScrapePdfResult {
   success: boolean;
 }
 
+interface AQDataStructuredDetail {
+  applicantCompany: {
+    address1: string;
+    address2: string;
+    city: string;
+    companyName: string;
+    email: string;
+    entityType: string;
+    phone: string;
+    state: string;
+    zip: string;
+  };
+  applicantOwner: {
+    address1: string;
+    address2: string;
+    city: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    state: string;
+    zip: string;
+  };
+  contact: {
+    email: string;
+    name: string;
+    phone: string;
+  };
+  header: {
+    applicationId: string;
+    companyName: string;
+    createdDate: string;
+    expirationDate: string;
+    issueDate: string;
+    projectName: string;
+    status: string;
+  };
+  isOwnerDeveloper: boolean | null;
+  primaryContact: {
+    companyName: string;
+    email: string;
+    fax: string;
+    firstName: string;
+    lastName: string;
+    mobile: string;
+    onSitePhone: string;
+    title: string;
+  };
+  project: {
+    description: string;
+    endDate: string;
+    name: string;
+    startDate: string;
+  };
+  propertyOwnerDeveloper: {
+    address1: string;
+    address2: string;
+    city: string;
+    contactEmail: string;
+    contactFirstName: string;
+    contactLastName: string;
+    contactPhone: string;
+    entityType: string;
+    fax: string;
+    name: string;
+    phone: string;
+    state: string;
+    zip: string;
+  } | null;
+  siteLocation: {
+    accessPoints: PermitData["accessPoints"];
+    disturbedArea: string;
+    locations: PermitData["locations"];
+  };
+  trackoutDevices: {
+    gravelPad: boolean;
+    grizzlyRumbleGrate: boolean;
+    other: boolean;
+    pavedArea: boolean;
+    wheelWash: boolean;
+  };
+  trackoutE1Answer: boolean | null;
+  waterMethods: {
+    hose: boolean;
+    other: boolean;
+    waterBuffalo: boolean;
+    waterPull: boolean;
+    waterTruck: boolean;
+  };
+}
+
+interface AQDataScrapePayload {
+  detail?: {
+    structured?: AQDataStructuredDetail;
+  };
+  error?: string;
+  qa?: unknown;
+  success: boolean;
+  summary?: unknown;
+}
+
 // ============================================
 // Helpers
 // ============================================
@@ -68,6 +177,204 @@ function jsonSuccess(data: Record<string, unknown>): Response {
     ...data,
     timestamp: new Date().toISOString(),
   });
+}
+
+function getAqdataWorkerUrl(): string {
+  const configured = process.env.AQDATA_WORKER_URL?.trim();
+  const baseUrl = configured || DEFAULT_AQDATA_WORKER_URL;
+  return baseUrl.replace(TRAILING_SLASHES_REGEX, "");
+}
+
+function getAqdataTimeoutMs(): number {
+  const configured = Number.parseInt(
+    process.env.AQDATA_SCRAPE_TIMEOUT_MS ?? "",
+    10
+  );
+  if (!Number.isFinite(configured)) {
+    return DEFAULT_AQDATA_TIMEOUT_MS;
+  }
+  return Math.min(
+    MAX_AQDATA_TIMEOUT_MS,
+    Math.max(MIN_AQDATA_TIMEOUT_MS, configured)
+  );
+}
+
+function inferAqdataErrorStatus(
+  status: number,
+  error: string | undefined
+): number {
+  if (status >= 400) {
+    return status;
+  }
+  const message = (error || "").toLowerCase();
+  if (message.includes("not found") || message.includes("not returned")) {
+    return 404;
+  }
+  return 500;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function parseAqdataPayload(raw: unknown): AQDataScrapePayload {
+  const record = asRecord(raw);
+  if (!record) {
+    return {
+      error: "Invalid AQData response payload",
+      success: false,
+    };
+  }
+
+  const detail = asRecord(record.detail);
+  const structured = detail
+    ? (detail.structured as AQDataStructuredDetail)
+    : undefined;
+
+  return {
+    detail: detail
+      ? {
+          structured,
+        }
+      : undefined,
+    error: typeof record.error === "string" ? record.error : undefined,
+    qa: record.qa,
+    success: record.success === true,
+    summary: record.summary,
+  };
+}
+
+function mapStructuredDetailToPermitData(
+  permitId: string,
+  structured: AQDataStructuredDetail
+): PermitData {
+  const header = structured.header;
+  const applicantCompany = structured.applicantCompany;
+  const propertyOwner = structured.propertyOwnerDeveloper;
+  const projectName = header.projectName || structured.project.name;
+
+  return {
+    accessPoints: structured.siteLocation.accessPoints,
+    applicantCompany: {
+      address1: applicantCompany.address1,
+      address2: applicantCompany.address2,
+      city: applicantCompany.city,
+      email: applicantCompany.email,
+      entityType: applicantCompany.entityType,
+      name: applicantCompany.companyName,
+      phone: applicantCompany.phone,
+      state: applicantCompany.state,
+      zip: applicantCompany.zip,
+    },
+    applicantOwner: {
+      address1: structured.applicantOwner.address1,
+      address2: structured.applicantOwner.address2,
+      city: structured.applicantOwner.city,
+      email: structured.applicantOwner.email,
+      firstName: structured.applicantOwner.firstName,
+      lastName: structured.applicantOwner.lastName,
+      phone: structured.applicantOwner.phone,
+      state: structured.applicantOwner.state,
+      zip: structured.applicantOwner.zip,
+    },
+    applicationId: header.applicationId || permitId,
+    companyName: header.companyName,
+    contact: {
+      email: structured.contact.email,
+      name: structured.contact.name,
+      phone: structured.contact.phone,
+    },
+    createdDate: header.createdDate,
+    disturbedArea: structured.siteLocation.disturbedArea,
+    expirationDate: header.expirationDate,
+    isOwnerDeveloper: structured.isOwnerDeveloper,
+    issueDate: header.issueDate,
+    locations: structured.siteLocation.locations,
+    primaryContact: {
+      companyName: structured.primaryContact.companyName,
+      email: structured.primaryContact.email,
+      fax: structured.primaryContact.fax,
+      firstName: structured.primaryContact.firstName,
+      lastName: structured.primaryContact.lastName,
+      mobile: structured.primaryContact.mobile,
+      onSitePhone: structured.primaryContact.onSitePhone,
+      title: structured.primaryContact.title,
+    },
+    project: {
+      description: structured.project.description,
+      endDate: structured.project.endDate,
+      name: structured.project.name,
+      startDate: structured.project.startDate,
+    },
+    projectName,
+    propertyOwnerDeveloper: propertyOwner
+      ? {
+          address1: propertyOwner.address1,
+          address2: propertyOwner.address2,
+          city: propertyOwner.city,
+          contactEmail: propertyOwner.contactEmail,
+          contactFirstName: propertyOwner.contactFirstName,
+          contactLastName: propertyOwner.contactLastName,
+          contactPhone: propertyOwner.contactPhone,
+          entityType: propertyOwner.entityType,
+          fax: propertyOwner.fax,
+          name: propertyOwner.name,
+          phone: propertyOwner.phone,
+          state: propertyOwner.state,
+          zip: propertyOwner.zip,
+        }
+      : null,
+    status: header.status,
+    trackoutDevices: {
+      gravelPad: structured.trackoutDevices.gravelPad,
+      grizzlyRumbleGrate: structured.trackoutDevices.grizzlyRumbleGrate,
+      other: structured.trackoutDevices.other,
+      pavedArea: structured.trackoutDevices.pavedArea,
+      wheelWash: structured.trackoutDevices.wheelWash,
+    },
+    trackoutE1Answer: structured.trackoutE1Answer,
+    waterMethods: {
+      hose: structured.waterMethods.hose,
+      other: structured.waterMethods.other,
+      waterBuffalo: structured.waterMethods.waterBuffalo,
+      waterPull: structured.waterMethods.waterPull,
+      waterTruck: structured.waterMethods.waterTruck,
+    },
+  };
+}
+
+async function fetchAqdataPermit(
+  permitId: string
+): Promise<{ payload: AQDataScrapePayload; status: number }> {
+  const timeoutMs = getAqdataTimeoutMs();
+  const workerUrl = getAqdataWorkerUrl();
+  const endpoint = `${workerUrl}/api/scrape/${encodeURIComponent(permitId)}`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(endpoint, { signal: controller.signal });
+    const text = await response.text();
+    let rawPayload: unknown = text;
+    try {
+      rawPayload = JSON.parse(text);
+    } catch {
+      // keep raw text for error diagnostics
+    }
+
+    const payload = parseAqdataPayload(rawPayload);
+    return { payload, status: response.status };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`AQData scrape request timed out after ${timeoutMs}ms`);
+    }
+    const msg = error instanceof Error ? error.message : String(error);
+    throw new Error(`AQData scrape request failed: ${msg}`);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function ensureBrowserSession(): Promise<
@@ -229,21 +536,30 @@ export async function handleScrapePermit(id: string): Promise<Response> {
   log(`\n🔍 SCRAPE permit request: ${id}`);
 
   try {
-    const sessionResult = await ensureBrowserSession();
-    if (!sessionResult.success) {
-      return jsonError(sessionResult.error, 500);
+    const { payload, status } = await fetchAqdataPermit(id);
+    if (!payload.success) {
+      return jsonError(
+        payload.error || `AQData scrape failed for ${id}`,
+        inferAqdataErrorStatus(status, payload.error)
+      );
     }
 
-    const { page } = sessionResult.page;
-
-    const result = await navigateAndExtract(page, id);
-    if (!result.success) {
-      return jsonError(result.error, result.status);
+    const structured = payload.detail?.structured;
+    if (!structured) {
+      return jsonError(
+        `AQData scrape succeeded but structured detail was missing for ${id}`,
+        502
+      );
     }
+
+    const data = mapStructuredDetailToPermitData(id, structured);
 
     return jsonSuccess({
-      data: result.data,
+      data,
       permitId: id,
+      qa: payload.qa,
+      source: "aqdata",
+      summary: payload.summary,
     });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);

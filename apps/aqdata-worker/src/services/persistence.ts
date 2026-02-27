@@ -92,7 +92,8 @@ export async function upsertAQDataPermits(
 }
 
 export async function listPermitsNeedingDetailScrape(
-  limit: number
+  limit: number,
+  ignoredPermitIds: readonly string[] = []
 ): Promise<AQPermitListRow[]> {
   if (limit <= 0) {
     return [];
@@ -103,10 +104,11 @@ export async function listPermitsNeedingDetailScrape(
       `SELECT id, status
        FROM aqdata_permits
        WHERE detail_scraped_at IS NULL
+         AND NOT (id = ANY($2::text[]))
        ORDER BY exported_at DESC, id ASC
        LIMIT $1`
     )
-    .all(limit);
+    .all(limit, ignoredPermitIds);
 }
 
 export async function savePermitDetail(

@@ -5,6 +5,7 @@ import {
   fetchDustApplicationDetailViaCrawl4Ai,
   getAQDetailFetchBackend,
 } from "../aqdata/crawl4ai";
+import { getIgnoredPermitIds, isPermitIgnored } from "../aqdata/ignore-list";
 import { parseDustApplicationDetail } from "../aqdata/parsers/dust-application-detail";
 import { mergePermitPdfIntoDetail } from "../aqdata/parsers/dust-application-detail-enrichment";
 import { evaluateDustApplicationDetailQA } from "../aqdata/parsers/dust-application-detail-qa";
@@ -55,9 +56,13 @@ export async function runAQDetailScrape(
     30_000
   );
   const detailFetchBackend = getAQDetailFetchBackend();
+  const ignoredPermitIds = getIgnoredPermitIds();
 
   try {
-    const pending = await listPermitsNeedingDetailScrape(limit);
+    const pending = await listPermitsNeedingDetailScrape(
+      limit,
+      ignoredPermitIds
+    );
     if (pending.length === 0) {
       return {
         success: true,
@@ -84,9 +89,14 @@ export async function runAQDetailScrape(
 
     let scraped = 0;
     let failed = 0;
-    const skipped = 0;
+    let skipped = 0;
 
     for (const row of pending) {
+      if (isPermitIgnored(row.id)) {
+        skipped++;
+        continue;
+      }
+
       try {
         const detailFetchResult = await fetchDetailWithRetries(
           row,

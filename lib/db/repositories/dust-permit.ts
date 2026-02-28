@@ -297,6 +297,11 @@ export async function getPermitsNeedingScrape(limit = 100): Promise<Permit[]> {
     .query<PermitRow, [number]>(
       `SELECT * FROM dust_permits_filed_by_desert_services
        WHERE updated_at = created_at
+         AND EXISTS (
+           SELECT 1
+           FROM aqdata_permits aq
+           WHERE aq.id = dust_permits_filed_by_desert_services.id
+         )
        ORDER BY created_at
        LIMIT $1`
     )
@@ -327,6 +332,74 @@ export async function getPermitCount(): Promise<number> {
     )
     .get();
   return row?.count ?? 0;
+}
+
+export interface CompanyMatch {
+  companyName: string;
+  permitCount: number;
+  portalCompanyId: string | null;
+}
+
+/**
+ * Find a company by name in our permits database.
+ * Case-insensitive exact match first, then ILIKE prefix/contains fallback.
+ * Returns the best match (most permits filed) or null.
+ */
+export async function findCompanyByName(
+  name: string
+): Promise<CompanyMatch | null> {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  // Exact case-insensitive match (most reliable)
+  const exact = await db
+    .query<
+      { company_name: string; portal_company_id: string | null; cnt: number },
+      [string]
+    >(
+      `SELECT company_name, portal_company_id, COUNT(*)::int AS cnt
+       FROM dust_permits_filed_by_desert_services
+       WHERE LOWER(company_name) = LOWER($1)
+       GROUP BY company_name, portal_company_id
+       ORDER BY cnt DESC
+       LIMIT 1`
+    )
+    .get(trimmed);
+
+  if (exact) {
+    return {
+      companyName: exact.company_name,
+      portalCompanyId: exact.portal_company_id,
+      permitCount: exact.cnt,
+    };
+  }
+
+  // Fuzzy fallback: ILIKE contains match
+  const fuzzy = await db
+    .query<
+      { company_name: string; portal_company_id: string | null; cnt: number },
+      [string]
+    >(
+      `SELECT company_name, portal_company_id, COUNT(*)::int AS cnt
+       FROM dust_permits_filed_by_desert_services
+       WHERE company_name ILIKE '%' || $1 || '%'
+       GROUP BY company_name, portal_company_id
+       ORDER BY cnt DESC
+       LIMIT 1`
+    )
+    .get(trimmed);
+
+  if (fuzzy) {
+    return {
+      companyName: fuzzy.company_name,
+      portalCompanyId: fuzzy.portal_company_id,
+      permitCount: fuzzy.cnt,
+    };
+  }
+
+  return null;
 }
 
 export async function getPermitsByPortalCompany(

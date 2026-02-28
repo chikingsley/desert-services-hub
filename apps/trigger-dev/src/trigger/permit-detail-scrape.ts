@@ -14,21 +14,9 @@ import { logger, schedules } from "@trigger.dev/sdk";
 import { PermitClient } from "@/apps/dust-permits-mcp/client";
 
 const DEFAULT_BATCH_SIZE = 5;
-const IGNORED_SCRAPE_MESSAGE_REGEX =
-  /configured to be ignored via AQDATA_IGNORE_PERMIT_IDS/i;
-
-function isIgnoredScrape(
-  resp: { error?: string } & Record<string, unknown>
-): boolean {
-  if (resp.ignored === true) {
-    return true;
-  }
-  return IGNORED_SCRAPE_MESSAGE_REGEX.test(resp.error ?? "");
-}
 
 type ScrapePermitOutcome =
   | { outcome: "scraped" }
-  | { outcome: "skipped"; reason: string }
   | { outcome: "failed"; reason: string };
 
 async function scrapeAndApplyPermit(
@@ -54,11 +42,6 @@ async function scrapeAndApplyPermit(
     return { outcome: "scraped" };
   }
 
-  if (isIgnoredScrape(resp)) {
-    await markPermitScraped(permitId);
-    return { outcome: "skipped", reason: resp.error ?? "ignored" };
-  }
-
   return {
     outcome: "failed",
     reason: resp.error || "No data returned",
@@ -75,7 +58,7 @@ export const permitDetailScrape = schedules.task({
 
     let scraped = 0;
     let failed = 0;
-    let skipped = 0;
+    const skipped = 0;
 
     const errors: string[] = [];
 
@@ -84,14 +67,6 @@ export const permitDetailScrape = schedules.task({
         const result = await scrapeAndApplyPermit(client, permit.id);
         if (result.outcome === "scraped") {
           scraped++;
-          continue;
-        }
-
-        if (result.outcome === "skipped") {
-          skipped++;
-          logger.info(`Skipping ignored permit ${permit.id}`, {
-            reason: result.reason,
-          });
           continue;
         }
 

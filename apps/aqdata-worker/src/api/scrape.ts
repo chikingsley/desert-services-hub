@@ -4,7 +4,6 @@ import {
   fetchDustApplicationDetailViaCrawl4Ai,
   getAQDetailFetchBackend,
 } from "../aqdata/crawl4ai";
-import { isPermitIgnored } from "../aqdata/ignore-list";
 import { parseDustApplicationDetail } from "../aqdata/parsers/dust-application-detail";
 import { mergePermitPdfIntoDetail } from "../aqdata/parsers/dust-application-detail-enrichment";
 import { evaluateDustApplicationDetailQA } from "../aqdata/parsers/dust-application-detail-qa";
@@ -80,18 +79,6 @@ export async function handleScrapeRun(req: Request): Promise<Response> {
 
 export async function handleScrapePermit(id: string): Promise<Response> {
   try {
-    if (isPermitIgnored(id)) {
-      return Response.json(
-        {
-          success: false,
-          error: `Permit ${id} is configured to be ignored via AQDATA_IGNORE_PERMIT_IDS.`,
-          ignored: true,
-          timestamp: new Date().toISOString(),
-        },
-        { status: 404 }
-      );
-    }
-
     const client = new AQDataClient();
     await client.connect();
     const summary = await findSummaryRow(client, id);

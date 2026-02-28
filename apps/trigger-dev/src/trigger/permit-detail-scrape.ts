@@ -14,6 +14,56 @@ import { logger, schedules } from "@trigger.dev/sdk";
 import { PermitClient } from "@/apps/dust-permits-mcp/client";
 
 const DEFAULT_BATCH_SIZE = 5;
+const IGNORED_SCRAPE_MESSAGE_REGEX =
+  /configured to be ignored via AQDATA_IGNORE_PERMIT_IDS/i;
+
+function isIgnoredScrape(
+  resp: { error?: string } & Record<string, unknown>
+): boolean {
+  if (resp.ignored === true) {
+    return true;
+  }
+  return IGNORED_SCRAPE_MESSAGE_REGEX.test(resp.error ?? "");
+}
+
+type ScrapePermitOutcome =
+  | { outcome: "scraped" }
+  | { outcome: "skipped"; reason: string }
+  | { outcome: "failed"; reason: string };
+
+async function scrapeAndApplyPermit(
+  client: PermitClient,
+  permitId: string
+): Promise<ScrapePermitOutcome> {
+  const resp = await client.scrape(permitId);
+
+  if (resp.success && resp.data) {
+    const d = resp.data;
+    const loc = d.locations?.[0];
+    await markPermitScraped(permitId, {
+      projectName: d.projectName || undefined,
+      status: d.status || undefined,
+      effectiveDate: d.issueDate || undefined,
+      expirationDate: d.expirationDate || undefined,
+      projectStartDate: d.project?.startDate || undefined,
+      projectEndDate: d.project?.endDate || undefined,
+      address: loc?.address || undefined,
+      city: loc?.city || undefined,
+      parcel: loc?.parcel || undefined,
+    });
+    return { outcome: "scraped" };
+  }
+
+  if (isIgnoredScrape(resp)) {
+    await markPermitScraped(permitId);
+    return { outcome: "skipped", reason: resp.error ?? "ignored" };
+  }
+
+  return {
+    outcome: "failed",
+    reason: resp.error || "No data returned",
+  };
+}
 
 export const permitDetailScrape = schedules.task({
   id: "permit-detail-scrape",
@@ -25,36 +75,31 @@ export const permitDetailScrape = schedules.task({
 
     let scraped = 0;
     let failed = 0;
-    const skipped = 0;
+    let skipped = 0;
 
     const errors: string[] = [];
 
     for (const permit of permits) {
       try {
-        const resp = await client.scrape(permit.id);
-
-        if (resp.success && resp.data) {
-          const d = resp.data;
-          const loc = d.locations?.[0];
-          await markPermitScraped(permit.id, {
-            projectName: d.projectName || undefined,
-            status: d.status || undefined,
-            effectiveDate: d.issueDate || undefined,
-            expirationDate: d.expirationDate || undefined,
-            projectStartDate: d.project?.startDate || undefined,
-            projectEndDate: d.project?.endDate || undefined,
-            address: loc?.address || undefined,
-            city: loc?.city || undefined,
-            parcel: loc?.parcel || undefined,
-          });
+        const result = await scrapeAndApplyPermit(client, permit.id);
+        if (result.outcome === "scraped") {
           scraped++;
-        } else {
-          // Don't mark as scraped — leave it for retry next run
-          const reason = resp.error || "No data returned";
-          logger.warn(`Scrape returned no data for ${permit.id}: ${reason}`);
-          failed++;
-          errors.push(`${permit.id}: ${reason}`);
+          continue;
         }
+
+        if (result.outcome === "skipped") {
+          skipped++;
+          logger.info(`Skipping ignored permit ${permit.id}`, {
+            reason: result.reason,
+          });
+          continue;
+        }
+
+        logger.warn(
+          `Scrape returned no data for ${permit.id}: ${result.reason}`
+        );
+        failed++;
+        errors.push(`${permit.id}: ${result.reason}`);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         logger.warn(`Scrape failed for ${permit.id}: ${msg}`);

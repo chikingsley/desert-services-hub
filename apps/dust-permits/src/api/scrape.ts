@@ -155,6 +155,7 @@ interface AQDataScrapePayload {
     structured?: AQDataStructuredDetail;
   };
   error?: string;
+  ignored?: boolean;
   qa?: unknown;
   success: boolean;
   summary?: unknown;
@@ -240,6 +241,7 @@ function parseAqdataPayload(raw: unknown): AQDataScrapePayload {
         }
       : undefined,
     error: typeof record.error === "string" ? record.error : undefined,
+    ignored: record.ignored === true,
     qa: record.qa,
     success: record.success === true,
     summary: record.summary,
@@ -538,6 +540,17 @@ export async function handleScrapePermit(id: string): Promise<Response> {
   try {
     const { payload, status } = await fetchAqdataPermit(id);
     if (!payload.success) {
+      if (payload.ignored) {
+        return Response.json(
+          {
+            error: payload.error || `AQData scrape ignored for ${id}`,
+            ignored: true,
+            success: false,
+            timestamp: new Date().toISOString(),
+          },
+          { status: inferAqdataErrorStatus(status, payload.error) }
+        );
+      }
       return jsonError(
         payload.error || `AQData scrape failed for ${id}`,
         inferAqdataErrorStatus(status, payload.error)
@@ -556,6 +569,7 @@ export async function handleScrapePermit(id: string): Promise<Response> {
 
     return jsonSuccess({
       data,
+      ignored: false,
       permitId: id,
       qa: payload.qa,
       source: "aqdata",

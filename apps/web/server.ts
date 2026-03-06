@@ -19,6 +19,7 @@ import {
   postAutomationStart,
   postAutomationStop,
   postPermitRenewAndPay,
+  postPermitSubmitDraftAndPay,
 } from "@/api/automation";
 import {
   getBuildingConnectedAuthStatus,
@@ -39,9 +40,20 @@ import {
   getConversation,
   listArchives,
 } from "@/api/contracts/archive";
+import {
+  addContractEmailLink,
+  getContractContext,
+  removeContractEmailLink,
+} from "@/api/contracts/context";
 import { listContracts } from "@/api/contracts/contracts";
 import { listContractReview } from "@/api/contracts/review";
-import { getAttachmentMonitoring } from "@/api/emails/attachment-monitoring";
+import { updateContractStatus } from "@/api/contracts/status";
+import {
+  getDocumentReviewDetail,
+  getDocumentReviewFile,
+  listDocumentReview,
+  rerunDocumentReview,
+} from "@/api/documents/review";
 import {
   downloadEmailAttachment,
   listEmailAttachments,
@@ -79,10 +91,6 @@ import { listInbox } from "@/api/inbox/list";
 import { getInboxStats } from "@/api/inbox/stats";
 import { getThread } from "@/api/inbox/thread";
 import { searchMonday } from "@/api/monday";
-import { listPermits } from "@/api/permits";
-// -- Projects --
-import { listProjects } from "@/api/projects/projects";
-import { getProjectFinalSov } from "@/api/projects/projects-by-id";
 // -- Takeoffs --
 import { createTakeoff, listTakeoffs } from "@/api/takeoffs/takeoffs";
 import {
@@ -102,7 +110,14 @@ const h = (handler: unknown) => handler as never;
 // Frontend - HTML entry point (Bun bundles automatically)
 import homepage from "@/apps/web/frontend/index.html";
 
-const STATIC_DIRS = ["./apps/web/frontend/public"];
+const STATIC_DIRS = [
+  "./apps/web/frontend/public",
+  "./apps/web/frontend/.bundle/apps/web/frontend",
+];
+
+const BUNDLED_MAIN_JS = file(
+  "./apps/web/frontend/.bundle/apps/web/frontend/main.js"
+);
 
 async function findStaticFile(pathname: string) {
   for (const dir of STATIC_DIRS) {
@@ -180,18 +195,6 @@ const server = serve({
       GET: h(getTakeoffItems),
     },
 
-    // Projects
-    "/api/projects": {
-      GET: h(listProjects),
-    },
-    "/api/projects/:id/final-sov": {
-      GET: h(getProjectFinalSov),
-    },
-
-    // Dust Permits
-    "/api/permits": {
-      GET: h(listPermits),
-    },
 
     // Browser Automation / Permit Worker
     "/api/browser/status": {
@@ -226,6 +229,11 @@ const server = serve({
         return postPermitRenewAndPay(req, req.params.id);
       },
     },
+    "/api/permits/:id/submit-draft-and-pay": {
+      POST(req) {
+        return postPermitSubmitDraftAndPay(req, req.params.id);
+      },
+    },
 
     // Operator Checkpoints (interactive yes/no for automation)
     "/api/checkpoints": {
@@ -241,8 +249,32 @@ const server = serve({
     "/api/contracts": {
       GET: h(listContracts),
     },
+    "/api/contracts/:id/context": {
+      GET: h(getContractContext),
+    },
+    "/api/contracts/:id/email-links": {
+      POST: h(addContractEmailLink),
+    },
+    "/api/contracts/:id/email-links/:emailId": {
+      DELETE: h(removeContractEmailLink),
+    },
+    "/api/contracts/:id/status": {
+      PUT: h(updateContractStatus),
+    },
     "/api/contracts/review": {
       GET: h(listContractReview),
+    },
+    "/api/documents/review": {
+      GET: h(listDocumentReview),
+    },
+    "/api/documents/review/rerun": {
+      POST: h(rerunDocumentReview),
+    },
+    "/api/documents/review/:id": {
+      GET: h(getDocumentReviewDetail),
+    },
+    "/api/documents/review/:id/file": {
+      GET: h(getDocumentReviewFile),
     },
 
     // Inbox (thread-based email client)
@@ -298,10 +330,6 @@ const server = serve({
       GET: h(downloadEmailAttachment),
     },
 
-    // Attachment Processing
-    "/api/attachments/monitoring": {
-      GET: h(getAttachmentMonitoring),
-    },
 
     // Monday.com
     "/api/monday/search": {
@@ -332,10 +360,6 @@ const server = serve({
     "/takeoffs/*": homepage,
     "/contracts": homepage,
     "/contracts/*": homepage,
-    "/projects": homepage,
-    "/projects/*": homepage,
-    "/permits": homepage,
-    "/permits/*": homepage,
     "/inbox": homepage,
     "/inbox/*": homepage,
     "/emails": homepage,
@@ -346,6 +370,8 @@ const server = serve({
     "/buildingconnected": homepage,
     "/automation": homepage,
     "/settings": homepage,
+    "/main.tsx": BUNDLED_MAIN_JS,
+    "/main.js": BUNDLED_MAIN_JS,
   },
 
   // Fallback handler for unmatched routes
@@ -360,8 +386,8 @@ const server = serve({
       return new Response(staticFile);
     }
 
-    // SPA fallback - serve index.html for client-side routing
-    // Note: HTMLBundle can't be returned from fetch(), only from routes
+    // SPA fallback - serve index.html for client-side routing.
+    // Note: HTMLBundle can't be returned from fetch(), so use file().
     const indexHtml = file("./apps/web/frontend/index.html");
     return new Response(indexHtml, {
       headers: { "Content-Type": "text/html" },

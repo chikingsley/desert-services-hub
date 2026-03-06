@@ -7,7 +7,6 @@ import {
   isRouteErrorResponse,
   Outlet,
   RouterProvider,
-  useLocation,
   useNavigate,
   useRouteError,
 } from "react-router";
@@ -28,13 +27,11 @@ import { CatalogPage } from "@/apps/web/frontend/pages/catalog";
 import { ContractsPage } from "@/apps/web/frontend/pages/contracts";
 // Pages
 import { DashboardPage } from "@/apps/web/frontend/pages/dashboard";
+import { DocumentsPage } from "@/apps/web/frontend/pages/documents";
 import { EmailsPage } from "@/apps/web/frontend/pages/emails";
 import { EstimateEditorPage } from "@/apps/web/frontend/pages/estimate-editor";
 import { EstimatesPage } from "@/apps/web/frontend/pages/estimates";
 import { InboxPage } from "@/apps/web/frontend/pages/inbox";
-import { PermitsPage } from "@/apps/web/frontend/pages/permits";
-import { ProcessingPage } from "@/apps/web/frontend/pages/processing";
-import { ProjectsPage } from "@/apps/web/frontend/pages/projects";
 import { SettingsPage } from "@/apps/web/frontend/pages/settings";
 import { TakeoffEditorPage } from "@/apps/web/frontend/pages/takeoff-editor";
 import { TakeoffsPage } from "@/apps/web/frontend/pages/takeoffs";
@@ -44,6 +41,11 @@ const LazyMapPage = React.lazy(() =>
   import("@/apps/web/frontend/pages/map").then((m) => ({
     default: m.MapPage,
   }))
+);
+const _routeLoadingFallback = (
+  <div className="flex flex-1 items-center justify-center text-muted-foreground">
+    Loading...
+  </div>
 );
 
 // Error boundary component for routes
@@ -78,35 +80,19 @@ function RouteErrorBoundary() {
   );
 }
 
-function isAutomationPortalPath(pathname: string): boolean {
-  return (
-    pathname === "/maricopa" ||
-    pathname === "/automation" ||
-    pathname === "/buildingconnected"
-  );
-}
-
 // Root layout with sidebar
 function RootLayout() {
-  const location = useLocation();
-  const maricopaVisible = isAutomationPortalPath(location.pathname);
-
   return (
     <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
       <SidebarInset className="texture-noise relative overflow-auto bg-desert-gradient">
-        <div className={maricopaVisible ? "hidden" : "flex h-full flex-col"}>
+        <div className="flex h-full flex-col">
           <Outlet />
         </div>
-        <AutomationPage visible={maricopaVisible} />
       </SidebarInset>
       <Toaster richColors />
     </SidebarProvider>
   );
-}
-
-function PlaceholderRoute() {
-  return null;
 }
 
 // Router configuration — all data fetching via SWR inside components
@@ -141,14 +127,6 @@ const router = createBrowserRouter([
         element: <ContractsPage />,
       },
       {
-        path: "projects",
-        element: <ProjectsPage />,
-      },
-      {
-        path: "permits",
-        element: <PermitsPage />,
-      },
-      {
         path: "inbox",
         element: <InboxPage />,
       },
@@ -157,8 +135,8 @@ const router = createBrowserRouter([
         element: <EmailsPage />,
       },
       {
-        path: "processing",
-        element: <ProcessingPage />,
+        path: "documents",
+        element: <DocumentsPage />,
       },
       {
         path: "catalog",
@@ -166,15 +144,15 @@ const router = createBrowserRouter([
       },
       {
         path: "maricopa",
-        element: <PlaceholderRoute />,
+        element: <AutomationPage />,
       },
       {
         path: "automation",
-        element: <PlaceholderRoute />,
+        element: <AutomationPage />,
       },
       {
         path: "buildingconnected",
-        element: <PlaceholderRoute />,
+        element: <AutomationPage />,
       },
       {
         path: "map",

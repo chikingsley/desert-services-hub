@@ -1,16 +1,13 @@
 import {
   FileCheck,
+  Files,
   FileText,
-  Inbox,
-  Loader2,
   Mail,
   MapPin,
   Monitor,
   Package,
-  Rocket,
   Search,
   Settings,
-  Shield,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import useSWR from "swr";
@@ -39,18 +36,15 @@ interface AutomationSidebarStatus {
   portalReady: boolean;
 }
 
-// Workflow order: Estimates → Contracts → Project Initiation → Dust Permits
+// Workflow order: Estimates → Contracts
 const mainNavItems = [
   { title: "Estimates", href: "/estimates", icon: FileText },
   { title: "Contracts", href: "/contracts", icon: FileCheck },
-  { title: "Projects", href: "/projects", icon: Rocket },
-  { title: "Dust Permits", href: "/permits", icon: Shield },
 ];
 
 const manageItems = [
-  { title: "Inbox", href: "/inbox", icon: Inbox },
   { title: "Emails", href: "/emails", icon: Mail },
-  { title: "Processing", href: "/processing", icon: Loader2 },
+  { title: "Documents", href: "/documents", icon: Files },
   { title: "Catalog", href: "/catalog", icon: Package },
   { title: "Map", href: "/map", icon: MapPin },
   {

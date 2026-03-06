@@ -79,11 +79,22 @@ async function postJson(
     headers: { "Content-Type": "application/json" },
     method: "POST",
   });
-  const data = await res.json();
+  const raw = (await res.json()) as unknown;
+  const data =
+    raw && typeof raw === "object"
+      ? (raw as { draftId?: unknown; error?: unknown })
+      : {};
   if (!res.ok) {
-    throw new Error(data.error ?? `Request failed (${res.status})`);
+    throw new Error(
+      typeof data.error === "string"
+        ? data.error
+        : `Request failed (${res.status})`
+    );
   }
-  return data;
+  return {
+    draftId: typeof data.draftId === "string" ? data.draftId : undefined,
+    error: typeof data.error === "string" ? data.error : undefined,
+  };
 }
 
 async function createAndOptionallySend(

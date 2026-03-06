@@ -80,16 +80,13 @@ import {
   updateEstimate,
 } from "@/api/estimates/estimates-by-id";
 import { healthCheck } from "@/api/health";
-// -- Inbox --
+// -- Email compose (inbox API) --
 import {
   composeEmail,
   listWritableMailboxes,
   replyToThread,
   sendDraftEmail,
 } from "@/api/inbox/compose";
-import { listInbox } from "@/api/inbox/list";
-import { getInboxStats } from "@/api/inbox/stats";
-import { getThread } from "@/api/inbox/thread";
 import { searchMonday } from "@/api/monday";
 // -- Takeoffs --
 import { createTakeoff, listTakeoffs } from "@/api/takeoffs/takeoffs";
@@ -277,13 +274,7 @@ const server = serve({
       GET: h(getDocumentReviewFile),
     },
 
-    // Inbox (thread-based email client)
-    "/api/inbox": {
-      GET: h(listInbox),
-    },
-    "/api/inbox/stats": {
-      GET: h(getInboxStats),
-    },
+    // Email compose/reply (used by ComposeModal on Emails page)
     "/api/inbox/compose": {
       POST: h(composeEmail),
     },
@@ -295,9 +286,6 @@ const server = serve({
     },
     "/api/inbox/mailboxes": {
       GET: h(listWritableMailboxes),
-    },
-    "/api/inbox/thread/:conversationId": {
-      GET: h(getThread),
     },
 
     // Emails
@@ -360,8 +348,6 @@ const server = serve({
     "/takeoffs/*": homepage,
     "/contracts": homepage,
     "/contracts/*": homepage,
-    "/inbox": homepage,
-    "/inbox/*": homepage,
     "/emails": homepage,
     "/emails/*": homepage,
     "/catalog": homepage,

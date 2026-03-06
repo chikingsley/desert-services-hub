@@ -9,12 +9,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Paperclip,
+  PenSquare,
   RefreshCw,
   Search,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import useSWR from "swr";
+import { ComposeModal } from "@/apps/web/frontend/components/emails/compose-modal";
 import { EmailDetailPanel } from "@/apps/web/frontend/components/emails/email-detail-panel";
 import { EmptyState } from "@/apps/web/frontend/components/empty-state";
 import { PageHeader } from "@/apps/web/frontend/components/page-header";
@@ -63,6 +65,9 @@ export function EmailsPage() {
   // Detail panel state
   const [selectedEmailId, setSelectedEmailId] = useState<number | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+
+  // Compose modal state
+  const [composeOpen, setComposeOpen] = useState(false);
 
   const resetPage = useCallback(() => {
     const params = new URLSearchParams(searchParams);
@@ -244,6 +249,10 @@ export function EmailsPage() {
               <RefreshCw className="h-4 w-4" />
               Refresh
             </Button>
+            <Button onClick={() => setComposeOpen(true)} size="sm">
+              <PenSquare className="h-4 w-4" />
+              Compose
+            </Button>
           </div>
         }
         breadcrumbs={[{ label: "Emails" }]}
@@ -388,6 +397,13 @@ export function EmailsPage() {
         onClose={() => setDetailOpen(false)}
         onSpam={handleSpam}
         open={detailOpen}
+      />
+
+      {/* Compose modal */}
+      <ComposeModal
+        onClose={() => setComposeOpen(false)}
+        onSent={() => mutate()}
+        open={composeOpen}
       />
     </div>
   );

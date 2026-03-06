@@ -31,7 +31,6 @@ import { DocumentsPage } from "@/apps/web/frontend/pages/documents";
 import { EmailsPage } from "@/apps/web/frontend/pages/emails";
 import { EstimateEditorPage } from "@/apps/web/frontend/pages/estimate-editor";
 import { EstimatesPage } from "@/apps/web/frontend/pages/estimates";
-import { InboxPage } from "@/apps/web/frontend/pages/inbox";
 import { SettingsPage } from "@/apps/web/frontend/pages/settings";
 import { TakeoffEditorPage } from "@/apps/web/frontend/pages/takeoff-editor";
 import { TakeoffsPage } from "@/apps/web/frontend/pages/takeoffs";
@@ -125,10 +124,6 @@ const router = createBrowserRouter([
       {
         path: "contracts",
         element: <ContractsPage />,
-      },
-      {
-        path: "inbox",
-        element: <InboxPage />,
       },
       {
         path: "emails",

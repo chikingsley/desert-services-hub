@@ -38,6 +38,7 @@ import {
 } from "./page1";
 import { primaryContact, project, site } from "./page3";
 import { page5 } from "./page5";
+import { paymentPage1 } from "./pointandpay";
 import { postK } from "./post-k";
 
 export { esriMap, mapPopup } from "./page2";
@@ -55,6 +56,11 @@ export { portal } from "./portal";
  * - Any selector has wrong nested structure
  */
 export const selectors: SelectorMap = {
+  payment: {
+    card: paymentPage1.card,
+    billing: paymentPage1.billing,
+  },
+
   // Page 1: Applicant Information
   permitContact,
   violation,

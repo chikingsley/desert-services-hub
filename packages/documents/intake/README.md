@@ -64,7 +64,7 @@ import {
   extractEstimate, // estimate line items + flags
   extractNoi,      // ADEQ NOI fields + flags
   extractContract, // contract parties, value, scope
-} from "@lib/pdf-analysis";
+} from "@documents-intake/pdf-analysis";
 ```
 
 ## Running Locally

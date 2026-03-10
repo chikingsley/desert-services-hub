@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { IntakeAttachmentRow } from "@lib/db/repositories/intake-attachments";
+import type { IntakeAttachmentRow } from "@documents-intake/db/intake-attachments";
 import { loadEmailAttachmentBuffer } from "@/apps/trigger-dev/src/trigger/attachment-intake";
 
 function makeRow(
@@ -62,7 +62,7 @@ describe("loadEmailAttachmentBuffer", () => {
     expect(buffer.byteLength).toBe(4);
   });
 
-  test("throws a clear error for body-link attachments missing local storage_path", async () => {
+  test("throws a clear error when body-link recovery metadata is missing", async () => {
     fixtureDir = join(
       tmpdir(),
       `attachment-intake-test-${crypto.randomUUID().slice(0, 8)}`
@@ -74,7 +74,7 @@ describe("loadEmailAttachmentBuffer", () => {
     });
 
     await expect(loadEmailAttachmentBuffer(row)).rejects.toThrow(
-      "Body-link attachment missing local storage_path"
+      "Body-link recovery requires email_id and graph_attachment_id"
     );
   });
 });

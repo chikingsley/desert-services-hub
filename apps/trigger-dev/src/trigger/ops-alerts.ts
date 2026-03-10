@@ -1,5 +1,5 @@
 import { db } from "@lib/db/client";
-import { logger, query, schedules, type QueryTable } from "@trigger.dev/sdk";
+import { logger, type QueryTable, query, schedules } from "@trigger.dev/sdk";
 
 const DB_SLOT_ERROR_FRAGMENT =
   "remaining connection slots are reserved for roles with the SUPERUSER attribute";
@@ -22,10 +22,10 @@ type TriggerRunsRow = QueryTable<
 >;
 
 interface RunErrorRow {
-  runId: string;
-  taskIdentifier: string;
-  status: string;
   errorMessage: string;
+  runId: string;
+  status: string;
+  taskIdentifier: string;
   triggeredAt: string;
 }
 

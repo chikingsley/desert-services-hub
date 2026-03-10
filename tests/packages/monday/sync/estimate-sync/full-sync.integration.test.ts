@@ -14,6 +14,7 @@ const REL_ESTIMATE_ID = "9900010001";
 const REL_ACCOUNT_ID = "9900011001";
 const REL_CONTACT_ID = "9900012001";
 const REL_ACCOUNT_DOMAIN = "test-estimate-sync-link.example.com";
+const REL_CONTACT_EMAIL = "rel.contact+estimate-sync@example.com";
 
 let mockItems: MondayItemRich[] = [];
 let mockMondayQuery: (graphql: string) => Promise<unknown> = async () => ({
@@ -94,8 +95,8 @@ async function cleanupTestRows(): Promise<void> {
     )
     .run(`${TEST_MONDAY_PREFIX}%`, REL_ESTIMATE_ID);
   await db
-    .query("DELETE FROM contacts WHERE monday_item_id = $1")
-    .run(REL_CONTACT_ID);
+    .query("DELETE FROM contacts WHERE monday_item_id = $1 OR LOWER(email) = $2")
+    .run(REL_CONTACT_ID, REL_CONTACT_EMAIL.toLowerCase());
   await db
     .query("DELETE FROM accounts WHERE monday_account_id = $1 OR domain = $2")
     .run(REL_ACCOUNT_ID, REL_ACCOUNT_DOMAIN);
@@ -236,7 +237,7 @@ describe("syncEstimates integration", () => {
               column_values: [
                 {
                   id: CONTACTS_COLUMNS.EMAIL.id,
-                  text: "rel.contact@example.com",
+                  text: REL_CONTACT_EMAIL,
                 },
                 { id: CONTACTS_COLUMNS.PHONE.id, text: "602-555-0100" },
                 { id: CONTACTS_COLUMNS.MOBILE_PHONE.id, text: null },
@@ -285,5 +286,97 @@ describe("syncEstimates integration", () => {
     expect(link?.source).toBe("monday.direct_contacts");
     expect(link?.account_id).toBeTruthy();
     expect(link?.monday_account_id).toBe(REL_ACCOUNT_ID);
+  });
+
+  test("upgrades an existing synthetic email contact to the real Monday contact id", async () => {
+    const syntheticContactId = "email:deadbeefdeadbeef";
+    const inserted = (await db.run(
+      `INSERT INTO contacts (monday_item_id, name, email, account_id, synced_at, updated_at)
+       VALUES ($1, $2, $3, NULL, now(), now())
+       RETURNING id`,
+      [syntheticContactId, "Synthetic Contact", REL_CONTACT_EMAIL]
+    )) as Array<{ id: number }>;
+
+    const preexistingId = inserted[0]?.id;
+    expect(preexistingId).toBeTruthy();
+
+    mockItems = [
+      makeItem(REL_ESTIMATE_ID, {
+        accountId: REL_ACCOUNT_ID,
+        directContactIds: [REL_CONTACT_ID],
+      }),
+    ];
+
+    mockMondayQuery = (graphql: string) => {
+      if (graphql.includes(CONTRACTORS_COLUMNS.DOMAIN.id)) {
+        return Promise.resolve({
+          items: [
+            {
+              id: REL_ACCOUNT_ID,
+              name: "Rel Account",
+              column_values: [
+                {
+                  id: CONTRACTORS_COLUMNS.DOMAIN.id,
+                  text: REL_ACCOUNT_DOMAIN,
+                },
+              ],
+            },
+          ],
+        });
+      }
+
+      if (graphql.includes(CONTACTS_COLUMNS.CONTRACTOR.id)) {
+        return Promise.resolve({
+          items: [
+            {
+              id: REL_CONTACT_ID,
+              name: "Rel Contact",
+              group: { id: "group-rel", title: "Contacts" },
+              column_values: [
+                {
+                  id: CONTACTS_COLUMNS.EMAIL.id,
+                  text: REL_CONTACT_EMAIL,
+                },
+                { id: CONTACTS_COLUMNS.PHONE.id, text: "602-555-0100" },
+                { id: CONTACTS_COLUMNS.MOBILE_PHONE.id, text: null },
+                { id: CONTACTS_COLUMNS.OFFICE_PHONE.id, text: null },
+                { id: CONTACTS_COLUMNS.COMPANY_PHONE.id, text: null },
+                { id: CONTACTS_COLUMNS.COMPANY_FAX.id, text: null },
+                { id: CONTACTS_COLUMNS.TITLE.id, text: "Estimator" },
+                { id: CONTACTS_COLUMNS.PRIORITY.id, text: "Medium" },
+                {
+                  id: CONTACTS_COLUMNS.CONTRACTOR.id,
+                  text: null,
+                  linked_item_ids: [REL_ACCOUNT_ID],
+                },
+              ],
+            },
+          ],
+        });
+      }
+
+      return Promise.resolve({ items: [] });
+    };
+
+    const result = await syncEstimates();
+    expect(result.errors).toBe(0);
+
+    const contacts = (await db
+      .query(
+        `SELECT id, monday_item_id, account_id
+         FROM contacts
+         WHERE LOWER(email) = $1
+         ORDER BY id`
+      )
+      .all(REL_CONTACT_EMAIL.toLowerCase())) as Array<{
+      account_id: number | null;
+      id: number;
+      monday_item_id: string;
+    }>;
+
+    expect(contacts).toHaveLength(1);
+    expect(contacts[0]?.id).toBe(preexistingId);
+    expect(contacts[0]?.monday_item_id).toBe(REL_CONTACT_ID);
+    expect(contacts[0]?.account_id).toBeTruthy();
   });
 });

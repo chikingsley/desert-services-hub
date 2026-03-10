@@ -1,19 +1,20 @@
+import { getAllMailboxes } from "@email/db/mailbox";
 import {
   deleteOutlookSubscription,
   deleteOutlookSubscriptionsForMailboxExcept,
   listOutlookSubscriptions,
-  upsertOutlookSubscription,
   type OutlookSubscriptionRecord,
-} from "@lib/db/repositories/outlook-subscription";
-import { getAllMailboxes } from "@lib/db/repositories/mailbox";
+  upsertOutlookSubscription,
+} from "@email/db/outlook-subscription";
+import { getGraphToken } from "@lib/graph/auth";
 import { logger, schedules, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
-import { getGraphToken } from "./graph";
 
 const GRAPH_API_BASE = "https://graph.microsoft.com/v1.0";
 const DEFAULT_CHANGE_TYPE = "created,updated";
 const RENEW_BUFFER_MINUTES = 60;
-const SUBSCRIPTION_TTL_MINUTES = 4_200;
+const SUBSCRIPTION_TTL_MINUTES = 4200;
+const TRAILING_SLASH_RE = /\/+$/;
 
 class GraphRequestError extends Error {
   status: number;
@@ -34,7 +35,7 @@ interface GraphSubscription {
 }
 
 function normalizeUrl(url: string): string {
-  return url.replace(/\/+$/, "");
+  return url.replace(TRAILING_SLASH_RE, "");
 }
 
 export function resolveOutlookWebhookUrl(
@@ -44,7 +45,8 @@ export function resolveOutlookWebhookUrl(
   if (explicit) {
     return explicit;
   }
-  const base = env.WEBHOOK_BASE_URL?.trim() || "https://webhooks.desertservices.app";
+  const base =
+    env.WEBHOOK_BASE_URL?.trim() || "https://webhooks.desertservices.app";
   return `${normalizeUrl(base)}/functions/v1/outlook-webhook`;
 }
 
@@ -105,7 +107,7 @@ async function graphRequest<T>(
   return (await response.json()) as T;
 }
 
-async function createGraphSubscription(params: {
+function createGraphSubscription(params: {
   changeType: string;
   clientState?: string;
   mailboxEmail: string;
@@ -120,19 +122,23 @@ async function createGraphSubscription(params: {
   });
 }
 
-async function renewGraphSubscription(
+function renewGraphSubscription(
   subscriptionId: string
 ): Promise<GraphSubscription> {
-  return graphRequest<GraphSubscription>("PATCH", `subscriptions/${subscriptionId}`, {
-    expirationDateTime: computeSubscriptionExpirationIso(),
-  });
+  return graphRequest<GraphSubscription>(
+    "PATCH",
+    `subscriptions/${subscriptionId}`,
+    {
+      expirationDateTime: computeSubscriptionExpirationIso(),
+    }
+  );
 }
 
 async function deleteGraphSubscription(subscriptionId: string): Promise<void> {
   await graphRequest<void>("DELETE", `subscriptions/${subscriptionId}`);
 }
 
-async function writeSubscription(
+function writeSubscription(
   mailboxId: number,
   mailboxEmail: string,
   subscription: GraphSubscription,
@@ -297,7 +303,7 @@ export async function ensureOutlookWebhookSubscriptions(
     errors,
   };
 
-  logger.info("Outlook webhook subscription ensure complete", result);
+  logger.info("Outlook webhook subscription ensure complete", { ...result });
   return result;
 }
 
@@ -320,4 +326,3 @@ export const outlookWebhookSubscriptions = schedules.task({
   maxDuration: 300,
   run: async () => ensureOutlookWebhookSubscriptions(),
 });
-

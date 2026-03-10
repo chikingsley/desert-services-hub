@@ -22,6 +22,11 @@ mock.module("@lib/db/client", () => ({
       sleepCalls.push(Number(value));
       return Promise.resolve([]);
     },
+    query: () => ({
+      all: () => Promise.resolve([]),
+      get: () => Promise.resolve(null),
+      run: () => Promise.resolve([]),
+    }),
   },
 }));
 
@@ -68,7 +73,7 @@ describe("load-test-db-ping task", () => {
       run: (payload: { holdMs: number; label?: string }) => Promise<unknown>;
     };
 
-    await task.run({ holdMs: 8_000, label: "clamp-test" });
+    await task.run({ holdMs: 8000, label: "clamp-test" });
     expect(sleepCalls).toHaveLength(1);
     expect(sleepCalls[0]).toBe(5);
   });

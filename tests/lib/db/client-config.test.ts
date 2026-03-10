@@ -7,8 +7,8 @@ describe("resolveDbPoolMax", () => {
   });
 
   test("uses non-test default when NODE_ENV is not test and DB_POOL_MAX is unset", () => {
-    expect(resolveDbPoolMax({ NODE_ENV: "development" })).toBe(4);
-    expect(resolveDbPoolMax({ NODE_ENV: "production" })).toBe(4);
+    expect(resolveDbPoolMax({ NODE_ENV: "development" })).toBe(2);
+    expect(resolveDbPoolMax({ NODE_ENV: "production" })).toBe(2);
   });
 
   test("uses DB_POOL_MAX override when valid", () => {

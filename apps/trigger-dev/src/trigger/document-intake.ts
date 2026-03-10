@@ -6,9 +6,8 @@
  *
  * Pipeline:
  *   1. Receive file contents as base64 from webhook
- *   2. Write to temp directory
+ *   2. Decode to in-memory buffers
  *   3. Extract text via processFilesIntake (pdf-analysis service)
- *   4. Clean up temp files
  *
  * Source flow:
  *   Email/document ingress → webhook handler → this task
@@ -18,8 +17,6 @@
  * shared filesystem requirements between containers.
  */
 
-import { mkdir, unlink } from "node:fs/promises";
-import { join } from "node:path";
 import { processFilesIntake } from "@documents-intake/files-intake";
 import { logger, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
@@ -47,64 +44,50 @@ export const documentIntake = schemaTask({
     forwarderEmail,
     files,
   }) => {
-    const jobDir = `/tmp/doc-intake-${Date.now()}`;
-    await mkdir(jobDir, { recursive: true });
-
-    // 1. Write files to temp directory
-    const tmpPaths: string[] = [];
-    for (const file of files) {
-      const tmpPath = join(jobDir, file.filename);
-      await Bun.write(tmpPath, Buffer.from(file.contentBase64, "base64"));
-      tmpPaths.push(tmpPath);
-    }
+    // Decode webhook payload into buffers so extraction works across containers.
+    const decodedFiles = files.map((file) => ({
+      filename: file.filename,
+      buffer: Buffer.from(file.contentBase64, "base64"),
+    }));
 
     logger.info("Processing document intake", {
       files: files.length,
+      totalBytes: decodedFiles.reduce((sum, f) => sum + f.buffer.byteLength, 0),
       subject: originalSubject,
       from: originalFrom,
       forwarder: forwarderEmail,
     });
 
-    try {
-      // 2. Extract via pdf-analysis service
-      const results = await processFilesIntake({
-        attachmentPaths: tmpPaths,
-        originalSubject,
-        originalFrom,
-        bodyText,
-        forwarderEmail,
-      });
+    // Extract via pdf-analysis service using multipart upload.
+    const results = await processFilesIntake({
+      attachmentPaths: decodedFiles.map((f) => f.filename),
+      attachmentBuffers: decodedFiles.map((f) => f.buffer),
+      originalSubject,
+      originalFrom,
+      bodyText,
+      forwarderEmail,
+    });
 
-      const succeeded = results.filter((r) => r.documentId !== null).length;
-      const failed = results.filter((r) => r.documentId === null).length;
+    const succeeded = results.filter((r) => r.documentId !== null).length;
+    const failed = results.filter((r) => r.documentId === null).length;
 
-      logger.info("Document intake complete", {
-        total: results.length,
-        succeeded,
-        failed,
-      });
+    logger.info("Document intake complete", {
+      total: results.length,
+      succeeded,
+      failed,
+    });
 
-      return {
-        processed: results.length,
-        succeeded,
-        failed,
-        results: results.map((r) => ({
-          documentId: r.documentId,
-          fileName: r.fileName,
-          documentType: r.documentType,
-          pageCount: r.pageCount,
-          error: r.error ?? null,
-        })),
-      };
-    } finally {
-      // 3. Cleanup temp files
-      for (const p of tmpPaths) {
-        try {
-          await unlink(p);
-        } catch {
-          // Non-fatal cleanup failure.
-        }
-      }
-    }
+    return {
+      processed: results.length,
+      succeeded,
+      failed,
+      results: results.map((r) => ({
+        documentId: r.documentId,
+        fileName: r.fileName,
+        documentType: r.documentType,
+        pageCount: r.pageCount,
+        error: r.error ?? null,
+      })),
+    };
   },
 });

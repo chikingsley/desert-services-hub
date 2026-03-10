@@ -406,7 +406,6 @@ Remaining in `lib/` (genuinely cross-cutting, used by multiple domains):
 |---------|-----------|-------|
 | `lib/db/` | 136 | Central DB layer -- every domain depends on it |
 | `lib/graph/` | 7 | Microsoft Graph auth -- used by email, sharepoint, workers |
-| `lib/utils.ts` | 55+ | Frontend infrastructure (`cn()`, formatters) |
 
 ---
 

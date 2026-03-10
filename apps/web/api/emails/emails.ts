@@ -2,11 +2,12 @@
  * Emails API handlers
  * Routes: GET /api/emails, GET /api/emails/:id, POST /api/emails/:id/classification
  */
+import { parseEmailRow } from "@email/db/email";
 import { db } from "@lib/db/client";
-import { parseEmailRow } from "@lib/db/repositories/email";
-import { findEstimateCandidatesForEmail } from "@lib/db/repositories/estimate-email";
+import { findEstimateCandidatesForEmail } from "@estimates/db/estimate-email";
 import { z } from "zod";
 import { listEmails as listEmailsHandler } from "./list-emails";
+import { invalidateSenderReviewCache } from "./sender-review";
 
 const EMAIL_CLASSIFICATIONS = [
   "CONTRACT",
@@ -43,7 +44,7 @@ const domainRuleSchema = z.object({
     .min(1, "domain is required")
     .transform((v) => v.trim().toLowerCase()),
   classification: z.string().nullable().optional(),
-  is_excluded: z.boolean().catch(false),
+  is_excluded: z.boolean().optional(),
 });
 
 const spamDomainSchema = z.object({
@@ -167,7 +168,7 @@ export async function getEmail(req: Request): Promise<Response> {
     }
 
     return Response.json({
-      email: parseEmailRow(row),
+      email: parseEmailRow(row as Parameters<typeof parseEmailRow>[0]),
       recipients,
     });
   } catch (error) {
@@ -258,6 +259,8 @@ export async function setEmailClassification(req: Request): Promise<Response> {
         .run(classification, method, isExcluded ? 1 : 0, emailId);
     }
 
+    invalidateSenderReviewCache();
+
     return Response.json({
       id: emailId,
       classification,
@@ -277,7 +280,9 @@ export async function setEmailClassification(req: Request): Promise<Response> {
 // Body: { domain: string, classification?: string, is_excluded?: boolean }
 export async function setDomainRule(req: Request): Promise<Response> {
   try {
-    const parsed = domainRuleSchema.safeParse(await req.json());
+    const body = await req.json();
+    const rawBody = body as Record<string, unknown>;
+    const parsed = domainRuleSchema.safeParse(body);
     if (!parsed.success) {
       return Response.json(
         { error: parsed.error.issues[0]?.message ?? "Invalid request" },
@@ -286,8 +291,27 @@ export async function setDomainRule(req: Request): Promise<Response> {
     }
 
     const { domain } = parsed.data;
-    const classification = parsed.data.classification ?? null;
-    const isExcluded = parsed.data.is_excluded;
+    const hasClassification = Object.hasOwn(rawBody, "classification");
+    const hasExcludedOverride = Object.hasOwn(rawBody, "is_excluded");
+
+    const existing = (await db
+      .query(
+        `SELECT classification, is_excluded
+         FROM domain_rules
+         WHERE domain = $1
+         LIMIT 1`
+      )
+      .get(domain)) as {
+      classification: string | null;
+      is_excluded: boolean;
+    } | null;
+
+    const classification = hasClassification
+      ? (parsed.data.classification ?? null)
+      : (existing?.classification ?? null);
+    const isExcluded = hasExcludedOverride
+      ? Boolean(parsed.data.is_excluded)
+      : (existing?.is_excluded ?? false);
 
     // Upsert the domain rule
     await db.run(
@@ -298,30 +322,18 @@ export async function setDomainRule(req: Request): Promise<Response> {
          is_excluded = excluded.is_excluded`,
       [domain, classification, isExcluded]
     );
-
-    // Apply to existing emails: exact domain + subdomains
-    if (isExcluded) {
-      await db
-        .query(
-          "UPDATE emails SET is_excluded = 1 WHERE is_excluded = 0 AND (from_domain = $1 OR from_domain LIKE $2)"
-        )
-        .run(domain, `%.${domain}`);
-    }
-
-    if (classification) {
-      await db
-        .query(
-          `UPDATE emails SET classification = $1, classification_method = 'domain_rule'
-           WHERE (from_domain = $2 OR from_domain LIKE $3)`
-        )
-        .run(classification, domain, `%.${domain}`);
-    }
+    invalidateSenderReviewCache();
 
     console.log(
       `[domain-rule] ${domain}: classification=${classification}, excluded=${isExcluded}`
     );
 
-    return Response.json({ domain, classification, is_excluded: isExcluded });
+    return Response.json({
+      domain,
+      classification,
+      is_excluded: isExcluded,
+      sync: "deferred",
+    });
   } catch (error) {
     console.error("Failed to set domain rule:", error);
     return Response.json(

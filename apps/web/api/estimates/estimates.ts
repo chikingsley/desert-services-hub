@@ -9,10 +9,15 @@ import {
   parseQuery,
   searchParam,
   sortParam,
-} from "@lib/api/validation";
+} from "@/api/validation";
 import { db } from "@lib/db/client";
-import { generateBaseNumber } from "@lib/utils";
 import { z } from "zod";
+import {
+  formatErrorForLog,
+  isApiDbTimeoutError,
+  withApiDbTimeout,
+} from "@/api/utils/db-guard";
+import { generateBaseNumber } from "@/packages/estimates/estimating/base-number";
 import {
   EstimatePayloadValidationError,
   validateCreateEstimatePayload,
@@ -91,6 +96,7 @@ function getSortExpression(field: SortField): string {
 
 // GET /api/estimates - List estimates with server-side filters/sort/pagination
 export async function listEstimates(req: Request): Promise<Response> {
+  const requestId = crypto.randomUUID();
   try {
     const url = new URL(req.url);
     const {
@@ -138,51 +144,100 @@ export async function listEstimates(req: Request): Promise<Response> {
     const orderByExpression = getSortExpression(sortField);
     const offset = (page - 1) * perPage;
 
-    const limitParam = `$${params.length + 1}`;
-    const offsetParam = `$${params.length + 2}`;
+    const rows = (await withApiDbTimeout(
+      {
+        operation: "estimates.items",
+        requestId,
+        route: "/api/estimates",
+      },
+      () =>
+        db
+          .query(
+            `SELECT
+          q.id,
+          q.base_number,
+          q.job_name,
+          q.contractor as client_name,
+          q.job_address,
+          COALESCE(q.status, 'draft') as status,
+          q.created_at,
+          q.takeoff_id,
+          cv.id as current_version_id,
+          cv.version_number as current_version_number,
+          cv.total as current_version_total,
+          cv.is_current as current_version_is_current,
+          cv.created_at as current_version_created_at
+        FROM estimates q
+        LEFT JOIN LATERAL (
+          SELECT v.id, v.version_number, v.total, v.is_current, v.created_at
+          FROM estimate_versions v
+          WHERE v.estimate_id = q.id
+          ORDER BY v.is_current DESC, v.version_number DESC, v.created_at DESC
+          LIMIT 1
+        ) cv ON TRUE
+        ${where}
+        ORDER BY ${orderByExpression} ${sortDirection.toUpperCase()}, q.id DESC
+        LIMIT ${perPage} OFFSET ${offset}`
+          )
+          .all(...params)
+    )) as EstimateListRow[];
 
-    const [rows, countResult, statusFacetRows] = await Promise.all([
-      db
-        .query(
-          `SELECT
-            q.id,
-            q.base_number,
-            q.job_name,
-            q.contractor as client_name,
-            q.job_address,
-            COALESCE(q.status, 'draft') as status,
-            q.created_at,
-            q.takeoff_id,
-            cv.id as current_version_id,
-            cv.version_number as current_version_number,
-            cv.total as current_version_total,
-            cv.is_current as current_version_is_current,
-            cv.created_at as current_version_created_at
-          FROM estimates q
-          LEFT JOIN LATERAL (
-            SELECT v.id, v.version_number, v.total, v.is_current, v.created_at
-            FROM estimate_versions v
-            WHERE v.estimate_id = q.id
-            ORDER BY v.is_current DESC, v.version_number DESC, v.created_at DESC
-            LIMIT 1
-          ) cv ON TRUE
-          ${where}
-          ORDER BY ${orderByExpression} ${sortDirection.toUpperCase()}, q.id DESC
-          LIMIT ${limitParam} OFFSET ${offsetParam}`
-        )
-        .all(...params, perPage, offset) as Promise<EstimateListRow[]>,
-      db
-        .query(`SELECT count(*)::int as total FROM estimates q ${where}`)
-        .get(...params) as Promise<{ total: number } | null>,
-      db
-        .query(
-          `SELECT COALESCE(status, 'draft') as status, count(*)::int as count
-           FROM estimates
-           GROUP BY COALESCE(status, 'draft')
-           ORDER BY COALESCE(status, 'draft') ASC`
-        )
-        .all() as Promise<Array<{ status: string; count: number }>>,
-    ]);
+    const countResult = (await withApiDbTimeout(
+      {
+        operation: "estimates.count",
+        requestId,
+        route: "/api/estimates",
+      },
+      () =>
+        db
+          .query(`SELECT count(*)::int as total FROM estimates q ${where}`)
+          .get(...params)
+    )) as { total: number } | null;
+
+    const statusFacetRows = (await withApiDbTimeout(
+      {
+        operation: "estimates.status-facets",
+        requestId,
+        route: "/api/estimates",
+      },
+      () =>
+        db
+          .query(
+            `SELECT COALESCE(status, 'draft') as status, count(*)::int as count
+         FROM estimates
+         GROUP BY COALESCE(status, 'draft')
+         ORDER BY COALESCE(status, 'draft') ASC`
+          )
+          .all()
+    )) as Array<{ status: string; count: number }>;
+
+    const manualCountResult = (await withApiDbTimeout(
+      {
+        operation: "estimates.source-manual-count",
+        requestId,
+        route: "/api/estimates",
+      },
+      () =>
+        db
+          .query(
+            "SELECT count(*)::int as count FROM estimates WHERE takeoff_id IS NULL"
+          )
+          .get()
+    )) as { count: number } | null;
+
+    const takeoffCountResult = (await withApiDbTimeout(
+      {
+        operation: "estimates.source-takeoff-count",
+        requestId,
+        route: "/api/estimates",
+      },
+      () =>
+        db
+          .query(
+            "SELECT count(*)::int as count FROM estimates WHERE takeoff_id IS NOT NULL"
+          )
+          .get()
+    )) as { count: number } | null;
 
     const total = countResult?.total ?? 0;
 
@@ -215,25 +270,28 @@ export async function listEstimates(req: Request): Promise<Response> {
       facets: {
         statuses: statusFacetRows,
         sources: {
-          manual: await db
-            .query(
-              "SELECT count(*)::int as count FROM estimates WHERE takeoff_id IS NULL"
-            )
-            .get()
-            .then((r) => (r as { count: number } | null)?.count ?? 0),
-          takeoff: await db
-            .query(
-              "SELECT count(*)::int as count FROM estimates WHERE takeoff_id IS NOT NULL"
-            )
-            .get()
-            .then((r) => (r as { count: number } | null)?.count ?? 0),
+          manual: manualCountResult?.count ?? 0,
+          takeoff: takeoffCountResult?.count ?? 0,
         },
       },
     });
   } catch (error) {
-    console.error("Failed to fetch estimates:", error);
+    console.error("[api.estimates] failed", {
+      requestId,
+      route: "/api/estimates",
+      error: formatErrorForLog(error),
+    });
+    if (isApiDbTimeoutError(error)) {
+      return Response.json(
+        {
+          error: "Estimates query timed out",
+          requestId,
+        },
+        { status: 503 }
+      );
+    }
     return Response.json(
-      { error: "Failed to fetch estimates" },
+      { error: "Failed to fetch estimates", requestId },
       { status: 500 }
     );
   }
@@ -262,7 +320,7 @@ async function insertEstimateHeader(params: {
       payload.client_name || null,
       payload.client_address || null,
       payload.estimator || null,
-      payload.estimator_email || null,
+      payload.estimator_email || payload.client_email || null,
       payload.notes || null,
       status,
       payload.is_locked ? 1 : 0,

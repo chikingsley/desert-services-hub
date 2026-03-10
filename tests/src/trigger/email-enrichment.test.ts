@@ -7,7 +7,7 @@ import {
   computeDomainEnrichment,
   extractDomain,
   extractRealSender,
-} from "@/apps/trigger-dev/src/trigger/email-enrichment";
+} from "@email/enrichment";
 
 // ── extractDomain ───────────────────────────────────────────────
 

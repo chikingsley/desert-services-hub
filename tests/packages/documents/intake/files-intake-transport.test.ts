@@ -14,7 +14,7 @@ const state: TransportState = {
   successRows: [],
 };
 
-mock.module("@lib/pdf-analysis", () => ({
+mock.module("@documents-intake/pdf-analysis", () => ({
   nativeExtract: async (filePath: string) => {
     state.nativeCalls.push(filePath);
     return {
@@ -47,7 +47,7 @@ mock.module("@lib/pdf-analysis", () => ({
   },
 }));
 
-mock.module("@lib/db/repositories/intake-document", () => ({
+mock.module("@documents-intake/db/intake-document", () => ({
   INTAKE_LOG_PREFIX: "[intake-test]",
   insertIntakeDocumentFailure: async (row: Record<string, unknown>) => {
     state.failureRows.push(row);

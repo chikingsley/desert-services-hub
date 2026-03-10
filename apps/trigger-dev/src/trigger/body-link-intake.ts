@@ -6,7 +6,7 @@
  *   - OneDrive / SharePoint (resolved via Graph API)
  *   - Dropbox (direct download with dl=1)
  *   - Egnyte (direct download)
- *   - BuildingConnected (delegated to bc-worker container via Playwright)
+ *   - BuildingConnected (bc-worker API: list files → stream download per file)
  *
  * Downloaded files are stored as attachment stubs in the documents table
  * (source='email_attachment', outlook_attachment_id='bodylink:{source}:{hash}')
@@ -18,28 +18,35 @@
 
 import { createHash } from "node:crypto";
 import { mkdir, unlink } from "node:fs/promises";
+import { insertAttachment } from "@documents-intake/db/attachment";
 import { db } from "@lib/db/client";
-import { insertAttachment } from "@lib/db/repositories/attachment";
 import {
   getBodyLinkScanState,
   isBodyLinkScanCompleteForVersion,
   recordBodyLinkScanResult,
-} from "@lib/db/repositories/email";
+} from "@email/db/email";
 import type { BodyLinkScanStatus } from "@lib/db/types";
+import { graphGet } from "@lib/graph/http";
 import { logger, schedules } from "@trigger.dev/sdk";
-import { graphGet } from "./graph";
+import { taskQueue } from "./queue";
 
 const BATCH_SIZE = 500;
 const SCAN_VERSION = 1;
 const MAX_LINKS_PER_EMAIL = 12;
-const DOWNLOAD_TIMEOUT_MS = 120_000;
+const DOWNLOAD_TIMEOUT_MS = 60_000;
+const MAX_RUNTIME_MS = 840_000; // Keep margin under task limit (900s)
+const RUNTIME_WARNING_MS = 30_000;
 const BODY_LINK_STORAGE_DIR =
   process.env.EMAIL_BODY_LINK_STORAGE_DIR?.trim() ||
   "/app/data/attachments/body-links";
 
 const BC_WORKER_BASE_URL =
   process.env.BC_WORKER_BASE_URL?.trim() || "http://bc-worker:47824";
-
+const BODY_LINK_INTAKE_QUEUE = taskQueue(
+  "body-link-intake",
+  "BODY_LINK_INTAKE_QUEUE_CONCURRENCY",
+  2
+);
 // ── URL extraction ──────────────────────────────────────────────
 
 type BodyLinkSource = "onedrive" | "egnyte" | "dropbox" | "buildingconnected";
@@ -123,17 +130,28 @@ interface DownloadedFile {
   size: number;
 }
 
-async function fetchWithTimeout(
+function fetchWithTimeout(
   url: string,
   timeoutMs = DOWNLOAD_TIMEOUT_MS
 ): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, { signal: controller.signal, redirect: "follow" });
-  } finally {
-    clearTimeout(timer);
-  }
+  // AbortSignal.timeout covers the ENTIRE lifecycle (headers + body streaming).
+  // Manual setTimeout+clearTimeout only covers headers because fetch() resolves
+  // on headers arrival, and finally{clearTimeout} disarms before body is read.
+  // See: https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/timeout_static
+  return fetch(url, {
+    signal: AbortSignal.timeout(timeoutMs),
+    redirect: "follow",
+  });
+}
+
+function shouldStopForRuntimeBudget(
+  startedAtMs: number,
+  maxDurationMs = MAX_RUNTIME_MS,
+  warningMs = RUNTIME_WARNING_MS
+): { stop: boolean; remainingMs: number } {
+  const elapsedMs = Date.now() - startedAtMs;
+  const remainingMs = maxDurationMs - elapsedMs;
+  return { stop: remainingMs <= warningMs, remainingMs };
 }
 
 function isHtmlResponse(contentType: string | null): boolean {
@@ -289,50 +307,7 @@ function normalizeDropboxUrl(rawUrl: string): string {
   }
 }
 
-/** Download from BuildingConnected via bc-worker's Playwright endpoint. */
-async function downloadBuildingConnected(
-  url: string,
-  outputPath: string
-): Promise<DownloadedFile> {
-  const response = await fetch(
-    `${BC_WORKER_BASE_URL}/api/buildingconnected/download`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    }
-  );
-
-  const result = (await response.json()) as {
-    data?: string;
-    error?: string;
-    name?: string;
-    pageTitle?: string;
-    size?: number;
-    success: boolean;
-  };
-
-  if (!result.success) {
-    throw new Error(result.error ?? "bc-worker download failed");
-  }
-  if (!(result.data && result.name)) {
-    throw new Error("bc-worker returned no file data");
-  }
-
-  const buffer = Buffer.from(result.data, "base64");
-  if (buffer.byteLength === 0) {
-    throw new Error("bc-worker returned empty file");
-  }
-  await Bun.write(outputPath, buffer);
-
-  return {
-    contentType: null,
-    name: result.name,
-    size: buffer.byteLength,
-  };
-}
-
-/** Download a body-link file using the appropriate strategy. */
+/** Download a body-link file using the appropriate strategy (non-BC sources). */
 function downloadBodyLink(
   link: BodyFileLink,
   outputPath: string
@@ -348,11 +323,136 @@ function downloadBodyLink(
       );
     case "egnyte":
       return downloadDirect(link.url, "egnyte-file", outputPath);
-    case "buildingconnected":
-      return downloadBuildingConnected(link.url, outputPath);
     default:
       throw new Error(`Unsupported body link source: ${link.source}`);
   }
+}
+
+/**
+ * Download files from a BuildingConnected /goto/ URL via bc-worker API.
+ *
+ * One BC link can contain multiple files. The bc-worker resolves the /goto/
+ * URL to an opportunity ID, lists files via the BC API, then streams each
+ * download through an authenticated proxy. No base64, no memory buffering.
+ *
+ * Returns the number of successfully inserted attachments.
+ */
+async function downloadAndInsertBcLink(
+  link: BodyFileLink,
+  emailId: number,
+  failures: LinkFailure[],
+  deadlineMs: number
+): Promise<number> {
+  // 1. List files in the opportunity
+  const listTimeout = Math.min(30_000, deadlineMs - Date.now());
+  if (listTimeout <= 0) {
+    throw new Error("Budget exhausted before BC file listing");
+  }
+  const listRes = await fetch(
+    `${BC_WORKER_BASE_URL}/api/buildingconnected/files`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: link.url }),
+      signal: AbortSignal.timeout(listTimeout),
+    }
+  );
+
+  const listData = (await listRes.json()) as {
+    error?: string;
+    files?: Array<{
+      _id: string;
+      downloadUrl: string;
+      name: string;
+      size: number;
+    }>;
+    success: boolean;
+  };
+
+  if (!(listData.success && listData.files?.length)) {
+    throw new Error(listData.error ?? "No files found at BC URL");
+  }
+
+  // 2. Download each file via streaming proxy (budget-aware)
+  await mkdir(BODY_LINK_STORAGE_DIR, { recursive: true });
+  let inserted = 0;
+
+  for (const file of listData.files) {
+    const remaining = deadlineMs - Date.now();
+    if (remaining < RUNTIME_WARNING_MS) {
+      logger.warn("BC download loop stopped early — budget exhausted", {
+        emailId,
+        filesRemaining: listData.files.length - inserted,
+        remainingMs: remaining,
+      });
+      break;
+    }
+
+    const attId = bodyLinkAttachmentId(
+      "buildingconnected",
+      `${link.url}#${file._id}`
+    );
+    const tmpPath = `${BODY_LINK_STORAGE_DIR}/bodylink-${emailId}-${file._id.slice(-12)}.bin`;
+
+    try {
+      const dlTimeout = Math.min(DOWNLOAD_TIMEOUT_MS, remaining - 5000);
+      const dlRes = await fetch(
+        `${BC_WORKER_BASE_URL}/api/buildingconnected/download`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ downloadUrl: file.downloadUrl }),
+          signal: AbortSignal.timeout(dlTimeout),
+        }
+      );
+
+      if (!dlRes.ok) {
+        const errText = await dlRes.text().catch(() => "");
+        throw new Error(
+          `BC download HTTP ${dlRes.status}: ${errText.slice(0, 200)}`
+        );
+      }
+
+      const size = await streamResponseToFile(dlRes, tmpPath);
+
+      await insertAttachment({
+        attachmentId: attId,
+        contentType: dlRes.headers.get("content-type"),
+        emailId,
+        name: file.name,
+        size,
+        storagePath: tmpPath,
+      });
+
+      logger.info("BC file downloaded", {
+        emailId,
+        name: file.name,
+        size,
+        source: "buildingconnected",
+      });
+      inserted++;
+    } catch (err) {
+      try {
+        await unlink(tmpPath);
+      } catch {
+        // Non-fatal cleanup
+      }
+      const msg = err instanceof Error ? err.message : String(err);
+      logger.warn("BC file download failed", {
+        emailId,
+        error: msg,
+        fileName: file.name,
+        source: "buildingconnected",
+      });
+      failures.push({
+        error: msg,
+        source: "buildingconnected",
+        url: `${link.url}#${file.name}`,
+      });
+    }
+  }
+
+  return inserted;
 }
 
 /** Build a deterministic attachment ID from source + URL hash. */
@@ -489,7 +589,10 @@ const NO_LINKS_RESULT: ProcessResult = {
   status: "no_links",
 };
 
-async function processEmail(email: EmailRow): Promise<ProcessResult> {
+async function processEmail(
+  email: EmailRow,
+  deadlineMs: number
+): Promise<ProcessResult> {
   // Check if already scanned
   const state = await getBodyLinkScanState(email.id);
   if (isBodyLinkScanCompleteForVersion(state, SCAN_VERSION)) {
@@ -518,6 +621,36 @@ async function processEmail(email: EmailRow): Promise<ProcessResult> {
   let inserted = 0;
 
   for (const link of selected) {
+    // Budget check per link — bail if time is running out
+    if (deadlineMs - Date.now() < RUNTIME_WARNING_MS) {
+      logger.warn("Skipping remaining links — budget exhausted", {
+        emailId: email.id,
+        linksRemaining: selected.length - inserted,
+      });
+      break;
+    }
+
+    // BC links use a separate multi-file flow (list files → stream each)
+    if (link.source === "buildingconnected") {
+      try {
+        inserted += await downloadAndInsertBcLink(
+          link,
+          email.id,
+          allFailures,
+          deadlineMs
+        );
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.warn("BC link processing failed", {
+          emailId: email.id,
+          error: msg,
+          url: link.url,
+        });
+        allFailures.push({ error: msg, source: link.source, url: link.url });
+      }
+      continue;
+    }
+
     try {
       const ok = await downloadAndInsertLink(link, email.id, allFailures);
       if (ok) {
@@ -557,22 +690,38 @@ async function processEmail(email: EmailRow): Promise<ProcessResult> {
 
 export const bodyLinkIntake = schedules.task({
   id: "body-link-intake",
+  queue: BODY_LINK_INTAKE_QUEUE,
   cron: "*/10 * * * *",
-  maxDuration: 480,
+  maxDuration: 900,
   run: async () => {
     const emails = await getUnscannedEmails(BATCH_SIZE);
     if (emails.length === 0) {
       return { processed: 0, inserted: 0, noLinks: 0, failed: 0, gated: 0 };
     }
 
+    const startedAtMs = Date.now();
+
     logger.info("Scanning emails for body links", { count: emails.length });
 
     const counts = { inserted: 0, noLinks: 0, failed: 0, gated: 0 };
+    let processed = 0;
 
     for (const email of emails) {
+      const { stop, remainingMs } = shouldStopForRuntimeBudget(startedAtMs);
+      if (stop) {
+        logger.warn("Body link intake stopped early to avoid max duration", {
+          processed,
+          total: emails.length,
+          remainingMs,
+        });
+        break;
+      }
+
       try {
-        const result = await processEmail(email);
+        const deadlineMs = startedAtMs + MAX_RUNTIME_MS;
+        const result = await processEmail(email, deadlineMs);
         counts.inserted += result.inserted;
+        processed += 1;
         if (result.status === "no_links") {
           counts.noLinks++;
         }
@@ -588,11 +737,11 @@ export const bodyLinkIntake = schedules.task({
           emailId: email.id,
           error: msg,
         });
+        processed += 1;
         counts.failed++;
       }
     }
 
-    const processed = emails.length;
     logger.info("Body link intake complete", { processed, ...counts });
     return { processed, ...counts };
   },

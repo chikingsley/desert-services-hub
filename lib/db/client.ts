@@ -5,28 +5,36 @@ import { SQL as BunSQL, type SQL } from "bun";
 // Named prepared statements are connection-specific but Supavisor rotates backend
 // connections between requests, causing "prepared statement already exists" errors.
 const databaseUrl = process.env.DATABASE_URL ?? "";
-// Keep non-test pools intentionally conservative because Trigger/web workers can
-// run in parallel and share one Postgres/Supavisor deployment.
-const DEFAULT_DB_POOL_MAX = 4;
-const TEST_DB_POOL_MAX = 1;
+const DEFAULT_DB_POOL_MAX = 2;
+const TEST_DEFAULT_DB_POOL_MAX = 1;
 
-type DbPoolEnv = {
-  DB_POOL_MAX?: string;
+type DbPoolEnv = Record<string, string | undefined> & {
   NODE_ENV?: string;
 };
 
-export function resolveDbPoolMax(
-  env: DbPoolEnv = process.env
+function readPositiveIntEnv(
+  key: string,
+  fallback: number,
+  env: Record<string, string | undefined> = process.env
 ): number {
-  const raw = env.DB_POOL_MAX?.trim();
-  if (raw) {
-    const parsed = Number.parseInt(raw, 10);
-    if (Number.isFinite(parsed) && parsed >= 1) {
-      return parsed;
-    }
+  const raw = env[key]?.trim();
+  if (!raw) {
+    return fallback;
   }
 
-  return env.NODE_ENV === "test" ? TEST_DB_POOL_MAX : DEFAULT_DB_POOL_MAX;
+  const parsed = Number.parseInt(raw, 10);
+  if (Number.isFinite(parsed) && parsed >= 1) {
+    return parsed;
+  }
+
+  return fallback;
+}
+
+export function resolveDbPoolMax(env: DbPoolEnv = process.env): number {
+  const fallback =
+    env.NODE_ENV === "test" ? TEST_DEFAULT_DB_POOL_MAX : DEFAULT_DB_POOL_MAX;
+
+  return readPositiveIntEnv("DB_POOL_MAX", fallback, env);
 }
 
 export const dbPoolMax = resolveDbPoolMax();

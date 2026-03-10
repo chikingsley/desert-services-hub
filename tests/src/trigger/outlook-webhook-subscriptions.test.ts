@@ -28,7 +28,9 @@ describe("outlook webhook subscription helpers", () => {
       `../../../apps/trigger-dev/src/trigger/outlook-webhook-subscriptions.ts?${cacheBuster}`
     );
 
-    expect(resolveOutlookWebhookUrl()).toBe("https://hooks.example.com/outlook");
+    expect(resolveOutlookWebhookUrl()).toBe(
+      "https://hooks.example.com/outlook"
+    );
   });
 
   test("resolveOutlookWebhookUrl builds from WEBHOOK_BASE_URL", async () => {
@@ -52,22 +54,20 @@ describe("outlook webhook subscription helpers", () => {
 
     const now = new Date("2026-02-26T16:00:00.000Z");
     expect(shouldRenewSubscription("not-a-date", now)).toBe(true);
-    expect(
-      shouldRenewSubscription("2026-02-26T16:20:00.000Z", now, 60)
-    ).toBe(true);
-    expect(
-      shouldRenewSubscription("2026-02-26T20:00:00.000Z", now, 60)
-    ).toBe(false);
+    expect(shouldRenewSubscription("2026-02-26T16:20:00.000Z", now, 60)).toBe(
+      true
+    );
+    expect(shouldRenewSubscription("2026-02-26T20:00:00.000Z", now, 60)).toBe(
+      false
+    );
   });
 
   test("task definitions expose expected IDs and schedule", async () => {
     const cacheBuster = `outlook-sub-task-${Date.now()}-${Math.random()}`;
-    const {
-      outlookWebhookSubscriptions,
-      outlookWebhookSubscriptionsSync,
-    } = await import(
-      `../../../apps/trigger-dev/src/trigger/outlook-webhook-subscriptions.ts?${cacheBuster}`
-    );
+    const { outlookWebhookSubscriptions, outlookWebhookSubscriptionsSync } =
+      await import(
+        `../../../apps/trigger-dev/src/trigger/outlook-webhook-subscriptions.ts?${cacheBuster}`
+      );
 
     expect((outlookWebhookSubscriptions as { id?: string }).id).toBe(
       "outlook-webhook-subscriptions"
@@ -80,4 +80,3 @@ describe("outlook webhook subscription helpers", () => {
     );
   });
 });
-

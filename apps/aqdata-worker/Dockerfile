@@ -13,7 +13,6 @@ COPY apps/aqdata-worker/package.json ./apps/aqdata-worker/
 COPY apps/aqdata-worker/tsconfig.json ./apps/aqdata-worker/
 COPY apps/aqdata-worker/src ./apps/aqdata-worker/src
 COPY lib/db/client.ts ./lib/db/client.ts
-COPY lib/config/throughput-guardrails.ts ./lib/config/throughput-guardrails.ts
 RUN mkdir -p /app/data/aqdata
 EXPOSE 47823
 CMD ["bun", "run", "apps/aqdata-worker/src/index.ts"]

@@ -71,6 +71,7 @@ describe("intake-webhook trigger dispatch", () => {
     expect(files).toHaveLength(2);
     expect(files[0]?.filename).toBe("invoice.pdf");
     expect(files[1]?.filename).toBe("email-body.txt");
+    expect(files[1]?.contentBase64).toBe("Qm9keSB0ZXh0");
   });
 
   test("returns 200 for links-only payloads without triggering task", async () => {
@@ -116,7 +117,9 @@ describe("intake-webhook trigger dispatch", () => {
 
     globalThis.fetch = (async (url, init) => {
       calledUrl = String(url);
-      calledAuth = String((init?.headers as Record<string, string>)?.Authorization);
+      calledAuth = String(
+        (init?.headers as Record<string, string>)?.Authorization
+      );
       calledPayload = String(init?.body ?? "");
       return new Response(JSON.stringify({ id: "run_abc123" }), {
         status: 200,

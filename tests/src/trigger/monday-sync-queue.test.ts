@@ -10,9 +10,12 @@ mock.module("@trigger.dev/sdk", () => ({
     task: <T>(definition: T) => definition,
   },
   schemaTask: <T>(definition: T) => definition,
+  tasks: {
+    trigger: async () => ({}),
+  },
 }));
 
-mock.module("@lib/db/repositories/intake-document", () => ({
+mock.module("@documents-intake/db/intake-document", () => ({
   propagateMissingDocumentProjectIds: async () => {},
 }));
 

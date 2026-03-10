@@ -18,7 +18,7 @@ own package/app.
 ## Cross-Domain Context (Active, Non-Authoritative)
 
 - `docs/reference/ARCHITECTURE.md` (redirect stub to canonical root docs)
-- `docs/reference/agent-automation-vision.md`
+- `docs/reference/agent-automation-vision.md` — operational North Star for automation, bottlenecks, and target state
 - `docs/reference/notion-file-uploads.md`
 - `docs/reference/siteline-api-documentation.md`
 - `docs/reference/signage/`

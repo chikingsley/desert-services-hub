@@ -43,6 +43,8 @@ That network is what allows task containers to call services in the main app com
   - `DEFAULT_ORG_EXECUTION_CONCURRENCY_LIMIT`
   - `TRIGGER_DEQUEUE_MAX_RUN_COUNT`
   - `TRIGGER_DEQUEUE_MAX_CONSUMER_COUNT`
+- Task queue defaults live next to the Trigger tasks in `apps/trigger-dev/src/trigger/queue.ts`
+- DB pool defaults live in `lib/db/client.ts`
 
 ## Outlook webhook subscription config
 

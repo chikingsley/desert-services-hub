@@ -6,12 +6,12 @@
  */
 
 import { beforeAll, describe, expect, it } from "bun:test";
-import type * as PermitsApi from "@/api/permits";
+import type * as PermitsApi from "../../../../apps/dust-permits/src/api/permits";
 
 let api: typeof PermitsApi;
 
 beforeAll(async () => {
-  api = await import("@/api/permits");
+  api = await import("../../../../apps/dust-permits/src/api/permits");
 });
 
 describe("Health Check Endpoint", () => {

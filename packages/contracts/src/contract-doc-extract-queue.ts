@@ -175,7 +175,7 @@ const getDocSummary = db.query<{
 async function extractContractFields(
   summary: string
 ): Promise<ContractFields | null> {
-  const { chat } = await import("@lib/pdf-analysis");
+  const { chat } = await import("@documents-intake/pdf-analysis");
   const chatResult = await chat(
     EXTRACT_PROMPT + summary.slice(0, 3000),
     "gemini"
@@ -302,7 +302,7 @@ async function matchViaLlm(fields: ContractFields): Promise<number | null> {
     .map(([id, name]) => `  ${id}: ${name}`)
     .join("\n");
 
-  const { chat } = await import("@lib/pdf-analysis");
+  const { chat } = await import("@documents-intake/pdf-analysis");
   const prompt = `You are matching a contract document to a project in our database.
 
 The document references:

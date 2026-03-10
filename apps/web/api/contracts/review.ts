@@ -6,6 +6,11 @@
  * with their extracted entities grouped and severity-counted.
  */
 import { db } from "@lib/db/client";
+import {
+  formatErrorForLog,
+  isApiDbTimeoutError,
+  withApiDbTimeout,
+} from "@/api/utils/db-guard";
 
 interface EntityRow {
   attributes: {
@@ -33,7 +38,7 @@ interface ReviewDocRow {
   warning_count: number;
 }
 
-const listReviewDocs = db.query<ReviewDocRow>(`
+const REVIEW_DOCS_BASE_SELECT = `
   SELECT
     d.id,
     d.file_name,
@@ -63,13 +68,51 @@ const listReviewDocs = db.query<ReviewDocRow>(`
   LEFT JOIN projects p ON p.id = d.project_id
   WHERE d.raw_extraction->>'contract_structured_extraction' IS NOT NULL
     AND (d.raw_extraction->'contract_structured_extraction'->>'extraction_count')::int > 0
-  ORDER BY critical_count DESC, entity_count DESC, d.updated_at DESC
-  LIMIT 200
-`);
+`;
 
-export async function listContractReview(_req: Request): Promise<Response> {
+function parsePositiveQueryId(raw: string | null): number | null {
+  if (!raw) {
+    return null;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+  return parsed;
+}
+
+export async function listContractReview(req: Request): Promise<Response> {
+  const requestId = crypto.randomUUID();
   try {
-    const rows = await listReviewDocs.all();
+    const url = new URL(req.url);
+    const projectId = parsePositiveQueryId(url.searchParams.get("projectId"));
+
+    const rows = await withApiDbTimeout(
+      {
+        operation: "contracts.review-items",
+        requestId,
+        route: "/api/contracts/review",
+      },
+      () => {
+        if (projectId) {
+          return db
+            .query<ReviewDocRow, [number]>(
+              `${REVIEW_DOCS_BASE_SELECT}
+               AND d.project_id = $1
+               ORDER BY critical_count DESC, entity_count DESC, d.updated_at DESC
+               LIMIT 100`
+            )
+            .all(projectId);
+        }
+        return db
+          .query<ReviewDocRow>(
+            `${REVIEW_DOCS_BASE_SELECT}
+             ORDER BY critical_count DESC, entity_count DESC, d.updated_at DESC
+             LIMIT 200`
+          )
+          .all();
+      }
+    );
 
     const items = rows.map((row) => {
       let entities: EntityRow[] = [];
@@ -97,9 +140,22 @@ export async function listContractReview(_req: Request): Promise<Response> {
 
     return Response.json({ items, total: items.length });
   } catch (error) {
-    console.error("Failed to fetch contract review data:", error);
+    console.error("[api.contracts.review] failed", {
+      requestId,
+      route: "/api/contracts/review",
+      error: formatErrorForLog(error),
+    });
+    if (isApiDbTimeoutError(error)) {
+      return Response.json(
+        {
+          error: "Contract review query timed out",
+          requestId,
+        },
+        { status: 503 }
+      );
+    }
     return Response.json(
-      { error: "Failed to fetch contract review data" },
+      { error: "Failed to fetch contract review data", requestId },
       { status: 500 }
     );
   }

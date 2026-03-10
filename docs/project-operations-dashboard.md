@@ -182,7 +182,7 @@ Background job that maintains a canonical folder structure per project in ShareP
 - **Projects list page** — filterable by contract_status, dust_status, sortable, with search. Shows email count, awarded value, last seen. (`apps/web/api/projects/projects.ts`, `apps/web/frontend/pages/projects.tsx`)
 - **Data linkage** — all pipelines running, emails tagged to projects, estimates linked
 - **Email classification** — triage pipeline classifies all inbound (CONTRACT, ESTIMATE, DUST_PERMIT, etc.)
-- **All API routes Zod-validated** — shared validation primitives in `lib/api/validation.ts`
+- **All API routes Zod-validated** — shared validation primitives in `apps/web/api/validation.ts`
 
 ### What doesn't exist yet
 

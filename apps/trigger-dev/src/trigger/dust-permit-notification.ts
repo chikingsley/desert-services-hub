@@ -17,9 +17,19 @@
  *      Authorization: Bearer <env-api-key>
  */
 
-import { createComposeClient } from "@lib/graph/client";
+import { PermitClient } from "@/apps/dust-permits-mcp/client";
+import type { PermitData } from "@/apps/dust-permits-mcp/types";
+import { getEmailById } from "@email/db/email";
+import type { Email } from "@lib/db/types";
+import { createComposeClient } from "@lib/graph/compose";
+import { createGraphClient } from "@lib/graph/mail";
 import { logger, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
+
+import {
+  formatNotificationAcreage,
+  formatNotificationSiteAddress,
+} from "./dust-permit-notification-values";
 
 // ── Constants ───────────────────────────────────────────────────
 
@@ -32,6 +42,34 @@ const BILLING_CC = [
 ];
 
 const DEFAULT_VENDOR_NAME = "Maricopa County ADEQ";
+const INTERNAL_DOMAIN = "@desertservices.net";
+const PDF_FILE_RE = /\.pdf$/i;
+const MARICOPA_SOURCE_SENDERS = [
+  "aqdimpact@maricopa.gov",
+  "no-reply@maricopa.gov",
+  "noreply@permitcenter.maricopa.gov",
+] as const;
+const MARICOPA_APPLICATION_RE =
+  /dust control permit application\s*(D\d{7})/i;
+const MARICOPA_FACILITY_ID_RE = /Facility ID#:\s*(F\d{6,})/i;
+
+type DbClient = typeof import("@lib/db/client").db;
+
+interface NotificationDraftAttachment {
+  contentBytesBase64: string;
+  contentType: string;
+  name: string;
+}
+
+interface RecipientResolution {
+  recipientName: string;
+  to: string[];
+}
+
+interface SourceEmailContext {
+  email: Email;
+  mailboxEmail: string;
+}
 
 // ── ADEQ fee → schedule value lookup ────────────────────────────
 // From packages/estimates/catalog/definitions/category-dust-control-maricopa.ts
@@ -61,6 +99,80 @@ function lookupScheduleValue(permitCostStr: string): string | null {
     return null;
   }
   return `$${schedule.toLocaleString("en-US")}`;
+}
+
+function coerceString(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function getEmailText(email: Email | null | undefined): string {
+  return [email?.subject, email?.bodyFull, email?.bodyPreview]
+    .filter((value): value is string => Boolean(value))
+    .join("\n");
+}
+
+function extractApplicationNumber(text: string): string | null {
+  return text.match(MARICOPA_APPLICATION_RE)?.[1] ?? null;
+}
+
+function extractFacilityId(text: string): string | null {
+  return text.match(MARICOPA_FACILITY_ID_RE)?.[1] ?? null;
+}
+
+function isInternalRecipient(email: string): boolean {
+  const lower = email.trim().toLowerCase();
+  return (
+    lower.endsWith(INTERNAL_DOMAIN) ||
+    MARICOPA_SOURCE_SENDERS.includes(
+      lower as (typeof MARICOPA_SOURCE_SENDERS)[number]
+    )
+  );
+}
+
+function uniqueEmails(emails: string[]): string[] {
+  return [...new Set(emails.map((email) => email.trim().toLowerCase()))].filter(
+    (email) => email.length > 0
+  );
+}
+
+function sanitizeFilenamePart(value: string): string {
+  const cleaned = value.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return cleaned.length > 0 ? cleaned : "permit";
+}
+
+function buildPermitPdfName(permitId: string, projectName: string): string {
+  return `${sanitizeFilenamePart(permitId)}-${sanitizeFilenamePart(projectName)}.pdf`;
+}
+
+async function getMailboxEmailById(
+  db: DbClient,
+  mailboxId: number
+): Promise<string | null> {
+  const row = await db
+    .query<{ email: string }, [number]>(
+      "SELECT email FROM mailboxes WHERE id = $1 LIMIT 1"
+    )
+    .get(mailboxId);
+  return row?.email ?? null;
+}
+
+async function getContactNameByEmail(
+  db: DbClient,
+  email: string
+): Promise<string | null> {
+  const row = await db
+    .query<{ name: string | null }, [string]>(
+      `SELECT name FROM contacts
+       WHERE lower(email) = lower($1)
+       ORDER BY is_active DESC NULLS LAST, updated_at DESC
+       LIMIT 1`
+    )
+    .get(email);
+  return coerceString(row?.name);
 }
 
 // ── Point and Pay email parsing ─────────────────────────────────
@@ -160,7 +272,7 @@ ${ul(
     liPlain(`Permit # (Facility ID): ${v.permitNumber}`) +
     liPlain(`Project Name: ${v.projectName}`) +
     liPlain(`Site Address: ${v.siteAddress}`) +
-    liPlain(`Project Acreage: ${v.acreage} acres`) +
+    liPlain(`Project Acreage: ${v.acreage}`) +
     liPlain(`Issue Date: ${v.issueDate}`) +
     liPlain(`Expiration Date: ${v.expirationDate}`)
 )}` +
@@ -198,7 +310,7 @@ ${ul(
     liPlain(`Permit # (Facility ID): ${v.permitNumber}`) +
     liPlain(`Project Name: ${v.projectName}`) +
     liPlain(`Site Address: ${v.siteAddress}`) +
-    liPlain(`Project Acreage: ${v.acreage} acres`) +
+    liPlain(`Project Acreage: ${v.acreage}`) +
     liPlain(`Issue Date: ${v.issueDate}`) +
     liPlain(`Expiration Date: ${v.expirationDate}`)
 )}` +
@@ -236,7 +348,7 @@ ${ul(
     liPlain(`Permit # (Facility ID): ${facilityDisplay}`) +
     liPlain(`Project Name: ${v.projectName}`) +
     liPlain(`Site Address: ${v.siteAddress}`) +
-    liPlain(`Project Acreage: ${v.acreage} acres`)
+    liPlain(`Project Acreage: ${v.acreage}`)
 )}` +
         `<div><br></div>
 <div>Processing typically takes 5-10 business days. If you need expedited processing, please reach out immediately.</div>` +
@@ -272,7 +384,7 @@ ${ul(
     liPlain(`Permit # (Facility ID): ${v.permitNumber}`) +
     liPlain(`Project Name: ${v.projectName}`) +
     liPlain(`Site Address: ${v.siteAddress}`) +
-    liPlain(`Project Acreage: ${v.acreage} acres`) +
+    liPlain(`Project Acreage: ${v.acreage}`) +
     liPlain(`Issue Date: ${v.issueDate}`) +
     liPlain(`Expiration Date: ${v.expirationDate}`)
 )}` +
@@ -457,6 +569,13 @@ const NOTIFICATION_TYPES = [
 
 type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
+const SOURCE_SUBJECT_HINTS: Partial<Record<NotificationType, string>> = {
+  issued: "Dust Permit Issued",
+  renewed: "Dust Permit Issued",
+  submitted: "Portal Submission Confirmation",
+  revised: "Dust Permit",
+};
+
 // biome-ignore lint/suspicious/noExplicitAny: template vars differ per type
 const TEMPLATE_MAP: Record<NotificationType, (vars: any) => EmailTemplate> = {
   issued: issuedEmail,
@@ -471,30 +590,355 @@ const TEMPLATE_MAP: Record<NotificationType, (vars: any) => EmailTemplate> = {
 
 // ── Shared: look up permit + build base vars ────────────────────
 
+async function resolvePermitByProjectQuery(
+  db: DbClient,
+  projectQuery: string
+): Promise<Record<string, unknown> | null> {
+  const query = `%${projectQuery.trim()}%`;
+  return await db
+    .query<Record<string, unknown>, [string]>(
+      `SELECT *
+       FROM dust_permits_filed_by_desert_services
+       WHERE id ILIKE $1
+          OR invoice_number ILIKE $1
+          OR facility_id ILIKE $1
+          OR project_name ILIKE $1
+          OR company_name ILIKE $1
+          OR address ILIKE $1
+       ORDER BY
+         CASE status
+           WHEN 'Active' THEN 0
+           WHEN 'Complete' THEN 1
+           WHEN 'Closed' THEN 2
+           WHEN 'Rejected' THEN 3
+           ELSE 4
+         END,
+         COALESCE(effective_date, submitted_date, expiration_date) DESC NULLS LAST,
+         id DESC
+       LIMIT 1`
+    )
+    .get(query);
+}
+
+async function resolveSupersededApplicationNumber(
+  db: DbClient,
+  permit: Record<string, unknown>,
+  permitId: string
+): Promise<string> {
+  const direct = coerceString(permit.previous_app_id);
+  if (direct) {
+    return direct;
+  }
+
+  const row = await db
+    .query<{ id: string }, [string, string, string | null, string | null]>(
+      `SELECT id
+       FROM dust_permits_filed_by_desert_services
+       WHERE id <> $1
+         AND company_name = $2
+         AND project_name = $3
+         AND ($4::text IS NULL OR address = $4)
+         AND COALESCE(status, '') <> 'Rejected'
+       ORDER BY COALESCE(effective_date, submitted_date, expiration_date) DESC NULLS LAST,
+                id DESC
+       LIMIT 1`
+    )
+    .get(
+      permitId,
+      coerceString(permit.company_name) ?? "",
+      coerceString(permit.project_name) ?? "",
+      coerceString(permit.address)
+    );
+
+  return row?.id ?? "N/A";
+}
+
+async function resolveSourceEmailContext(
+  db: DbClient,
+  params: {
+    permitId: string;
+    projectName: string;
+    sourceEmailId?: number;
+    type: NotificationType;
+  }
+): Promise<SourceEmailContext | null> {
+  if (params.sourceEmailId) {
+    const email = await getEmailById(params.sourceEmailId);
+    if (!email) {
+      throw new Error(`Email ${params.sourceEmailId} not found`);
+    }
+    const mailboxEmail = await getMailboxEmailById(db, email.mailboxId);
+    if (!mailboxEmail) {
+      throw new Error(`Mailbox ${email.mailboxId} not found for email ${email.id}`);
+    }
+    return { email, mailboxEmail };
+  }
+
+  const subjectHint = SOURCE_SUBJECT_HINTS[params.type] ?? "Dust Permit";
+  const permitPattern = `%${params.permitId}%`;
+  const projectPattern = `%${params.projectName}%`;
+
+  const row = await db
+    .query<{ id: number; mailbox_id: number }, [string, string, string]>(
+      `SELECT id, mailbox_id
+       FROM emails
+       WHERE lower(COALESCE(from_email, '')) = ANY (ARRAY[
+         'aqdimpact@maricopa.gov',
+         'no-reply@maricopa.gov',
+         'noreply@permitcenter.maricopa.gov'
+       ])
+         AND subject ILIKE $1
+         AND (
+           subject ILIKE $2
+           OR body_preview ILIKE $2
+           OR body_full ILIKE $2
+           OR body_preview ILIKE $3
+           OR body_full ILIKE $3
+         )
+       ORDER BY received_at DESC
+       LIMIT 1`
+    )
+    .get(`%${subjectHint}%`, permitPattern, projectPattern);
+
+  if (!row) {
+    return null;
+  }
+
+  const email = await getEmailById(row.id);
+  const mailboxEmail = await getMailboxEmailById(db, row.mailbox_id);
+  if (!(email && mailboxEmail)) {
+    return null;
+  }
+
+  return { email, mailboxEmail };
+}
+
+async function resolveNotificationRecipients(
+  db: DbClient,
+  params: {
+    explicitRecipients?: string[];
+    sourceEmail?: Email | null;
+  }
+): Promise<RecipientResolution> {
+  if (params.explicitRecipients?.length) {
+    const to = uniqueEmails(params.explicitRecipients);
+    const recipientName =
+      to.length === 1 ? (await getContactNameByEmail(db, to[0])) ?? "Team" : "Team";
+    return { to, recipientName };
+  }
+
+  if (params.sourceEmail) {
+    const externalRecipients = uniqueEmails([
+      ...params.sourceEmail.toEmails,
+      ...params.sourceEmail.ccEmails,
+    ]).filter((email) => !isInternalRecipient(email));
+
+    if (externalRecipients.length > 0) {
+      const recipientName =
+        externalRecipients.length === 1
+          ? (await getContactNameByEmail(db, externalRecipients[0])) ?? "Team"
+          : "Team";
+      return { to: externalRecipients, recipientName };
+    }
+  }
+
+  return { to: [FROM_MAILBOX], recipientName: "Team" };
+}
+
+function isPdfLikeAttachment(att: {
+  contentType?: string;
+  isInline?: boolean;
+  name: string;
+}): boolean {
+  if (att.isInline) {
+    return false;
+  }
+  const contentType = att.contentType?.toLowerCase() ?? "";
+  return PDF_FILE_RE.test(att.name) || contentType.includes("pdf");
+}
+
+function isGraphItemNotFoundError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("graph api 404") ||
+    normalized.includes("itemnotfound") ||
+    normalized.includes("not found")
+  );
+}
+
+async function loadSourceEmailAttachments(
+  graph: ReturnType<typeof createGraphClient>,
+  sourceEmail: SourceEmailContext
+): Promise<{
+  attachments: Array<{
+    contentType?: string;
+    id: string;
+    isInline?: boolean;
+    name: string;
+    size?: number;
+  }>;
+  messageId: string;
+}> {
+  try {
+    return {
+      messageId: sourceEmail.email.messageId,
+      attachments: await graph.getAttachments(
+        sourceEmail.email.messageId,
+        sourceEmail.mailboxEmail
+      ),
+    };
+  } catch (error) {
+    if (
+      !isGraphItemNotFoundError(error) ||
+      !sourceEmail.email.internetMessageId
+    ) {
+      throw error;
+    }
+
+    const liveMessageId = await graph.findLatestMessageIdByInternetMessageId(
+      sourceEmail.email.internetMessageId,
+      sourceEmail.mailboxEmail
+    );
+
+    if (!(liveMessageId && liveMessageId !== sourceEmail.email.messageId)) {
+      throw error;
+    }
+
+    logger.warn("Resolved stale Graph message_id via internet_message_id", {
+      emailId: sourceEmail.email.id,
+      liveMessageId,
+      mailboxEmail: sourceEmail.mailboxEmail,
+      staleMessageId: sourceEmail.email.messageId,
+    });
+
+    return {
+      messageId: liveMessageId,
+      attachments: await graph.getAttachments(
+        liveMessageId,
+        sourceEmail.mailboxEmail
+      ),
+    };
+  }
+}
+
+async function resolveNotificationAttachments(
+  params: {
+    permitId: string;
+    projectName: string;
+    sourceEmail: SourceEmailContext | null;
+  }
+): Promise<NotificationDraftAttachment[]> {
+  if (!params.sourceEmail) {
+    return [];
+  }
+
+  const graph = createGraphClient();
+  const { messageId, attachments } = await loadSourceEmailAttachments(
+    graph,
+    params.sourceEmail
+  );
+  const targetAttachment =
+    attachments.find(isPdfLikeAttachment) ??
+    attachments.find((att) => !att.isInline);
+
+  if (!targetAttachment) {
+    return [];
+  }
+
+  const bytes = await graph.downloadAttachment(
+    messageId,
+    targetAttachment.id,
+    params.sourceEmail.mailboxEmail
+  );
+
+  return [
+    {
+      name: buildPermitPdfName(params.permitId, params.projectName),
+      contentType: "application/pdf",
+      contentBytesBase64: bytes.toString("base64"),
+    },
+  ];
+}
+
+async function resolveScrapedPermitData(
+  permitId: string
+): Promise<PermitData | null> {
+  try {
+    const client = new PermitClient();
+    const result = await client.scrape(permitId);
+    if (result.success && result.data) {
+      return result.data;
+    }
+
+    logger.warn("Permit scrape did not return structured data for notification", {
+      permitId,
+    });
+    return null;
+  } catch (error) {
+    logger.warn("Permit scrape fallback failed for notification", {
+      permitId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
 // biome-ignore lint/suspicious/noExplicitAny: raw SQL row
-function permitToBaseVars(permit: any, permitId: string) {
+async function buildPermitBaseVars(
+  db: DbClient,
+  permit: any,
+  permitId: string,
+  params: {
+    recipientName: string;
+    scrapedPermit?: PermitData | null;
+    sourceEmail?: Email | null;
+  }
+) {
+  const sourceText = getEmailText(params.sourceEmail);
+  const permitNumber =
+    coerceString(permit.facility_id) ?? extractFacilityId(sourceText) ?? permitId;
+  const supersededApplicationNumber = await resolveSupersededApplicationNumber(
+    db,
+    permit,
+    permitId
+  );
+
   return {
     acceleratedProcessing: permit.is_accelerated ? "Yes" : "No",
     accountName: (permit.company_name as string) ?? "Unknown",
-    acreage: "N/A",
-    address: (permit.address as string) ?? "N/A",
-    applicationNumber: permitId,
+    acreage: formatNotificationAcreage(params.scrapedPermit?.disturbedArea),
+    address: formatNotificationSiteAddress(
+      {
+        address: permit.address,
+        city: permit.city,
+      },
+      params.scrapedPermit
+    ),
+    applicationNumber: extractApplicationNumber(sourceText) ?? permitId,
     expirationDate: (permit.expiration_date as string) ?? "N/A",
-    facilityId: permit.facility_id as string | null,
+    facilityId: permitNumber,
     issueDate: (permit.effective_date as string) ?? "N/A",
-    permitNumber: (permit.facility_id as string) ?? permitId,
+    permitNumber,
     permitStatus: (permit.status as string) ?? "Active",
     projectName: (permit.project_name as string) ?? "Unknown",
-    recipientName: "Team",
+    recipientName: params.recipientName,
     showPermitInfo: true,
-    siteAddress: (permit.address as string) ?? "N/A",
-    supersededApplicationNumber: (permit.previous_app_id as string) ?? "N/A",
+    siteAddress: formatNotificationSiteAddress(
+      {
+        address: permit.address,
+        city: permit.city,
+      },
+      params.scrapedPermit
+    ),
+    supersededApplicationNumber,
   };
 }
 
 // ── Shared: create draft + optionally send ──────────────────────
 
 async function createNotificationDraft(opts: {
+  attachments?: NotificationDraftAttachment[];
   body: string;
   cc?: string[];
   draft: boolean;
@@ -513,11 +957,23 @@ async function createNotificationDraft(opts: {
     skipSignature: true,
   });
 
+  const attachedFiles: string[] = [];
+  for (const attachment of opts.attachments ?? []) {
+    const result = await compose.addFileAttachment({
+      userId: FROM_MAILBOX,
+      draftId: draftMsg.id,
+      name: attachment.name,
+      contentType: attachment.contentType,
+      contentBytesBase64: attachment.contentBytesBase64,
+    });
+    attachedFiles.push(result.name ?? attachment.name);
+  }
+
   if (!opts.draft) {
     await compose.sendDraft(draftMsg.id, FROM_MAILBOX);
   }
 
-  return draftMsg;
+  return { attachedFiles, draftMsg };
 }
 
 // ── The task ────────────────────────────────────────────────────
@@ -533,6 +989,8 @@ export const dustPermitNotification = schemaTask({
         .string()
         .regex(/^D\d{7}$/, "Must be D0XXXXXX format")
         .optional(),
+      projectQuery: z.string().trim().min(1).optional(),
+      sourceEmailId: z.number().int().positive().optional(),
       type: z.enum(NOTIFICATION_TYPES).optional(),
       // Optional overrides
       billingType: z
@@ -544,10 +1002,15 @@ export const dustPermitNotification = schemaTask({
       recipients: z.array(z.email()).optional(),
       scheduleValue: z.string().optional(),
     })
-    .refine((d) => d.emailId || (d.permitId && d.type), {
-      message:
-        "Provide emailId (billing) OR permitId + type (other notifications)",
-    }),
+    .refine(
+      (d) =>
+        Boolean(d.emailId) ||
+        Boolean(d.type && (d.permitId || d.projectQuery || d.sourceEmailId)),
+      {
+        message:
+          "Provide emailId (billing) OR type + (permitId | projectQuery | sourceEmailId)",
+      }
+    ),
   maxDuration: 60,
   retry: { maxAttempts: 2 },
   run: async (input) => {
@@ -630,13 +1093,27 @@ export const dustPermitNotification = schemaTask({
         project: permit.project_name,
       });
 
-      // Auto-detect billing type
+      const sourceEmail = await resolveSourceEmailContext(db, {
+        permitId,
+        projectName: coerceString(permit.project_name) ?? "",
+        type: "renewed",
+      });
+
+      const baseVars = await buildPermitBaseVars(db, permit, permitId, {
+        recipientName: "Team",
+        sourceEmail: sourceEmail?.email,
+      });
+
+      // Prefer the resolved superseded app over raw previous_app_id because
+      // permit sync can lag or omit that column on newer renewals.
       const billingType: NotificationType =
         input.billingType ??
-        (permit.previous_app_id ? "billing-renewed" : "billing");
+        (baseVars.supersededApplicationNumber !== "N/A"
+          ? "billing-renewed"
+          : "billing");
 
       const vars: BillingVars = {
-        ...permitToBaseVars(permit, permitId),
+        ...baseVars,
         cardLastFour: cardLastFour ?? "N/A",
         cardholderName: cardLastFour
           ? `Company Card (ending ${cardLastFour})`
@@ -661,7 +1138,7 @@ export const dustPermitNotification = schemaTask({
         subject,
       });
 
-      const draftMsg = await createNotificationDraft({
+      const draftResult = await createNotificationDraft({
         subject,
         body,
         to: input.recipients?.length ? input.recipients : BILLING_TO,
@@ -670,12 +1147,13 @@ export const dustPermitNotification = schemaTask({
       });
 
       logger.info("Created billing draft", {
-        draftId: draftMsg.id,
+        draftId: draftResult.draftMsg.id,
         subject,
       });
 
       return {
-        draftId: draftMsg.id,
+        attachedFiles: draftResult.attachedFiles,
+        draftId: draftResult.draftMsg.id,
         emailId: input.emailId,
         invoiceNumber,
         mode: input.draft ? ("draft" as const) : ("sent" as const),
@@ -689,17 +1167,49 @@ export const dustPermitNotification = schemaTask({
     }
 
     // ── Generic notification flow ───────────────────────────
-    const permitId = input.permitId!;
-    const type = input.type!;
+    if (!input.type) {
+      throw new Error("type is required for non-billing flow");
+    }
+    const type = input.type;
 
-    const permit = await db
-      .query<Record<string, unknown>>(
-        "SELECT * FROM dust_permits_filed_by_desert_services WHERE id = $1"
-      )
-      .get(permitId);
+    let permitId = input.permitId ?? null;
+    let sourceEmail = input.sourceEmailId
+      ? await resolveSourceEmailContext(db, {
+          permitId: input.permitId ?? "",
+          projectName: input.projectQuery ?? "",
+          sourceEmailId: input.sourceEmailId,
+          type,
+        })
+      : null;
 
-    if (!permit) {
-      throw new Error(`Dust permit ${permitId} not found`);
+    if (!permitId && sourceEmail) {
+      permitId = extractApplicationNumber(getEmailText(sourceEmail.email));
+    }
+
+    let permit: Record<string, unknown> | null = null;
+    if (permitId) {
+      permit = await db
+        .query<Record<string, unknown>>(
+          "SELECT * FROM dust_permits_filed_by_desert_services WHERE id = $1"
+        )
+        .get(permitId);
+    } else if (input.projectQuery) {
+      permit = await resolvePermitByProjectQuery(db, input.projectQuery);
+      permitId = coerceString(permit?.id);
+    }
+
+    if (!(permit && permitId)) {
+      throw new Error(
+        `Could not resolve dust permit for type ${type}. Provide permitId, projectQuery, or sourceEmailId.`
+      );
+    }
+
+    if (!sourceEmail) {
+      sourceEmail = await resolveSourceEmailContext(db, {
+        permitId,
+        projectName: coerceString(permit.project_name) ?? permitId,
+        type,
+      });
     }
 
     logger.info("Found dust permit", {
@@ -707,10 +1217,25 @@ export const dustPermitNotification = schemaTask({
       company: permit.company_name,
       project: permit.project_name,
       status: permit.status,
+      sourceEmailId: sourceEmail?.email.id ?? null,
     });
 
+    const recipientResolution = await resolveNotificationRecipients(db, {
+      explicitRecipients: input.recipients,
+      sourceEmail: sourceEmail?.email,
+    });
+    const attachments = await resolveNotificationAttachments({
+      permitId,
+      projectName: coerceString(permit.project_name) ?? permitId,
+      sourceEmail,
+    });
+    const scrapedPermit = await resolveScrapedPermitData(permitId);
     const baseVars = {
-      ...permitToBaseVars(permit, permitId),
+      ...(await buildPermitBaseVars(db, permit, permitId, {
+        recipientName: recipientResolution.recipientName,
+        scrapedPermit,
+        sourceEmail: sourceEmail?.email,
+      })),
       ...(input.extraVars ?? {}),
     };
 
@@ -719,34 +1244,32 @@ export const dustPermitNotification = schemaTask({
 
     logger.info("Rendered notification", { permitId, type, subject });
 
-    const isBillingType = type.startsWith("billing");
-    const toAddrs = input.recipients?.length
-      ? input.recipients
-      : isBillingType
-        ? BILLING_TO
-        : [FROM_MAILBOX];
-    const ccAddrs = input.cc?.length
-      ? input.cc
-      : isBillingType
-        ? BILLING_CC
-        : undefined;
+    const ccAddrs = input.cc?.length ? input.cc : undefined;
 
-    const draftMsg = await createNotificationDraft({
+    const draftResult = await createNotificationDraft({
       subject,
       body,
-      to: toAddrs,
+      to: recipientResolution.to,
       cc: ccAddrs,
       draft: input.draft,
+      attachments,
     });
 
-    logger.info("Created draft", { draftId: draftMsg.id, subject });
+    logger.info("Created draft", {
+      draftId: draftResult.draftMsg.id,
+      subject,
+      attachedFiles: draftResult.attachedFiles,
+      recipientCount: recipientResolution.to.length,
+    });
 
     return {
-      draftId: draftMsg.id,
+      attachedFiles: draftResult.attachedFiles,
+      draftId: draftResult.draftMsg.id,
       mode: input.draft ? ("draft" as const) : ("sent" as const),
       permitId,
+      sourceEmailId: sourceEmail?.email.id ?? null,
       subject,
-      to: toAddrs,
+      to: recipientResolution.to,
       type,
     };
   },

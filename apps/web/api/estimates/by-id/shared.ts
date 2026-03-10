@@ -1,7 +1,7 @@
 import { db } from "@lib/db/client";
 import type { EstimateVersionRow } from "@lib/db/types";
-import { generateBaseNumber } from "@lib/utils";
 import { z } from "zod";
+import { generateBaseNumber } from "@/packages/estimates/estimating/base-number";
 
 // Bun extends Request with params from route matching
 type BunRequest = Request & { params: { id: string } };

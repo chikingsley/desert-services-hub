@@ -49,7 +49,6 @@ function buildEstimateUpdateStatement(payload: NormalizedUpdatePayload): {
     { key: "client_name", column: "contractor" },
     { key: "client_address", column: "client_address" },
     { key: "estimator", column: "estimator" },
-    { key: "estimator_email", column: "estimator_email" },
     { key: "notes", column: "notes" },
     { key: "takeoff_id", column: "takeoff_id" },
   ];
@@ -61,6 +60,14 @@ function buildEstimateUpdateStatement(payload: NormalizedUpdatePayload): {
     }
     values.push(value || null);
     fields.push(`${mapping.column} = $${values.length}`);
+  }
+
+  if (payload.estimator_email !== undefined) {
+    values.push(payload.estimator_email || null);
+    fields.push(`estimator_email = $${values.length}`);
+  } else if (payload.client_email !== undefined) {
+    values.push(payload.client_email || null);
+    fields.push(`estimator_email = $${values.length}`);
   }
 
   if (payload.status !== undefined) {

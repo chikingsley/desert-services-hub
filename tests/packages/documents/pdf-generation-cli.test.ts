@@ -221,6 +221,7 @@ describe("PDF Generation CLI", () => {
 
 let estimateIdForPdfGen: string | null = null;
 let estimateIdLookupError: string | null = null;
+const runLiveTests = process.env.RUN_LIVE_TESTS === "1";
 
 try {
   const estimates = await listEstimates();
@@ -230,7 +231,7 @@ try {
     error instanceof Error ? error.message : String(error);
 }
 
-if (estimateIdForPdfGen) {
+if (runLiveTests && estimateIdForPdfGen) {
   test("quoting estimate generate writes a valid PDF", async () => {
     const dir = await mkdtemp(join(tmpdir(), "pdfgen-quote-"));
     const outPath = join(dir, "estimate.pdf");
@@ -255,8 +256,11 @@ if (estimateIdForPdfGen) {
     }
   });
 } else {
+  const reason = runLiveTests
+    ? `no estimate available${estimateIdLookupError ? `: ${estimateIdLookupError}` : ""}`
+    : "set RUN_LIVE_TESTS=1";
   // biome-ignore lint/suspicious/noSkippedTests: Integration data is environment-dependent.
-  test.skip(`quoting estimate generate integration (no estimate available${estimateIdLookupError ? `: ${estimateIdLookupError}` : ""})`, () => {
+  test.skip(`quoting estimate generate integration (${reason})`, () => {
     // Intentionally skipped when integration data is unavailable.
   });
 }

@@ -1,4 +1,7 @@
-import { nativeExtract, nativeExtractMultipart } from "@lib/pdf-analysis";
+import {
+  nativeExtract,
+  nativeExtractMultipart,
+} from "@documents-intake/pdf-analysis";
 
 export interface MondayAssetProcessInput {
   /** Buffer content — when provided, sends via multipart upload to pdf-analysis

@@ -6,11 +6,7 @@
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { db } from "@lib/db/client";
-import type {
-  EstimateLineItemRow,
-  EstimateRow,
-  EstimateSectionRow,
-} from "@lib/db/types";
+import type { EstimateLineItemRow, EstimateSectionRow } from "@lib/db/types";
 import { createEstimate, listEstimates } from "@/api/estimates/estimates";
 import {
   deleteEstimate,
@@ -242,15 +238,33 @@ describe("createEstimate", () => {
 
     // Query database directly and verify ACTUAL VALUES
     const row = (await db
-      .query("SELECT * FROM estimates WHERE id = $1")
-      .get(id)) as EstimateRow;
+      .query(
+        `SELECT
+           name,
+           job_address,
+           contractor AS client_name,
+           client_address,
+           estimator_email AS client_email,
+           notes,
+           status
+         FROM estimates
+         WHERE id = $1`
+      )
+      .get(id)) as {
+      client_address: string | null;
+      client_email: string | null;
+      client_name: string | null;
+      job_address: string | null;
+      name: string;
+      notes: string | null;
+      status: string | null;
+    };
 
     expect(row.name).toBe(input.job_name);
     expect(row.job_address).toBe(UNIQUE.NORMALIZED_JOB_ADDRESS);
     expect(row.client_name).toBe(input.client_name);
     expect(row.client_address).toBe(UNIQUE.NORMALIZED_CLIENT_ADDRESS);
     expect(row.client_email).toBe(input.client_email);
-    expect(row.client_phone).toBe(input.client_phone);
     expect(row.notes).toBe(input.notes);
     expect(row.status).toBe(input.status);
   });
@@ -493,11 +507,15 @@ describe("updateEstimate", () => {
 
     // Query database and verify values ACTUALLY changed
     const row = (await db
-      .query("SELECT name, client_name, status FROM estimates WHERE id = $1")
+      .query(
+        `SELECT name, contractor AS client_name, status
+         FROM estimates
+         WHERE id = $1`
+      )
       .get(testId)) as {
+      client_name: string | null;
       name: string;
-      client_name: string;
-      status: string;
+      status: string | null;
     };
 
     expect(row.name).toBe(newJobName);
@@ -724,8 +742,19 @@ describe("duplicateEstimate", () => {
 
     // Verify the copy has all the same data
     const copy = (await db
-      .query("SELECT * FROM estimates WHERE id = $1")
-      .get(newId)) as EstimateRow;
+      .query(
+        `SELECT
+           name,
+           contractor AS client_name,
+           estimator_email AS client_email
+         FROM estimates
+         WHERE id = $1`
+      )
+      .get(newId)) as {
+      client_email: string | null;
+      client_name: string | null;
+      name: string;
+    };
 
     expect(copy.name).toContain("DuplicateOriginal");
     expect(copy.name).toContain("(Copy)");

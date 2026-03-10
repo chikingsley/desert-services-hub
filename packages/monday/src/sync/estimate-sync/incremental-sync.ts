@@ -8,9 +8,12 @@
  */
 
 import { db } from "@lib/db/client";
-import { getChangedItemIds } from "@monday/client/activity-log";
+import {
+  type ChangedItemLogResult,
+  getChangedItemIds,
+} from "@monday/client/activity-log";
 import { BOARD_IDS } from "@monday/types/schema";
-import { syncEstimateItem } from "./item-sync";
+import { readPositiveIntEnv } from "../../env";
 
 const SYNC_STATE_KEY = "monday_estimating_last_sync";
 
@@ -18,15 +21,26 @@ const SYNC_STATE_KEY = "monday_estimating_last_sync";
  * Threshold: if the activity log returns more than this many changed items,
  * it's cheaper/safer to just do a full sync.
  */
-const FULL_SYNC_THRESHOLD = 500;
+const FULL_SYNC_THRESHOLD = readPositiveIntEnv(
+  "MONDAY_INCREMENTAL_FULL_RECOMMENDED_THRESHOLD",
+  500
+);
 
 interface IncrementalSyncResult {
   changedItemIds: number;
   errors: number;
   filesDetected: number;
+  metadata: {
+    truncated: boolean;
+    reason?: "max_pages" | "max_item_ids" | "deadline" | "error";
+  };
   mode: "incremental" | "full_recommended";
   synced: number;
   totalEvents: number;
+}
+
+interface IncrementalSyncOptions {
+  maxDurationMs?: number;
 }
 
 async function getLastSyncTimestamp(): Promise<Date> {
@@ -54,26 +68,74 @@ async function updateLastSyncTimestamp(timestamp: Date): Promise<void> {
   );
 }
 
+export async function setIncrementalSyncCursor(timestamp: Date): Promise<void> {
+  await updateLastSyncTimestamp(timestamp);
+}
+
 /**
  * Run an incremental sync cycle.
  *
  * 1. Query activity log for changes since last sync
  * 2. If too many changes, recommend a full sync instead
- * 3. Otherwise, sync each changed item individually
- * 4. Update the last sync timestamp
+ * 3. Otherwise, return changed item IDs for downstream sync workers
+ * 4. Update the last sync cursor is done in the caller after successful handoff
  *
- * Returns file item IDs for downstream file download processing.
+ * Returns changed estimate item IDs for downstream item sync workers.
  */
-export async function syncEstimatesIncremental(): Promise<{
+export async function syncEstimatesIncremental(
+  options: IncrementalSyncOptions = {}
+): Promise<{
   result: IncrementalSyncResult;
-  estimateFileItemIds: string[];
+  estimateItemIds: string[];
+  latestTimestamp: Date | null;
 }> {
   const since = await getLastSyncTimestamp();
+  const deadlineMs =
+    options.maxDurationMs === undefined
+      ? undefined
+      : Date.now() + options.maxDurationMs;
 
-  const { itemIds, latestTimestamp, totalEvents } = await getChangedItemIds(
-    BOARD_IDS.ESTIMATING,
-    since
-  );
+  let changedItems: ChangedItemLogResult;
+  try {
+    changedItems = await getChangedItemIds(BOARD_IDS.ESTIMATING, since, {
+      maxItemIds: FULL_SYNC_THRESHOLD + 1,
+      deadlineMs,
+      maxQueryRetries: undefined,
+    });
+  } catch {
+    return {
+      result: {
+        mode: "full_recommended",
+        changedItemIds: 0,
+        totalEvents: 0,
+        synced: 0,
+        errors: 0,
+        filesDetected: 0,
+        metadata: { truncated: true, reason: "error" },
+      },
+      estimateItemIds: [],
+      latestTimestamp: null,
+    };
+  }
+
+  const { itemIds, latestTimestamp, totalEvents, metadata } = changedItems;
+
+  // If we didn't read the full activity log slice, fall back to full sync.
+  if (metadata.truncated) {
+    return {
+      result: {
+        mode: "full_recommended",
+        changedItemIds: itemIds.length,
+        totalEvents,
+        synced: 0,
+        errors: 0,
+        filesDetected: 0,
+        metadata,
+      },
+      estimateItemIds: itemIds,
+      latestTimestamp,
+    };
+  }
 
   // If too many changes, recommend falling back to full sync
   if (itemIds.length > FULL_SYNC_THRESHOLD) {
@@ -85,8 +147,10 @@ export async function syncEstimatesIncremental(): Promise<{
         synced: 0,
         errors: 0,
         filesDetected: 0,
+        metadata,
       },
-      estimateFileItemIds: [],
+      estimateItemIds: itemIds,
+      latestTimestamp,
     };
   }
 
@@ -103,41 +167,27 @@ export async function syncEstimatesIncremental(): Promise<{
         synced: 0,
         errors: 0,
         filesDetected: 0,
+        metadata: { truncated: false },
       },
-      estimateFileItemIds: [],
+      estimateItemIds: [],
+      latestTimestamp,
     };
   }
 
-  // Sync each changed item
-  let synced = 0;
-  let errors = 0;
-  const estimateFileItemIds: string[] = [];
-
-  for (const itemId of itemIds) {
-    try {
-      const hasFiles = await syncEstimateItem(itemId);
-      synced++;
-      if (hasFiles) {
-        estimateFileItemIds.push(itemId);
-      }
-    } catch {
-      errors++;
-    }
-  }
-
-  // Update timestamp to the latest event we processed
-  const newTimestamp = latestTimestamp ?? new Date();
-  await updateLastSyncTimestamp(newTimestamp);
+  // Return candidate item IDs so the trigger pipeline can fan out work.
+  const dedupedItemIds = [...new Set(itemIds)];
 
   return {
     result: {
       mode: "incremental",
-      changedItemIds: itemIds.length,
+      changedItemIds: dedupedItemIds.length,
       totalEvents,
-      synced,
-      errors,
-      filesDetected: estimateFileItemIds.length,
+      synced: dedupedItemIds.length,
+      errors: 0,
+      filesDetected: 0,
+      metadata,
     },
-    estimateFileItemIds,
+    estimateItemIds: dedupedItemIds,
+    latestTimestamp,
   };
 }

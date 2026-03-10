@@ -16,8 +16,11 @@ mock.module("@trigger.dev/sdk", () => ({
 
 mock.module("@lib/db/client", () => ({
   db: {
+    run: () => Promise.resolve([]),
     query: () => ({
+      all: () => Promise.resolve([]),
       get: async () => null,
+      run: () => Promise.resolve([]),
     }),
   },
 }));

@@ -206,7 +206,7 @@ describe("formatValidationResult", () => {
 describe("Expected Fixtures", () => {
   test("NOI fixture loads and has required fields", async () => {
     const fixture = await Bun.file(
-      "tests/fixtures/expected/noi-bjerk-builders-113509.json"
+      "tests/apps/dust-permits/fixtures/expected/noi-bjerk-builders-113509.json"
     ).json();
 
     expect(fixture.applicantName).toBe("BJERK BUILDERS, LLC");
@@ -218,7 +218,7 @@ describe("Expected Fixtures", () => {
 
   test("Plan fixture loads and has required fields", async () => {
     const fixture = await Bun.file(
-      "tests/fixtures/expected/plan-southwest-gas-surprise.json"
+      "tests/apps/dust-permits/fixtures/expected/plan-southwest-gas-surprise.json"
     ).json();
 
     expect(fixture.projectName).toBe(

@@ -1,6 +1,6 @@
-import { flagParam, multiFilter, searchParam } from "@lib/api/validation";
+import { flagParam, multiFilter, searchParam } from "@/api/validation";
+import { parseEmailRow } from "@email/db/email";
 import { db } from "@lib/db/client";
-import { parseEmailRow } from "@lib/db/repositories/email";
 import { z } from "zod";
 
 const LIST_COLUMNS = `
@@ -212,7 +212,9 @@ function parseRowsForList(
   rows: Record<string, unknown>[]
 ): Record<string, unknown>[] {
   return rows.map((row) => ({
-    ...parseEmailRow({ ...row, body_full: null, body_html: null }),
+    ...parseEmailRow({ ...row, body_full: null, body_html: null } as Parameters<
+      typeof parseEmailRow
+    >[0]),
     recipientCount: Number(row.recipient_count) || 1,
   }));
 }

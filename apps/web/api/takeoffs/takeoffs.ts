@@ -8,7 +8,7 @@ import {
   parseQuery,
   searchParam,
   sortParam,
-} from "@lib/api/validation";
+} from "@/api/validation";
 import { db } from "@lib/db/client";
 import { z } from "zod";
 

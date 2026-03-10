@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
-import type { IntakeAttachmentRow } from "@lib/db/repositories/intake-attachments";
+import type { IntakeAttachmentRow } from "@documents-intake/db/intake-attachments";
 
 interface MockState {
   attachments: IntakeAttachmentRow[];
@@ -10,11 +10,13 @@ interface MockState {
     projectId: number | null;
   }>;
   deleteFailedCalls: Array<{ emailId: number; graphAttachmentId: string }>;
+  graphError: string | null;
   graphGetCalls: string[];
   hashCalls: Array<{ documentId: number; hash: string }>;
+  multipartCalls: Array<{ buffer: Buffer; fileName: string }>;
+  multipartError: string | null;
   nativeCalls: string[];
   successRows: Record<string, unknown>[];
-  multipartCalls: Array<{ buffer: Buffer; fileName: string }>;
   updateExtractionCalls: Array<{
     attachmentId: number;
     error: string | null | undefined;
@@ -27,8 +29,10 @@ const state: MockState = {
   attachments: [],
   backfillCalls: [],
   deleteFailedCalls: [],
+  graphError: null,
   graphGetCalls: [],
   hashCalls: [],
+  multipartError: null,
   nativeCalls: [],
   successRows: [],
   multipartCalls: [],
@@ -75,7 +79,7 @@ function installMocks() {
     },
   }));
 
-  mock.module("@lib/db/repositories/attachment", () => ({
+  mock.module("@documents-intake/db/attachment", () => ({
     updateAttachmentExtraction: async (
       attachmentId: number,
       status: string,
@@ -91,7 +95,7 @@ function installMocks() {
     },
   }));
 
-  mock.module("@lib/db/repositories/intake-attachments", () => ({
+  mock.module("@documents-intake/db/intake-attachments", () => ({
     deleteFailedParsedDocs: async (
       emailId: number,
       graphAttachmentId: string
@@ -105,6 +109,7 @@ function installMocks() {
     setAttachmentContentHash: async (documentId: number, hash: string) => {
       state.hashCalls.push({ documentId, hash });
     },
+    setAttachmentSharePointSource: async () => {},
     updateDocumentBackfillLinks: async (
       documentId: number,
       emailId: number | null,
@@ -120,9 +125,12 @@ function installMocks() {
     },
   }));
 
-  mock.module("../../../apps/trigger-dev/src/trigger/graph.ts", () => ({
+  mock.module("@lib/graph/http", () => ({
     graphGet: async (path: string) => {
       state.graphGetCalls.push(path);
+      if (state.graphError) {
+        throw new Error(state.graphError);
+      }
       return {
         contentBytes: Buffer.from([0x25, 0x50, 0x44, 0x46]).toString("base64"),
       };
@@ -134,13 +142,18 @@ function installMocks() {
     },
   }));
 
-  mock.module("@lib/pdf-analysis", () => ({
+  mock.module("@documents-intake/pdf-analysis", () => ({
     nativeExtract: async (filePath: string) => {
       state.nativeCalls.push(filePath);
-      throw new Error("nativeExtract should not run when attachment buffer exists");
+      throw new Error(
+        "nativeExtract should not run when attachment buffer exists"
+      );
     },
     nativeExtractMultipart: async (buffer: Buffer, fileName: string) => {
       state.multipartCalls.push({ buffer, fileName });
+      if (state.multipartError) {
+        throw new Error(state.multipartError);
+      }
       return {
         document_type: "contract",
         extracted: { ok: true },
@@ -156,7 +169,7 @@ function installMocks() {
     },
   }));
 
-  mock.module("@lib/db/repositories/intake-document", () => ({
+  mock.module("@documents-intake/db/intake-document", () => ({
     INTAKE_LOG_PREFIX: "[intake-test]",
     insertIntakeDocumentFailure: async () => {},
     insertIntakeDocumentSuccess: async (row: Record<string, unknown>) => {
@@ -171,8 +184,10 @@ describe("attachmentIntake task", () => {
     state.attachments = [];
     state.backfillCalls = [];
     state.deleteFailedCalls = [];
+    state.graphError = null;
     state.graphGetCalls = [];
     state.hashCalls = [];
+    state.multipartError = null;
     state.nativeCalls = [];
     state.successRows = [];
     state.multipartCalls = [];
@@ -201,8 +216,12 @@ describe("attachmentIntake task", () => {
       deduped: 0,
       extracted: 1,
       failed: 0,
+      gated: 0,
+      notFoundLikeFailures: 0,
       processed: 1,
+      providerCapacityGated: false,
       skipped: 0,
+      topFailureReasons: [],
     });
 
     expect(state.graphGetCalls).toEqual([
@@ -243,5 +262,109 @@ describe("attachmentIntake task", () => {
         status: "success",
       },
     ]);
+  });
+
+  test("marks Graph ErrorItemNotFound attachments as skipped", async () => {
+    installMocks();
+    state.attachments = [makeRow()];
+    state.graphError =
+      'Graph API 404: {"error":{"code":"ErrorItemNotFound","message":"The specified object was not found in the store."}}';
+
+    const cacheBuster = `attachment-intake-task-${Date.now()}-${Math.random()}`;
+    const { attachmentIntake } = await import(
+      `../../../apps/trigger-dev/src/trigger/attachment-intake.ts?${cacheBuster}`
+    );
+
+    const run = (
+      attachmentIntake as { run: () => Promise<Record<string, number>> }
+    ).run;
+    const result = await run();
+
+    expect(result).toEqual({
+      deduped: 0,
+      extracted: 0,
+      failed: 0,
+      gated: 0,
+      notFoundLikeFailures: 0,
+      processed: 1,
+      providerCapacityGated: false,
+      skipped: 1,
+      topFailureReasons: [],
+    });
+
+    expect(state.updateExtractionCalls).toEqual([
+      {
+        attachmentId: 101,
+        error: "Graph item not found (likely deleted/moved)",
+        extractedText: null,
+        status: "skipped",
+      },
+    ]);
+  });
+
+  test("skips oversized attachments before download", async () => {
+    installMocks();
+    state.attachments = [
+      makeRow({
+        size: 100 * 1024 * 1024,
+      }),
+    ];
+
+    const cacheBuster = `attachment-intake-task-${Date.now()}-${Math.random()}`;
+    const { attachmentIntake } = await import(
+      `../../../apps/trigger-dev/src/trigger/attachment-intake.ts?${cacheBuster}`
+    );
+
+    const run = (
+      attachmentIntake as { run: () => Promise<Record<string, number>> }
+    ).run;
+    const result = await run();
+
+    expect(result).toEqual({
+      deduped: 0,
+      extracted: 0,
+      failed: 0,
+      gated: 0,
+      notFoundLikeFailures: 0,
+      processed: 1,
+      providerCapacityGated: false,
+      skipped: 1,
+      topFailureReasons: [],
+    });
+
+    expect(state.graphGetCalls).toHaveLength(0);
+    expect(state.updateExtractionCalls[0]?.status).toBe("skipped");
+    expect(state.updateExtractionCalls[0]?.error).toContain(
+      "Attachment too large"
+    );
+  });
+
+  test("gates the batch when provider capacity is exhausted", async () => {
+    installMocks();
+    state.attachments = [makeRow()];
+    state.multipartError =
+      'pdf-analysis /native-text-extraction/upload failed (429): {"detail":"All providers failed for \\"chat\\". Errors: local: unavailable | gemini: ClientError: 429 RESOURCE_EXHAUSTED"}';
+
+    const cacheBuster = `attachment-intake-task-${Date.now()}-${Math.random()}`;
+    const { attachmentIntake } = await import(
+      `../../../apps/trigger-dev/src/trigger/attachment-intake.ts?${cacheBuster}`
+    );
+
+    const run = (
+      attachmentIntake as { run: () => Promise<Record<string, unknown>> }
+    ).run;
+    const result = await run();
+
+    expect(result).toMatchObject({
+      deduped: 0,
+      extracted: 0,
+      failed: 0,
+      gated: 1,
+      notFoundLikeFailures: 0,
+      processed: 1,
+      providerCapacityGated: true,
+      skipped: 0,
+    });
+    expect(state.updateExtractionCalls).toHaveLength(0);
   });
 });

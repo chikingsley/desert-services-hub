@@ -1,3 +1,8 @@
+export interface SourcePersistenceRef {
+  sharepointPath: string | null;
+  sharepointUrl: string | null;
+}
+
 export interface ContractsEmailIntakePayload {
   /** Parallel array of file content buffers. When provided, sends content as
    *  base64 to the pdf-analysis service instead of a local file path. Use when
@@ -17,6 +22,7 @@ export interface ParseIntakeResult {
   fileName: string;
   pageCount: number;
   processingTimeMs: number;
+  sourcePersistence: SourcePersistenceRef | null;
 }
 
 export interface EmailMeta {

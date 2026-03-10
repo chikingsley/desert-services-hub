@@ -1,11 +1,11 @@
 import { db } from "@lib/db/client";
-import { generateBaseNumber } from "@lib/utils";
 import type {
   Estimate,
   EstimateLineItem,
   EstimateSection,
   EstimateVersion,
 } from "@/packages/estimates/estimating/types";
+import { generateBaseNumber } from "./base-number";
 
 // Generate a unique base number (YYMMDD format with suffix for duplicates)
 export async function getNextBaseNumber(): Promise<string> {

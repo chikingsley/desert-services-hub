@@ -6,6 +6,7 @@
  * we fetch only the ones that changed.
  */
 
+import { readPositiveIntEnv } from "../env";
 import { query } from "./query";
 
 /** Event types that indicate an item was modified and needs re-sync. */
@@ -38,8 +39,47 @@ interface ActivityLogResponse {
   }[];
 }
 
-const MAX_LOGS_PER_PAGE = 500;
-const MAX_PAGES = 20; // Safety cap: 10,000 logs max
+const MAX_LOGS_PER_PAGE = readPositiveIntEnv(
+  "MONDAY_ACTIVITY_LOG_PAGE_SIZE",
+  100
+);
+const MAX_PAGES = readPositiveIntEnv("MONDAY_ACTIVITY_LOG_MAX_PAGES", 20);
+const MAX_RETRIES = readPositiveIntEnv("MONDAY_ACTIVITY_LOG_MAX_RETRIES", 2);
+const REQUEST_TIMEOUT_MS = readPositiveIntEnv(
+  "MONDAY_ACTIVITY_LOG_REQUEST_TIMEOUT_MS",
+  30_000
+);
+const QUERY_TIMEOUT_SAFETY_SLACK_MS = 1_000;
+const MIN_QUERY_TIMEOUT_MS = 1_000;
+
+export interface ChangedItemLogOptions {
+  /** Optional hard deadline for the scan, in epoch ms. */
+  deadlineMs?: number;
+  /** Early-stop once we collect this many unique pulse IDs. */
+  maxItemIds?: number;
+  /** Optional page cap override (for tests/emergency throttling). */
+  maxPages?: number;
+  /** Optional retry limit for activity-log calls. */
+  maxQueryRetries?: number;
+  /** Optional page-size override for activity log pages. */
+  pageSize?: number;
+  /** Optional query-time overrides for activity-log calls. */
+  queryTimeoutMs?: number;
+}
+
+export interface ChangedItemLogResult {
+  itemIds: string[];
+  latestTimestamp: Date | null;
+  metadata: ChangedItemLogMetadata;
+  totalEvents: number;
+}
+
+export interface ChangedItemLogMetadata {
+  /** Why the scan ended without exhausting available logs. */
+  reason?: "max_pages" | "max_item_ids" | "deadline" | "error";
+  /** True when the scan stopped before all available logs were consumed. */
+  truncated: boolean;
+}
 
 /**
  * Parse Monday's 17-digit timestamp to a JS Date.
@@ -87,14 +127,18 @@ function processLogPage(
 async function fetchActivityPage(
   boardId: string,
   fromISO: string,
-  page: number
+  page: number,
+  pageSize: number,
+  timeoutMs: number,
+  options: ChangedItemLogOptions
 ): Promise<RawLog[]> {
-  const result = await query<ActivityLogResponse>(`
+  const result = await query<ActivityLogResponse>(
+    `
     query {
       boards(ids: ${boardId}) {
         activity_logs(
           from: "${fromISO}"
-          limit: ${MAX_LOGS_PER_PAGE}
+          limit: ${pageSize}
           page: ${page}
         ) {
           id
@@ -106,8 +150,29 @@ async function fetchActivityPage(
         }
       }
     }
-  `);
+    `,
+    {
+      timeoutMs,
+      maxRetries: options.maxQueryRetries ?? MAX_RETRIES,
+    }
+  );
   return result.boards[0]?.activity_logs ?? [];
+}
+
+function getRemainingQueryTimeout(
+  deadlineMs: number | undefined,
+  defaultTimeoutMs: number
+): number {
+  if (deadlineMs === undefined) {
+    return Math.max(MIN_QUERY_TIMEOUT_MS, defaultTimeoutMs);
+  }
+
+  const remainingMs = deadlineMs - Date.now() - QUERY_TIMEOUT_SAFETY_SLACK_MS;
+  if (remainingMs <= MIN_QUERY_TIMEOUT_MS) {
+    return 0;
+  }
+
+  return Math.min(defaultTimeoutMs, remainingMs);
 }
 
 /**
@@ -116,21 +181,63 @@ async function fetchActivityPage(
  * Queries the activity_logs API with time-range filtering, extracts
  * unique pulse (item) IDs from item-related events.
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: bounded loop with explicit deadline/page controls.
 export async function getChangedItemIds(
   boardId: string,
-  since: Date
-): Promise<{
-  itemIds: string[];
-  latestTimestamp: Date | null;
-  totalEvents: number;
-}> {
+  since: Date,
+  options: ChangedItemLogOptions = {}
+): Promise<ChangedItemLogResult> {
   const fromISO = since.toISOString();
   const allItemIds = new Set<string>();
   let latestTimestamp: Date | null = null;
   let totalEvents = 0;
+  const maxItemIds = options.maxItemIds ?? Number.POSITIVE_INFINITY;
+  const maxPages = Math.max(1, options.maxPages ?? MAX_PAGES);
+  const pageSize = Math.min(
+    Math.max(1, options.pageSize ?? MAX_LOGS_PER_PAGE),
+    500
+  );
+  const deadlineMs = options.deadlineMs;
+  let truncated = false;
+  let truncatedReason: ChangedItemLogMetadata["reason"] | undefined;
+  const stopAtMax =
+    Number.isFinite(maxItemIds) &&
+    maxItemIds > 0 &&
+    maxItemIds !== Number.POSITIVE_INFINITY;
 
-  for (let page = 1; page <= MAX_PAGES; page++) {
-    const logs = await fetchActivityPage(boardId, fromISO, page);
+  for (let page = 1; page <= maxPages; page++) {
+    if (deadlineMs !== undefined && Date.now() >= deadlineMs) {
+      truncated = true;
+      truncatedReason = "deadline";
+      break;
+    }
+
+    const timeoutMs = getRemainingQueryTimeout(
+      deadlineMs,
+      options.queryTimeoutMs ?? REQUEST_TIMEOUT_MS
+    );
+    if (timeoutMs <= 0) {
+      truncated = true;
+      truncatedReason = "deadline";
+      break;
+    }
+
+    let logs: RawLog[];
+    try {
+      logs = await fetchActivityPage(
+        boardId,
+        fromISO,
+        page,
+        pageSize,
+        timeoutMs,
+        options
+      );
+    } catch (_error) {
+      truncated = true;
+      truncatedReason = "error";
+      break;
+    }
+
     if (logs.length === 0) {
       break;
     }
@@ -141,8 +248,19 @@ export async function getChangedItemIds(
       latestTimestamp = latest;
     }
 
-    if (logs.length < MAX_LOGS_PER_PAGE) {
+    if (stopAtMax && allItemIds.size >= maxItemIds) {
+      truncated = true;
+      truncatedReason = "max_item_ids";
       break;
+    }
+
+    if (logs.length < pageSize) {
+      break;
+    }
+
+    if (page === maxPages) {
+      truncated = true;
+      truncatedReason = "max_pages";
     }
   }
 
@@ -150,5 +268,9 @@ export async function getChangedItemIds(
     itemIds: [...allItemIds],
     latestTimestamp,
     totalEvents,
+    metadata: {
+      truncated,
+      reason: truncatedReason,
+    },
   };
 }

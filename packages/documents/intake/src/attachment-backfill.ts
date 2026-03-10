@@ -1,10 +1,9 @@
+// biome-ignore lint/nursery/noExcessiveLinesPerFile: operational backfill stays in one file for now
 import { existsSync } from "node:fs";
 import { mkdir, readdir, rmdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { shouldSkipByContentType } from "@documents-intake/attachment-policy";
-import { processFilesIntake } from "@documents-intake/files-intake";
-import { processMondayAssetDocument } from "@documents-intake/processors/monday-asset";
-import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
+import { updateAttachmentExtraction } from "@documents-intake/db/attachment";
 import {
   clearAttachmentLocalPath,
   deleteFailedParsedDocs,
@@ -16,20 +15,24 @@ import {
   markAttachmentDeduped,
   markMondayAssetExtractionSuccess,
   setAttachmentContentHash,
+  setAttachmentSharePointSource,
   updateDocumentBackfillLinks,
-} from "@lib/db/repositories/intake-attachments";
-import {
-  createGraphClient,
-  createGroupsClient,
-  type GraphEmailClient,
-  type GraphGroupsClient,
-} from "@lib/graph/client";
+} from "@documents-intake/db/intake-attachments";
+import { processFilesIntake } from "@documents-intake/files-intake";
+import { processMondayAssetDocument } from "@documents-intake/processors/monday-asset";
+import { createGroupsClient, type GraphGroupsClient } from "@lib/graph/groups";
+import { createGraphClient, type GraphEmailClient } from "@lib/graph/mail";
 import { COLUMN_HINTS } from "@monday/sync/pipeline-config";
+import {
+  createSharePointClientFromEnv,
+  uploadBufferToUncategorized,
+} from "@sharepoint/intake-upload";
 
 const BACKFILL_DIR = "/app/data/backfill";
 const DOWNLOAD_TIMEOUT_MS = 10_000;
 const IC_GROUP_EMAIL = "internalcontracts@desertservices.net";
 const IC_GROUP_ID = "962f9440-9bde-4178-b538-edc7f8d3ecce";
+const sharePointClient = createSharePointClientFromEnv();
 
 export interface IntakeAttachmentsResult {
   attachmentsPerMinute: number;
@@ -63,6 +66,50 @@ function computeHash(buffer: Buffer): string {
   return hasher.digest("hex");
 }
 
+async function persistSourceBufferToSharePoint(
+  fileName: string,
+  buffer: Buffer
+): Promise<{
+  sharepointPath: string;
+  sharepointUrl: string;
+} | null> {
+  if (!sharePointClient) {
+    return null;
+  }
+
+  try {
+    return await uploadBufferToUncategorized(sharePointClient, {
+      buffer,
+      originalFileName: fileName,
+    });
+  } catch (error) {
+    console.warn("SharePoint source persistence failed", {
+      fileName,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+async function loadSharePointBuffer(
+  att: IntakeAttachmentRow
+): Promise<Buffer | null> {
+  if (!(sharePointClient && att.sharepoint_path)) {
+    return null;
+  }
+
+  try {
+    return await sharePointClient.download(att.sharepoint_path);
+  } catch (error) {
+    console.warn("SharePoint source load failed", {
+      documentId: att.attachment_id_pk,
+      sharepointPath: att.sharepoint_path,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
 async function linkResultsToDocuments(
   results: Awaited<ReturnType<typeof processFilesIntake>>,
   att: IntakeAttachmentRow
@@ -70,6 +117,11 @@ async function linkResultsToDocuments(
   let anySuccess = false;
 
   for (const r of results) {
+    await setAttachmentSharePointSource(
+      att.attachment_id_pk,
+      r.sourcePersistence?.sharepointPath ?? null,
+      r.sourcePersistence?.sharepointUrl ?? null
+    );
     if (!r.documentId) {
       continue;
     }
@@ -171,6 +223,7 @@ async function downloadMondayAssetFromApi(
   return Buffer.from(await response.arrayBuffer());
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: backfill path handles download, dedupe, persistence, and cleanup together
 async function processMondayAsset(
   att: IntakeAttachmentRow
 ): Promise<AttachmentOutcome> {
@@ -179,12 +232,12 @@ async function processMondayAsset(
     : undefined;
 
   // Try local file first, fall back to downloading from Monday API
-  let fileBuffer: ArrayBuffer | null = null;
+  let fileBuffer: Buffer | null = null;
   let tempPath: string | null = null;
   const filePath = att.local_path;
 
   if (filePath && existsSync(filePath)) {
-    fileBuffer = await Bun.file(filePath).arrayBuffer();
+    fileBuffer = Buffer.from(await Bun.file(filePath).arrayBuffer());
   } else if (att.monday_item_id && att.monday_asset_id) {
     const downloaded = await downloadMondayAssetFromApi(
       att.monday_item_id,
@@ -210,7 +263,16 @@ async function processMondayAsset(
     return { type: "failed", error: `${att.name}: ${errMsg}` };
   }
 
-  const contentHash = computeHash(Buffer.from(fileBuffer));
+  const contentHash = computeHash(fileBuffer);
+  const sharePointSource = await persistSourceBufferToSharePoint(
+    att.name,
+    fileBuffer
+  );
+  await setAttachmentSharePointSource(
+    att.attachment_id_pk,
+    sharePointSource?.sharepointPath ?? null,
+    sharePointSource?.sharepointUrl ?? null
+  );
   await setAttachmentContentHash(att.attachment_id_pk, contentHash);
   const hashDupe = await findContentHashAttachmentDuplicate(
     contentHash,
@@ -255,6 +317,7 @@ async function safeUnlink(path: string): Promise<void> {
   }
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: backfill path handles local, SharePoint, and Graph fallbacks in one place
 async function processEmailAttachment(
   att: IntakeAttachmentRow,
   client: GraphEmailClient,
@@ -289,36 +352,43 @@ async function processEmailAttachment(
     att.storage_path && existsSync(att.storage_path)
   );
 
-  const buffer = hasLocalCopy
-    ? Buffer.from(await Bun.file(att.storage_path as string).arrayBuffer())
-    : await Promise.race([
-        att.mailbox_email === IC_GROUP_EMAIL
-          ? downloadGroupAttachment(att, groupClient)
-          : (() => {
-              if (
-                !(
-                  att.message_id &&
-                  att.graph_attachment_id &&
-                  att.mailbox_email
-                )
-              ) {
-                throw new Error(
-                  "Missing message_id, graph_attachment_id, mailbox_email, and local storage_path"
-                );
-              }
-              return client.downloadAttachment(
-                att.message_id,
-                att.graph_attachment_id,
-                att.mailbox_email
+  const sharePointBuffer = hasLocalCopy
+    ? null
+    : await loadSharePointBuffer(att);
+
+  let buffer: Buffer;
+  if (hasLocalCopy) {
+    buffer = Buffer.from(
+      await Bun.file(att.storage_path as string).arrayBuffer()
+    );
+  } else if (sharePointBuffer) {
+    buffer = sharePointBuffer;
+  } else {
+    buffer = await Promise.race([
+      att.mailbox_email === IC_GROUP_EMAIL
+        ? downloadGroupAttachment(att, groupClient)
+        : (() => {
+            if (
+              !(att.message_id && att.graph_attachment_id && att.mailbox_email)
+            ) {
+              throw new Error(
+                "Missing message_id, graph_attachment_id, mailbox_email, and local storage_path"
               );
-            })(),
-        new Promise<never>((_, reject) =>
-          setTimeout(
-            () => reject(new Error("Download timed out")),
-            DOWNLOAD_TIMEOUT_MS
-          )
-        ),
-      ]);
+            }
+            return client.downloadAttachment(
+              att.message_id,
+              att.graph_attachment_id,
+              att.mailbox_email
+            );
+          })(),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Download timed out")),
+          DOWNLOAD_TIMEOUT_MS
+        )
+      ),
+    ]);
+  }
 
   const hash = computeHash(buffer);
   await setAttachmentContentHash(att.attachment_id_pk, hash);
@@ -513,6 +583,8 @@ export async function processAttachmentsForEmail(
           break;
         case "failed":
           result.failed++;
+          break;
+        default:
           break;
       }
     } catch (err) {

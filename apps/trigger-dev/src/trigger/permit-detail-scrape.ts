@@ -9,7 +9,7 @@
 import {
   getPermitsNeedingScrape,
   markPermitScraped,
-} from "@lib/db/repositories/dust-permit";
+} from "@dust-permits/db/dust-permit";
 import { logger, schedules } from "@trigger.dev/sdk";
 import { PermitClient } from "@/apps/dust-permits-mcp/client";
 
@@ -58,11 +58,17 @@ export const permitDetailScrape = schedules.task({
 
     let scraped = 0;
     let failed = 0;
-    const skipped = 0;
+    let skipped = 0;
 
     const errors: string[] = [];
 
     for (const permit of permits) {
+      if (permit.status === "Draft") {
+        skipped++;
+        logger.info(`Skipping draft permit ${permit.id} in detail scrape`);
+        continue;
+      }
+
       try {
         const result = await scrapeAndApplyPermit(client, permit.id);
         if (result.outcome === "scraped") {

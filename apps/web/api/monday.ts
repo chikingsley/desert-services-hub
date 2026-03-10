@@ -4,7 +4,7 @@
  *
  * Searches the estimates table in Supabase Postgres (synced from Monday ESTIMATING board).
  */
-import { parseQuery, searchParam } from "@lib/api/validation";
+import { parseQuery, searchParam } from "@/api/validation";
 import { likeSearch } from "@lib/db/search";
 import { z } from "zod";
 

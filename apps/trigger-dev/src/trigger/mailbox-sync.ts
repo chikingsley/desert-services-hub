@@ -8,31 +8,56 @@
 // https://trigger.dev/docs/queue-concurrency (concurrencyLimit on child task)
 
 import { db } from "@lib/db/client";
-import { insertAttachment } from "@lib/db/repositories/attachment";
-import { insertEmail } from "@lib/db/repositories/email";
+import { insertAttachment } from "@documents-intake/db/attachment";
+import { insertEmail } from "@email/db/email";
 import {
   getAllMailboxes,
   getOrCreateMailbox,
   updateMailboxSyncState,
-} from "@lib/db/repositories/mailbox";
+} from "@email/db/mailbox";
 import type { InsertEmailData } from "@lib/db/types";
-import { logger, schedules, schemaTask } from "@trigger.dev/sdk";
+import { graphGet } from "@lib/graph/http";
+import { logger, schedules, schemaTask, tasks } from "@trigger.dev/sdk";
 import { z } from "zod";
 import {
+  taskQueue,
+} from "./queue";
+import {
   computeDomainEnrichment,
+  extractDomain,
   extractRealSender,
   findOrCreateAccount,
   findOrCreateContact,
   linkContactToEmail,
   updateEmailEnrichment,
-} from "./email-enrichment";
-import { graphGet } from "./graph";
+} from "@email/enrichment";
 
 export const LOOKBACK_HOURS = 6;
+const EMAIL_SYNC_QUEUE = taskQueue(
+  "email-sync",
+  "EMAIL_SYNC_QUEUE_CONCURRENCY",
+  16
+);
+const MAILBOX_SYNC_CONTROL_QUEUE = taskQueue(
+  "mailbox-sync-control",
+  "MAILBOX_SYNC_CONTROL_QUEUE_CONCURRENCY",
+  1
+);
+const MAILBOX_SYNC_MAILBOX_QUEUE = taskQueue(
+  "mailbox-sync-mailbox",
+  "MAILBOX_SYNC_MAILBOX_QUEUE_CONCURRENCY",
+  6
+);
 
 // Graph API $top range 1–1000 per page. 250 reduces API calls 5x vs 50.
 // https://learn.microsoft.com/en-us/graph/api/user-list-messages
 const PAGE_SIZE = 250;
+const BATCH_TRIGGER_LIMIT = 500;
+const THREAD_SIBLING_PAGE_SIZE = 100;
+const THREAD_SIBLING_MAX_PAGES = 10;
+const THREAD_SIBLING_FALLBACK_LOOKBACK_DAYS = 30;
+const THREAD_SIBLING_FALLBACK_MAX_PAGES = 8;
+const FULL_HISTORY_SINCE_ISO = "1970-01-01T00:00:00.000Z";
 
 const EMAIL_FIELDS = [
   "id",
@@ -97,9 +122,14 @@ interface GraphAttachment {
 }
 
 const HTML_TAG_RE = /<[^>]*>/g;
+const HTML_WHITESPACE_RE = /\s+/g;
 
-function htmlToText(html: string): string {
-  return html.replace(HTML_TAG_RE, "").trim();
+export function htmlToText(html: string): string {
+  return html
+    .replace(HTML_TAG_RE, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(HTML_WHITESPACE_RE, " ")
+    .trim();
 }
 
 function extractRecipients(recipients: GraphRecipient[] | undefined): string[] {
@@ -169,6 +199,27 @@ async function getExistingMessageIds(
   return new Set(rows.map((r) => r.message_id));
 }
 
+async function getExistingMessageIdsForPage(
+  mailboxId: number,
+  messageIds: string[]
+): Promise<Set<string>> {
+  if (messageIds.length === 0) {
+    return new Set();
+  }
+
+  const placeholders = messageIds
+    .map((_, idx) => `$${idx + 2}`)
+    .join(", ");
+  const rows = await db
+    .query<{ message_id: string }, [number, ...string[]]>(
+      `SELECT message_id FROM emails
+       WHERE mailbox_id = $1 AND message_id IN (${placeholders})`
+    )
+    .all(mailboxId, ...messageIds);
+
+  return new Set(rows.map((r) => r.message_id));
+}
+
 /** Yield email pages from Graph API one at a time via @odata.nextLink pagination.
  *  Each page holds up to PAGE_SIZE (250) emails — we never buffer the full result set. */
 async function* fetchEmailPages(
@@ -223,7 +274,11 @@ async function enrichEmail(
   subject: string | null,
   bodyFull: string | null,
   bodyPreview: string | null
-): Promise<{ accountId: number | null; contactId: number | null }> {
+): Promise<{
+  accountDomain: string | null;
+  accountId: number | null;
+  contactId: number | null;
+}> {
   const domainData = computeDomainEnrichment(
     fromEmail,
     subject,
@@ -269,7 +324,73 @@ async function enrichEmail(
     }
   }
 
-  return { accountId, contactId };
+  return { accountDomain: effectiveDomain, accountId, contactId };
+}
+
+async function findRecipientAccountId(
+  recipientEmail: string,
+  fallbackAccountId: number | null,
+  fallbackAccountDomain: string | null
+): Promise<number | null> {
+  const recipientDomain = extractDomain(recipientEmail);
+  if (!recipientDomain) {
+    return null;
+  }
+
+  if (
+    fallbackAccountId &&
+    fallbackAccountDomain &&
+    recipientDomain === fallbackAccountDomain
+  ) {
+    return fallbackAccountId;
+  }
+
+  const existing = await db
+    .query<{ id: number }, [string]>("SELECT id FROM accounts WHERE domain = $1")
+    .get(recipientDomain);
+
+  return existing?.id ?? null;
+}
+
+async function linkRecipientContacts(
+  emailId: number,
+  recipients: GraphRecipient[] | undefined,
+  relationship: "to" | "cc",
+  fallbackAccountId: number | null,
+  fallbackAccountDomain: string | null
+): Promise<void> {
+  if (!recipients || recipients.length === 0) {
+    return;
+  }
+
+  const seen = new Set<string>();
+  for (const recipient of recipients) {
+    const address = recipient.emailAddress.address?.trim().toLowerCase() ?? "";
+    if (!address || seen.has(address)) {
+      continue;
+    }
+    seen.add(address);
+
+    const accountId = await findRecipientAccountId(
+      address,
+      fallbackAccountId,
+      fallbackAccountDomain
+    );
+    if (!accountId) {
+      continue;
+    }
+
+    const contactId = await findOrCreateContact(
+      address,
+      recipient.emailAddress.name?.trim() || null,
+      accountId
+    );
+    if (!contactId) {
+      continue;
+    }
+
+    await linkContactToEmail(contactId, emailId, relationship);
+  }
 }
 
 type EmailOutcome = "stored" | "skipped" | "duplicate";
@@ -280,21 +401,38 @@ interface EmailProcessResult {
   outcome: EmailOutcome;
 }
 
+interface FanOutOptions {
+  mailboxEmails?: string[];
+  senderFilter?: string;
+  forceReprocessExisting?: boolean;
+}
+
 /** Insert one email + stubs + enrichment. Used by syncOneMailbox bulk loop. */
 async function processOneEmail(
   email: GraphEmail,
   mailboxEmail: string,
-  mailboxId: number
+  mailboxId: number,
+  options: { forceReprocessExisting?: boolean } = {}
 ): Promise<EmailProcessResult> {
   const data = graphEmailToInsertData(email, mailboxId);
-  const emailId = await insertEmail(data);
+  const inserted = await insertEmail(data);
+  const emailId = inserted.id;
 
   if (!emailId) {
     return { attachments: 0, enriched: false, outcome: "skipped" };
   }
 
+  if (inserted.isExcluded) {
+    logger.info("Skipping excluded email after insert", {
+      emailId,
+      from: data.fromEmail ?? null,
+      subject: data.subject ?? null,
+    });
+    return { attachments: 0, enriched: false, outcome: "stored" };
+  }
+
   let attachments = 0;
-  if (email.hasAttachments) {
+  if (email.hasAttachments && !options.forceReprocessExisting) {
     try {
       attachments = await syncAttachmentStubs(mailboxEmail, email.id, emailId);
     } catch (attErr) {
@@ -307,13 +445,27 @@ async function processOneEmail(
 
   let enriched = false;
   try {
-    await enrichEmail(
+    const enrichment = await enrichEmail(
       emailId,
       data.fromEmail ?? null,
       data.fromName ?? null,
       data.subject ?? null,
       data.bodyFull ?? null,
       data.bodyPreview ?? null
+    );
+    await linkRecipientContacts(
+      emailId,
+      email.toRecipients,
+      "to",
+      enrichment.accountId,
+      enrichment.accountDomain
+    );
+    await linkRecipientContacts(
+      emailId,
+      email.ccRecipients,
+      "cc",
+      enrichment.accountId,
+      enrichment.accountDomain
     );
     enriched = true;
   } catch (enrichErr) {
@@ -332,8 +484,36 @@ export interface MailboxSyncResult {
   enriched: number;
   error: string | null;
   fetched: number;
+  filtered: number;
   skipped: number;
   stored: number;
+}
+
+function normalizeSenderFilter(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const normalized = value.trim().toLowerCase();
+  return normalized.length ? normalized : undefined;
+}
+
+function emailMatchesSenderFilter(
+  rawFromEmail: string | null | undefined,
+  senderFilter: string
+): boolean {
+  const fromEmail = rawFromEmail?.trim().toLowerCase() ?? "";
+  if (!fromEmail) {
+    return false;
+  }
+
+  if (senderFilter.includes("@")) {
+    if (senderFilter.endsWith("@")) {
+      return fromEmail.startsWith(senderFilter);
+    }
+    return fromEmail === senderFilter;
+  }
+
+  return fromEmail.split("@")[0]?.startsWith(senderFilter) ?? false;
 }
 
 /** Process a page of emails, updating result counters. Separated to keep syncOneMailbox flat. */
@@ -342,13 +522,52 @@ async function processPage(
   existing: Set<string>,
   mailboxEmail: string,
   mailboxId: number,
-  result: MailboxSyncResult
+  result: MailboxSyncResult,
+  senderFilter: string | undefined,
+  forceReprocessExisting: boolean
 ): Promise<void> {
+  const normalizedSenderFilter = normalizeSenderFilter(senderFilter);
+
   for (const email of page) {
-    if (existing.has(email.id)) {
-      result.skipped++;
+    if (
+      normalizedSenderFilter &&
+      !emailMatchesSenderFilter(
+        email.from?.emailAddress.address,
+        normalizedSenderFilter
+      )
+    ) {
+      result.filtered++;
       continue;
     }
+
+    if (existing.has(email.id)) {
+      if (!forceReprocessExisting) {
+        result.skipped++;
+        continue;
+      }
+
+      try {
+        const r = await processOneEmail(email, mailboxEmail, mailboxId, {
+          forceReprocessExisting: true,
+        });
+        if (r.outcome === "stored") {
+          result.stored++;
+          if (r.enriched) {
+            result.enriched++;
+          }
+        } else {
+          result.skipped++;
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.warn("Email reprocess failed", {
+          messageId: email.id,
+          error: msg,
+        });
+      }
+      continue;
+    }
+
     try {
       const r = await processOneEmail(email, mailboxEmail, mailboxId);
       if (r.outcome === "stored") {
@@ -374,7 +593,9 @@ async function processPage(
 export async function syncOneMailbox(
   mailboxEmail: string,
   mailboxId: number,
-  sinceIso: string
+  sinceIso: string,
+  senderFilter?: string,
+  forceReprocessExisting = false
 ): Promise<MailboxSyncResult> {
   const result: MailboxSyncResult = {
     attachments: 0,
@@ -382,17 +603,28 @@ export async function syncOneMailbox(
     enriched: 0,
     error: null,
     fetched: 0,
+    filtered: 0,
     skipped: 0,
     stored: 0,
   };
 
   try {
-    const existing = await getExistingMessageIds(mailboxId, sinceIso);
-
     // Stream page-by-page — never more than PAGE_SIZE emails in memory
     for await (const page of fetchEmailPages(mailboxEmail, sinceIso)) {
       result.fetched += page.length;
-      await processPage(page, existing, mailboxEmail, mailboxId, result);
+      const existing = await getExistingMessageIdsForPage(
+        mailboxId,
+        page.map((email) => email.id)
+      );
+      await processPage(
+        page,
+        existing,
+        mailboxEmail,
+        mailboxId,
+        result,
+        senderFilter,
+        forceReprocessExisting
+      );
     }
 
     await updateMailboxSyncState(mailboxId, result.stored);
@@ -407,11 +639,119 @@ export async function syncOneMailbox(
   return result;
 }
 
+function encodeODataStringLiteral(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+function resolveThreadSiblingFallbackSinceIso(
+  anchorReceivedDateTime: string
+): string {
+  const anchorMs = Date.parse(anchorReceivedDateTime);
+  const baseMs = Number.isFinite(anchorMs) ? anchorMs : Date.now();
+  return new Date(
+    baseMs - THREAD_SIBLING_FALLBACK_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
+  ).toISOString();
+}
+
+async function fetchThreadMessages(
+  mailboxEmail: string,
+  conversationId: string,
+  anchorReceivedDateTime: string
+): Promise<{ messages: GraphEmail[]; usedFallback: boolean }> {
+  const userPath = encodeURIComponent(mailboxEmail);
+  const filter = encodeURIComponent(
+    `conversationId eq ${encodeODataStringLiteral(conversationId)}`
+  );
+
+  try {
+    const messages: GraphEmail[] = [];
+    const seenUrls = new Set<string>();
+    let pages = 0;
+    let url = `users/${userPath}/messages?$filter=${filter}&$select=${EMAIL_FIELDS}&$top=${THREAD_SIBLING_PAGE_SIZE}`;
+
+    while (url && pages < THREAD_SIBLING_MAX_PAGES && !seenUrls.has(url)) {
+      seenUrls.add(url);
+      const response = await graphGet<GraphListResponse>(url);
+      messages.push(...response.value);
+      pages++;
+      url = response["@odata.nextLink"] ?? "";
+    }
+
+    if (url && pages >= THREAD_SIBLING_MAX_PAGES) {
+      logger.warn(
+        "Thread sibling query reached page cap; results may be partial",
+        {
+          mailboxEmail,
+          conversationId,
+          maxPages: THREAD_SIBLING_MAX_PAGES,
+        }
+      );
+    }
+
+    return { messages, usedFallback: false };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    if (!isGraphInefficientFilterError(msg)) {
+      throw error;
+    }
+
+    logger.warn(
+      "Graph conversationId filter hit InefficientFilter; using recent mailbox scan fallback",
+      {
+        conversationId,
+        mailboxEmail,
+        error: msg,
+      }
+    );
+
+    const fallbackSinceIso = resolveThreadSiblingFallbackSinceIso(
+      anchorReceivedDateTime
+    );
+    const fallbackFilter = encodeURIComponent(
+      `receivedDateTime ge ${fallbackSinceIso}`
+    );
+
+    const matches: GraphEmail[] = [];
+    const seenUrls = new Set<string>();
+    let pages = 0;
+    let url = `users/${userPath}/messages?$filter=${fallbackFilter}&$select=${EMAIL_FIELDS}&$orderby=receivedDateTime desc&$top=${PAGE_SIZE}`;
+
+    while (
+      url &&
+      pages < THREAD_SIBLING_FALLBACK_MAX_PAGES &&
+      !seenUrls.has(url)
+    ) {
+      seenUrls.add(url);
+      const response = await graphGet<GraphListResponse>(url);
+      matches.push(
+        ...response.value.filter((msg) => msg.conversationId === conversationId)
+      );
+      pages++;
+      url = response["@odata.nextLink"] ?? "";
+    }
+
+    if (url && pages >= THREAD_SIBLING_FALLBACK_MAX_PAGES) {
+      logger.warn(
+        "Thread sibling fallback scan reached page cap; results may be partial",
+        {
+          mailboxEmail,
+          conversationId,
+          maxPages: THREAD_SIBLING_FALLBACK_MAX_PAGES,
+          fallbackSinceIso,
+        }
+      );
+    }
+
+    return { messages: matches, usedFallback: true };
+  }
+}
+
 async function syncThreadSiblings(
   mailboxEmail: string,
   mailboxId: number,
   conversationId: string,
-  excludeMessageId: string
+  excludeMessageId: string,
+  anchorReceivedDateTime: string
 ): Promise<number> {
   const existingRows = await db
     .query<{ message_id: string }, [string]>(
@@ -421,14 +761,26 @@ async function syncThreadSiblings(
 
   const existingIds = new Set(existingRows.map((r) => r.message_id));
 
-  const filter = encodeURIComponent(`conversationId eq '${conversationId}'`);
-  const response = await graphGet<GraphListResponse>(
-    `users/${encodeURIComponent(mailboxEmail)}/messages?$filter=${filter}&$select=${EMAIL_FIELDS}&$orderby=receivedDateTime asc&$top=50`
+  const threadFetch = await fetchThreadMessages(
+    mailboxEmail,
+    conversationId,
+    anchorReceivedDateTime
   );
 
-  const siblings = response.value.filter(
-    (msg) => msg.id !== excludeMessageId && !existingIds.has(msg.id)
+  const threadMessages = Array.from(
+    new Map(threadFetch.messages.map((msg) => [msg.id, msg])).values()
   );
+
+  const siblings = threadMessages
+    .filter((msg) => msg.id !== excludeMessageId && !existingIds.has(msg.id))
+    .sort((a, b) => {
+      const aTime = Date.parse(a.receivedDateTime);
+      const bTime = Date.parse(b.receivedDateTime);
+      if (!(Number.isFinite(aTime) && Number.isFinite(bTime))) {
+        return 0;
+      }
+      return aTime - bTime;
+    });
 
   if (siblings.length === 0) {
     return 0;
@@ -436,16 +788,25 @@ async function syncThreadSiblings(
 
   logger.info("Syncing thread siblings", {
     conversationId,
-    total: response.value.length,
+    total: threadMessages.length,
     newSiblings: siblings.length,
+    usedFallback: threadFetch.usedFallback,
   });
 
   let synced = 0;
+  let syncedAttachments = 0;
+  let syncedEnriched = 0;
   for (const sibling of siblings) {
     try {
-      const siblingData = graphEmailToInsertData(sibling, mailboxId);
-      await insertEmail(siblingData);
+      const result = await processOneEmail(sibling, mailboxEmail, mailboxId);
+      if (result.outcome !== "stored") {
+        continue;
+      }
       synced++;
+      syncedAttachments += result.attachments;
+      if (result.enriched) {
+        syncedEnriched++;
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       logger.warn("Failed to sync sibling", {
@@ -458,7 +819,10 @@ async function syncThreadSiblings(
   logger.info("Thread siblings synced", {
     conversationId,
     synced,
+    attachments: syncedAttachments,
+    enriched: syncedEnriched,
     skipped: siblings.length - synced,
+    usedFallback: threadFetch.usedFallback,
   });
 
   return synced;
@@ -470,6 +834,7 @@ interface AggregatedResults {
   totalAttachments: number;
   totalEnriched: number;
   totalFetched: number;
+  totalFiltered: number;
   totalStored: number;
 }
 
@@ -486,6 +851,7 @@ function aggregateBatchResults(
   let totalFetched = 0;
   let totalAttachments = 0;
   let totalEnriched = 0;
+  let totalFiltered = 0;
   let errors = 0;
 
   for (const run of batchResult.runs) {
@@ -495,12 +861,13 @@ function aggregateBatchResults(
     }
     const r = run.output;
     totalStored += r.stored;
-    totalFetched += r.fetched;
-    totalAttachments += r.attachments;
-    totalEnriched += r.enriched;
-    if (r.error) {
-      errors++;
-    }
+      totalFetched += r.fetched;
+      totalAttachments += r.attachments;
+      totalEnriched += r.enriched;
+      totalFiltered += r.filtered;
+      if (r.error) {
+        errors++;
+      }
   }
 
   return {
@@ -509,14 +876,46 @@ function aggregateBatchResults(
     totalAttachments,
     totalEnriched,
     totalFetched,
+    totalFiltered,
     totalStored,
   };
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+
+function isGraphItemNotFoundError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("graph api 404") ||
+    normalized.includes("erroritemnotfound")
+  );
+}
+
+function isGraphInefficientFilterError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("inefficientfilter") ||
+    normalized.includes("restriction or sort order is too complex")
+  );
+}
+
+function isGraphSkippableError(message: string): boolean {
+  return (
+    isGraphItemNotFoundError(message) || isGraphInefficientFilterError(message)
+  );
 }
 
 // Webhook-driven: triggered by Outlook webhook via REST API when
 // a new email arrives. Processes one email + its thread siblings.
 export const emailSync = schemaTask({
   id: "email-sync",
+  queue: EMAIL_SYNC_QUEUE,
   schema: z.object({
     messageId: z.string().min(1),
     mailboxEmail: z.string().min(1),
@@ -527,111 +926,355 @@ export const emailSync = schemaTask({
   run: async ({ messageId, mailboxEmail }) => {
     const mailbox = await getOrCreateMailbox(mailboxEmail);
 
-    const email = await graphGet<GraphEmail>(
-      `users/${encodeURIComponent(mailboxEmail)}/messages/${encodeURIComponent(messageId)}?$select=${EMAIL_FIELDS}`
-    );
+    try {
+      let email: GraphEmail;
+      try {
+        email = await graphGet<GraphEmail>(
+          `users/${encodeURIComponent(mailboxEmail)}/messages/${encodeURIComponent(messageId)}?$select=${EMAIL_FIELDS}`
+        );
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        if (isGraphItemNotFoundError(msg)) {
+          logger.info(
+            "Email no longer exists in Graph; skipping webhook sync",
+            {
+              mailboxEmail,
+              messageId,
+            }
+          );
+          return {
+            skipped: true,
+            reason: "graph_item_not_found",
+            mailboxEmail,
+            messageId,
+          };
+        }
+        throw error;
+      }
 
-    const data = graphEmailToInsertData(email, mailbox.id);
-    const emailId = await insertEmail(data);
+      const data = graphEmailToInsertData(email, mailbox.id);
+      const inserted = await insertEmail(data);
+      const emailId = inserted.id;
 
-    logger.info("Email synced", {
-      emailId,
-      subject: email.subject,
-      from: email.from?.emailAddress.address,
-      conversationId: email.conversationId,
-    });
+      logger.info("Email synced", {
+        emailId,
+        subject: email.subject,
+        from: email.from?.emailAddress.address,
+        conversationId: email.conversationId,
+        isExcluded: inserted.isExcluded,
+      });
 
-    let attachmentStubs = 0;
-    if (email.hasAttachments && emailId) {
-      attachmentStubs = await syncAttachmentStubs(
-        mailboxEmail,
-        messageId,
-        emailId
-      );
+      if (inserted.isExcluded) {
+        return {
+          emailId,
+          subject: email.subject,
+          conversationId: email.conversationId ?? null,
+          siblingsSynced: 0,
+          attachmentStubs: 0,
+          accountId: null,
+          contactId: null,
+          excluded: true,
+        };
+      }
+
+      let attachmentStubs = 0;
+      if (email.hasAttachments && emailId) {
+        try {
+          attachmentStubs = await syncAttachmentStubs(
+            mailboxEmail,
+            messageId,
+            emailId
+          );
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : String(error);
+          if (isGraphItemNotFoundError(msg)) {
+            logger.info(
+              "Attachment list missing in Graph; skipping attachment stubs",
+              {
+                mailboxEmail,
+                messageId,
+              }
+            );
+          } else {
+            throw error;
+          }
+        }
+      }
+
+      let accountId: number | null = null;
+      let contactId: number | null = null;
+      try {
+        const enrichment = await enrichEmail(
+          emailId,
+          data.fromEmail ?? null,
+          data.fromName ?? null,
+          data.subject ?? null,
+          data.bodyFull ?? null,
+          data.bodyPreview ?? null
+        );
+        await linkRecipientContacts(
+          emailId,
+          email.toRecipients,
+          "to",
+          enrichment.accountId,
+          enrichment.accountDomain
+        );
+        await linkRecipientContacts(
+          emailId,
+          email.ccRecipients,
+          "cc",
+          enrichment.accountId,
+          enrichment.accountDomain
+        );
+        accountId = enrichment.accountId;
+        contactId = enrichment.contactId;
+      } catch (error) {
+        logger.warn("Email enrichment failed in webhook email-sync", {
+          emailId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      let siblingsSynced = 0;
+      if (email.conversationId) {
+        try {
+          siblingsSynced = await syncThreadSiblings(
+            mailboxEmail,
+            mailbox.id,
+            email.conversationId,
+            messageId,
+            email.receivedDateTime
+          );
+        } catch (error) {
+          logger.warn("Thread sibling sync failed in webhook email-sync", {
+            conversationId: email.conversationId,
+            emailId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+
+      return {
+        emailId,
+        subject: email.subject,
+        conversationId: email.conversationId ?? null,
+        siblingsSynced,
+        attachmentStubs,
+        accountId,
+        contactId,
+      };
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (isGraphSkippableError(msg)) {
+        const reason = isGraphInefficientFilterError(msg)
+          ? "graph_inefficient_filter"
+          : "graph_item_not_found";
+        logger.info("Recoverable Graph error in email-sync; skipping", {
+          mailboxEmail,
+          messageId,
+          reason,
+        });
+        return {
+          skipped: true,
+          reason,
+          mailboxEmail,
+          messageId,
+        };
+      }
+      throw error;
     }
-
-    const { accountId, contactId } = await enrichEmail(
-      emailId,
-      data.fromEmail ?? null,
-      data.fromName ?? null,
-      data.subject ?? null,
-      data.bodyFull ?? null,
-      data.bodyPreview ?? null
-    );
-
-    let siblingsSynced = 0;
-    if (email.conversationId) {
-      siblingsSynced = await syncThreadSiblings(
-        mailboxEmail,
-        mailbox.id,
-        email.conversationId,
-        messageId
-      );
-    }
-
-    return {
-      emailId,
-      subject: email.subject,
-      conversationId: email.conversationId ?? null,
-      siblingsSynced,
-      attachmentStubs,
-      accountId,
-      contactId,
-    };
   },
 });
 
 // Child task — syncs a single mailbox. Runs in its own container.
 export const syncOneMailboxTask = schemaTask({
   id: "sync-one-mailbox",
+  queue: MAILBOX_SYNC_MAILBOX_QUEUE,
   schema: z.object({
     email: z.email(),
     mailboxId: z.number(),
     sinceIso: z.string(),
+    senderFilter: z.string().trim().toLowerCase().optional(),
+    forceReprocessExisting: z.boolean().optional(),
   }),
-  maxDuration: 3600, // 1 hour — large mailboxes may have 50k+ emails
+  maxDuration: 7200, // 2 hours — large mailboxes may have 50k+ emails
   retry: { maxAttempts: 2 },
-  run: async ({ email, mailboxId, sinceIso }) => {
-    return syncOneMailbox(email, mailboxId, sinceIso);
-  },
+  run: ({ email, mailboxId, sinceIso, senderFilter, forceReprocessExisting }) =>
+    syncOneMailbox(
+      email,
+      mailboxId,
+      sinceIso,
+      senderFilter,
+      forceReprocessExisting ?? false
+    ),
 });
 
+async function triggerDownstreamIntakeTasks(params: {
+  totalAttachments: number;
+  totalStored: number;
+}): Promise<void> {
+  if (params.totalStored <= 0) {
+    return;
+  }
+
+  const triggers: Promise<unknown>[] = [];
+
+  if (params.totalAttachments > 0) {
+    triggers.push(
+      tasks.trigger("attachment-intake", {}).catch((err) =>
+        logger.warn("Failed to trigger attachment-intake", {
+          error: String(err),
+        })
+      )
+    );
+  }
+
+  triggers.push(
+    tasks.trigger("body-link-intake", {}).catch((err) =>
+      logger.warn("Failed to trigger body-link-intake", {
+        error: String(err),
+      })
+    )
+  );
+
+  await Promise.all(triggers);
+}
+
 /** Fan out to syncOneMailboxTask for all mailboxes, aggregate results. */
-async function fanOutSync(label: string, sinceIso: string) {
+async function fanOutSync(
+  label: string,
+  sinceIso: string,
+  options: FanOutOptions = {}
+) {
   const mailboxes = await getAllMailboxes();
   if (mailboxes.length === 0) {
     logger.warn("No mailboxes found");
-    return { mailboxes: 0, totalStored: 0, totalAttachments: 0, errors: 0 };
+    return {
+      mailboxes: 0,
+      totalFetched: 0,
+      totalStored: 0,
+      totalFiltered: 0,
+      totalAttachments: 0,
+      totalEnriched: 0,
+      errors: 0,
+    };
+  }
+
+  const normalizedMailboxEmails = options.mailboxEmails
+    ? [...new Set(options.mailboxEmails.map((mailbox) => mailbox.toLowerCase()))]
+    : [];
+  const filteredMailboxes = normalizedMailboxEmails.length
+    ? mailboxes.filter((mailbox) =>
+        normalizedMailboxEmails.includes(mailbox.email.toLowerCase())
+      )
+    : mailboxes;
+
+  if (normalizedMailboxEmails.length > 0 && filteredMailboxes.length === 0) {
+    logger.warn("No matching mailboxes found for mailbox-backfill", {
+      requestedMailboxes: normalizedMailboxEmails,
+      totalMailboxes: mailboxes.length,
+    });
+    return {
+      mailboxes: 0,
+      totalFetched: 0,
+      totalStored: 0,
+      totalFiltered: 0,
+      totalAttachments: 0,
+      totalEnriched: 0,
+      errors: 0,
+    };
   }
 
   logger.info(`Starting ${label}`, {
-    mailboxes: mailboxes.length,
+    mailboxes: filteredMailboxes.length,
+    requestedMailboxes: normalizedMailboxEmails.length ? normalizedMailboxEmails : undefined,
+    senderFilter: options.senderFilter,
     since: sinceIso,
   });
 
-  const batchResults = await syncOneMailboxTask.batchTriggerAndWait(
-    mailboxes.map((m) => ({
-      payload: { email: m.email, mailboxId: m.id, sinceIso },
-    }))
-  );
+  const mailboxBatches = chunk(filteredMailboxes, BATCH_TRIGGER_LIMIT);
+  const agg: AggregatedResults = {
+    mailboxCount: 0,
+    totalFetched: 0,
+    totalStored: 0,
+    totalFiltered: 0,
+    totalAttachments: 0,
+    totalEnriched: 0,
+    errors: 0,
+  };
 
-  const agg = aggregateBatchResults(batchResults, mailboxes.length);
+  for (const [batchIndex, batch] of mailboxBatches.entries()) {
+    const batchResults = await syncOneMailboxTask.batchTriggerAndWait(
+      batch.map((m) => ({
+        payload: {
+          email: m.email,
+          mailboxId: m.id,
+          sinceIso,
+          senderFilter: options.senderFilter,
+          forceReprocessExisting: options.forceReprocessExisting,
+        },
+      }))
+    );
+
+    const batchAgg = aggregateBatchResults(batchResults, batch.length);
+    agg.mailboxCount += batchAgg.mailboxCount;
+    agg.totalFetched += batchAgg.totalFetched;
+    agg.totalStored += batchAgg.totalStored;
+    agg.totalFiltered += batchAgg.totalFiltered;
+    agg.totalAttachments += batchAgg.totalAttachments;
+    agg.totalEnriched += batchAgg.totalEnriched;
+    agg.errors += batchAgg.errors;
+
+    logger.info(`${label} fan-out batch complete`, {
+      batchIndex: batchIndex + 1,
+      totalBatches: mailboxBatches.length,
+      ...batchAgg,
+    });
+  }
+
+  await triggerDownstreamIntakeTasks({
+    totalAttachments: agg.totalAttachments,
+    totalStored: agg.totalStored,
+  });
+
   logger.info(`${label} complete`, { ...agg });
 
   return {
     mailboxes: agg.mailboxCount,
     totalFetched: agg.totalFetched,
     totalStored: agg.totalStored,
+    totalFiltered: agg.totalFiltered,
     totalAttachments: agg.totalAttachments,
     totalEnriched: agg.totalEnriched,
     errors: agg.errors,
   };
 }
 
+function resolveBackfillSinceIso(
+  lookbackHours: number | undefined,
+  sinceIso: string | undefined
+): string {
+  const trimmedSince = sinceIso?.trim();
+  if (trimmedSince) {
+    const parsed = Date.parse(trimmedSince);
+    if (!Number.isFinite(parsed)) {
+      throw new Error(`Invalid sinceIso provided to mailbox-backfill: ${trimmedSince}`);
+    }
+    return new Date(parsed).toISOString();
+  }
+
+  if (lookbackHours && lookbackHours > 0) {
+    return buildSinceFilter(lookbackHours);
+  }
+
+  return FULL_HISTORY_SINCE_ISO;
+}
+
 // Cron — every 15 min, fans out to syncOneMailboxTask per mailbox.
 // Wait time in batchTriggerAndWait does NOT count toward maxDuration.
 export const mailboxSync = schedules.task({
   id: "mailbox-sync",
+  queue: MAILBOX_SYNC_CONTROL_QUEUE,
   cron: "*/15 * * * *",
   maxDuration: 300,
   run: () => fanOutSync("mailbox sync", buildSinceFilter(LOOKBACK_HOURS)),
@@ -639,14 +1282,41 @@ export const mailboxSync = schedules.task({
 
 // On-demand backfill — configurable lookback, no per-mailbox limit.
 // POST /api/v1/tasks/mailbox-backfill/trigger
+// {"payload":{}}
 // {"payload":{"lookbackHours":40000}}
 export const mailboxBackfill = schemaTask({
   id: "mailbox-backfill",
+  queue: MAILBOX_SYNC_CONTROL_QUEUE,
   schema: z.object({
-    lookbackHours: z.number().min(1).default(40_000),
+    lookbackHours: z.number().min(1).optional(),
+    sinceIso: z.string().trim().optional(),
+    senderFilter: z
+      .string()
+      .trim()
+      .min(1)
+      .toLowerCase()
+      .optional(),
+    mailboxEmails: z
+      .array(z.string().toLowerCase().trim())
+      .optional(),
+    forceReprocessExisting: z.boolean().optional().default(false),
   }),
   maxDuration: 7200,
   retry: { maxAttempts: 1 },
-  run: ({ lookbackHours }) =>
-    fanOutSync("mailbox backfill", buildSinceFilter(lookbackHours)),
+  run: ({
+    lookbackHours,
+    sinceIso,
+    mailboxEmails,
+    senderFilter,
+    forceReprocessExisting,
+  }) =>
+    fanOutSync(
+      "mailbox backfill",
+      resolveBackfillSinceIso(lookbackHours, sinceIso),
+      {
+        mailboxEmails,
+        senderFilter,
+        forceReprocessExisting,
+      }
+    ),
 });

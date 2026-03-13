@@ -67,12 +67,47 @@ trigger-restart service="webapp":
 trigger-logs service="webapp":
     @docker compose logs -f --tail 200 {{service}}
 
+# Hatchet orchestration engine lifecycle.
+hatchet-up:
+    @docker compose --profile hatchet up -d hatchet
+
+hatchet-down:
+    @docker compose stop hatchet
+    @docker compose rm -f hatchet
+
+hatchet-logs:
+    @docker compose logs -f --tail 200 hatchet
+
+# Start the Hatchet worker (long-running bun process).
+hatchet-worker:
+    {{BUN}} run apps/hatchet/src/worker.ts
+
 # Monday queue guardrail: trips and pauses Monday queues when thresholds are hit.
 # Example:
 #   just monday-killswitch 150 500 1800 pause
 monday-killswitch run_limit="150" pending_limit="0" max_seconds="1800" mode="pause":
     @RUNNER_LIMIT={{run_limit}} MONDAY_PENDING_LIMIT={{pending_limit}} MAX_SECONDS={{max_seconds}} ACTION_MODE={{mode}} \
       bash ops/trigger/monday-killswitch-monitor.sh
+
+# Intake reset/quiesce control for mailbox + document ingestion queues.
+# mode: pause | pause_and_cancel_pending | panic_cancel_all | resume
+trigger-intake-reset mode="pause" wait_for_drain="1" drain_timeout="900":
+    @ACTION_MODE={{mode}} WAIT_FOR_DRAIN={{wait_for_drain}} DRAIN_TIMEOUT_SECONDS={{drain_timeout}} \
+      bash ops/trigger/intake-reset.sh
+
+# Intake failure report (Trigger runs + documents backlog/error buckets).
+trigger-intake-report hours="24" limit="20":
+    @HOURS={{hours}} LIMIT={{limit}} bash ops/trigger/intake-failure-report.sh
+
+# Requeue failed extraction docs (dry-run by default).
+trigger-intake-requeue limit="100" dry_run="1" error_like="" bodylink_only="0":
+    @LIMIT={{limit}} DRY_RUN={{dry_run}} ERROR_LIKE="{{error_like}}" BODYLINK_ONLY={{bodylink_only}} \
+      bash ops/trigger/intake-requeue.sh
+
+# Reset body-link scan state for emails with failed body-link docs missing storage_path.
+trigger-intake-rescan-bodylinks limit="100" dry_run="1":
+    @MODE=bodylink_rescan LIMIT={{limit}} DRY_RUN={{dry_run}} \
+      bash ops/trigger/intake-requeue.sh
 
 # Cloudflare worker deployment checks (best effort; requires token scope for deployments list).
 cf-check:
@@ -107,6 +142,44 @@ permits-probe:
       exit 1
     fi
     echo "Permit tunnel probe OK"
+
+# Fast county parcel lookup helpers (calls local Bun script, no worker required).
+# Examples:
+#   just pima-lookup identifier 114964
+#   just maricopa-lookup address "16155 W Elwood St"
+#   just county-lookup pima coordinates "32.159457,-110.842543"
+county-lookup county mode value include_geometry="0":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    args=(--county "{{county}}")
+    case "{{mode}}" in
+      identifier)
+        args+=(--identifier "{{value}}")
+        ;;
+      address)
+        args+=(--address "{{value}}")
+        ;;
+      parcel)
+        args+=(--parcel "{{value}}")
+        ;;
+      coordinates)
+        args+=(--coordinates "{{value}}")
+        ;;
+      *)
+        echo "mode must be one of: identifier, address, parcel, coordinates" >&2
+        exit 1
+        ;;
+    esac
+    if [[ "{{include_geometry}}" == "1" ]]; then
+      args+=(--include-geometry)
+    fi
+    {{BUN}} apps/dust-permits/scripts/county-lookup.ts "${args[@]}"
+
+pima-lookup mode value include_geometry="0":
+    @just county-lookup pima "{{mode}}" "{{value}}" "{{include_geometry}}"
+
+maricopa-lookup mode value include_geometry="0":
+    @just county-lookup maricopa "{{mode}}" "{{value}}" "{{include_geometry}}"
 
 # AQData
 aqdata-health:

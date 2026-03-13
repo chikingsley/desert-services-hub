@@ -237,6 +237,168 @@ describe("graph module split", () => {
     );
   });
 
+  test("mail client can read and restore message read state", async () => {
+    process.env.AZURE_TENANT_ID = "tenant-123";
+    process.env.AZURE_CLIENT_ID = "client-123";
+    process.env.AZURE_CLIENT_SECRET = "secret-123";
+
+    const fetchCalls: FetchCall[] = [];
+    globalThis.fetch = (async (url, init) => {
+      const requestUrl = String(url);
+      fetchCalls.push({ url: requestUrl, init });
+      if (requestUrl.includes("login.microsoftonline.com")) {
+        return jsonResponse({
+          access_token: "token-mail-state",
+          expires_in: 3600,
+        });
+      }
+      if (
+        requestUrl.endsWith(
+          "/users/mailbox%2Bops%40example.com/messages/message-123?$select=isRead"
+        )
+      ) {
+        return jsonResponse({ isRead: false });
+      }
+      return jsonResponse({ id: "message-123", isRead: false });
+    }) as typeof fetch;
+
+    const { createGraphClient } = await import(
+      withCacheBuster("../../../lib/graph/mail.ts")
+    );
+    const client = createGraphClient();
+
+    expect(
+      typeof (client as unknown as { getMessageReadState?: unknown })
+        .getMessageReadState
+    ).toBe("function");
+    expect(
+      typeof (client as unknown as { setMessageReadState?: unknown })
+        .setMessageReadState
+    ).toBe("function");
+
+    const wasRead = await (
+      client as unknown as {
+        getMessageReadState: (
+          messageId: string,
+          mailboxEmail: string
+        ) => Promise<boolean>;
+      }
+    ).getMessageReadState("message-123", "mailbox+ops@example.com");
+
+    await (
+      client as unknown as {
+        setMessageReadState: (
+          messageId: string,
+          mailboxEmail: string,
+          isRead: boolean
+        ) => Promise<void>;
+      }
+    ).setMessageReadState("message-123", "mailbox+ops@example.com", false);
+
+    expect(wasRead).toBe(false);
+
+    const graphCalls = fetchCalls.filter((call) =>
+      call.url.includes("graph.microsoft.com")
+    );
+
+    expect(graphCalls[0]?.url).toBe(
+      "https://graph.microsoft.com/v1.0/users/mailbox%2Bops%40example.com/messages/message-123?$select=isRead"
+    );
+    expect(graphCalls[1]?.url).toBe(
+      "https://graph.microsoft.com/v1.0/users/mailbox%2Bops%40example.com/messages/message-123"
+    );
+    expect(graphCalls[1]?.init?.method).toBe("PATCH");
+  });
+
+  test("mail client can read message metadata for reply-all drafting", async () => {
+    process.env.AZURE_TENANT_ID = "tenant-123";
+    process.env.AZURE_CLIENT_ID = "client-123";
+    process.env.AZURE_CLIENT_SECRET = "secret-123";
+
+    const fetchCalls: FetchCall[] = [];
+    globalThis.fetch = (async (url, init) => {
+      const requestUrl = String(url);
+      fetchCalls.push({ url: requestUrl, init });
+      if (requestUrl.includes("login.microsoftonline.com")) {
+        return jsonResponse({
+          access_token: "token-mail-message",
+          expires_in: 3600,
+        });
+      }
+      return jsonResponse({
+        id: "message-123",
+        isRead: false,
+        subject: "RE: LPC 75th Ave -NOI /Dust Control Permit",
+        body: {
+          contentType: "html",
+          content: "<html><body><div>Original draft body</div></body></html>",
+        },
+        toRecipients: [
+          {
+            emailAddress: {
+              address: "amber@example.com",
+              name: "Amber",
+            },
+          },
+        ],
+        ccRecipients: [
+          {
+            emailAddress: {
+              address: "jt@example.com",
+              name: "JT",
+            },
+          },
+        ],
+      });
+    }) as typeof fetch;
+
+    const { createGraphClient } = await import(
+      withCacheBuster("../../../lib/graph/mail.ts")
+    );
+    const client = createGraphClient();
+
+    expect(
+      typeof (client as unknown as { getMessage?: unknown }).getMessage
+    ).toBe("function");
+
+    const message = await (
+      client as unknown as {
+        getMessage: (
+          messageId: string,
+          mailboxEmail: string
+        ) => Promise<{
+          body?: { content?: string; contentType?: string };
+          ccRecipients: Array<{
+            emailAddress: { address: string; name?: string };
+          }>;
+          id: string;
+          isRead?: boolean;
+          subject?: string;
+          toRecipients: Array<{
+            emailAddress: { address: string; name?: string };
+          }>;
+        }>;
+      }
+    ).getMessage("message-123", "mailbox+ops@example.com");
+
+    expect(message.subject).toBe("RE: LPC 75th Ave -NOI /Dust Control Permit");
+    expect(message.body?.content).toContain("Original draft body");
+    expect(message.toRecipients[0]?.emailAddress.address).toBe(
+      "amber@example.com"
+    );
+    expect(message.ccRecipients[0]?.emailAddress.address).toBe(
+      "jt@example.com"
+    );
+
+    const graphCalls = fetchCalls.filter((call) =>
+      call.url.includes("graph.microsoft.com")
+    );
+
+    expect(graphCalls[0]?.url).toBe(
+      "https://graph.microsoft.com/v1.0/users/mailbox%2Bops%40example.com/messages/message-123?$select=id,subject,isRead,toRecipients,ccRecipients,body"
+    );
+  });
+
   test("compose and mailbox config modules preserve compose behavior", async () => {
     process.env.AZURE_TENANT_ID = "tenant-123";
     process.env.AZURE_CLIENT_ID = "client-123";
@@ -257,6 +419,9 @@ describe("graph module split", () => {
       }
       if (requestUrl.endsWith("/messages/message-123/createReplyAll")) {
         return jsonResponse({ id: "reply-1", subject: "RE: Subject" });
+      }
+      if (requestUrl.endsWith("/messages/reply-1")) {
+        return jsonResponse({ id: "reply-1", subject: "Dust Permit Submitted - Project" });
       }
       if (requestUrl.endsWith("/messages/draft-1/attachments")) {
         return jsonResponse({ id: "file-1", name: "test.pdf" });
@@ -293,6 +458,44 @@ describe("graph module split", () => {
       replyAll: true,
       userId: "mailbox@example.com",
     });
+    expect(
+      typeof (client as unknown as { createReplyAllDraft?: unknown }).createReplyAllDraft
+    ).toBe("function");
+    await (
+      client as unknown as {
+        createReplyAllDraft: (params: {
+          messageId: string;
+          userId: string;
+        }) => Promise<{ id: string; subject: string }>;
+      }
+    ).createReplyAllDraft({
+      messageId: "message-123",
+      userId: "mailbox@example.com",
+    });
+    expect(
+      typeof (client as unknown as { updateDraft?: unknown }).updateDraft
+    ).toBe("function");
+    await (
+      client as unknown as {
+        updateDraft: (params: {
+          body: string;
+          bodyType: "html" | "text";
+          cc: Array<{ email: string; name?: string }>;
+          draftId: string;
+          subject: string;
+          to: Array<{ email: string; name?: string }>;
+          userId: string;
+        }) => Promise<{ id: string; subject: string }>;
+      }
+    ).updateDraft({
+      draftId: "reply-1",
+      userId: "mailbox@example.com",
+      subject: "Dust Permit Submitted - Project",
+      body: "<p>Updated</p>",
+      bodyType: "html",
+      to: [{ email: "to@example.com", name: "To Person" }],
+      cc: [{ email: "cc@example.com", name: "CC Person" }],
+    });
     await client.addFileAttachment({
       contentBytesBase64: "dGVzdA==",
       contentType: "application/pdf",
@@ -313,9 +516,16 @@ describe("graph module split", () => {
       "https://graph.microsoft.com/v1.0/users/mailbox%40example.com/messages/message-123/createReplyAll"
     );
     expect(graphCalls[2]?.url).toBe(
-      "https://graph.microsoft.com/v1.0/users/mailbox%40example.com/messages/draft-1/attachments"
+      "https://graph.microsoft.com/v1.0/users/mailbox%40example.com/messages/message-123/createReplyAll"
     );
     expect(graphCalls[3]?.url).toBe(
+      "https://graph.microsoft.com/v1.0/users/mailbox%40example.com/messages/reply-1"
+    );
+    expect(graphCalls[3]?.init?.method).toBe("PATCH");
+    expect(graphCalls[4]?.url).toBe(
+      "https://graph.microsoft.com/v1.0/users/mailbox%40example.com/messages/draft-1/attachments"
+    );
+    expect(graphCalls[5]?.url).toBe(
       "https://graph.microsoft.com/v1.0/users/mailbox%40example.com/messages/draft-1/send"
     );
   });

@@ -13,16 +13,23 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      DB_POOL_MAX: ${DB_POOL_MAX:-4}
+      API_DB_MAX_IN_FLIGHT: ${API_DB_MAX_IN_FLIGHT:-3}
+      CONTRACTS_LIST_CACHE_TTL_MS: ${CONTRACTS_LIST_CACHE_TTL_MS:-10000}
       DATABASE_URL: postgresql://postgres.pooler-dev:postgres@host.docker.internal:54329/postgres
       MONDAY_FILES_DIR: /app/data/monday-files
+      PDF_ANALYSIS_URL: http://pdf-analysis:4848
       BC_WORKER_BASE_URL: ${BC_WORKER_BASE_URL:-http://bc-worker:47824}
       BUILDINGCONNECTED_AUTH_VNC_PORT: ${BUILDINGCONNECTED_AUTH_VNC_PORT:-6081}
       BUILDINGCONNECTED_AUTH_VNC_URL: ${BUILDINGCONNECTED_AUTH_VNC_URL:-https://buildingconnected-vnc.desertservices.app/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true}
       PERMIT_WORKER_URL: http://permit-worker:47822
       PERMIT_WORKER_VNC_WS_URL: ${PERMIT_WORKER_VNC_WS_URL:-wss://maricopa-vnc.desertservices.app}
+      PERMIT_WORKER_VNC_PORT: ${PERMIT_WORKER_VNC_PORT:-6080}
       BUILDINGCONNECTED_AUTH_VNC_WS_URL: ${BUILDINGCONNECTED_AUTH_VNC_WS_URL:-wss://buildingconnected-vnc.desertservices.app}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    volumes:
+      - webhooks-data:/app/data
     healthcheck:
       test: ["CMD", "bun", "-e", "const r = await fetch('http://localhost:3000/api/health'); if (!r.ok) process.exit(1);"]
       interval: 10s
@@ -45,7 +52,7 @@ services:
     volumes:
       - ./ops/webhook-gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      test: ["CMD-SHELL", "status=$(wget -S -O /dev/null http://127.0.0.1/ 2>&1 | awk '/^  HTTP\\/1.1/{print $2}' | tail -n1); [ \"$$status\" = \"200\" ] || [ \"$$status\" = \"404\" ]"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -64,11 +71,12 @@ services:
       - "4848:4848"
     env_file: .env
     environment:
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3-flash-preview}
-      PDF_ANALYSIS_PROVIDER_ORDER: ${PDF_ANALYSIS_PROVIDER_ORDER:-local,gemini}
-      OLLAMA_ENDPOINT: http://host.docker.internal:11434/v1
-      OLLAMA_MODEL: glm-ocr:latest
-      OLLAMA_CHAT_MODEL: granite4:latest
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-google/gemini-3.1-flash-lite-preview}
+      PDF_ANALYSIS_PROVIDER_ORDER: ${PDF_ANALYSIS_PROVIDER_ORDER:-openrouter}
+      OLLAMA_ENDPOINT: ${OLLAMA_ENDPOINT:-http://host.docker.internal:11434/v1}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-glm-ocr:latest}
+      OLLAMA_CHAT_MODEL: ${OLLAMA_CHAT_MODEL:-granite4:latest}
+      OLLAMA_CHAT_TIMEOUT_SECONDS: ${OLLAMA_CHAT_TIMEOUT_SECONDS:-60}
       OLLAMA_MANAGER_ENDPOINT: ${OLLAMA_MANAGER_ENDPOINT:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -266,6 +274,10 @@ services:
       CLICKHOUSE_LOG_LEVEL: info
       RUN_REPLICATION_LOG_LEVEL: info
       INTERNAL_OTEL_TRACE_LOGGING_ENABLED: "0"
+      TASK_PAYLOAD_MAXIMUM_SIZE: ${TASK_PAYLOAD_MAXIMUM_SIZE:-10485760}
+      TASK_PAYLOAD_OFFLOAD_THRESHOLD: ${TASK_PAYLOAD_OFFLOAD_THRESHOLD:-262144}
+      BATCH_TASK_PAYLOAD_MAXIMUM_SIZE: ${BATCH_TASK_PAYLOAD_MAXIMUM_SIZE:-5242880}
+      STREAMING_BATCH_ITEM_MAXIMUM_SIZE: ${STREAMING_BATCH_ITEM_MAXIMUM_SIZE:-524288}
     healthcheck:
       test:
         [
@@ -452,6 +464,28 @@ services:
       retries: 5
       start_period: 5s
 
+  # ==========================================================================
+  # Hatchet — Workflow orchestration engine (replaces Trigger.dev)
+  # ==========================================================================
+  hatchet:
+    profiles: ["hatchet"]
+    image: ghcr.io/hatchet-dev/hatchet/hatchet-lite:latest
+    container_name: desert-hatchet
+    ports:
+      - "8888:8888"   # Dashboard UI
+      - "7077:7077"   # gRPC (worker connections)
+    environment:
+      SERVER_GRPC_BROADCAST_ADDRESS: "localhost:7077"
+    volumes:
+      - hatchet-data:/hatchet-lite
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8888/api/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
 volumes:
   webhooks-data:
   permit-data:
@@ -471,6 +505,7 @@ volumes:
   trigger-minio:
     name: trigger_minio
     external: true
+  hatchet-data:
 
 # =============================================================================
 # Usage
@@ -489,5 +524,8 @@ volumes:
 #                 docker compose logs -f permit-worker
 # Trigger up:     docker compose --profile trigger up -d
 # Trigger logs:   docker compose logs -f webapp supervisor
+# Hatchet up:     docker compose --profile hatchet up -d
+# Hatchet UI:     http://localhost:8888
+# Hatchet worker: bun run apps/hatchet/src/worker.ts
 # Rebuild:        docker compose build && docker compose up -d
 # =============================================================================

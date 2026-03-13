@@ -172,6 +172,11 @@ export interface RenewAndPayRequest {
   expedited?: boolean;
 }
 
+export interface SubmitDraftAndPayRequest {
+  applicationId?: string;
+  expedited?: boolean;
+}
+
 export interface ReviseRequest {
   notes?: string;
   revisionType: string;
@@ -241,12 +246,29 @@ export type RenewAndPayStage =
   | "payment-review"
   | "paid";
 
+export type SubmitDraftAndPayStage =
+  | "resume-failed"
+  | "submit-failed"
+  | "submitted-no-payment"
+  | "payment-page1"
+  | "payment-continue-failed"
+  | "paid";
+
 export interface RenewAndPayResponse extends BaseResponse {
   amount?: string;
   applicationId?: string;
   cardLastFour?: string;
   convenienceFee?: string;
   stage?: RenewAndPayStage;
+  totalPaid?: string;
+}
+
+export interface SubmitDraftAndPayResponse extends BaseResponse {
+  amount?: string;
+  applicationId?: string;
+  cardLastFour?: string;
+  convenienceFee?: string;
+  stage?: SubmitDraftAndPayStage;
   totalPaid?: string;
 }
 
@@ -344,4 +366,173 @@ export interface SearchPermitsRequest {
 
 export interface ExpiringPermitsRequest {
   days?: number;
+}
+
+// ============================================================================
+// NOI Types
+// ============================================================================
+
+export interface NoiResolveRequest {
+  /** Override company name (otherwise parsed from NOI record) */
+  companyName?: string;
+  /** Permit application ID to copy form data from */
+  copyFromApp?: string;
+  /** Override disturbed acres (otherwise parsed from NOI record) */
+  disturbedAcres?: number;
+  /** Force flow type (otherwise auto-determined from company check) */
+  flow?: "new-company" | "existing-company";
+  /** NOI identifier: AZC#, LTF#, or bare digits */
+  identifier: string;
+}
+
+export interface NoiCreateRequest extends NoiResolveRequest {
+  /** Set to false to dry-run (resolve + validate but don't create). Default: true */
+  create?: boolean;
+}
+
+export interface NoiCompanyMatch {
+  matchedName: string;
+  permitCount: number;
+  portalCompanyId: string | null;
+}
+
+export interface NoiResolveResponse {
+  approvedForCreate: boolean;
+  checks: Record<string, unknown>;
+  companyMatch: NoiCompanyMatch | null;
+  createPayload: {
+    companyName?: string;
+    copyFromApp?: string;
+    flow: "new-company" | "existing-company";
+    formData: Record<string, unknown>;
+  };
+  noi: Record<string, unknown>;
+  success: boolean;
+  timestamp: string;
+}
+
+export interface NoiCreateResponse extends NoiResolveResponse {
+  create?: Record<string, unknown> | null;
+  createSkipped?: boolean;
+}
+
+// ============================================================================
+// Pima GIS Lookup Types
+// ============================================================================
+
+export interface PimaLookupRequest {
+  /** Search by street address in Pima County */
+  address?: string;
+  /** Optional buffer for coordinate-based parcel lookup */
+  distanceFeet?: number;
+  /** AZDEQ NOI/LTF identifier */
+  identifier?: string;
+  /** Include parcel polygon geometry in response */
+  includeGeometry?: boolean;
+  /** Latitude for direct coordinate lookup */
+  latitude?: number;
+  /** Longitude for direct coordinate lookup */
+  longitude?: number;
+  /** Pima parcel/APN */
+  parcel?: string;
+}
+
+export interface PimaLookupParcel {
+  acres: number | null;
+  address: string | null;
+  centroid: { lat: number; lng: number } | null;
+  owner: string | null;
+  parcel: string;
+  parcelDashed: string;
+  parcelUse: string | null;
+  polygon?: Array<{ lat: number; lng: number }>;
+  rawAttributes: Record<string, unknown>;
+}
+
+export interface PimaLookupAddressCandidate {
+  address: string;
+  city: string | null;
+  coordinates: { lat: number; lng: number } | null;
+  parcel: string | null;
+  primary: boolean | null;
+  resolvedParcels: PimaLookupParcel[];
+  zip: string | null;
+}
+
+export interface PimaLookupResponse extends BaseResponse {
+  addressCandidates?: PimaLookupAddressCandidate[];
+  noi?: {
+    companyName: string | null;
+    countyCode: string | null;
+    facilityName: string | null;
+    identifier: string;
+    latitude: number;
+    longitude: number;
+    ltfIdno: string | null;
+    permitAuthCode: string | null;
+  };
+  parcels: PimaLookupParcel[];
+  query: {
+    address?: string;
+    distanceFeet?: number | null;
+    identifier?: string;
+    includeGeometry: boolean;
+    latitude?: number;
+    longitude?: number;
+    mode: "address" | "coordinates" | "identifier" | "parcel";
+    parcel?: string;
+  };
+}
+
+// ============================================================================
+// Maricopa GIS Lookup Types
+// ============================================================================
+
+export interface MaricopaLookupRequest {
+  address?: string;
+  identifier?: string;
+  includeGeometry?: boolean;
+  latitude?: number;
+  longitude?: number;
+  parcel?: string;
+}
+
+export interface MaricopaLookupParcel {
+  acres: number | null;
+  address: string | null;
+  apn: string;
+  apnDashed: string;
+  centroid: { lat: number; lng: number };
+  owner: string | null;
+  polygon?: Array<{ lat: number; lng: number }>;
+  rawAttributes: Record<string, unknown>;
+}
+
+export interface MaricopaLookupResponse extends BaseResponse {
+  addressLookup?: {
+    exact: MaricopaLookupParcel[];
+    searchedStreet: string | null;
+    similar: MaricopaLookupParcel[];
+  };
+  noi?: {
+    companyName: string | null;
+    countyCode: string | null;
+    facilityName: string | null;
+    identifier: string;
+    latitude: number;
+    longitude: number;
+    ltfIdno: string | null;
+    permitAuthCode: string | null;
+  };
+  parcels: MaricopaLookupParcel[];
+  query: {
+    address?: string;
+    identifier?: string;
+    includeGeometry: boolean;
+    latitude?: number;
+    longitude?: number;
+    mode: "address" | "coordinates" | "identifier" | "parcel";
+    parcel?: string;
+    searchStrategy?: "exact" | "similar";
+  };
 }

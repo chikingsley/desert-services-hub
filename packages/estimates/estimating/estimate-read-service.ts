@@ -93,30 +93,6 @@ export async function getEstimate(id: string): Promise<Estimate | null> {
   return row ? parseEstimateRow(row) : null;
 }
 
-// Get estimate by base number
-export async function getEstimateByBaseNumber(
-  baseNumber: string
-): Promise<Estimate | null> {
-  const row = (await db
-    .query(
-      `SELECT q.*,
-        (SELECT COALESCE(json_agg(json_build_object(
-          'id', v.id,
-          'version_number', v.version_number,
-          'total', v.total,
-          'is_current', v.is_current,
-          'created_at', v.created_at
-        )), '[]'::json) FROM estimate_versions v WHERE v.estimate_id = q.id) as versions
-      FROM estimates q
-      WHERE q.base_number = $1`
-    )
-    .get(baseNumber)) as
-    | (Record<string, unknown> & { versions: unknown })
-    | null;
-
-  return row ? parseEstimateRow(row) : null;
-}
-
 // Get full estimate with current version details
 export async function getEstimateWithDetails(id: string): Promise<
   | (Estimate & {

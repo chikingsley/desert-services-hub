@@ -34,6 +34,13 @@ export const coordinator = {
     '[id="ThePage:siTable:9:sioTable:1:siForm:radio"]',
     '[id="ThePage:siTable:11:sioTable:3:siForm:radioTable:1:radio"]',
     '[id="ThePage:siTable:11:sioTable:1:siForm:radio"]',
+    // Extended range for renewal copies (portal shifts indices)
+    '[id="ThePage:siTable:7:sioTable:3:siForm:radioTable:1:radio"]',
+    '[id="ThePage:siTable:7:sioTable:1:siForm:radio"]',
+    '[id="ThePage:siTable:12:sioTable:3:siForm:radioTable:1:radio"]',
+    '[id="ThePage:siTable:12:sioTable:1:siForm:radio"]',
+    '[id="ThePage:siTable:13:sioTable:3:siForm:radioTable:1:radio"]',
+    '[id="ThePage:siTable:13:sioTable:1:siForm:radio"]',
   ],
   yes: '[id="ThePage:siTable:10:sioTable:3:siForm:radioTable:0:radio"]',
   yesFallbacks: [
@@ -42,6 +49,13 @@ export const coordinator = {
     '[id="ThePage:siTable:9:sioTable:0:siForm:radio"]',
     '[id="ThePage:siTable:11:sioTable:3:siForm:radioTable:0:radio"]',
     '[id="ThePage:siTable:11:sioTable:0:siForm:radio"]',
+    // Extended range for renewal copies (portal shifts indices)
+    '[id="ThePage:siTable:7:sioTable:3:siForm:radioTable:0:radio"]',
+    '[id="ThePage:siTable:7:sioTable:0:siForm:radio"]',
+    '[id="ThePage:siTable:12:sioTable:3:siForm:radioTable:0:radio"]',
+    '[id="ThePage:siTable:12:sioTable:0:siForm:radio"]',
+    '[id="ThePage:siTable:13:sioTable:3:siForm:radioTable:0:radio"]',
+    '[id="ThePage:siTable:13:sioTable:0:siForm:radio"]',
   ],
 } as const;
 

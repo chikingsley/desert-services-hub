@@ -19,6 +19,7 @@
  */
 
 import type { BrowserContext, Frame, Page } from "playwright";
+import { goToPage } from "@/portal/create/navigation";
 import { sleep, waitForElement, waitForPopup } from "@/portal/utils/helpers";
 import { portal } from "@/portal/utils/selectors";
 import { esriMap, mapPopup } from "@/portal/utils/selectors/page2";
@@ -46,121 +47,87 @@ export interface MapSearchData {
 /**
  * Ensure we are on Page 2 (Project Location).
  */
-async function ensureOnProjectLocationPage(page: Page): Promise<boolean> {
-  const addSiteDrawingVisible = await page
+async function hasSiteDrawingAction(page: Page): Promise<boolean> {
+  const addVisible = await page
     .locator(portal.page2.addSiteDrawingBtn)
     .isVisible()
     .catch(() => false);
+  const editVisible = await page
+    .locator(portal.page2.editSiteDrawingBtn)
+    .isVisible()
+    .catch(() => false);
+  return addVisible || editVisible;
+}
 
-  if (addSiteDrawingVisible) {
+async function waitForSiteDrawingAction(page: Page): Promise<boolean> {
+  if (await waitForElement(page, portal.page2.editSiteDrawingBtn, 3_000)) {
+    return true;
+  }
+  return await waitForElement(page, portal.page2.addSiteDrawingBtn, 3_000);
+}
+
+async function ensureOnProjectLocationPage(page: Page): Promise<boolean> {
+  if (await hasSiteDrawingAction(page)) {
     return true;
   }
 
-  console.log("  Clicking step 2 (Project Location) indicator...");
-  let step2Clicked = false;
-
-  // Try clicking via text selector
-  try {
-    const step2Link = page.locator('a.xj:has-text("2. Project Location")');
-    if ((await step2Link.count()) > 0) {
-      await step2Link.click();
-      step2Clicked = true;
-      console.log("    ✓ Found via a.xj selector");
-    }
-  } catch {
-    // Try fallback
-  }
-
-  // Fallback: text selector
-  if (!step2Clicked) {
-    try {
-      const textLink = page.locator('text="2. Project Location"');
-      if ((await textLink.count()) > 0) {
-        await textLink.click();
-        step2Clicked = true;
-        console.log("    ✓ Found via text selector");
-      }
-    } catch {
-      // Try evaluate fallback
-    }
-  }
-
-  // Fallback: evaluate click
-  if (!step2Clicked) {
-    console.log("    Trying to find link via evaluate...");
-    step2Clicked = await page.evaluate(() => {
-      const links = [...document.querySelectorAll("a")];
-      const link = links.find(
-        (a) => a.textContent?.trim() === "2. Project Location"
-      );
-      if (link) {
-        link.click();
-        return true;
-      }
-      return false;
-    });
-    if (step2Clicked) {
-      console.log("    ✓ Found via evaluate");
-    }
-  }
-
-  if (!step2Clicked) {
-    console.log("    ✗ Could not click step 2 indicator");
+  console.log("  Navigating to Page 2 (Project Location)...");
+  const navigation = await goToPage(page, 2);
+  if (!navigation.success) {
+    console.log(`    ✗ ${navigation.debug}`);
     return false;
   }
-
-  // Wait for page to reload
-  console.log("  Waiting for page reload...");
-  try {
-    await page.waitForLoadState("networkidle", { timeout: 15_000 });
-    console.log("    ✓ Page reloaded");
-  } catch {
-    console.log("    ⚠ Page load timeout, continuing...");
-  }
-  await sleep(2000);
-  return true;
+  return await waitForSiteDrawingAction(page);
 }
 
 /**
- * Click the "Add Site Drawing" button.
+ * Click the site drawing action button.
  */
-async function clickAddSiteDrawing(page: Page): Promise<boolean> {
-  // Wait for Add Site Drawing button to appear
-  console.log("  Waiting for 'Add Site Drawing' button...");
-  const buttonFound = await waitForElement(
-    page,
-    portal.page2.addSiteDrawingBtn,
-    10_000
-  );
+async function clickSiteDrawingButton(page: Page): Promise<boolean> {
+  const actions = [
+    {
+      label: "Edit Site Drawing",
+      selector: portal.page2.editSiteDrawingBtn,
+    },
+    {
+      label: "Add Site Drawing",
+      selector: portal.page2.addSiteDrawingBtn,
+    },
+  ] as const;
 
-  if (!buttonFound) {
-    console.log("    ✗ Add Site Drawing button not found on page");
-    return false;
+  for (const action of actions) {
+    console.log(`  Waiting for '${action.label}' button...`);
+    const buttonFound = await waitForElement(page, action.selector, 3_000);
+    if (!buttonFound) {
+      continue;
+    }
+    console.log(`    ✓ ${action.label} button found`);
+
+    console.log(`  Clicking '${action.label}' button...`);
+    const clicked = await page
+      .locator(action.selector)
+      .first()
+      .click()
+      .then(() => true)
+      .catch(() => false);
+
+    if (!clicked) {
+      console.log(`    ✗ ${action.label} click failed`);
+      continue;
+    }
+    console.log(`    ✓ Clicked ${action.label}`);
+    return true;
   }
-  console.log("    ✓ Button found");
 
-  // Click "Add Site Drawing" button
-  console.log("  Clicking 'Add Site Drawing' button...");
-  const clicked = await page
-    .locator(portal.page2.addSiteDrawingBtn)
-    .first()
-    .click()
-    .then(() => true)
-    .catch(() => false);
-
-  if (!clicked) {
-    console.log("    ✗ Click failed");
-    return false;
-  }
-  console.log("    ✓ Clicked Add Site Drawing");
-  return true;
+  console.log("    ✗ No site drawing action button found on Page 2");
+  return false;
 }
 
 /**
  * Navigate to Page 2 and open the map popup.
  *
- * If already on the application detail page, clicks the step 2 indicator
- * to navigate to Project Location, then clicks "Add Site Drawing".
+ * If already on the application detail page, navigates to Project Location
+ * and clicks the available site drawing action ("Edit" or "Add").
  *
  * @param page - Main Playwright page
  * @param context - Browser context for popup detection
@@ -182,8 +149,8 @@ export async function openMapPopup(
     return null;
   }
 
-  // 2. Click Add Site Drawing
-  const clicked = await clickAddSiteDrawing(page);
+  // 2. Click site drawing action
+  const clicked = await clickSiteDrawingButton(page);
   if (!clicked) {
     return null;
   }

@@ -59,7 +59,7 @@ export function ContractsIntakeExperimentPage() {
 
   const { data, error, isLoading, isValidating, mutate } =
     useSWR<ContractsApiResponse>(
-      "/api/contracts?page=1&perPage=200&sort=updated_at.desc",
+      "/api/contracts?page=1&perPage=100&includeMeta=0&sort=updated_at.desc",
       fetcher,
       {
         keepPreviousData: true,

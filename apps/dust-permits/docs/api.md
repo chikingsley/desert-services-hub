@@ -20,6 +20,8 @@ Base URL: `http://localhost:47822`
 | `DELETE` | `/api/permits/:id` | Delete draft permit |
 | `DELETE` | `/api/permits/drafts` | Delete all draft permits |
 | `POST` | `/api/permits/create` | Create permit from FormData |
+| `POST` | `/api/maricopa/lookup` | Lookup Maricopa parcels by NOI, address, parcel, or coordinates |
+| `POST` | `/api/pima/lookup` | Lookup Pima County parcels by NOI, address, parcel, or coordinates |
 | `POST` | `/api/permits/:id/renew` | Renew existing permit |
 | `POST` | `/api/permits/:id/renew-and-pay` | Renew, submit, and pay |
 | `POST` | `/api/permits/:id/close` | Close active permit |
@@ -37,6 +39,76 @@ Base URL: `http://localhost:47822`
 | `POST` | `/api/browser/abort` | Emergency kill switch for in-flight operations |
 | `POST` | `/api/browser/clipboard/paste` | Paste text from host clipboard |
 | `POST` | `/api/browser/clipboard/copy` | Copy text from page to host clipboard |
+
+---
+
+## Maricopa GIS API
+
+### POST /api/maricopa/lookup
+
+Resolve Maricopa parcel context from one lookup mode:
+
+- `identifier`: AZDEQ NOI/LTF number, which is resolved to facility coordinates first
+- `address`: assessor address search with exact/similar results
+- `parcel`: direct parcel/APN lookup
+- `latitude` + `longitude`: direct coordinate lookup
+
+**Request Body:**
+```json
+{
+  "parcel": "50072958",
+  "includeGeometry": false
+}
+```
+
+---
+
+## Pima GIS API
+
+### POST /api/pima/lookup
+
+Resolve Pima County parcel context from one lookup mode:
+
+- `identifier`: AZDEQ NOI/LTF number, which is resolved to facility coordinates first
+- `address`: Pima address search, with parcel fallback via address-point coordinates
+- `parcel`: direct parcel/APN lookup
+- `latitude` + `longitude`: direct coordinate lookup
+
+**Request Body:**
+```json
+{
+  "identifier": "114964",
+  "distanceFeet": 500,
+  "includeGeometry": false
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "query": {
+    "mode": "identifier",
+    "identifier": "114964",
+    "distanceFeet": 500,
+    "includeGeometry": false
+  },
+  "noi": {
+    "facilityName": "DLA-TUCSON DISPOSITION SERVICES WAREHOUSE REFLOW PROJECT",
+    "permitAuthCode": "AZC114964",
+    "latitude": 32.159457,
+    "longitude": -110.842543
+  },
+  "parcels": [
+    {
+      "parcel": "141020050",
+      "parcelDashed": "141-02-0050",
+      "owner": "UNITED STATES OF AMERICA"
+    }
+  ],
+  "timestamp": "2026-03-06T00:00:00.000Z"
+}
+```
 
 ---
 

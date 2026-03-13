@@ -138,7 +138,9 @@ export default async function CategoriesPage({
 
           <TabsContent className="m-0" value="uncategorized">
             <Uncategorized
-              autoCategorizeSenders={emailAccount?.autoCategorizeSenders ?? false}
+              autoCategorizeSenders={
+                emailAccount?.autoCategorizeSenders ?? false
+              }
               categories={categories}
             />
           </TabsContent>

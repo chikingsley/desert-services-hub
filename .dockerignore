@@ -28,6 +28,7 @@
 !packages/sharepoint/
 !packages/monday/
 !packages/email/
+!packages/projects/
 !packages/estimates/
 !packages/permits/
 !packages/takeoff/

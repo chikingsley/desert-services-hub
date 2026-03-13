@@ -8,11 +8,11 @@
  */
 
 import { db } from "@lib/db/client";
-import { getPermitCount, upsertPermit } from "@lib/db/repositories/dust-permit";
+import { getPermitCount, upsertPermit } from "@dust-permits/db/dust-permit";
 import {
   getMarketingPermitCount,
   upsertMarketingPermit,
-} from "@lib/db/repositories/marketing-permit";
+} from "@dust-permits/db/marketing-permit";
 import type { PortalPermit } from "@/portal/permit-parser";
 import { parsePermitExport } from "@/portal/permit-parser";
 import { downloadCompanyPermits } from "@/portal/sync-company";

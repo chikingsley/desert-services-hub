@@ -7,6 +7,7 @@ import {
   handleBuildingConnectedAuthStop,
 } from "./api/auth";
 import { handleBuildingConnectedDownload } from "./api/download";
+import { handleBuildingConnectedFiles } from "./api/files";
 import { bcSession } from "./lib/browser";
 
 const PORT = Number(process.env.PORT) || 47_824;
@@ -39,6 +40,9 @@ serve({
     },
     "/api/buildingconnected/auth/clipboard/copy": {
       POST: handleBuildingConnectedAuthClipboardCopy,
+    },
+    "/api/buildingconnected/files": {
+      POST: ((req: Request) => handleBuildingConnectedFiles(req)) as never,
     },
     "/api/buildingconnected/download": {
       POST: ((req: Request) => handleBuildingConnectedDownload(req)) as never,

@@ -1,32 +1,33 @@
-﻿<!DOCTYPE html>
-<html class="no-js" lang="en">
+﻿<!DOCTYPE
+html >
+  <html class="no-js" lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Language" content="en">
+    <meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0, user-scalable=no" name="viewport">
+    <meta content="en" http-equiv="Content-Language">
 
     <title>City of Scottsdale - Search</title>
 
     <!-- Favicons -->
-    <link rel="shortcut icon" href="./content/images/favicon.ico">
-    <link rel="apple-touch-icon" sizes="57x57" href="./content/images/CoS-icon-57x57.jpg" />
-    <link rel="apple-touch-icon" sizes="114x114" href="./content/images/CoS-icon-114x114.jpg" />
-    <link rel="apple-touch-icon" sizes="72x72" href="./content/images/CoS-icon-72x72.jpg" />
-    <link rel="apple-touch-icon" sizes="144x144" href="./content/images/CoS-icon-144x144.jpg" />
+    <link href="./content/images/favicon.ico" rel="shortcut icon">
+    <link href="./content/images/CoS-icon-57x57.jpg" rel="apple-touch-icon" sizes="57x57" />
+    <link href="./content/images/CoS-icon-114x114.jpg" rel="apple-touch-icon" sizes="114x114" />
+    <link href="./content/images/CoS-icon-72x72.jpg" rel="apple-touch-icon" sizes="72x72" />
+    <link href="./content/images/CoS-icon-144x144.jpg" rel="apple-touch-icon" sizes="144x144" />
 
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="./content/fonts/font-awesome.min.css">
-    <link rel="stylesheet" href="./content/bootstrap.min.css">
-    <link rel="stylesheet" href="./content/cos.css">
-    <link rel="stylesheet" href="./content/eServices.css">
+    <link href="./content/fonts/font-awesome.min.css" rel="stylesheet">
+    <link href="./content/bootstrap.min.css" rel="stylesheet">
+    <link href="./content/cos.css" rel="stylesheet">
+    <link href="./content/eServices.css" rel="stylesheet">
 </head>
 <body>
     <header>
-        <div id="site-header" class="site-header site-header-general hidden-xs">
+        <div class="site-header site-header-general hidden-xs" id="site-header">
             <div class="site-header-caption">
                 <!-- logo -->
                 <a href="https://www.scottsdaleaz.gov" title="Back to Home">
-                    <img src="./content/images/CityHeaderLogo.png" alt="City of Scottsdale Logo" style="margin-top: 10px; margin-left: 20px;">
+                    <img alt="City of Scottsdale Logo" src="./content/images/CityHeaderLogo.png" style="margin-top: 10px; margin-left: 20px;">
                 </a>
                 <div class="department-branding">
                     <h3 style="margin-left: 20px;">eServices</h3>
@@ -36,27 +37,27 @@
     </header>
     <section class="container-fluid cms-content">
         <div class="cos-page-header">
-            <a href="https://www.scottsdaleaz.gov" class="hidden-sm hidden-md hidden-lg">
+            <a class="hidden-sm hidden-md hidden-lg" href="https://www.scottsdaleaz.gov">
                 <h3 class="branding-sm text-center">
                     City of <strong>Scottsdale</strong>
                 </h3>
             </a>
         </div>
-        <div id="page-nav-large" class="page-nav-large breadcrumb-container">
+        <div class="page-nav-large breadcrumb-container" id="page-nav-large">
             <div class="container-fluid page-wrapper">
                 <div class="container">
-                    <div id="locationline" class="breadcrumb">
-                        <span class="ipb-locationline-separator"></span><a href="https://www.scottsdaleaz.gov/home">Home Page</a>
+                    <div class="breadcrumb" id="locationline">
+                        <span class="ipb-locationline-separator" /><a href="https://www.scottsdaleaz.gov/home">Home Page</a>
                         <span class="ipb-locationline-separator">&nbsp;/&nbsp;</span>&nbsp;Not Found
                     </div>
                 </div>
             </div>
         </div>
-        <div class="container page-content">
+        <div class="page-content container">
             <h2>Oops!</h2>
             <div class="row">
                 <div class="col-md-4 col-sm-12 col-xs-12">
-                    <img src="./content/images/404-box-image.jpg" class="img-responsive" style="border: none; width: 100%;" alt="">
+                    <img alt="" class="img-responsive" src="./content/images/404-box-image.jpg" style="border: none; width: 100%;">
                 </div>
                 <div class="col-md-8 col-sm-12 col-xs-12">
                     <p class="lead">
@@ -69,14 +70,14 @@
         </div>
     </section>
     <footer class="footer-sticky">
-        <div class="container hidden-print">
+        <div class="hidden-print container">
             <div class="row copyright">
-                <div class="col-sm-6 col-sm-push-6 copyright-citysymbol center-to-right">
+                <div class="copyright-citysymbol center-to-right col-sm-6 col-sm-push-6">
                     <a href="https://www.scottsdaleaz.gov">
                         <img alt="City Logo" src="./content/images/CityHeaderLogoStacked.png">
                     </a>
                 </div>
-                <div class="col-sm-6 col-sm-pull-6 copyright-address center-to-left">
+                <div class="copyright-address center-to-left col-sm-6 col-sm-pull-6">
                     <address>
 						<small>
 							3939 N. Drinkwater Blvd. <br>
@@ -121,3 +122,107 @@
     </footer>
 </body>
 </html>
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;

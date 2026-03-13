@@ -55,10 +55,12 @@ export function printAuditResult(
     console.log(line);
   }
 
-  if (samples.unresolved.length > 0) {
-    console.log("  unresolved samples:");
-    for (const sample of samples.unresolved) {
-      console.log(`    - ${sample}`);
+  for (const bucket of ["relation_fallback", "display_fallback", "unresolved"] as const) {
+    if (samples[bucket].length > 0) {
+      console.log(`  ${bucket} samples:`);
+      for (const sample of samples[bucket]) {
+        console.log(`    - ${sample}`);
+      }
     }
   }
 }

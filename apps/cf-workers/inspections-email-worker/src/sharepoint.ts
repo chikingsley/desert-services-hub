@@ -4,7 +4,34 @@
  * Uploads inspection PDFs to the DataDrive site's Shared Documents library.
  */
 
-import { getGraphToken } from "@/packages/archive/email/sync/graph/token";
+async function getGraphToken(credentials: {
+  tenantId: string;
+  clientId: string;
+  clientSecret: string;
+}): Promise<string> {
+  const tokenUrl = `https://login.microsoftonline.com/${credentials.tenantId}/oauth2/v2.0/token`;
+  const response = await fetch(tokenUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: credentials.clientId,
+      client_secret: credentials.clientSecret,
+      scope: "https://graph.microsoft.com/.default",
+      grant_type: "client_credentials",
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to fetch Graph token: ${response.status} ${text}`);
+  }
+
+  const data = (await response.json()) as { access_token?: string };
+  if (!data.access_token) {
+    throw new Error("Graph token response missing access_token");
+  }
+  return data.access_token;
+}
 
 export interface SharePointResult {
   error?: string;
@@ -23,11 +50,7 @@ export async function uploadToSharePoint(
   content: Uint8Array
 ): Promise<SharePointResult> {
   try {
-    const token = await getGraphToken(
-      credentials.tenantId,
-      credentials.clientId,
-      credentials.clientSecret
-    );
+    const token = await getGraphToken(credentials);
 
     const driveEndpoint =
       "https://graph.microsoft.com/v1.0/sites/desertservices.sharepoint.com:/sites/DataDrive:/drives";

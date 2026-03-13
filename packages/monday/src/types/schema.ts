@@ -83,6 +83,7 @@ export const ESTIMATING_COLUMNS = {
   CONTACTS_DIRECT: { id: "board_relation_mm065k5n", type: "board_relation" },
   ACCOUNTS: { id: "board_relation_mkzdd0r4", type: "board_relation" },
   BID_STATUS: { id: "deal_stage", type: "status" },
+  CONTRACT_STATUS: { id: "color_mm0w2vgv", type: "status" },
   BID_VALUE: { id: "deal_value", type: "numbers" },
   AWARDED_VALUE: { id: "deal_actual_value", type: "numbers" },
   BID_SOURCE: { id: "color_mksetd6e", type: "status" },

@@ -3,11 +3,15 @@
  *
  * Graph API endpoints:
  *   GET /users/{mailbox}/messages/{id}/attachments              → list
- *   GET /users/{mailbox}/messages/{id}/attachments/{attachId}   → get one
+ *   GET /users/{mailbox}/messages/{id}/attachments/{attachId}/$value → download binary
  */
 
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import { ensureAuthenticated } from "@outlook/auth/ensure";
 import { callGraphAPI } from "@outlook/utils/graph-api";
+
+const ATTACHMENT_OUTPUT_DIR = "/tmp/outlook-attachments";
 
 interface MCPResponse {
   content: Array<{ type: "text"; text: string }>;
@@ -126,6 +130,10 @@ interface GetAttachmentArgs {
   mailbox?: string;
 }
 
+/**
+ * Downloads an attachment via the Graph API $value endpoint (raw binary),
+ * saves to disk, and returns the file path.
+ */
 export async function handleGetAttachment(
   args: GetAttachmentArgs
 ): Promise<MCPResponse> {
@@ -142,37 +150,56 @@ export async function handleGetAttachment(
 
   try {
     const accessToken = await ensureAuthenticated();
+
+    // Get metadata first (without contentBytes).
+    // Note: @odata.type is always returned automatically — it cannot be in $select.
     const att = await callGraphAPI<GraphAttachment>(
       accessToken,
       "GET",
-      `users/${mailbox}/messages/${id}/attachments/${attachmentId}`
+      `users/${mailbox}/messages/${id}/attachments/${attachmentId}`,
+      null,
+      { $select: "id,name,contentType,size,isInline" }
     );
 
-    const type = att["@odata.type"] ?? "";
-    const isFile = type.includes("fileAttachment");
-
-    if (isFile && att.contentBytes) {
-      const sizeStr = formatSize(att.size);
-      const truncated = att.contentBytes.length > 50_000;
-      const preview = truncated
-        ? `${att.contentBytes.slice(0, 50_000)}...(truncated)`
-        : att.contentBytes;
-
+    const isFile = att["@odata.type"]?.includes("fileAttachment");
+    if (!isFile) {
+      const type =
+        att["@odata.type"]?.replace("#microsoft.graph.", "") ?? "unknown";
       return {
         content: [
           {
             type: "text",
-            text: `Attachment: ${att.name}\nContent-Type: ${att.contentType}\nSize: ${sizeStr}\nEncoding: base64\n\n${preview}`,
+            text: `Attachment: ${att.name}\nType: ${type}\nThis attachment type does not support binary download.`,
           },
         ],
       };
     }
 
+    // Download raw binary via $value endpoint
+    const downloadUrl = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(mailbox)}/messages/${encodeURIComponent(id)}/attachments/${encodeURIComponent(attachmentId)}/$value`;
+
+    const res = await fetch(downloadUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Download failed: ${res.status} ${text}`);
+    }
+
+    const buffer = Buffer.from(await res.arrayBuffer());
+
+    // Save to disk
+    await mkdir(ATTACHMENT_OUTPUT_DIR, { recursive: true });
+    const safeName = att.name.replace(/[^\w.\-()]/g, "_");
+    const outputPath = join(ATTACHMENT_OUTPUT_DIR, `${Date.now()}-${safeName}`);
+    await Bun.write(outputPath, buffer);
+
     return {
       content: [
         {
           type: "text",
-          text: `Attachment: ${att.name}\nType: ${type.replace("#microsoft.graph.", "")}\nContent-Type: ${att.contentType ?? "unknown"}\nSize: ${formatSize(att.size)}\n\nThis attachment type does not have downloadable content bytes.`,
+          text: `Downloaded: ${att.name}\nContent-Type: ${att.contentType ?? "unknown"}\nSize: ${formatSize(buffer.length)}\nSaved to: ${outputPath}`,
         },
       ],
     };
@@ -181,7 +208,7 @@ export async function handleGetAttachment(
     if (msg === "Authentication required") {
       return authRequiredResponse();
     }
-    return errorResponse(`Error getting attachment: ${msg}`);
+    return errorResponse(`Error downloading attachment: ${msg}`);
   }
 }
 
@@ -214,7 +241,7 @@ export const attachmentTools: ToolDefinition[] = [
   {
     name: "get-attachment",
     description:
-      "Downloads a specific attachment from an email. Returns the attachment content as base64 for file attachments.",
+      "Downloads a specific attachment from an email. Saves the file to disk and returns the file path. Works with any file size.",
     inputSchema: {
       type: "object",
       properties: {

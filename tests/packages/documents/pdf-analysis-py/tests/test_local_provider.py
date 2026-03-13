@@ -6,14 +6,20 @@ from types import SimpleNamespace
 def test_settings_blank_values_fall_back_to_defaults() -> None:
     settings = Settings(
         ollama_endpoint="",
+        ollama_public_endpoint="",
         ollama_model="",
         ollama_chat_model="",
+        ollama_public_model="",
+        ollama_public_chat_model="",
         pdf_analysis_provider_order="",
     )
     assert settings.ollama_endpoint == "https://ollama.peacockery.studio/v1"
+    assert settings.ollama_public_endpoint == "https://llama.peacockery.studio/v1"
     assert settings.ollama_model == "glm-ocr:latest"
     assert settings.ollama_chat_model == "granite4:latest"
-    assert settings.pdf_analysis_provider_order == "local,gemini"
+    assert settings.ollama_public_model == "glm-ocr:latest"
+    assert settings.ollama_public_chat_model == "granite4:latest"
+    assert settings.pdf_analysis_provider_order == "openrouter"
 
 
 def test_completion_endpoint_variants() -> None:

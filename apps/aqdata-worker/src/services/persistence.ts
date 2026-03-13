@@ -103,6 +103,7 @@ export async function listPermitsNeedingDetailScrape(
       `SELECT id, status
        FROM aqdata_permits
        WHERE detail_scraped_at IS NULL
+         AND COALESCE(status, '') <> 'Draft'
        ORDER BY exported_at DESC, id ASC
        LIMIT $1`
     )

@@ -78,7 +78,7 @@ export function AutomationToolbar({
       : sessionDotClass;
 
   return (
-    <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex flex-col gap-2">
+    <div className="pointer-events-none flex flex-col gap-2">
       {/* Main toolbar */}
       <div className="pointer-events-auto flex items-center gap-2 rounded-xl border border-white/10 bg-black/70 px-3 py-2 backdrop-blur-sm">
         {/* Left: status indicator with telemetry popover */}

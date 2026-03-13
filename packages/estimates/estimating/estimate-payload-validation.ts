@@ -16,42 +16,42 @@ const sectionSchema = z.object({
 });
 
 const createPayloadSchema = z.looseObject({
-    base_number: z.string().trim().optional(),
-    takeoff_id: stringOrNullSchema.optional(),
-    job_name: stringOrNullSchema.optional(),
-    job_address: stringOrNullSchema.optional(),
-    client_name: stringOrNullSchema.optional(),
-    client_address: stringOrNullSchema.optional(),
-    client_email: stringOrNullSchema.optional(),
-    client_phone: stringOrNullSchema.optional(),
-    estimator: stringOrNullSchema.optional(),
-    estimator_email: stringOrNullSchema.optional(),
-    notes: stringOrNullSchema.optional(),
-    status: z.string().trim().optional(),
-    is_locked: z.boolean().optional(),
-    total: z.coerce.number().finite().nonnegative().optional(),
-    sections: z.array(sectionSchema).optional(),
-    line_items: z.array(lineItemSchema).optional(),
-  });
+  base_number: z.string().trim().optional(),
+  takeoff_id: stringOrNullSchema.optional(),
+  job_name: stringOrNullSchema.optional(),
+  job_address: stringOrNullSchema.optional(),
+  client_name: stringOrNullSchema.optional(),
+  client_address: stringOrNullSchema.optional(),
+  client_email: stringOrNullSchema.optional(),
+  client_phone: stringOrNullSchema.optional(),
+  estimator: stringOrNullSchema.optional(),
+  estimator_email: stringOrNullSchema.optional(),
+  notes: stringOrNullSchema.optional(),
+  status: z.string().trim().optional(),
+  is_locked: z.boolean().optional(),
+  total: z.coerce.number().finite().nonnegative().optional(),
+  sections: z.array(sectionSchema).optional(),
+  line_items: z.array(lineItemSchema).optional(),
+});
 
 const updatePayloadSchema = z.looseObject({
-    base_number: stringOrNullSchema.optional(),
-    takeoff_id: stringOrNullSchema.optional(),
-    job_name: stringOrNullSchema.optional(),
-    job_address: stringOrNullSchema.optional(),
-    client_name: stringOrNullSchema.optional(),
-    client_address: stringOrNullSchema.optional(),
-    client_email: stringOrNullSchema.optional(),
-    client_phone: stringOrNullSchema.optional(),
-    estimator: stringOrNullSchema.optional(),
-    estimator_email: stringOrNullSchema.optional(),
-    notes: stringOrNullSchema.optional(),
-    status: stringOrNullSchema.optional(),
-    is_locked: z.boolean().optional(),
-    total: z.coerce.number().finite().nonnegative().optional(),
-    sections: z.array(sectionSchema).optional(),
-    line_items: z.array(lineItemSchema).optional(),
-  });
+  base_number: stringOrNullSchema.optional(),
+  takeoff_id: stringOrNullSchema.optional(),
+  job_name: stringOrNullSchema.optional(),
+  job_address: stringOrNullSchema.optional(),
+  client_name: stringOrNullSchema.optional(),
+  client_address: stringOrNullSchema.optional(),
+  client_email: stringOrNullSchema.optional(),
+  client_phone: stringOrNullSchema.optional(),
+  estimator: stringOrNullSchema.optional(),
+  estimator_email: stringOrNullSchema.optional(),
+  notes: stringOrNullSchema.optional(),
+  status: stringOrNullSchema.optional(),
+  is_locked: z.boolean().optional(),
+  total: z.coerce.number().finite().nonnegative().optional(),
+  sections: z.array(sectionSchema).optional(),
+  line_items: z.array(lineItemSchema).optional(),
+});
 
 export interface NormalizedEstimateSection {
   id: string;
@@ -309,7 +309,9 @@ export function validateUpdateEstimatePayload(
       normalizeText(existingEstimate.job_name ?? existingEstimate.name);
     const effectiveClientName =
       normalizeText(payload.client_name) ??
-      normalizeText(existingEstimate.client_name);
+      normalizeText(
+        existingEstimate.client_name ?? existingEstimate.contractor
+      );
     const effectiveJobAddress =
       normalizedJobAddress ??
       normalizeAddress(existingEstimate.job_address, "job_address", errors);

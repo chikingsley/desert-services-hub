@@ -26,6 +26,7 @@ interface MCPResponse {
  * Arguments for read email handler
  */
 interface ReadEmailArgs {
+  format?: "html" | "text";
   id?: string;
   mailbox?: string;
 }
@@ -81,11 +82,16 @@ function formatRecipients(recipients: EmailRecipient[] | undefined): string {
     .join(", ");
 }
 
-function formatEmailBody(email: GraphEmailDetail): string {
+function formatEmailBody(
+  email: GraphEmailDetail,
+  requestedFormat: "html" | "text"
+): string {
   if (email.body) {
-    return email.body.contentType === "html"
-      ? email.body.content.replace(/<[^>]*>/g, "")
-      : email.body.content;
+    // When text is requested but the API returned HTML, strip tags as a fallback
+    if (requestedFormat === "text" && email.body.contentType === "html") {
+      return email.body.content.replace(/<[^>]*>/g, "");
+    }
+    return email.body.content;
   }
   return email.bodyPreview ?? "No content";
 }
@@ -156,11 +162,18 @@ export async function handleReadEmail(
     };
   }
 
+  const format = args.format ?? "html";
+
   try {
     const endpoint = `users/${mailbox}/messages/${emailId}`;
-    const email = (await callGraphAPI(accessToken, "GET", endpoint, null, {
-      $select: config.EMAIL_DETAIL_FIELDS,
-    })) as GraphEmailDetail | null;
+    const email = (await callGraphAPI(
+      accessToken,
+      "GET",
+      endpoint,
+      null,
+      { $select: config.EMAIL_DETAIL_FIELDS },
+      { Prefer: `outlook.body-content-type="${format}"` }
+    )) as GraphEmailDetail | null;
 
     if (!email) {
       return {
@@ -177,7 +190,7 @@ export async function handleReadEmail(
     const cc = formatRecipients(email.ccRecipients);
     const bcc = formatRecipients(email.bccRecipients);
     const date = new Date(email.receivedDateTime).toLocaleString();
-    const body = formatEmailBody(email);
+    const body = formatEmailBody(email, format);
 
     const formattedEmail = `From: ${sender}
 To: ${to}

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@lib/*": ["../../lib/*"],
       "@outlook/*": ["./*"],
       "@outlook/auth/*": ["./auth/*"],
       "@outlook/email/*": ["./email/*"],

@@ -8,7 +8,7 @@ import {
   getCanonicalEstimateForProject,
   linkEstimateToProject,
   setCanonicalEstimateForProject,
-} from "@lib/db/repositories/project-estimate";
+} from "@projects/db/project-estimate";
 import type {
   EstimateLineItemRow,
   EstimateRow,

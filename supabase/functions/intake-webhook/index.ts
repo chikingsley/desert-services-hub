@@ -114,6 +114,34 @@ function asString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
+function utf8ToBase64(value: string): string {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  const chunkSize = 0x80_00;
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  if (typeof btoa === "function") {
+    return btoa(binary);
+  }
+
+  const maybeBuffer = (
+    globalThis as unknown as {
+      Buffer?: {
+        from(input: Uint8Array): { toString(encoding: string): string };
+      };
+    }
+  ).Buffer;
+  if (maybeBuffer) {
+    return maybeBuffer.from(bytes).toString("base64");
+  }
+
+  throw new Error("No base64 encoder available in this runtime");
+}
+
 function parseAttachments(value: unknown): IncomingAttachment[] {
   if (!Array.isArray(value)) {
     return [];
@@ -152,7 +180,7 @@ function parseFileLinks(value: unknown): FileLink[] | undefined {
     }
     const url = asString(item.url);
     const source = asString(item.source);
-    if (!url || !source) {
+    if (!(url && source)) {
       continue;
     }
     if (source === "onedrive" || source === "egnyte" || source === "dropbox") {
@@ -194,7 +222,7 @@ export function buildTriggerFiles(payload: IncomingPayload): TriggerFile[] {
   if (payload.bodyHasContent === true && payload.bodyText.trim().length > 0) {
     files.push({
       filename: "email-body.txt",
-      contentBase64: Buffer.from(payload.bodyText).toString("base64"),
+      contentBase64: utf8ToBase64(payload.bodyText),
     });
   }
 
@@ -219,7 +247,9 @@ async function triggerDocumentIntake(
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    throw new Error(`Trigger.dev API ${response.status}: ${text.slice(0, 200)}`);
+    throw new Error(
+      `Trigger.dev API ${response.status}: ${text.slice(0, 200)}`
+    );
   }
 
   const result = (await response.json().catch(() => ({}))) as { id?: string };

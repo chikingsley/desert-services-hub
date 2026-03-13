@@ -22,6 +22,7 @@ if [[ -z "${DISPLAY_NUM}" || ! "${DISPLAY_NUM}" =~ ^[0-9]+$ ]]; then
 fi
 VNC_TCP_PORT=$((5900 + DISPLAY_NUM))
 NOVNC_PORT="${NOVNC_PORT:-6080}"
+VNC_ACCEPT_SET_DESKTOP_SIZE="${VNC_ACCEPT_SET_DESKTOP_SIZE:-0}"
 
 # Clean stale lock files from previous container restarts
 rm -f "/tmp/.X${DISPLAY_NUM}-lock" "/tmp/.X11-unix/X${DISPLAY_NUM}"
@@ -29,6 +30,7 @@ rm -f "/tmp/.X${DISPLAY_NUM}-lock" "/tmp/.X11-unix/X${DISPLAY_NUM}"
 echo "[vnc] Starting Xvnc on ${DISPLAY} (${VNC_RESOLUTION:-1280x720})..."
 Xvnc "${DISPLAY}" \
   -geometry "${VNC_RESOLUTION:-1280x720}" \
+  -AcceptSetDesktopSize="${VNC_ACCEPT_SET_DESKTOP_SIZE}" \
   -SecurityTypes None \
   -AlwaysShared \
   > /dev/null 2>&1 &

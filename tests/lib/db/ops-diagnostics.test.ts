@@ -11,7 +11,6 @@
  * Run: bun test tests/db/ops-diagnostics.test.ts --verbose
  */
 
-/* biome-ignore lint/nursery/noExcessiveLinesPerFile: This integration suite intentionally keeps related diagnostics in one file. */
 import { beforeAll, describe, expect, test } from "bun:test";
 import { db } from "@lib/db/client";
 

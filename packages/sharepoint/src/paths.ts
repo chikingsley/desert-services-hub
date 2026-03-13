@@ -12,6 +12,7 @@
 // =============================================================================
 
 export const CUSTOMER_PROJECTS_PATH = "Customer Projects";
+export const UNCATEGORIZED_CUSTOMER_PROJECTS_PATH = `${CUSTOMER_PROJECTS_PATH}/Uncategorized`;
 
 export const SHAREPOINT_HOST = "desertservices.sharepoint.com";
 export const SHAREPOINT_SITE_PATH = "/sites/DataDrive";

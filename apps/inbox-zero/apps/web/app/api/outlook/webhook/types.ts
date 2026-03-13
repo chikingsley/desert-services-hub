@@ -2,11 +2,11 @@ import { z } from "zod";
 
 // https://learn.microsoft.com/en-us/graph/api/resources/resourcedata?view=graph-rest-1.0
 const resourceDataSchema = z.looseObject({
-    "@odata.type": z.string().optional(),
-    "@odata.id": z.string().optional(),
-    "@odata.etag": z.string().optional(),
-    id: z.string(), // The message identifier
-  }); // Allow additional properties from other notification types
+  "@odata.type": z.string().optional(),
+  "@odata.id": z.string().optional(),
+  "@odata.etag": z.string().optional(),
+  id: z.string(), // The message identifier
+}); // Allow additional properties from other notification types
 
 const notificationSchema = z.object({
   subscriptionId: z.string(),

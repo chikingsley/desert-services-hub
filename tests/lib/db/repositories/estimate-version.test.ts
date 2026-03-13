@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { db } from "@lib/db/client";
-import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
+import { ensureEstimateHasCurrentVersion } from "@estimates/db/estimate-version";
 
 const TEST_PREFIX = "_TEST_DELETE_ME_ESTIMATE_VERSION_INTEGRITY_";
 const createdEstimateIds: number[] = [];

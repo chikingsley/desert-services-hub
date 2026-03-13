@@ -7,6 +7,7 @@
 
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { getPermitById } from "@dust-permits/db/dust-permit";
 import { z } from "zod";
 import {
   ALL_STATUSES,
@@ -403,6 +404,17 @@ async function ensureBrowserSession(): Promise<
   return { page: ctx, success: true };
 }
 
+async function rejectIfDraftPermit(permitId: string): Promise<Response | null> {
+  const permit = await getPermitById(permitId);
+  if (permit?.status === "Draft") {
+    return jsonError(
+      `Permit ${permitId} is Draft and cannot be scraped. Submit the application first.`,
+      409
+    );
+  }
+  return null;
+}
+
 /**
  * Navigate to the search page, set all status filters, type the permit ID,
  * submit ONCE, open the detail page, and extract structured data.
@@ -477,6 +489,11 @@ export async function handleScrapePdf(body: unknown): Promise<Response> {
   log(`   Permit: ${permitId}`);
 
   try {
+    const draftCheck = await rejectIfDraftPermit(permitId);
+    if (draftCheck) {
+      return draftCheck;
+    }
+
     const sessionResult = await ensureBrowserSession();
     if (!sessionResult.success) {
       return jsonError(sessionResult.error, 500);
@@ -536,6 +553,11 @@ export async function handleScrapePermit(id: string): Promise<Response> {
   log(`\n🔍 SCRAPE permit request: ${id}`);
 
   try {
+    const draftCheck = await rejectIfDraftPermit(id);
+    if (draftCheck) {
+      return draftCheck;
+    }
+
     const { payload, status } = await fetchAqdataPermit(id);
     if (!payload.success) {
       return jsonError(

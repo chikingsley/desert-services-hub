@@ -146,3 +146,21 @@ export async function postPermitRenewAndPay(
     return proxyError(error);
   }
 }
+
+/**
+ * POST /api/permits/:id/submit-draft-and-pay
+ *
+ * Tunnel-safe proxy to permit-worker submit-draft-and-pay endpoint.
+ */
+export async function postPermitSubmitDraftAndPay(
+  req: { json(): Promise<unknown> },
+  id: string
+): Promise<Response> {
+  try {
+    const body = (await req.json().catch(() => ({}))) as unknown;
+    const result = await client.submitDraftAndPay(id, body as never);
+    return Response.json(result);
+  } catch (error) {
+    return proxyError(error);
+  }
+}

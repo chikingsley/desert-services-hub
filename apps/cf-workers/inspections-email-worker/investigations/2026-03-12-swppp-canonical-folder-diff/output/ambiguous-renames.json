@@ -1,0 +1,232 @@
+[
+  {
+    "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/BPR COMPANIES/FALCON FIELD EXECUTIVE HANGARS",
+    "candidates": [
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/BPR Companies/Falcon Field Executive Hangers",
+        "contractor": "BPR Companies",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/BPR COMPANIES/FALCON FIELD EXECUTIVE HANGARS",
+        "jobName": "Falcon Field Executive Hangers",
+        "score": 0.946
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/BPR Companies/Falcon Field Excutive Hangers",
+        "contractor": "BPR Companies",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/BPR COMPANIES/FALCON FIELD EXECUTIVE HANGARS",
+        "jobName": "Falcon Field Excutive Hangers",
+        "score": 0.904
+      }
+    ]
+  },
+  {
+    "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/CATAMOUNT CONSTRUCTORS/PAVILION CAMELBACK SENIOR LIVING COMMUNITY",
+    "candidates": [
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/Catamount Constructors/Pavilion at Camelback Senior Living Community",
+        "contractor": "Catamount Constructors",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/CATAMOUNT CONSTRUCTORS/PAVILION CAMELBACK SENIOR LIVING COMMUNITY",
+        "jobName": "Pavilion at Camelback Senior Living Community",
+        "score": 0.963
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/Catamount Constructors/Pavillion at Camelback Senior Living Community",
+        "contractor": "Catamount Constructors",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/CATAMOUNT CONSTRUCTORS/PAVILION CAMELBACK SENIOR LIVING COMMUNITY",
+        "jobName": "Pavillion at Camelback Senior Living Community",
+        "score": 0.955
+      }
+    ]
+  },
+  {
+    "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/ENGLEWOOD CONSTRUCTION INC/PORTILLOS CHANDLER",
+    "candidates": [
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/Englewood Construction, Inc/Portillos - chandler",
+        "contractor": "Englewood Construction, Inc",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/ENGLEWOOD CONSTRUCTION INC/PORTILLOS CHANDLER",
+        "jobName": "Portillos - chandler",
+        "score": 1
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/Englewood Construction, Inc/Portillos - Chandler",
+        "contractor": "Englewood Construction, Inc",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/ENGLEWOOD CONSTRUCTION INC/PORTILLOS CHANDLER",
+        "jobName": "Portillos - Chandler",
+        "score": 1
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/Engelwood Construction, Inc/Portillos - chandler",
+        "contractor": "Engelwood Construction, Inc",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/ENGLEWOOD CONSTRUCTION INC/PORTILLOS CHANDLER",
+        "jobName": "Portillos - chandler",
+        "score": 0.961
+      }
+    ]
+  },
+  {
+    "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/INTEGRITY BUILDING CORP/Gateway Norte Industrial Building",
+    "candidates": [
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/Integrity Building/Gateway Norte - Industrial Building",
+        "contractor": "Integrity Building",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/INTEGRITY BUILDING CORP/Gateway Norte Industrial Building",
+        "jobName": "Gateway Norte - Industrial Building",
+        "score": 0.967
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/Intergrity Building/Gateway Norte - Industrial Building",
+        "contractor": "Intergrity Building",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/INTEGRITY BUILDING CORP/Gateway Norte Industrial Building",
+        "jobName": "Gateway Norte - Industrial Building",
+        "score": 0.943
+      }
+    ]
+  },
+  {
+    "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/LAYTON CONSTRUCTION COMPANY/QTS PHX3 DC1",
+    "candidates": [
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/Layton Construction Company/QTS - PHX3 - DC1",
+        "contractor": "Layton Construction Company",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/LAYTON CONSTRUCTION COMPANY/QTS PHX3 DC1",
+        "jobName": "QTS - PHX3 - DC1",
+        "score": 1
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/Layton Construction Company/QTS PHX3 DC1",
+        "contractor": "Layton Construction Company",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/LAYTON CONSTRUCTION COMPANY/QTS PHX3 DC1",
+        "jobName": "QTS PHX3 DC1",
+        "score": 1
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/Layton Construction Company/QTS - PHX3 - DC14",
+        "contractor": "Layton Construction Company",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/LAYTON CONSTRUCTION COMPANY/QTS PHX3 DC1",
+        "jobName": "QTS - PHX3 - DC14",
+        "score": 0.963
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/Layton Construction Company/QTS PHX3 DC14",
+        "contractor": "Layton Construction Company",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS A-M/LAYTON CONSTRUCTION COMPANY/QTS PHX3 DC1",
+        "jobName": "QTS PHX3 DC14",
+        "score": 0.963
+      }
+    ]
+  },
+  {
+    "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/RENAISSANCE COMPANIES/PETERSON & ELLSWORTH SHOPS (email)",
+    "candidates": [
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/Renaissance Companies/Peterson & Ellsworth Shops",
+        "contractor": "Renaissance Companies",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/RENAISSANCE COMPANIES/PETERSON & ELLSWORTH SHOPS (email)",
+        "jobName": "Peterson & Ellsworth Shops",
+        "score": 0.934
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/Renaissance Companies/Peterson & Ellsworth- Shops",
+        "contractor": "Renaissance Companies",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/RENAISSANCE COMPANIES/PETERSON & ELLSWORTH SHOPS (email)",
+        "jobName": "Peterson & Ellsworth- Shops",
+        "score": 0.934
+      }
+    ]
+  },
+  {
+    "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/ROERS GENERAL CONTRACTING/CALYPSO AT BALLPARK VILLAGE- GOODYEAR APARTMENTS",
+    "candidates": [
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/Roers General Contracting LLC/Calypso at Ballpark Village - Goodyear Apartments",
+        "contractor": "Roers General Contracting LLC",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/ROERS GENERAL CONTRACTING/CALYPSO AT BALLPARK VILLAGE- GOODYEAR APARTMENTS",
+        "jobName": "Calypso at Ballpark Village - Goodyear Apartments",
+        "score": 0.981
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/Roers General Contracting LLC/Calypso an Ballpark Village - Goodyear Apartments",
+        "contractor": "Roers General Contracting LLC",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/ROERS GENERAL CONTRACTING/CALYPSO AT BALLPARK VILLAGE- GOODYEAR APARTMENTS",
+        "jobName": "Calypso an Ballpark Village - Goodyear Apartments",
+        "score": 0.947
+      }
+    ]
+  },
+  {
+    "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/RYAN COMPANIES/17 NORTH PHASE II - BUILDING D",
+    "candidates": [
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/Ryan Companies/17 North Phase II - Building D",
+        "contractor": "Ryan Companies",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/RYAN COMPANIES/17 NORTH PHASE II - BUILDING D",
+        "jobName": "17 North Phase II - Building D",
+        "score": 1
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/Ryan Companies/17 North Phase II - Building C",
+        "contractor": "Ryan Companies",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/RYAN COMPANIES/17 NORTH PHASE II - BUILDING D",
+        "jobName": "17 North Phase II - Building C",
+        "score": 0.968
+      }
+    ]
+  },
+  {
+    "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/RYAN COMPANIES/ONE SCOTTSDALE - 73RD STREET INFRASTRUCTURE",
+    "candidates": [
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/Ryan Companies US, Inc/73rd Street Infrastructure - One Scottsdale",
+        "contractor": "Ryan Companies US, Inc",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/RYAN COMPANIES/ONE SCOTTSDALE - 73RD STREET INFRASTRUCTURE",
+        "jobName": "73rd Street Infrastructure - One Scottsdale",
+        "score": 0.948
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/Ryan Companies US, Inc/One Scottsdale -73rd Street Infrastructure",
+        "contractor": "Ryan Companies US, Inc",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/RYAN COMPANIES/ONE SCOTTSDALE - 73RD STREET INFRASTRUCTURE",
+        "jobName": "One Scottsdale -73rd Street Infrastructure",
+        "score": 0.948
+      }
+    ]
+  },
+  {
+    "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/SANDSTORM CONSTRUCTION/TANGER OUTLETS WESTGATE - OUT PARCELS",
+    "candidates": [
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/Sandstorm Construction/Tanger Outlets westgate - out parcels",
+        "contractor": "Sandstorm Construction",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/SANDSTORM CONSTRUCTION/TANGER OUTLETS WESTGATE - OUT PARCELS",
+        "jobName": "Tanger Outlets westgate - out parcels",
+        "score": 1
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/Sandstorm Construction/Tanger Outlets Westgate - out parcels",
+        "contractor": "Sandstorm Construction",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/SANDSTORM CONSTRUCTION/TANGER OUTLETS WESTGATE - OUT PARCELS",
+        "jobName": "Tanger Outlets Westgate - out parcels",
+        "score": 1
+      }
+    ]
+  },
+  {
+    "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/WOOD PARTNERS/RESIDENCE AT GOLDWATER",
+    "candidates": [
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/Wood Partners/Residence at Goldwater",
+        "contractor": "Wood Partners",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/WOOD PARTNERS/RESIDENCE AT GOLDWATER",
+        "jobName": "Residence at Goldwater",
+        "score": 1
+      },
+      {
+        "canonicalPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/Wood Partners/Residence an Goldwater",
+        "contractor": "Wood Partners",
+        "currentPath": "SWPPP/INSPECTIONS/PROJECTS/PROJECTS N-Z/WOOD PARTNERS/RESIDENCE AT GOLDWATER",
+        "jobName": "Residence an Goldwater",
+        "score": 0.926
+      }
+    ]
+  }
+]

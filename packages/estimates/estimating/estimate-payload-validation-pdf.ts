@@ -13,27 +13,27 @@ const stringOrNullSchema = z.union([z.string(), z.null()]);
 const LINE_ITEM_PREFIX_RE = /^Line item\s+\d+:/;
 
 const editorSectionSchema = z.looseObject({
-    id: z.string().trim().min(1, "Section id is required"),
-    name: z.string().trim().min(1, "Section name is required"),
-    title: z.string().trim().optional(),
-    showSubtotal: z.boolean().optional(),
-  });
+  id: z.string().trim().min(1, "Section id is required"),
+  name: z.string().trim().min(1, "Section name is required"),
+  title: z.string().trim().optional(),
+  showSubtotal: z.boolean().optional(),
+});
 
 const editorLineItemSchema = z.looseObject({
-    id: z.string().trim().optional(),
-    item: z.string().trim().min(1, "Line item name is required"),
-    description: z.string().optional(),
-    qty: z.coerce.number().finite().nonnegative(),
-    uom: z.string().trim().optional(),
-    cost: z.coerce.number().finite().nonnegative(),
-    total: z.coerce.number().finite().nonnegative().optional(),
-    sectionId: stringOrNullSchema.optional(),
-    notes: stringOrNullSchema.optional(),
-    isAlternate: z.boolean().optional(),
-    catalogCode: z.string().trim().optional(),
-    allowDescriptionOverride: z.boolean().optional(),
-    allowUnitOverride: z.boolean().optional(),
-  });
+  id: z.string().trim().optional(),
+  item: z.string().trim().min(1, "Line item name is required"),
+  description: z.string().optional(),
+  qty: z.coerce.number().finite().nonnegative(),
+  uom: z.string().trim().optional(),
+  cost: z.coerce.number().finite().nonnegative(),
+  total: z.coerce.number().finite().nonnegative().optional(),
+  sectionId: stringOrNullSchema.optional(),
+  notes: stringOrNullSchema.optional(),
+  isAlternate: z.boolean().optional(),
+  catalogCode: z.string().trim().optional(),
+  allowDescriptionOverride: z.boolean().optional(),
+  allowUnitOverride: z.boolean().optional(),
+});
 
 const ESTIMATOR_DIRECTORY = {
   "Jared Aiken": {
@@ -75,27 +75,27 @@ function resolveEstimatorContact(estimatorName: string): {
 }
 
 const editorEstimateSchema = z.looseObject({
-    estimateNumber: z.string().trim().min(1, "estimateNumber is required"),
-    date: z.string().trim().min(1, "date is required"),
-    estimator: z.string().trim().min(1, "estimator is required"),
-    estimatorEmail: z.string().trim().optional().default(""),
-    estimatorPhone: z.string().trim().optional().default(""),
-    billTo: z.object({
-      companyName: z.string().trim().min(1, "billTo.companyName is required"),
-      address: z.string().trim().min(1, "billTo.address is required"),
-      email: z.string().trim().optional().default(""),
-      phone: z.string().trim().optional().default(""),
-    }),
-    jobInfo: z.object({
-      siteName: z.string().trim().min(1, "jobInfo.siteName is required"),
-      address: z.string().trim().min(1, "jobInfo.address is required"),
-    }),
-    sections: z.array(editorSectionSchema).default([]),
-    lineItems: z
-      .array(editorLineItemSchema)
-      .min(1, "lineItems must contain at least one row"),
-    total: z.coerce.number().finite().nonnegative().optional(),
-  });
+  estimateNumber: z.string().trim().min(1, "estimateNumber is required"),
+  date: z.string().trim().min(1, "date is required"),
+  estimator: z.string().trim().min(1, "estimator is required"),
+  estimatorEmail: z.string().trim().optional().default(""),
+  estimatorPhone: z.string().trim().optional().default(""),
+  billTo: z.object({
+    companyName: z.string().trim().min(1, "billTo.companyName is required"),
+    address: z.string().trim().min(1, "billTo.address is required"),
+    email: z.string().trim().optional().default(""),
+    phone: z.string().trim().optional().default(""),
+  }),
+  jobInfo: z.object({
+    siteName: z.string().trim().min(1, "jobInfo.siteName is required"),
+    address: z.string().trim().min(1, "jobInfo.address is required"),
+  }),
+  sections: z.array(editorSectionSchema).default([]),
+  lineItems: z
+    .array(editorLineItemSchema)
+    .min(1, "lineItems must contain at least one row"),
+  total: z.coerce.number().finite().nonnegative().optional(),
+});
 
 function toRawCatalogLineItem(
   lineItem: z.infer<typeof editorLineItemSchema>

@@ -1,8 +1,9 @@
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 
 import { db } from "@lib/db/client";
-import { getProjectById } from "@lib/db/repositories/project";
-import { getEstimatesForProject } from "@lib/db/repositories/project-estimate";
+import { getProjectById } from "@projects/db/project";
+import { getEstimatesForProject } from "@projects/db/project-estimate";
 import type { Project } from "@lib/db/types";
 import { SharePointClient } from "@sharepoint/client";
 import {
@@ -11,6 +12,7 @@ import {
   DEFAULT_STATUS,
   getStatusFolder,
   sanitizeName,
+  UNCATEGORIZED_CUSTOMER_PROJECTS_PATH,
 } from "@sharepoint/paths";
 
 const getAccountNameById = db.query<{ name: string }>(
@@ -172,6 +174,64 @@ function buildStableAltName(fileName: string, stableSuffix: string): string {
   const safeSuffix = sanitizeName(stableSuffix).replaceAll(/\s+/g, "-");
   const { stem, ext } = splitExtension(fileName);
   return `${stem}-intake-${safeSuffix}${ext}`;
+}
+
+export interface SharePointSourceRef {
+  sharepointPath: string;
+  sharepointUrl: string;
+}
+
+export async function uploadBufferToUncategorized(
+  sp: SharePointClient,
+  options: {
+    buffer: Buffer;
+    originalFileName: string;
+    stableSuffix?: string;
+  }
+): Promise<SharePointSourceRef> {
+  const folderPath = UNCATEGORIZED_CUSTOMER_PROJECTS_PATH;
+  await sp.ensureFolder(folderPath);
+
+  const desiredName = sanitizeName(options.originalFileName) || "intake-file";
+  const desiredItemPath = `${folderPath}/${desiredName}`;
+  const stableSuffix =
+    options.stableSuffix?.trim() ||
+    createHash("sha1").update(options.buffer).digest("hex").slice(0, 12);
+
+  let finalName = desiredName;
+
+  if (await sp.exists(desiredItemPath)) {
+    const altName = buildStableAltName(desiredName, stableSuffix);
+    const altItemPath = `${folderPath}/${altName}`;
+
+    if (await sp.exists(altItemPath)) {
+      return {
+        sharepointPath: altItemPath,
+        sharepointUrl: buildSharePointUrl(altItemPath),
+      };
+    }
+
+    finalName = altName;
+  }
+
+  const sharepointPath = `${folderPath}/${finalName}`;
+  try {
+    await sp.upload(folderPath, finalName, options.buffer);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const alreadyExists =
+      message.toLowerCase().includes("already exists") ||
+      message.toLowerCase().includes("namealreadyexists");
+
+    if (!(alreadyExists && (await sp.exists(sharepointPath)))) {
+      throw error;
+    }
+  }
+
+  return {
+    sharepointPath,
+    sharepointUrl: buildSharePointUrl(sharepointPath),
+  };
 }
 
 export async function uploadLocalFileToProjectSubfolder(

@@ -35,6 +35,8 @@ class TextResult:
     has_text: bool
     filename: str
     pages_with_text: int
+    metadata: dict[str, Any] = field(default_factory=dict)
+    tables: list[Any] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -92,6 +94,8 @@ def extract_text(pdf_path: Path, max_pages: int = 0) -> TextResult:
             has_text=has_text,
             filename=path.name,
             pages_with_text=page_count if has_text else 0,
+            metadata=dict(result.metadata or {}),
+            tables=list(getattr(result, "tables", []) or []),
         )
     except Exception:
         # Return empty result if extraction fails
@@ -101,6 +105,8 @@ def extract_text(pdf_path: Path, max_pages: int = 0) -> TextResult:
             has_text=False,
             filename=path.name,
             pages_with_text=0,
+            metadata={},
+            tables=[],
         )
 
 

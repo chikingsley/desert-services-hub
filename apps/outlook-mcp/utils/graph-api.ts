@@ -68,7 +68,8 @@ export async function callGraphAPI<T = unknown>(
   method: HttpMethod,
   path: string,
   data: unknown = null,
-  queryParams: GraphApiQueryParams = {}
+  queryParams: GraphApiQueryParams = {},
+  extraHeaders: Record<string, string> = {}
 ): Promise<T> {
   if (config.USE_TEST_MODE && accessToken.startsWith("test_access_token_")) {
     console.error(`TEST MODE: Simulating ${method} ${path} API call`);
@@ -86,6 +87,7 @@ export async function callGraphAPI<T = unknown>(
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
+      ...extraHeaders,
     },
     body: hasBody ? JSON.stringify(data) : undefined,
   });
@@ -110,6 +112,37 @@ export async function callGraphAPI<T = unknown>(
     const parseError = error as Error;
     throw new Error(`Error parsing API response: ${parseError.message}`);
   }
+}
+
+/**
+ * Binary GET — returns raw bytes instead of parsing JSON.
+ * Used for the attachment $value endpoint which returns raw file content.
+ */
+export async function callGraphAPIBinary(
+  accessToken: string,
+  path: string,
+  queryParams: GraphApiQueryParams = {}
+): Promise<{ buffer: Buffer; contentType: string }> {
+  const finalUrl = buildRequestUrl(path, queryParams);
+
+  const response = await fetch(finalUrl, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (response.status === 401) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`API call failed with status ${response.status}: ${text}`);
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  const contentType =
+    response.headers.get("content-type") ?? "application/octet-stream";
+  return { buffer, contentType };
 }
 
 /**

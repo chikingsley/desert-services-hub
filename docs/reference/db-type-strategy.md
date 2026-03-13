@@ -237,7 +237,7 @@ These numbers should go down each phase.
 
 ## External references
 
-1. Supabase TypeScript support: https://supabase.com/docs/reference/javascript/typescript-support
-2. Supabase CLI type generation: https://supabase.com/docs/reference/cli/supabase-gen-types
-3. Trigger.dev task typing and trigger behavior: https://trigger.dev/docs/tasks-overview
-4. Trigger.dev metadata typing with Zod pattern: https://trigger.dev/docs/runs/metadata
+1. Supabase TypeScript support: <https://supabase.com/docs/reference/javascript/typescript-support>
+2. Supabase CLI type generation: <https://supabase.com/docs/reference/cli/supabase-gen-types>
+3. Trigger.dev task typing and trigger behavior: <https://trigger.dev/docs/tasks-overview>
+4. Trigger.dev metadata typing with Zod pattern: <https://trigger.dev/docs/runs/metadata>

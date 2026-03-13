@@ -26,6 +26,7 @@ const SAMPLE_COUNT = Number(
     ? process.argv[process.argv.indexOf("--count") + 1]
     : 200
 );
+const WHITESPACE_RE = /\s+/;
 
 interface Permit {
   address: string | null;
@@ -64,7 +65,7 @@ function generateQueries(p: Permit): Query[] {
     });
 
     // Partial project: first 2 words (if multi-word)
-    const words = p.project_name.split(/\s+/);
+    const words = p.project_name.split(WHITESPACE_RE);
     if (words.length >= 3) {
       queries.push({
         _id: `${p.id}_partial`,
@@ -76,8 +77,8 @@ function generateQueries(p: Permit): Query[] {
 
   // Company + project fragment
   if (p.company_name && p.project_name && p.project_name.length > 3) {
-    const companyFirst = p.company_name.split(/\s+/)[0];
-    const projectFirst = p.project_name.split(/\s+/)[0];
+    const companyFirst = p.company_name.split(WHITESPACE_RE)[0];
+    const projectFirst = p.project_name.split(WHITESPACE_RE)[0];
     queries.push({
       _id: `${p.id}_combo`,
       text: `${companyFirst} ${projectFirst}`,
@@ -149,7 +150,7 @@ async function main() {
   const corpusPath = join(DIR, "corpus.jsonl");
   writeFileSync(
     corpusPath,
-    allPermits
+    `${allPermits
       .map((p) =>
         JSON.stringify({
           _id: p.id,
@@ -166,7 +167,7 @@ async function main() {
             .join(" | "),
         })
       )
-      .join("\n") + "\n"
+      .join("\n")}\n`
   );
   console.log(`  Wrote ${corpusPath}`);
 
@@ -174,7 +175,7 @@ async function main() {
   const queriesPath = join(DIR, "queries.jsonl");
   writeFileSync(
     queriesPath,
-    allQueries.map((q) => JSON.stringify(q)).join("\n") + "\n"
+    `${allQueries.map((q) => JSON.stringify(q)).join("\n")}\n`
   );
   console.log(`  Wrote ${queriesPath}`);
 
@@ -184,7 +185,7 @@ async function main() {
   for (const q of allQueries) {
     qrelsLines.push(`${q._id}\t${q.metadata.permit_id}\t1`);
   }
-  writeFileSync(qrelsPath, qrelsLines.join("\n") + "\n");
+  writeFileSync(qrelsPath, `${qrelsLines.join("\n")}\n`);
   console.log(`  Wrote ${qrelsPath}`);
 
   // Stats

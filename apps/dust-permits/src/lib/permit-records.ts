@@ -6,7 +6,7 @@
  */
 
 import { db } from "@lib/db/client";
-import { getPermitById, upsertPermit } from "@lib/db/repositories/dust-permit";
+import { getPermitById, upsertPermit } from "@dust-permits/db/dust-permit";
 import type { DeepPartial, FormData } from "@/form-data";
 
 export type DraftFlow = "new-company" | "existing-company" | "renew" | "revise";

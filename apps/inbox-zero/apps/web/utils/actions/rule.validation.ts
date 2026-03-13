@@ -142,7 +142,11 @@ const zodAction = z
     }
 
     if (data.type === ActionType.FORWARD && !data.to?.value?.trim()) {
-      addCustomIssue(payload, ["to"], "Please enter an email address to forward to");
+      addCustomIssue(
+        payload,
+        ["to"],
+        "Please enter an email address to forward to"
+      );
     }
     if (data.type === ActionType.CALL_WEBHOOK && !data.url?.value?.trim()) {
       addCustomIssue(payload, ["url"], "Please enter a webhook URL");
@@ -151,7 +155,11 @@ const zodAction = z
       data.type === ActionType.MOVE_FOLDER &&
       !(data.folderName?.value?.trim() && data.folderId?.value?.trim())
     ) {
-      addCustomIssue(payload, ["folderName"], "Please select a folder from the list");
+      addCustomIssue(
+        payload,
+        ["folderName"],
+        "Please select a folder from the list"
+      );
     }
   });
 
@@ -325,7 +333,11 @@ const importedAction = z
       const labelValue = data.label?.trim();
 
       if (!labelValue) {
-        addCustomIssue(payload, ["label"], "Label action requires a label name");
+        addCustomIssue(
+          payload,
+          ["label"],
+          "Label action requires a label name"
+        );
         return;
       }
 
@@ -348,7 +360,11 @@ const importedAction = z
     }
 
     if (data.type === ActionType.MOVE_FOLDER && !data.folderName?.trim()) {
-      addCustomIssue(payload, ["folderName"], "Move folder action requires a folder name");
+      addCustomIssue(
+        payload,
+        ["folderName"],
+        "Move folder action requires a folder name"
+      );
     }
   });
 

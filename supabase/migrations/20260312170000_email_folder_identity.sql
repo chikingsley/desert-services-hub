@@ -1,0 +1,3 @@
+ALTER TABLE emails
+  ADD COLUMN IF NOT EXISTS folder_id TEXT,
+  ADD COLUMN IF NOT EXISTS folder_name TEXT;

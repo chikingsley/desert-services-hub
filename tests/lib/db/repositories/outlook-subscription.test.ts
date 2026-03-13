@@ -6,7 +6,7 @@ import {
   deleteOutlookSubscriptionsForMailboxExcept,
   listOutlookSubscriptionsForMailbox,
   upsertOutlookSubscription,
-} from "@lib/db/repositories/outlook-subscription";
+} from "@email/db/outlook-subscription";
 
 const RUN_TAG = crypto.randomUUID().slice(0, 8).toLowerCase();
 const MAILBOX_EMAIL = `_test_outlook_sub_${RUN_TAG}@example.com`;

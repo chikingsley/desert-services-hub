@@ -18,6 +18,9 @@ import {
 } from "@/api/browser";
 import { handleFormDefaults, handleFormSchema } from "@/api/form-schema";
 import { handleInvoicePdf } from "@/api/invoices";
+import { handleMaricopaLookup } from "@/api/maricopa";
+import { handleCreateFromNoi, handleResolveNoi } from "@/api/noi";
+import { handlePimaLookup } from "@/api/pima";
 import {
   handleClosePermit,
   handleCreatePermit,
@@ -29,6 +32,7 @@ import {
   handleListPermits,
   handleRenewAndPay,
   handleRenewPermit,
+  handleSubmitDraftAndPay,
   handleRevisePermit,
   handleSearchPermits,
 } from "@/api/permits";
@@ -77,6 +81,30 @@ serve({
         return handleCreatePermit(body);
       },
     },
+    "/api/noi/resolve": {
+      async POST(req) {
+        const body = await req.json();
+        return handleResolveNoi(body);
+      },
+    },
+    "/api/noi/create": {
+      async POST(req) {
+        const body = await req.json();
+        return handleCreateFromNoi(body);
+      },
+    },
+    "/api/maricopa/lookup": {
+      async POST(req) {
+        const body = await req.json();
+        return handleMaricopaLookup(body);
+      },
+    },
+    "/api/pima/lookup": {
+      async POST(req) {
+        const body = await req.json();
+        return handlePimaLookup(body);
+      },
+    },
     "/api/permits/drafts": {
       DELETE() {
         return handleDeleteAllDrafts();
@@ -101,6 +129,8 @@ serve({
             return handleRenewPermit(id, body);
           case "renew-and-pay":
             return handleRenewAndPay(id, body);
+          case "submit-draft-and-pay":
+            return handleSubmitDraftAndPay(id, body);
           case "close":
             return handleClosePermit(id, body);
           case "revise":

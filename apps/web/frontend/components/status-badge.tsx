@@ -22,6 +22,18 @@ const STATUS_COLORS: Record<string, string> = {
   "Awaiting Counterparty":
     "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300",
   "On Hold": "bg-zinc-100 text-zinc-700 dark:bg-zinc-800/40 dark:text-zinc-300",
+  "Need Contract":
+    "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+  "Need Safety":
+    "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
+  "Need Dust Permit":
+    "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300",
+  "No Action":
+    "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+  "N/A": "bg-zinc-50 text-zinc-500 dark:bg-zinc-800/20 dark:text-zinc-400",
+  Negotiating:
+    "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300",
+  Done: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
 
   // Permit statuses
   Active:

@@ -8,8 +8,8 @@ import { db } from "@lib/db/client";
 import {
   getAttachmentById,
   getAttachmentsForEmail,
-} from "@lib/db/repositories/attachment";
-import { createGraphClient } from "@lib/graph/client";
+} from "@documents-intake/db/attachment";
+import { createGraphClient } from "@lib/graph/mail";
 
 interface ApiEmailAttachment {
   contentType: string | null;

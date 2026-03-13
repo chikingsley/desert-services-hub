@@ -8,6 +8,7 @@ import {
   Package,
   Search,
   Settings,
+  UsersRound,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import useSWR from "swr";
@@ -42,8 +43,9 @@ const mainNavItems = [
   { title: "Contracts", href: "/contracts", icon: FileCheck },
 ];
 
-const manageItems = [
+export const manageItems = [
   { title: "Emails", href: "/emails", icon: Mail },
+  { title: "Sender Review", href: "/senders", icon: UsersRound },
   { title: "Documents", href: "/documents", icon: Files },
   { title: "Catalog", href: "/catalog", icon: Package },
   { title: "Map", href: "/map", icon: MapPin },

@@ -143,9 +143,11 @@ export const submit = {
 /** Page 2 - Project Location */
 export const page2 = {
   accessPointsTable: '[id="ThePage:siTable:12:accessPoints"]',
-  addSiteDrawingBtn: 'img[alt="Add Site Drawing"]',
+  addSiteDrawingBtn:
+    'img[alt="Add Site Drawing"], img[title="Add Site Drawing"]',
   deleteSiteDrawingBtn: 'img[alt="Delete Site Drawing"]',
-  editSiteDrawingBtn: 'img[alt="Edit Site Drawing"]',
+  editSiteDrawingBtn:
+    'img[alt="Edit Site Drawing"], img[title="Edit Site Drawing"]',
   locationsTable: '[id="ThePage:siTable:12:locations"]',
   selectFirstLocation: '[id="ThePage:siTable:12:locations:0:selectRadio"]',
 } as const;

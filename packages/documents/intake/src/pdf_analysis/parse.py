@@ -1,4 +1,4 @@
-"""Document parsing pipeline: kreuzberg text + GLM OCR → reconciled markdown.
+"""Document parsing pipeline: kreuzberg text + PaddleOCR → reconciled markdown.
 
 Runs BOTH extraction methods on every PDF, then reconciles via opencode CLI
 (kimi-k2.5) or a provider chat model. Outputs a single clean markdown document
@@ -83,8 +83,8 @@ same PDF{page_range_info}:
 
 1. **TEXT-LAYER** (kreuzberg) — exact text from the PDF's internal data. \
 Accurate text but loses layout/visual elements.
-2. **VISION** (OCR) — a vision model read the rendered page image. Has \
-layout/spatial info but may have minor OCR errors.
+2. **OCR** (PaddleOCR) — OCR pass over rendered page content. Has \
+coverage on scanned/image-only pages but may have OCR errors.
 
 Combine both into ONE clean structured markdown document:
 - Include ALL text from both (if one has content the other missed, include it)

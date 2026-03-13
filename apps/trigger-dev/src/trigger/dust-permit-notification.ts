@@ -27,6 +27,16 @@ import { logger, schemaTask } from "@trigger.dev/sdk";
 import { z } from "zod";
 
 import {
+  extractPointAndPayBillingDetails,
+} from "./dust-permit-billing-values";
+import {
+  extractReplyAllExternalRecipients,
+} from "./dust-permit-notification-recipients";
+import {
+  buildReplyAllDraftRecipientsFromDraft,
+  prependReplyDraftBodyHtml,
+} from "./dust-permit-reply-values";
+import {
   formatNotificationAcreage,
   formatNotificationSiteAddress,
 } from "./dust-permit-notification-values";
@@ -174,14 +184,6 @@ async function getContactNameByEmail(
     .get(email);
   return coerceString(row?.name);
 }
-
-// ── Point and Pay email parsing ─────────────────────────────────
-
-const PAP_ACCOUNT_RE = /Account Number:\s*(IV\d+)/i;
-const PAP_AMOUNT_RE = /Amount:\s*(\$[\d,]+\.\d{2})/i;
-const PAP_CONFIRMATION_RE = /Confirmation ID:\s*(\d+)/i;
-const PAP_PAYMENT_DATE_RE = /Payment Date:\s*(\d{2}\/\d{2}\/\d{4})/i;
-const PAP_CARD_LAST_FOUR_RE = /Account Last Four:\s*(\d{4})/i;
 
 // ── HTML template helpers ───────────────────────────────────────
 // Outlook-safe HTML: <b> not <strong>, no <p> tags, skipSignature: true.
@@ -713,10 +715,61 @@ async function resolveSourceEmailContext(
   return { email, mailboxEmail };
 }
 
+async function resolveReplyEmailContext(
+  db: DbClient,
+  replyToEmailId: number
+): Promise<SourceEmailContext> {
+  const email = await getEmailById(replyToEmailId);
+  if (!email) {
+    throw new Error(`Email ${replyToEmailId} not found`);
+  }
+
+  const mailboxEmail = await getMailboxEmailById(db, email.mailboxId);
+  if (!mailboxEmail) {
+    throw new Error(`Mailbox ${email.mailboxId} not found for email ${email.id}`);
+  }
+
+  if (mailboxEmail.toLowerCase() === FROM_MAILBOX) {
+    return { email, mailboxEmail };
+  }
+
+  if (!email.internetMessageId) {
+    throw new Error(
+      `Email ${replyToEmailId} is not in ${FROM_MAILBOX} and has no internet_message_id to resolve a sibling copy`
+    );
+  }
+
+  const sibling = await db
+    .query<{ id: number; mailbox_id: number }, [string, string]>(
+      `SELECT e.id, e.mailbox_id
+       FROM emails e
+       JOIN mailboxes m ON m.id = e.mailbox_id
+       WHERE e.internet_message_id = $1
+         AND lower(m.email) = lower($2)
+       ORDER BY e.received_at DESC
+       LIMIT 1`
+    )
+    .get(email.internetMessageId, FROM_MAILBOX);
+
+  if (!sibling) {
+    throw new Error(
+      `Email ${replyToEmailId} does not have a copy in ${FROM_MAILBOX}`
+    );
+  }
+
+  const siblingEmail = await getEmailById(sibling.id);
+  if (!siblingEmail) {
+    throw new Error(`Reply-all sibling email ${sibling.id} not found`);
+  }
+
+  return { email: siblingEmail, mailboxEmail: FROM_MAILBOX };
+}
+
 async function resolveNotificationRecipients(
   db: DbClient,
   params: {
     explicitRecipients?: string[];
+    replySourceEmail?: Email | null;
     sourceEmail?: Email | null;
   }
 ): Promise<RecipientResolution> {
@@ -725,6 +778,20 @@ async function resolveNotificationRecipients(
     const recipientName =
       to.length === 1 ? (await getContactNameByEmail(db, to[0])) ?? "Team" : "Team";
     return { to, recipientName };
+  }
+
+  if (params.replySourceEmail) {
+    const externalRecipients = extractReplyAllExternalRecipients(
+      params.replySourceEmail
+    );
+
+    if (externalRecipients.length > 0) {
+      const recipientName =
+        externalRecipients.length === 1
+          ? (await getContactNameByEmail(db, externalRecipients[0])) ?? "Team"
+          : "Team";
+      return { to: externalRecipients, recipientName };
+    }
   }
 
   if (params.sourceEmail) {
@@ -861,6 +928,52 @@ async function resolveNotificationAttachments(
   ];
 }
 
+async function loadReplyTargetMessageState(
+  graph: ReturnType<typeof createGraphClient>,
+  replyEmail: SourceEmailContext
+): Promise<{ messageId: string; wasUnread: boolean }> {
+  try {
+    const isRead = await graph.getMessageReadState(
+      replyEmail.email.messageId,
+      replyEmail.mailboxEmail
+    );
+    return {
+      messageId: replyEmail.email.messageId,
+      wasUnread: !isRead,
+    };
+  } catch (error) {
+    if (!isGraphItemNotFoundError(error) || !replyEmail.email.internetMessageId) {
+      throw error;
+    }
+
+    const liveMessageId = await graph.findLatestMessageIdByInternetMessageId(
+      replyEmail.email.internetMessageId,
+      replyEmail.mailboxEmail
+    );
+
+    if (!(liveMessageId && liveMessageId !== replyEmail.email.messageId)) {
+      throw error;
+    }
+
+    logger.warn("Resolved stale reply Graph message_id via internet_message_id", {
+      emailId: replyEmail.email.id,
+      liveMessageId,
+      mailboxEmail: replyEmail.mailboxEmail,
+      staleMessageId: replyEmail.email.messageId,
+    });
+
+    const isRead = await graph.getMessageReadState(
+      liveMessageId,
+      replyEmail.mailboxEmail
+    );
+
+    return {
+      messageId: liveMessageId,
+      wasUnread: !isRead,
+    };
+  }
+}
+
 async function resolveScrapedPermitData(
   permitId: string
 ): Promise<PermitData | null> {
@@ -942,20 +1055,74 @@ async function createNotificationDraft(opts: {
   body: string;
   cc?: string[];
   draft: boolean;
+  replyTo?: SourceEmailContext | null;
   subject: string;
   to: string[];
 }) {
   const compose = createComposeClient();
+  let draftMsg:
+    | {
+        "@odata.etag"?: string;
+        id: string;
+        subject: string;
+      }
+    | undefined;
 
-  const draftMsg = await compose.createDraft({
-    userId: FROM_MAILBOX,
-    subject: opts.subject,
-    body: opts.body,
-    bodyType: "html",
-    to: opts.to.map((email) => ({ email })),
-    cc: opts.cc?.map((email) => ({ email })),
-    skipSignature: true,
-  });
+  if (opts.replyTo) {
+    const graph = createGraphClient();
+    const { messageId, wasUnread } = await loadReplyTargetMessageState(
+      graph,
+      opts.replyTo
+    );
+    const replyDraft = await compose.createReplyAllDraft({
+      userId: FROM_MAILBOX,
+      messageId,
+    });
+    const replyDraftMessage = await graph.getMessage(replyDraft.id, FROM_MAILBOX);
+    const replyRecipients = buildReplyAllDraftRecipientsFromDraft(
+      {
+        toEmails:
+          replyDraftMessage.toRecipients
+            ?.map((recipient) => recipient.emailAddress?.address ?? null)
+            .filter((email): email is string => Boolean(email)) ?? [],
+        ccEmails:
+          replyDraftMessage.ccRecipients
+            ?.map((recipient) => recipient.emailAddress?.address ?? null)
+            .filter((email): email is string => Boolean(email)) ?? [],
+      },
+      FROM_MAILBOX,
+      opts.to,
+      opts.cc
+    );
+    const mergedBody = prependReplyDraftBodyHtml(
+      opts.body,
+      replyDraftMessage.body?.content ?? ""
+    );
+
+    draftMsg = await compose.updateDraft({
+      userId: FROM_MAILBOX,
+      draftId: replyDraft.id,
+      ifMatch: replyDraft["@odata.etag"],
+      body: mergedBody,
+      bodyType: "html",
+      to: replyRecipients.to.map((email) => ({ email })),
+      cc: replyRecipients.cc.map((email) => ({ email })),
+    });
+
+    if (wasUnread) {
+      await graph.setMessageReadState(messageId, FROM_MAILBOX, false);
+    }
+  } else {
+    draftMsg = await compose.createDraft({
+      userId: FROM_MAILBOX,
+      subject: opts.subject,
+      body: opts.body,
+      bodyType: "html",
+      to: opts.to.map((email) => ({ email })),
+      cc: opts.cc?.map((email) => ({ email })),
+      skipSignature: true,
+    });
+  }
 
   const attachedFiles: string[] = [];
   for (const attachment of opts.attachments ?? []) {
@@ -990,6 +1157,7 @@ export const dustPermitNotification = schemaTask({
         .regex(/^D\d{7}$/, "Must be D0XXXXXX format")
         .optional(),
       projectQuery: z.string().trim().min(1).optional(),
+      replyToEmailId: z.number().int().positive().optional(),
       sourceEmailId: z.number().int().positive().optional(),
       type: z.enum(NOTIFICATION_TYPES).optional(),
       // Optional overrides
@@ -1043,8 +1211,8 @@ export const dustPermitNotification = schemaTask({
       });
 
       // Parse payment details — only Point and Pay confirmations have IV###### format
-      const invoiceNumber = bodyText.match(PAP_ACCOUNT_RE)?.[1];
-      if (!invoiceNumber) {
+      const paymentDetails = extractPointAndPayBillingDetails(bodyText);
+      if (!paymentDetails) {
         logger.info("Not a Point and Pay confirmation — skipping", {
           emailId: input.emailId,
           subject: email.subject,
@@ -1056,10 +1224,13 @@ export const dustPermitNotification = schemaTask({
         };
       }
 
-      const permitCost = bodyText.match(PAP_AMOUNT_RE)?.[1] ?? "Unknown";
-      const confirmationId = bodyText.match(PAP_CONFIRMATION_RE)?.[1];
-      const paymentDate = bodyText.match(PAP_PAYMENT_DATE_RE)?.[1];
-      const cardLastFour = bodyText.match(PAP_CARD_LAST_FOUR_RE)?.[1];
+      const {
+        cardLastFour,
+        confirmationId,
+        invoiceNumber,
+        paymentDate,
+        permitCost,
+      } = paymentDetails;
 
       logger.info("Extracted payment details", {
         invoiceNumber,
@@ -1181,6 +1352,9 @@ export const dustPermitNotification = schemaTask({
           type,
         })
       : null;
+    const replyToEmail = input.replyToEmailId
+      ? await resolveReplyEmailContext(db, input.replyToEmailId)
+      : null;
 
     if (!permitId && sourceEmail) {
       permitId = extractApplicationNumber(getEmailText(sourceEmail.email));
@@ -1220,10 +1394,20 @@ export const dustPermitNotification = schemaTask({
       sourceEmailId: sourceEmail?.email.id ?? null,
     });
 
+    const replyExtraRecipients =
+      replyToEmail && input.recipients?.length
+        ? uniqueEmails(input.recipients)
+        : [];
     const recipientResolution = await resolveNotificationRecipients(db, {
-      explicitRecipients: input.recipients,
+      explicitRecipients: replyToEmail ? undefined : input.recipients,
+      replySourceEmail: replyToEmail?.email,
       sourceEmail: sourceEmail?.email,
     });
+    const recipientName =
+      replyToEmail?.email.fromEmail
+        ? (await getContactNameByEmail(db, replyToEmail.email.fromEmail)) ??
+          recipientResolution.recipientName
+        : recipientResolution.recipientName;
     const attachments = await resolveNotificationAttachments({
       permitId,
       projectName: coerceString(permit.project_name) ?? permitId,
@@ -1232,7 +1416,7 @@ export const dustPermitNotification = schemaTask({
     const scrapedPermit = await resolveScrapedPermitData(permitId);
     const baseVars = {
       ...(await buildPermitBaseVars(db, permit, permitId, {
-        recipientName: recipientResolution.recipientName,
+        recipientName,
         scrapedPermit,
         sourceEmail: sourceEmail?.email,
       })),
@@ -1249,17 +1433,20 @@ export const dustPermitNotification = schemaTask({
     const draftResult = await createNotificationDraft({
       subject,
       body,
-      to: recipientResolution.to,
+      to: replyToEmail ? replyExtraRecipients : recipientResolution.to,
       cc: ccAddrs,
       draft: input.draft,
       attachments,
+      replyTo: replyToEmail,
     });
 
     logger.info("Created draft", {
       draftId: draftResult.draftMsg.id,
       subject,
       attachedFiles: draftResult.attachedFiles,
-      recipientCount: recipientResolution.to.length,
+      recipientCount: (
+        replyToEmail ? replyExtraRecipients : recipientResolution.to
+      ).length,
     });
 
     return {
@@ -1269,7 +1456,7 @@ export const dustPermitNotification = schemaTask({
       permitId,
       sourceEmailId: sourceEmail?.email.id ?? null,
       subject,
-      to: recipientResolution.to,
+      to: replyToEmail ? replyExtraRecipients : recipientResolution.to,
       type,
     };
   },

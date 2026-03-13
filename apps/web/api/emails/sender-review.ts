@@ -8,6 +8,7 @@ import {
   mapDomainVerdictToRule,
   SENDER_REVIEW_PROMPT_VERSION,
 } from "./sender-review-llm";
+import { buildSenderReviewSamplesQuery } from "./sender-review-sql";
 
 type SenderReviewStatus =
   | "all"
@@ -315,40 +316,6 @@ LEFT JOIN domain_classifications dc ON dc.domain = da.domain
 WHERE da.domain ILIKE $1
 ORDER BY da.email_count DESC, da.last_received_at DESC, da.domain ASC`;
 
-// ── Samples (Phase 2) ───────────────────────────────────────────────
-// LATERAL lookup: 5 recent emails per domain, only for the displayed page.
-const SAMPLES_SQL = `
-SELECT d.val AS domain, s.samples
-FROM unnest($1::text[]) AS d(val)
-LEFT JOIN LATERAL (
-  SELECT JSON_AGG(
-    JSON_BUILD_OBJECT(
-      'emailId', e2.id,
-      'senderEmail', COALESCE(NULLIF(e2.real_sender_email, ''), NULLIF(e2.original_sender_email, ''), NULLIF(e2.from_email, '')),
-      'senderName', COALESCE(NULLIF(e2.real_sender_name, ''), NULLIF(e2.from_name, '')),
-      'subject', e2.subject,
-      'receivedAt', e2.received_at,
-      'accountName', a.name,
-      'accountDomain', a.domain,
-      'accountType', a.type
-    ) ORDER BY e2.received_at DESC, e2.id DESC
-  ) AS samples
-  FROM (
-    SELECT e.*
-    FROM emails e
-    WHERE e.is_excluded = 0
-      AND e.classification IS NULL
-      AND COALESCE(
-        NULLIF(e.real_sender_domain, ''),
-        NULLIF(e.original_sender_domain, ''),
-        NULLIF(e.from_domain, '')
-      ) = d.val
-    ORDER BY e.received_at DESC, e.id DESC
-    LIMIT 5
-  ) e2
-  LEFT JOIN accounts a ON a.id = e2.account_id
-) s ON TRUE`;
-
 function matchesStatusFilter(
   row: DomainAggRow,
   status: SenderReviewStatus
@@ -463,11 +430,14 @@ async function loadSenderReviewPayload(params: {
   const samplesMap = new Map<string, ReturnType<typeof parseSamples>>();
   if (page.length > 0) {
     const domainList = page.map((r) => r.domain);
-    const sampleRows = await db
-      .query<SampleRow, [string[]]>(SAMPLES_SQL)
-      .all(domainList);
-    for (const row of sampleRows) {
-      samplesMap.set(row.domain, parseSamples(row.samples));
+    const sampleQuery = buildSenderReviewSamplesQuery(domainList);
+    if (sampleQuery) {
+      const sampleRows = (await db
+        .query<SampleRow, string[]>(sampleQuery.sql)
+        .all(...sampleQuery.params)) as SampleRow[];
+      for (const row of sampleRows) {
+        samplesMap.set(row.domain, parseSamples(row.samples));
+      }
     }
   }
 
@@ -561,7 +531,7 @@ const classifyRequestSchema = z.object({
     .max(MAX_CLASSIFY_BATCH)
     .default(DEFAULT_CLASSIFY_BATCH),
   provider: z
-    .enum(["auto", "gemini", "local", "openrouter"])
+    .enum(["auto", "gemini", "local", "local_public", "openrouter"])
     .default("openrouter"),
 });
 

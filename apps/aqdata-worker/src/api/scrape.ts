@@ -92,6 +92,16 @@ export async function handleScrapePermit(id: string): Promise<Response> {
         { status: 404 }
       );
     }
+    if (summary.status === "Draft") {
+      return Response.json(
+        {
+          success: false,
+          error: `Permit ${id} is Draft and is not eligible for detail scrape.`,
+          timestamp: new Date().toISOString(),
+        },
+        { status: 409 }
+      );
+    }
 
     const backend = getAQDetailFetchBackend();
     let detailHtml: string | null = null;

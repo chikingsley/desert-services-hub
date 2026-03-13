@@ -53,6 +53,7 @@ Task definitions live in `apps/trigger-dev/src/trigger/`.
 | `monday-sync-incremental` | scheduled | `*/10 * * * *` | Monday incremental sync via activity log |
 | `monday-sync` | scheduled | `0 */6 * * *` | Monday full safety-net sync |
 | `monday-sync-item` | on-demand | — | Sync a single Monday item by ID |
+| `monday-sync-files` | on-demand | — | Sync/download files for one or more Monday items |
 | `monday-sync-targeted` | on-demand | — | Sync specific Monday items by board + item IDs |
 | `mailbox-backfill` | on-demand | — | Backfill emails for a mailbox from a given date |
 | `db-saturation-alert-monitor` | scheduled | `*/1 * * * *` | Detect/post DB slot saturation alerts |

@@ -1,5 +1,5 @@
-import http from "k6/http";
 import { check, fail } from "k6";
+import http from "k6/http";
 
 const apiUrl = (__ENV.TRIGGER_API_URL || "http://localhost:8030").replace(
   /\/$/,
@@ -48,7 +48,7 @@ export const options = {
   },
   thresholds: {
     http_req_failed: ["rate<0.01"],
-    http_req_duration: ["p(95)<" + httpP95ThresholdMs],
+    http_req_duration: [`p(95)<${httpP95ThresholdMs}`],
     checks: ["rate>0.99"],
   },
 };
@@ -56,7 +56,7 @@ export const options = {
 export default function () {
   const taskPayload = taskPayloadOverride ?? {
     holdMs,
-    label: "k6-vu" + __VU + "-iter" + __ITER,
+    label: `k6-vu${__VU}-iter${__ITER}`,
   };
 
   const payload = JSON.stringify({
@@ -65,11 +65,11 @@ export default function () {
   });
 
   const response = http.post(
-    apiUrl + "/api/v1/tasks/" + taskId + "/trigger",
+    `${apiUrl}/api/v1/tasks/${taskId}/trigger`,
     payload,
     {
       headers: {
-        Authorization: "Bearer " + secretKey,
+        Authorization: `Bearer ${secretKey}`,
         "Content-Type": "application/json",
       },
       timeout: "10s",
@@ -77,7 +77,9 @@ export default function () {
   );
 
   const accepted =
-    response.status === 200 || response.status === 201 || response.status === 202;
+    response.status === 200 ||
+    response.status === 201 ||
+    response.status === 202;
 
   const checkResult = check(response, {
     "trigger accepted": () => accepted,
@@ -97,17 +99,17 @@ export default function () {
         parsed.id ||
           parsed.runId ||
           parsed.handle ||
-          (parsed.run && parsed.run.id) ||
-          (parsed.taskRun && parsed.taskRun.id)
+          parsed.run?.id ||
+          parsed.taskRun?.id
       );
     },
   });
 
-  if (!accepted || !checkResult) {
+  if (!(accepted && checkResult)) {
     const body =
       typeof response.body === "string" ? response.body.slice(0, 240) : "";
     console.error(
-      "trigger request failed status=" + response.status + " body=" + body
+      `trigger request failed status=${response.status} body=${body}`
     );
   }
 }

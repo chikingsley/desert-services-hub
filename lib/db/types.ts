@@ -146,6 +146,8 @@ export interface Email {
   fromDomain: string | null;
   fromEmail: string | null;
   fromName: string | null;
+  folderId: string | null;
+  folderName: string | null;
   hasAttachments: boolean;
   id: number;
   internetMessageId: string | null;
@@ -347,6 +349,8 @@ export interface InsertEmailData {
   categories?: string[];
   ccEmails?: string[];
   conversationId?: string | null;
+  folderId?: string | null;
+  folderName?: string | null;
   fromEmail?: string | null;
   fromName?: string | null;
   hasAttachments?: boolean;

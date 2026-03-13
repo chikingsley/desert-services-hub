@@ -1,121 +1,26 @@
 /**
- * BuildingConnected file download using the persistent browser session.
+ * BuildingConnected file download proxy.
  *
- * Opens a new tab in the singleton session's context (reuses cookies).
- * No cold-start overhead, no ephemeral browsers.
+ * Streams files from BuildingConnected using auth cookies extracted from
+ * the persistent Playwright browser session. Returns a binary response
+ * (not base64 JSON) so callers can stream large files to disk without
+ * buffering everything in memory.
+ *
+ * Input: { downloadUrl: "/_/download/file/..." }
+ * Output: streaming binary with Content-Type/Content-Length/Content-Disposition
  */
-import { readFile, unlink } from "node:fs/promises";
-import type { Download, Page } from "playwright";
 import { bcSession } from "../lib/browser";
 
-const PAGE_TIMEOUT_MS = 45_000;
-const DOWNLOAD_WAIT_MS = 15_000;
-const AUTO_DOWNLOAD_SETTLE_MS = 3000;
+const BC_BASE = "https://app.buildingconnected.com";
+const DOWNLOAD_TIMEOUT_MS = 300_000; // 5 minutes for large files
 
-const DOWNLOAD_SELECTORS = [
-  'button:has-text("Download")',
-  'a:has-text("Download")',
-  '[data-testid="download"]',
-  'button:has-text("Download Folder")',
-  'a:has-text("Direct download")',
-  'a:has-text("Download as zip")',
-];
-
-interface DownloadResult {
-  data: string;
-  name: string;
-  size: number;
-  success: true;
-}
-
-interface DownloadError {
-  error: string;
-  pageTitle?: string;
-  success: false;
-}
-
-async function tryClickDownload(page: Page): Promise<Download | null> {
-  for (const selector of DOWNLOAD_SELECTORS) {
-    try {
-      const button = page.locator(selector).first();
-      if (await button.isVisible({ timeout: 1000 })) {
-        const downloadPromise = page.waitForEvent("download", {
-          timeout: DOWNLOAD_WAIT_MS,
-        });
-        await button.click();
-        return await downloadPromise;
-      }
-    } catch {
-      // Try next selector
-    }
+async function getAuthCookieHeader(): Promise<string> {
+  const context = bcSession.getContext();
+  if (!context) {
+    throw new Error("No active browser context");
   }
-  return null;
-}
-
-function downloadFile(url: string): Promise<DownloadResult | DownloadError> {
-  return bcSession.withOperation("download", async (session) => {
-    const page = await session.instance.context.newPage();
-
-    try {
-      const autoDownloadPromise = page
-        .waitForEvent("download", { timeout: PAGE_TIMEOUT_MS })
-        .catch(() => null);
-
-      await page.goto(url, {
-        timeout: PAGE_TIMEOUT_MS,
-        waitUntil: "domcontentloaded",
-      });
-
-      let download = await Promise.race([
-        autoDownloadPromise,
-        new Promise<null>((resolve) =>
-          setTimeout(() => resolve(null), AUTO_DOWNLOAD_SETTLE_MS)
-        ),
-      ]);
-
-      if (!download) {
-        download = await tryClickDownload(page);
-      }
-
-      if (!download) {
-        const title = await page.title().catch(() => "unknown");
-        return {
-          error:
-            "No download triggered. Session may have expired or page requires CAPTCHA.",
-          pageTitle: title,
-          success: false as const,
-        };
-      }
-
-      const tmpPath = await download.path();
-      if (!tmpPath) {
-        return {
-          error: "Download path not available",
-          success: false as const,
-        };
-      }
-
-      const filename = download.suggestedFilename();
-      const buffer = await readFile(tmpPath);
-
-      try {
-        await unlink(tmpPath);
-      } catch {
-        // Non-fatal
-      }
-
-      return {
-        data: buffer.toString("base64"),
-        name: filename,
-        size: buffer.byteLength,
-        success: true as const,
-      };
-    } finally {
-      await page.close().catch(() => {
-        // Non-fatal: page may already be closed
-      });
-    }
-  });
+  const cookies = await context.cookies(BC_BASE);
+  return cookies.map((c) => `${c.name}=${c.value}`).join("; ");
 }
 
 export async function handleBuildingConnectedDownload(
@@ -124,26 +29,20 @@ export async function handleBuildingConnectedDownload(
   const status = bcSession.getStatus();
   if (!status.active) {
     return Response.json(
-      {
-        error: "No active browser session",
-        success: false,
-      },
+      { error: "No active browser session", success: false },
       { status: 503 }
     );
   }
   if (!status.isLoggedIn) {
     return Response.json(
-      {
-        error: "Not logged in. Run auth bootstrap via VNC first.",
-        success: false,
-      },
+      { error: "Not logged in", success: false },
       { status: 401 }
     );
   }
 
-  let body: { url?: string };
+  let body: { downloadUrl?: string };
   try {
-    body = (await req.json()) as { url?: string };
+    body = (await req.json()) as { downloadUrl?: string };
   } catch {
     return Response.json(
       { error: "Invalid JSON body", success: false },
@@ -151,19 +50,63 @@ export async function handleBuildingConnectedDownload(
     );
   }
 
-  if (!body?.url || typeof body.url !== "string") {
+  if (!body?.downloadUrl || typeof body.downloadUrl !== "string") {
     return Response.json(
-      { error: "url is required", success: false },
+      { error: "downloadUrl is required", success: false },
       { status: 400 }
     );
   }
 
   try {
-    const result = await downloadFile(body.url);
-    if (!result.success) {
-      return Response.json(result, { status: 422 });
+    const cookieHeader = await getAuthCookieHeader();
+    const fullUrl = body.downloadUrl.startsWith("http")
+      ? body.downloadUrl
+      : `${BC_BASE}${body.downloadUrl}`;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), DOWNLOAD_TIMEOUT_MS);
+
+    let upstream: globalThis.Response;
+    try {
+      upstream = await fetch(fullUrl, {
+        headers: { Cookie: cookieHeader },
+        redirect: "follow",
+        signal: controller.signal,
+      });
+    } catch (err) {
+      clearTimeout(timer);
+      throw err;
     }
-    return Response.json(result);
+
+    clearTimeout(timer);
+
+    if (!upstream.ok) {
+      const errorText = await upstream.text().catch(() => "");
+      return Response.json(
+        {
+          error: `BC download returned HTTP ${upstream.status}: ${errorText.slice(0, 200)}`,
+          success: false,
+        },
+        { status: 502 }
+      );
+    }
+
+    // Pass through the streaming body with relevant headers
+    const headers = new Headers();
+    const contentType = upstream.headers.get("content-type");
+    if (contentType) {
+      headers.set("Content-Type", contentType);
+    }
+    const contentLength = upstream.headers.get("content-length");
+    if (contentLength) {
+      headers.set("Content-Length", contentLength);
+    }
+    const contentDisposition = upstream.headers.get("content-disposition");
+    if (contentDisposition) {
+      headers.set("Content-Disposition", contentDisposition);
+    }
+
+    return new Response(upstream.body, { headers });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`[bc-worker-download] failed: ${message}`);

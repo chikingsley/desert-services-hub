@@ -3,7 +3,7 @@
  * Split out from sync.ts to keep modules focused and testable.
  */
 import { db } from "@lib/db/client";
-import { normalizeProjectNameKey } from "@lib/db/repositories/project-matching-utils";
+import { normalizeProjectNameKey } from "@projects/db/project-matching-utils";
 import { parseVariantPrefix } from "@sharepoint/paths";
 import {
   batchFetchGroupMap,

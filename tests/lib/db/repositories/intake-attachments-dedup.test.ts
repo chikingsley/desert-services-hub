@@ -4,7 +4,7 @@ import {
   findContentHashAttachmentDuplicate,
   findInternetMessageAttachmentDuplicate,
   getIntakeAttachmentRows,
-} from "@lib/db/repositories/intake-attachments";
+} from "@documents-intake/db/intake-attachments";
 
 /**
  * Tests that the dedup queries only match against 'success' status,

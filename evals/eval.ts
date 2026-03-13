@@ -170,7 +170,7 @@ async function main() {
   };
 
   const resultsPath = join(DIR, "results.jsonl");
-  appendFileSync(resultsPath, JSON.stringify(report) + "\n");
+  appendFileSync(resultsPath, `${JSON.stringify(report)}\n`);
   console.log(`\nReport appended to ${resultsPath}`);
 }
 

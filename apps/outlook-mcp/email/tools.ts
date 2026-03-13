@@ -122,7 +122,8 @@ export const emailTools: ToolDefinition[] = [
   },
   {
     name: "read-email",
-    description: "Reads the content of a specific email",
+    description:
+      "Reads the content of a specific email. Returns HTML by default to preserve links, tables, and formatting (important for DocuSign, newsletters, etc.). Use format='text' for a plain-text version.",
     inputSchema: {
       type: "object",
       properties: {
@@ -134,6 +135,12 @@ export const emailTools: ToolDefinition[] = [
         id: {
           type: "string",
           description: "ID of the email to read",
+        },
+        format: {
+          type: "string",
+          description:
+            "Body format: 'html' preserves links and formatting (default), 'text' returns plain text",
+          enum: ["html", "text"],
         },
       },
       required: ["mailbox", "id"],

@@ -12,29 +12,29 @@ import type { ParsedMessage } from "@/utils/types";
 
 const emptyInputSchema = z.object({}).describe("No parameters required");
 const sendEmailToolInputSchema = z.strictObject({
-    to: z.string().trim().min(1),
-    cc: z.string().trim().min(1).optional(),
-    bcc: z.string().trim().min(1).optional(),
-    subject: z.string().trim().min(1).max(300),
-    messageHtml: z.string().trim().min(1),
-  });
+  to: z.string().trim().min(1),
+  cc: z.string().trim().min(1).optional(),
+  bcc: z.string().trim().min(1).optional(),
+  subject: z.string().trim().min(1).max(300),
+  messageHtml: z.string().trim().min(1),
+});
 const replyEmailToolInputSchema = z.strictObject({
-    messageId: z
-      .string()
-      .trim()
-      .min(1)
-      .describe(
-        "Message ID to reply to. Use a messageId returned by searchInbox."
-      ),
-    content: z.string().trim().min(1).max(10_000),
-  });
+  messageId: z
+    .string()
+    .trim()
+    .min(1)
+    .describe(
+      "Message ID to reply to. Use a messageId returned by searchInbox."
+    ),
+  content: z.string().trim().min(1).max(10_000),
+});
 const forwardEmailToolInputSchema = z.strictObject({
-    messageId: z.string().trim().min(1),
-    to: z.string().trim().min(1),
-    cc: z.string().trim().min(1).optional(),
-    bcc: z.string().trim().min(1).optional(),
-    content: z.string().trim().max(5000).optional(),
-  });
+  messageId: z.string().trim().min(1),
+  to: z.string().trim().min(1),
+  cc: z.string().trim().min(1).optional(),
+  bcc: z.string().trim().min(1).optional(),
+  content: z.string().trim().max(5000).optional(),
+});
 
 export const getAccountOverviewTool = ({
   email,

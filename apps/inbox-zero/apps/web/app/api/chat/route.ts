@@ -56,7 +56,10 @@ export const POST = withEmailAccount("chat", async (request) => {
   const parsedInput = assistantInputSchema.safeParse(json);
 
   if (!parsedInput.success) {
-    return NextResponse.json({ error: parsedInput.error.issues }, { status: 400 });
+    return NextResponse.json(
+      { error: parsedInput.error.issues },
+      { status: 400 }
+    );
   }
   const data = parsedInput.data;
 

@@ -3,7 +3,7 @@ set -euo pipefail
 
 POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-desert-services-hub-postgres-1}"
 REDIS_CONTAINER="${REDIS_CONTAINER:-desert-services-hub-redis-1}"
-MONDAY_QUEUES="${MONDAY_QUEUES:-monday-sync-item,monday-sync-pipeline}"
+MONDAY_QUEUES="${MONDAY_QUEUES:-monday-sync-item,monday-sync-pipeline,monday-sync-files}"
 
 # Trip thresholds
 RUNNER_LIMIT="${RUNNER_LIMIT:-150}"           # total runner-* containers

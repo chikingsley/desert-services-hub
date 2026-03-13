@@ -12,7 +12,7 @@ import {
   deleteRecentPermits,
   permitExists,
   upsertPermit,
-} from "@lib/db/repositories/dust-permit";
+} from "@dust-permits/db/dust-permit";
 import type { PermitData } from "@/portal/scrape";
 import { runScrapeFlow } from "@/portal/scrape";
 import { PortalHarness } from "./utils/harness";

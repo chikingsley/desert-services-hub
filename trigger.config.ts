@@ -5,7 +5,7 @@ const BUN_IMPORT_RE = /^bun$/;
 export default defineConfig({
   project: "proj_cebbbbrvbstcozdvvnri",
   runtime: "bun",
-  maxDuration: 300,
+  maxDuration: 7200,
   dirs: ["./apps/trigger-dev/src/trigger"],
   build: {
     external: ["bun"],

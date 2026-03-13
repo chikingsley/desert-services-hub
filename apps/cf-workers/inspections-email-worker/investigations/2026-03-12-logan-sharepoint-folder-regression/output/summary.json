@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-03-12T22:41:17.815Z",
+  "mailbox": "logan@desertservices.net",
+  "sender": "support@compliancego.com",
+  "startedAt": "2026-03-12T22:34:39.210Z",
+  "totals": {
+    "exactPathExists": 4,
+    "likelyExistingFolder": 46,
+    "noCandidateFound": 26,
+    "parseFailed": 0,
+    "possibleExistingFolder": 12,
+    "totalEmails": 314,
+    "totalSites": 88
+  }
+}

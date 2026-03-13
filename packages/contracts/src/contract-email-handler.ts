@@ -12,11 +12,11 @@ import { existsSync } from "node:fs";
 import { mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { shouldSkipAttachment } from "@documents-intake/attachment-policy";
+import { updateAttachmentExtraction } from "@documents-intake/db/attachment";
+import { propagateMissingDocumentProjectIds } from "@documents-intake/db/intake-document";
 import { processFilesIntake } from "@documents-intake/files-intake";
 import { db } from "@lib/db/client";
-import { updateAttachmentExtraction } from "@lib/db/repositories/attachment";
-import { propagateMissingDocumentProjectIds } from "@lib/db/repositories/intake-document";
-import { createGraphClient, type GraphEmailClient } from "@lib/graph/client";
+import { createGraphClient, type GraphEmailClient } from "@lib/graph/mail";
 import type {
   ContractAttachmentContext,
   ContractAttachmentRow,

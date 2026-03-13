@@ -37,6 +37,8 @@ export function parseEmailRow(row: EmailRow): Email {
     normalizedSubject: row.normalized_subject,
     fromEmail: row.from_email,
     fromName: row.from_name,
+    folderId: row.folder_id,
+    folderName: row.folder_name,
     fromDomain: row.from_domain,
     toEmails: parseStringArray(row.to_emails),
     ccEmails: parseStringArray(row.cc_emails),
@@ -209,6 +211,8 @@ function toEmailUpsertParams(params: {
     data.internetMessageId ?? null,
     data.mailboxId,
     data.conversationId ?? null,
+    data.folderId ?? null,
+    data.folderName ?? null,
     data.subject ?? null,
     normalizedSubject,
     data.fromEmail ?? null,
@@ -237,12 +241,14 @@ async function upsertEmailRecord(params: {
 }): Promise<void> {
   await db.run(
     `INSERT INTO emails (
-      message_id, internet_message_id, mailbox_id, conversation_id, subject, normalized_subject, from_email, from_name,
+      message_id, internet_message_id, mailbox_id, conversation_id, folder_id, folder_name, subject, normalized_subject, from_email, from_name,
       to_emails, cc_emails, received_at, has_attachments, attachment_names,
       body_preview, body_full, body_html, web_url, categories, is_excluded, classification, classification_method
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
     ON CONFLICT(message_id) DO UPDATE SET
       internet_message_id = excluded.internet_message_id,
+      folder_id = excluded.folder_id,
+      folder_name = excluded.folder_name,
       subject = excluded.subject,
       normalized_subject = excluded.normalized_subject,
       from_email = excluded.from_email,

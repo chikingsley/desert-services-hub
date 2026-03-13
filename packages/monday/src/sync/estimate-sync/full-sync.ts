@@ -6,7 +6,7 @@
  */
 
 import { db } from "@lib/db/client";
-import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
+import { ensureEstimateHasCurrentVersion } from "@estimates/db/estimate-version";
 import { getItemsRich, type MondayItemRich } from "@monday/client/rich";
 import { SKIP_GROUPS } from "@monday/sync/helpers";
 import { BOARD_IDS, ESTIMATING_COLUMNS } from "@monday/types/schema";

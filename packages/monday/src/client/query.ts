@@ -7,7 +7,12 @@ const API_URL = "https://api.monday.com/v2";
 const API_VERSION = "2026-01";
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 3000;
-const DEFAULT_REQUEST_TIMEOUT_MS = 20_000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 45_000;
+
+export interface QueryOptions {
+  maxRetries?: number;
+  timeoutMs?: number;
+}
 
 function readPositiveIntEnv(key: string, fallback: number): number {
   const raw = process.env[key]?.trim();
@@ -114,15 +119,21 @@ async function parseGraphQLResponse<T>(
 /**
  * Execute a GraphQL query against Monday.com API with retry logic.
  */
-export async function query<T>(graphqlQuery: string): Promise<T> {
+export async function query<T>(
+  graphqlQuery: string,
+  options: QueryOptions = {}
+): Promise<T> {
+  const maxRetries = Math.max(1, options.maxRetries ?? MAX_RETRIES);
+  const timeoutMs = Math.max(1, options.timeoutMs ?? REQUEST_TIMEOUT_MS);
+
   let lastError: Error | null = null;
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const response = await fetchWithTimeout(
         API_URL,
         buildRequestOptions(graphqlQuery),
-        REQUEST_TIMEOUT_MS
+        timeoutMs
       );
       const result = await parseGraphQLResponse<T>(response);
 
@@ -133,7 +144,7 @@ export async function query<T>(graphqlQuery: string): Promise<T> {
           RETRYABLE_ERROR_MARKERS
         );
 
-        if (isRetryable && attempt < MAX_RETRIES) {
+        if (isRetryable && attempt < maxRetries) {
           lastError = new Error(`Monday API error: ${firstError.message}`);
           await sleep(RETRY_DELAY_MS * attempt);
           continue;
@@ -154,7 +165,7 @@ export async function query<T>(graphqlQuery: string): Promise<T> {
         lastError.message,
         RETRYABLE_NETWORK_ERROR_MARKERS
       );
-      if (isRetryable && attempt < MAX_RETRIES) {
+      if (isRetryable && attempt < maxRetries) {
         await sleep(RETRY_DELAY_MS * attempt);
         continue;
       }

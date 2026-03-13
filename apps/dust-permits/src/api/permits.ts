@@ -8,8 +8,9 @@ import {
   ftsSearchPermits,
   getActivePermits,
   getExpiringPermits,
+  getLatestDraftForPermit,
   getPermitById,
-} from "@lib/db/repositories/dust-permit";
+} from "@dust-permits/db/dust-permit";
 import type { Permit as DbPermit } from "@lib/db/types";
 import { z } from "zod";
 import type { DeepPartial, FormData } from "@/form-data";
@@ -36,6 +37,7 @@ import {
   submitApplication,
 } from "@/portal/create/fill";
 import { deleteAllDrafts, deleteByApplicationId } from "@/portal/delete";
+import { resumeFlow } from "@/portal/resume";
 import {
   ensureBrowserSessionReady,
   getSessionPageAndContext,
@@ -83,6 +85,29 @@ async function ensureBrowserSession(): Promise<
   return { page: ctx, success: true };
 }
 
+async function resolveDraftApplicationId(
+  permitId: string,
+  applicationId?: string
+): Promise<{ applicationId: string } | { error: string }> {
+  if (applicationId?.trim()) {
+    return { applicationId: applicationId.trim() };
+  }
+
+  const permit = await getPermitById(permitId);
+  if (permit?.status === "Draft") {
+    return { applicationId: permit.id };
+  }
+
+  const draft = await getLatestDraftForPermit(permitId);
+  if (!draft) {
+    return {
+      error: `No draft application found for permit ${permitId}. Pass applicationId explicitly if needed.`,
+    };
+  }
+
+  return { applicationId: draft.id };
+}
+
 // ─── Schemas ─────────────────────────────────────────────────────────
 
 const apiCreateSchema = z.object({
@@ -114,6 +139,16 @@ const renewBodySchema = z.object({
 
 export const renewAndPayBodySchema = z.object({
   companyName: z.string().describe("Company name for renewal"),
+  expedited: z.boolean().optional().default(false),
+});
+
+export const submitDraftAndPayBodySchema = z.object({
+  applicationId: z
+    .string()
+    .optional()
+    .describe(
+      "Existing draft application ID to resume. If omitted, the latest draft linked to the permit ID is used."
+    ),
   expedited: z.boolean().optional().default(false),
 });
 
@@ -312,7 +347,8 @@ export async function handleCreatePermit(body: unknown): Promise<Response> {
   }
   const mapValidation = await validateCreateMapPreflight(formData);
   if (mapValidation.valid === false) {
-    return jsonError(mapValidation.error);
+    console.warn(`[create] Map preflight warning: ${mapValidation.error}`);
+    // Continue anyway — new development sites may not have assessor parcel data yet
   }
 
   const sessionResult = await ensureBrowserSession();
@@ -578,6 +614,142 @@ export async function handleRenewAndPay(
     const errorMsg = error instanceof Error ? error.message : String(error);
     log(`  Renew & Pay error: ${errorMsg}`);
     return jsonError(`Renew & Pay error: ${errorMsg}`, 500);
+  }
+}
+
+/**
+ * POST /api/permits/:id/submit-draft-and-pay
+ *
+ * Resume an existing draft application, submit it, and pay.
+ */
+export async function handleSubmitDraftAndPay(
+  id: string,
+  body: unknown
+): Promise<Response> {
+  log(`\n  SUBMIT DRAFT & PAY permit request: ${id}`);
+
+  const parsed = submitDraftAndPayBodySchema.safeParse(body);
+  if (!parsed.success) {
+    return jsonError(parsed.error.issues[0]?.message || "Invalid input");
+  }
+
+  if (!DEFAULTS.payment.card.cardNumber) {
+    return jsonError(
+      "Payment env vars not configured (PAYMENT_CARD_NUMBER missing)",
+      500
+    );
+  }
+
+  const resolvedDraft = await resolveDraftApplicationId(
+    id,
+    parsed.data.applicationId
+  );
+  if ("error" in resolvedDraft) {
+    return jsonError(resolvedDraft.error, 404);
+  }
+
+  try {
+    const sessionResult = await ensureBrowserSession();
+    if (sessionResult.success === false) {
+      return jsonError(sessionResult.error, 500);
+    }
+
+    const { page } = sessionResult.page;
+    const draftApplicationId = resolvedDraft.applicationId;
+    const { expedited } = parsed.data;
+
+    const result = await withBrowserSessionOperation(
+      `submit-draft-and-pay:${draftApplicationId}`,
+      async () => {
+        const resumeResult = await resumeFlow(page, draftApplicationId);
+        if (!resumeResult.success) {
+          return {
+            applicationId: draftApplicationId,
+            error:
+              resumeResult.error ||
+              `Failed to resume draft ${draftApplicationId}`,
+            stage: "resume-failed",
+            success: false,
+          };
+        }
+
+        if (expedited) {
+          await checkExpedited(page, true);
+        }
+
+        const submitResult = await submitApplication(page);
+        log(
+          `  Submit draft: success=${submitResult.success}, redirect=${submitResult.redirectedToPayment}`
+        );
+
+        if (!submitResult.success) {
+          return {
+            applicationId: draftApplicationId,
+            error: `Submit failed: ${submitResult.error}`,
+            stage: "submit-failed",
+            success: false,
+          };
+        }
+
+        if (!submitResult.redirectedToPayment) {
+          return {
+            applicationId: draftApplicationId,
+            stage: "submitted-no-payment",
+            success: true,
+          };
+        }
+
+        const fillReport = await fillPaymentPage1(page, DEFAULTS.payment);
+        log(`  Filled: ${fillReport.filledFields.join(", ")}`);
+
+        if (!fillReport.success) {
+          return {
+            applicationId: draftApplicationId,
+            error: `Payment fill failed: ${fillReport.failedFields.join(", ")}`,
+            stage: "payment-page1",
+            success: false,
+          };
+        }
+
+        const advanced = await clickPaymentContinue(page);
+        if (!advanced) {
+          return {
+            applicationId: draftApplicationId,
+            error: "Failed to advance to payment review page",
+            stage: "payment-continue-failed",
+            success: false,
+          };
+        }
+
+        const review = await confirmPayment(page, { dryRun: true });
+        log(`  Payment review total: ${review.totalPaid ?? "unknown"}`);
+
+        const payResult = await confirmPayment(page, { dryRun: false });
+        log(
+          `  Payment: success=${payResult.success}, total=${payResult.totalPaid}`
+        );
+
+        return {
+          amount: payResult.amount,
+          applicationId: draftApplicationId,
+          cardLastFour: payResult.cardLastFour,
+          convenienceFee: payResult.convenienceFee,
+          stage: "paid",
+          success: payResult.success,
+          totalPaid: payResult.totalPaid,
+        };
+      }
+    );
+
+    if (!result.success) {
+      return jsonError(result.error || "Submit draft and pay failed", 500);
+    }
+
+    return jsonSuccess(result);
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    log(`  Submit draft & pay error: ${errorMsg}`);
+    return jsonError(`Submit draft & pay error: ${errorMsg}`, 500);
   }
 }
 

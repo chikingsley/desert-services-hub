@@ -2,7 +2,7 @@
 
 Three extraction tiers — all include LLM classification:
   POST /native-text-extraction  — kreuzberg text layer + LLM classify
-  POST /ocr-extraction          — GLM-OCR vision + LLM classify
+  POST /ocr-extraction          — PaddleOCR + LLM classify
   POST /full-extraction         — kreuzberg + OCR + LLM reconcile + classify
 
 Specialist extractors — take a file path, return structured JSON:
@@ -11,7 +11,7 @@ Specialist extractors — take a file path, return structured JSON:
   POST /contract   — Subcontract/PO: parties, value, scope, terms
 
 Generic LLM gateway (single entry point for all TS callers):
-  POST /chat       — Send any prompt, get parsed JSON back (local → gemini fallback)
+  POST /chat       — Send any prompt, get parsed JSON back
 
 Utility:
   GET  /health
@@ -50,11 +50,37 @@ def get_manager() -> ProviderManager:
     return _manager
 
 
+def _map_provider_error(exc: Exception) -> HTTPException:
+    message = str(exc)
+    normalized = message.lower()
+
+    if (
+        "resource_exhausted" in normalized
+        or "exceeded your current quota" in normalized
+        or "rate limit" in normalized
+    ):
+        return HTTPException(status_code=429, detail=message)
+
+    if "all providers failed" in normalized or "unavailable" in normalized:
+        return HTTPException(status_code=503, detail=message)
+
+    return HTTPException(status_code=500, detail=message)
+
+
 def _resolve_path(raw: str) -> Path:
     p = Path(raw)
     if not p.exists():
         raise HTTPException(status_code=404, detail=f"File not found: {raw}")
     return p
+
+
+def _write_upload_to_temp(file: UploadFile) -> tuple[Path, str]:
+    suffix = Path(file.filename or ".bin").suffix
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+    shutil.copyfileobj(file.file, tmp)
+    tmp.close()
+    path = Path(tmp.name)
+    return path, (file.filename or path.name)
 
 
 # ---------------------------------------------------------------------------
@@ -171,11 +197,11 @@ async def health() -> dict[str, str]:
 
 @app.post("/chat")
 async def chat_endpoint(req: ChatRequest) -> dict[str, Any]:
-    """Generic LLM prompt → parsed JSON. Local (granite4) first, Gemini fallback.
+    """Generic LLM prompt → parsed JSON.
 
     The single gateway for all TypeScript LLM calls — email triage, contact
-    enrichment, contract field extraction. Provider routing and fallback are
-    handled here so TypeScript has no direct Ollama/Gemini knowledge.
+    enrichment, contract field extraction. Provider routing is handled here so
+    TypeScript has no direct Ollama/Gemini knowledge.
     """
     provider = (
         ProviderSelector(req.provider) if req.provider != "auto" else ProviderSelector.AUTO
@@ -183,9 +209,14 @@ async def chat_endpoint(req: ChatRequest) -> dict[str, Any]:
     manager = get_manager()
     try:
         result = await manager.chat(req.prompt, provider=provider)
-        return {"data": result.data, "model": result.model, "metadata": result.metadata}
+        return {
+            "data": result.data,
+            "model": result.model,
+            "metadata": result.metadata,
+            "processing_time_ms": result.processing_time_ms,
+        }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise _map_provider_error(exc) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -204,7 +235,10 @@ async def native_text_extraction(req: FileRequest) -> dict[str, Any]:
     provider = ProviderSelector(req.provider) if req.provider != "auto" else ProviderSelector.AUTO
 
     started = time.perf_counter()
-    result = await ingest_pdf(path, provider=provider)
+    try:
+        result = await ingest_pdf(path, provider=provider)
+    except Exception as exc:
+        raise _map_provider_error(exc) from exc
     elapsed_ms = int((time.perf_counter() - started) * 1000)
 
     return {
@@ -238,19 +272,15 @@ async def native_text_extraction_upload(
     spools files >1 MB to disk automatically. Use this from Trigger.dev runner
     containers to avoid OOM on large attachments.
     """
-    suffix = Path(file.filename or ".bin").suffix
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-    # Stream from FastAPI's spool file to disk — no full-content memory copy
-    shutil.copyfileobj(file.file, tmp)
-    tmp.close()
-    path = Path(tmp.name)
-
+    path, original_filename = _write_upload_to_temp(file)
     provider_sel = ProviderSelector(provider) if provider != "auto" else ProviderSelector.AUTO
-    original_filename = file.filename or path.name
 
     try:
         started = time.perf_counter()
-        result = await ingest_pdf(path, provider=provider_sel)
+        try:
+            result = await ingest_pdf(path, provider=provider_sel)
+        except Exception as exc:
+            raise _map_provider_error(exc) from exc
         elapsed_ms = int((time.perf_counter() - started) * 1000)
 
         return {
@@ -269,6 +299,149 @@ async def native_text_extraction_upload(
         path.unlink(missing_ok=True)
 
 
+@app.post("/text-extraction/upload")
+async def text_extraction_upload(
+    file: UploadFile = File(...),
+    mode: str = Form("native"),
+) -> dict[str, Any]:
+    """Text-only extraction for review workflows.
+
+    Uses kreuzberg text extraction first. If no text layer is present, falls
+    back to local OCR. This endpoint intentionally skips LLM classification so
+    QA/review flows do not block on model availability.
+    """
+    path, original_filename = _write_upload_to_temp(file)
+    normalized_mode = mode.strip().lower()
+    if normalized_mode not in {"native", "ocr"}:
+        raise HTTPException(status_code=400, detail=f"Unsupported text extraction mode: {mode}")
+
+    manager = get_manager()
+
+    try:
+        started = time.perf_counter()
+        metadata: dict[str, Any] = {
+            "classification_skipped": True,
+            "mode": normalized_mode,
+        }
+
+        if normalized_mode == "ocr":
+            try:
+                ocr_result = await manager.ocr(path, provider=ProviderSelector.LOCAL)
+            except Exception as exc:
+                raise _map_provider_error(exc) from exc
+
+            elapsed_ms = int((time.perf_counter() - started) * 1000)
+            return {
+                "filename": original_filename,
+                "text": ocr_result.text,
+                "page_count": len(ocr_result.pages),
+                "extraction_method": f"ocr:{ocr_result.provider.value}",
+                "processing_time_ms": elapsed_ms,
+                "metadata": {
+                    **metadata,
+                    "page_artifacts": {
+                        "pages": [
+                            {"is_blank": False, "number": page}
+                            for page in ocr_result.pages
+                        ],
+                        "total_count": len(ocr_result.pages),
+                        "unit_type": "page",
+                    },
+                    "ocr_model": ocr_result.model,
+                    "ocr_pages": ocr_result.pages,
+                    **ocr_result.metadata,
+                },
+            }
+
+        text_result = extract_text(path)
+        if text_result.has_text:
+            elapsed_ms = int((time.perf_counter() - started) * 1000)
+            return {
+                "filename": original_filename,
+                "text": text_result.text,
+                "page_count": text_result.page_count,
+                "extraction_method": "kreuzberg",
+                "processing_time_ms": elapsed_ms,
+                "metadata": {
+                    **metadata,
+                    "kreuzberg_metadata": text_result.metadata,
+                    "page_artifacts": text_result.metadata.get("pages"),
+                    "pages_with_text": text_result.pages_with_text,
+                    "tables": text_result.tables,
+                },
+            }
+
+        try:
+            ocr_result = await manager.ocr(path, provider=ProviderSelector.LOCAL)
+        except Exception as exc:
+            raise _map_provider_error(exc) from exc
+
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
+        return {
+            "filename": original_filename,
+            "text": ocr_result.text,
+            "page_count": len(ocr_result.pages),
+            "extraction_method": f"ocr:{ocr_result.provider.value}",
+            "processing_time_ms": elapsed_ms,
+            "metadata": {
+                **metadata,
+                "ocr_fallback_used": True,
+                "page_artifacts": {
+                    "pages": [
+                        {"is_blank": False, "number": page}
+                        for page in ocr_result.pages
+                    ],
+                    "total_count": len(ocr_result.pages),
+                    "unit_type": "page",
+                },
+                "ocr_model": ocr_result.model,
+                "ocr_pages": ocr_result.pages,
+                **ocr_result.metadata,
+            },
+        }
+    finally:
+        path.unlink(missing_ok=True)
+
+
+@app.post("/ocr-extraction/upload")
+async def ocr_extraction_upload(
+    file: UploadFile = File(...),
+    provider: str = Form("local"),
+) -> dict[str, Any]:
+    path, original_filename = _write_upload_to_temp(file)
+    provider_sel = ProviderSelector(provider) if provider != "auto" else ProviderSelector.LOCAL
+    manager = get_manager()
+
+    try:
+        started = time.perf_counter()
+        try:
+            ocr_result = await manager.ocr(path, provider=provider_sel)
+            text = ocr_result.text
+            data, model = await _llm_extract(text, provider_sel, manager)
+        except Exception as exc:
+            raise _map_provider_error(exc) from exc
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
+
+        return {
+            "filename": original_filename,
+            "document_type": str(data.get("document_type", "unknown")),
+            "summary": str(data.get("summary", "")),
+            "extracted": data,
+            "text": text,
+            "page_count": len(ocr_result.pages),
+            "extraction_method": f"ocr:{ocr_result.provider.value}",
+            "model": model,
+            "processing_time_ms": elapsed_ms,
+            "metadata": {
+                "ocr_model": ocr_result.model,
+                "ocr_pages": ocr_result.pages,
+                **ocr_result.metadata,
+            },
+        }
+    finally:
+        path.unlink(missing_ok=True)
+
+
 # ---------------------------------------------------------------------------
 # POST /ocr-extraction  (GLM-OCR vision + LLM classify)
 # ---------------------------------------------------------------------------
@@ -276,11 +449,10 @@ async def native_text_extraction_upload(
 
 @app.post("/ocr-extraction")
 async def ocr_extraction(req: FileRequest) -> dict[str, Any]:
-    """GLM-OCR vision model extraction + LLM classification.
+    """PaddleOCR extraction + LLM classification.
 
-    Sends each page as an image to the vision model. Use when the document is
-    scanned, image-heavy, or when you explicitly want the vision pass regardless
-    of whether a text layer exists.
+    Use when the document is scanned/image-heavy or when you explicitly want
+    OCR regardless of whether a text layer exists.
     """
     path = _resolve_path(req.path)
     provider = ProviderSelector(req.provider) if req.provider != "auto" else ProviderSelector.LOCAL
@@ -361,6 +533,58 @@ async def full_extraction(req: FullExtractionRequest) -> dict[str, Any]:
     }
 
 
+@app.post("/full-extraction/upload")
+async def full_extraction_upload(
+    file: UploadFile = File(...),
+    ocr_provider: str = Form("local"),
+    reconcile_model: str = Form("zai-coding-plan/glm-4.7"),
+) -> dict[str, Any]:
+    path, original_filename = _write_upload_to_temp(file)
+    ocr_provider_sel = (
+        ProviderSelector(ocr_provider)
+        if ocr_provider != "auto"
+        else ProviderSelector.LOCAL
+    )
+    manager = get_manager()
+
+    from pdf_analysis.parse import parse_pdf
+
+    try:
+        started = time.perf_counter()
+        try:
+            parse_result = await parse_pdf(
+                path,
+                ocr_provider=ocr_provider_sel,
+                reconcile_model=reconcile_model,
+            )
+            text = parse_result.reconciled_markdown
+            data, classify_model = await _llm_extract(
+                text, ProviderSelector.AUTO, manager
+            )
+        except Exception as exc:
+            raise _map_provider_error(exc) from exc
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
+
+        return {
+            "filename": original_filename,
+            "document_type": str(data.get("document_type", "unknown")),
+            "summary": str(data.get("summary", "")),
+            "extracted": data,
+            "text": text,
+            "page_count": parse_result.page_count,
+            "extraction_method": "full",
+            "model": classify_model,
+            "processing_time_ms": elapsed_ms,
+            "metadata": {
+                "ocr_model": parse_result.ocr_model,
+                "reconcile_model": parse_result.reconcile_model,
+                **parse_result.metadata,
+            },
+        }
+    finally:
+        path.unlink(missing_ok=True)
+
+
 # ---------------------------------------------------------------------------
 # POST /estimate  (kreuzberg table extraction, no LLM)
 # ---------------------------------------------------------------------------
@@ -386,6 +610,27 @@ async def estimate_endpoint(req: FileRequest) -> dict[str, Any]:
         return data
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/estimate/upload")
+async def estimate_upload_endpoint(file: UploadFile = File(...)) -> dict[str, Any]:
+    path, original_filename = _write_upload_to_temp(file)
+
+    from pdf_analysis.analysis.estimates import extract_estimate
+
+    try:
+        started = time.perf_counter()
+        try:
+            result = await asyncio.to_thread(extract_estimate, path)
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+        data = result.model_dump()
+        data["filename"] = original_filename
+        data["flags"] = await _verify(data, "estimate", get_manager())
+        data["processing_time_ms"] = int((time.perf_counter() - started) * 1000)
+        return data
+    finally:
+        path.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -423,6 +668,35 @@ async def noi_endpoint(req: FileRequest) -> dict[str, Any]:
         return data
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/noi/upload")
+async def noi_upload_endpoint(file: UploadFile = File(...)) -> dict[str, Any]:
+    path, original_filename = _write_upload_to_temp(file)
+
+    from pdf_analysis.analysis.noi import extract_noi
+
+    try:
+        started = time.perf_counter()
+        try:
+            text_result = extract_text(path)
+            text = text_result.text
+
+            if not text_result.has_text:
+                manager = get_manager()
+                ocr_result = await manager.ocr(path, provider=ProviderSelector.LOCAL)
+                text = ocr_result.text
+
+            result = extract_noi(text)
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+        data = result.model_dump(by_alias=False)
+        data["filename"] = original_filename
+        data["flags"] = await _verify(data, "noi", get_manager())
+        data["processing_time_ms"] = int((time.perf_counter() - started) * 1000)
+        return data
+    finally:
+        path.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -482,3 +756,35 @@ async def contract_endpoint(req: FileRequest) -> dict[str, Any]:
         return data
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/contract/upload")
+async def contract_upload_endpoint(
+    file: UploadFile = File(...),
+    provider: str = Form("auto"),
+) -> dict[str, Any]:
+    path, original_filename = _write_upload_to_temp(file)
+    provider_sel = ProviderSelector(provider) if provider != "auto" else ProviderSelector.AUTO
+    manager = get_manager()
+
+    try:
+        started = time.perf_counter()
+        try:
+            text_result = extract_text(path)
+            text = text_result.text
+
+            if not text_result.has_text:
+                ocr_result = await manager.ocr(path, provider=ProviderSelector.LOCAL)
+                text = ocr_result.text
+
+            data, model = await _llm_extract(
+                text, provider_sel, manager, prompt=_CONTRACT_PROMPT
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+        data["filename"] = original_filename
+        data["model"] = model
+        data["processing_time_ms"] = int((time.perf_counter() - started) * 1000)
+        return data
+    finally:
+        path.unlink(missing_ok=True)

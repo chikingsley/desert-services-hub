@@ -358,27 +358,27 @@ export const FormDataOverridesSchema = baseOverridesSchema as z.ZodType<
   DeepPartial<FormData>
 >;
 
-export const FormDataSchema = (
-  baseFormDataSchema as z.ZodType<FormData>
-).check((payload) => {
-  const data = payload.value;
-  if (!data || typeof data !== "object") {
-    return;
+export const FormDataSchema = (baseFormDataSchema as z.ZodType<FormData>).check(
+  (payload) => {
+    const data = payload.value;
+    if (!data || typeof data !== "object") {
+      return;
+    }
+
+    const issueCtx: IssueCtx = {
+      addIssue: ({ message, path }) => {
+        payload.issues.push({
+          code: "custom",
+          input: payload.value,
+          message,
+          path: path ?? [],
+        });
+      },
+    };
+
+    validateConditionalRules(data as FormData, issueCtx);
   }
-
-  const issueCtx: IssueCtx = {
-    addIssue: ({ message, path }) => {
-      payload.issues.push({
-        code: "custom",
-        input: payload.value,
-        message,
-        path: path ?? [],
-      });
-    },
-  };
-
-  validateConditionalRules(data as FormData, issueCtx);
-});
+);
 
 function formatValidationError(title: string, error: z.ZodError): string {
   const pretty = z.prettifyError(error).trim();

@@ -8,12 +8,16 @@ from typing import Any, Literal, TypeGuard
 class ProviderName(str, Enum):
     GEMINI = "gemini"
     LOCAL = "local"
+    LOCAL_PUBLIC = "local_public"
+    OPENROUTER = "openrouter"
 
 
 class ProviderSelector(str, Enum):
     AUTO = "auto"
     GEMINI = "gemini"
     LOCAL = "local"
+    LOCAL_PUBLIC = "local_public"
+    OPENROUTER = "openrouter"
 
 
 class OutputFormat(str, Enum):

@@ -1105,6 +1105,13 @@ export async function clickApplicationWithRetry(
  * Detect the current page number in the application form (1-5).
  */
 export async function getCurrentPage(page: Page): Promise<number | null> {
+  const isVisible = async (selector: string): Promise<boolean> =>
+    await page
+      .locator(selector)
+      .first()
+      .isVisible()
+      .catch(() => false);
+
   // 1. Try active step indicator in the sidebar (most reliable)
   const activeImg = page.locator('img[title*="Active step"]').first();
   if ((await activeImg.count()) > 0) {
@@ -1118,33 +1125,28 @@ export async function getCurrentPage(page: Page): Promise<number | null> {
   // 2. Page-specific element markers (Fallbacks)
 
   // Page 1: Applicant info table (look for email field in siTable:1)
-  if (
-    (await page
-      .locator('[id="ThePage:siTable:1:sioTable:0:siForm:text"]')
-      .count()) > 0
-  ) {
+  if (await isVisible('[id="ThePage:siTable:1:sioTable:0:siForm:text"]')) {
     return 1;
   }
 
-  // Page 2: Add Site Drawing button
-  if ((await page.locator('img[alt="Add Site Drawing"]').count()) > 0) {
+  // Page 2: site drawing actions
+  if (
+    (await isVisible(portal.page2.addSiteDrawingBtn)) ||
+    (await isVisible(portal.page2.editSiteDrawingBtn))
+  ) {
     return 2;
   }
 
   // Page 3: Primary contact section (look for first name field in siTable:8)
-  if (
-    (await page
-      .locator('[id="ThePage:siTable:8:sioTable:1:siForm:text"]')
-      .count()) > 0
-  ) {
+  if (await isVisible('[id="ThePage:siTable:8:sioTable:1:siForm:text"]')) {
     return 3;
   }
 
   // Page 4: Dust control plan section (look for Category A header or siTable:18)
   if (
-    (await page.locator("text=Category A").count()) > 0 ||
-    (await page.locator('[id*="siTable:18:sioTable"]').count()) > 0 ||
-    (await page.locator('[id*="siTable:35:sioTable"]').count()) > 0
+    (await isVisible("text=Category A")) ||
+    (await isVisible('[id*="siTable:18:sioTable"]')) ||
+    (await isVisible('[id*="siTable:35:sioTable"]'))
   ) {
     return 4;
   }

@@ -5,18 +5,18 @@ import type { CatalogItem } from "@/packages/estimates/catalog/types";
 const stringOrNullSchema = z.union([z.string(), z.null()]);
 
 export const lineItemSchema = z.looseObject({
-    section_id: stringOrNullSchema.optional(),
-    code: z.string().trim().optional(),
-    item_name: z.string().trim().optional(),
-    description: z.string().optional(),
-    quantity: z.coerce.number().finite().nonnegative().optional(),
-    unit: z.string().trim().optional(),
-    unit_price: z.coerce.number().finite().nonnegative().optional(),
-    notes: stringOrNullSchema.optional(),
-    is_excluded: z.union([z.boolean(), z.literal(0), z.literal(1)]).optional(),
-    allow_description_override: z.boolean().optional(),
-    allow_unit_override: z.boolean().optional(),
-  });
+  section_id: stringOrNullSchema.optional(),
+  code: z.string().trim().optional(),
+  item_name: z.string().trim().optional(),
+  description: z.string().optional(),
+  quantity: z.coerce.number().finite().nonnegative().optional(),
+  unit: z.string().trim().optional(),
+  unit_price: z.coerce.number().finite().nonnegative().optional(),
+  notes: stringOrNullSchema.optional(),
+  is_excluded: z.union([z.boolean(), z.literal(0), z.literal(1)]).optional(),
+  allow_description_override: z.boolean().optional(),
+  allow_unit_override: z.boolean().optional(),
+});
 
 export type RawCatalogLineItem = z.infer<typeof lineItemSchema>;
 

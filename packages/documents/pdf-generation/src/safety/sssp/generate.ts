@@ -67,50 +67,50 @@ const ssspSectionSchema = z.enum([
 ]);
 
 const ssspContactSchema = z.strictObject({
-    email: z.string().trim().optional(),
-    name: z.string().trim().min(1),
-    notes: z.string().trim().optional(),
-    phone: z.string().trim().min(1),
-    role: z.string().trim().min(1),
-  });
+  email: z.string().trim().optional(),
+  name: z.string().trim().min(1),
+  notes: z.string().trim().optional(),
+  phone: z.string().trim().min(1),
+  role: z.string().trim().min(1),
+});
 
 const ssspScopeItemSchema = z.strictObject({
-    details: z.array(z.string().trim().min(1)).min(1),
-    title: z.string().trim().min(1),
-  });
+  details: z.array(z.string().trim().min(1)).min(1),
+  title: z.string().trim().min(1),
+});
 
 const ssspInputSchema = z.looseObject({
-    approvedBy: z.string().optional(),
-    contacts: z.array(ssspContactSchema).min(5),
-    date: z.string().optional(),
-    duration: z.string().optional(),
-    gcName: z.string().optional(),
+  approvedBy: z.string().optional(),
+  contacts: z.array(ssspContactSchema).min(5),
+  date: z.string().optional(),
+  duration: z.string().optional(),
+  gcName: z.string().optional(),
 
-    includePortableSanitationSection: z
-      .union([z.boolean(), z.literal("auto")])
-      .optional(),
-    includeStreetSweepingSection: z
-      .union([z.boolean(), z.literal("auto")])
-      .optional(),
-    includeWaterTruckSection: z
-      .union([z.boolean(), z.literal("auto")])
-      .optional(),
-    jobNumber: z.string().optional(),
-    ownerName: z.string().optional(),
-    preparedBy: z.string().optional(),
-    projectAddress: z.string().trim().min(1),
-    projectCode: z.string().optional(),
-    projectName: z.string().trim().min(1),
+  includePortableSanitationSection: z
+    .union([z.boolean(), z.literal("auto")])
+    .optional(),
+  includeStreetSweepingSection: z
+    .union([z.boolean(), z.literal("auto")])
+    .optional(),
+  includeWaterTruckSection: z
+    .union([z.boolean(), z.literal("auto")])
+    .optional(),
+  jobNumber: z.string().optional(),
+  ownerName: z.string().optional(),
+  preparedBy: z.string().optional(),
+  projectAddress: z.string().trim().min(1),
+  projectCode: z.string().optional(),
+  projectName: z.string().trim().min(1),
 
-    revision: z.string().optional(),
-    scopeItems: z.array(ssspScopeItemSchema).optional(),
-    scopeOfWork: z.string().optional(),
-    sections: z.array(ssspSectionSchema).optional(),
-    startDate: z.string().optional(),
-    title: z.string().optional(),
+  revision: z.string().optional(),
+  scopeItems: z.array(ssspScopeItemSchema).optional(),
+  scopeOfWork: z.string().optional(),
+  sections: z.array(ssspSectionSchema).optional(),
+  startDate: z.string().optional(),
+  title: z.string().optional(),
 
-    workHours: z.string().optional(),
-  });
+  workHours: z.string().optional(),
+});
 
 function deriveSectionsFromLegacyFields(doc: SsspDocument): SsspSection[] {
   const sections: SsspSection[] = [];

@@ -10,6 +10,10 @@ export const TERRAIN_DEM_TILE_URL =
 export const USGS_3DEP_GET_SAMPLES_URL =
   "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/getSamples";
 
+const STREET_CENTERLINE_SERVICE_BASE_URL =
+  "https://gis.maricopa.gov/arcgis/rest/services/IndividualService/Street/MapServer";
+const STREET_CENTERLINE_LAYER_IDS = [1, 2, 3] as const;
+
 export interface ParcelInfo {
   acres: number | null;
   address: string | null;
@@ -30,6 +34,13 @@ export interface LowestPoint {
   point: LngLatTuple;
   resolutionMeters: number | null;
   source: "terrain" | "3dep";
+}
+
+export interface AccessPointCandidate {
+  distanceToRoadMeters: number;
+  nearStreetClassification: string | null;
+  nearStreetName: string | null;
+  point: LngLatTuple;
 }
 
 interface EsriAttributes {
@@ -391,4 +402,342 @@ export async function fetchApnLabels(map: {
     return null;
   }
   return fc;
+}
+
+interface StreetFeature {
+  classification: string | null;
+  name: string | null;
+  path: LngLatTuple[];
+}
+
+function pointToLocalMeters(
+  point: LngLatTuple,
+  origin: LngLatTuple,
+  cosLat: number
+): { x: number; y: number } {
+  const R = 6_371_000;
+  return {
+    x: ((point[0] - origin[0]) * Math.PI * R * cosLat) / 180,
+    y: ((point[1] - origin[1]) * Math.PI * R) / 180,
+  };
+}
+
+function distancePointToSegmentMeters(
+  p: { x: number; y: number },
+  a: { x: number; y: number },
+  b: { x: number; y: number }
+): number {
+  const abx = b.x - a.x;
+  const aby = b.y - a.y;
+  const apx = p.x - a.x;
+  const apy = p.y - a.y;
+  const ab2 = abx * abx + aby * aby;
+  if (ab2 <= 1e-9) {
+    return Math.hypot(apx, apy);
+  }
+  const t = Math.max(0, Math.min(1, (apx * abx + apy * aby) / ab2));
+  const cx = a.x + t * abx;
+  const cy = a.y + t * aby;
+  return Math.hypot(p.x - cx, p.y - cy);
+}
+
+function distanceBetweenPointsMeters(a: LngLatTuple, b: LngLatTuple): number {
+  const lat0 = ((a[1] + b[1]) / 2) * (Math.PI / 180);
+  const cosLat = Math.max(Math.cos(lat0), 1e-6);
+  const ax = pointToLocalMeters(a, a, cosLat);
+  const bx = pointToLocalMeters(b, a, cosLat);
+  return Math.hypot(bx.x - ax.x, bx.y - ax.y);
+}
+
+function getPolygonExtent(
+  polygon: GeoJSON.Feature<GeoJSON.Polygon, { APN: string }>
+): { xmax: number; xmin: number; ymax: number; ymin: number } | null {
+  const ring = getOuterRing(polygon);
+  if (ring.length < 3) {
+    return null;
+  }
+  const first = ring[0];
+  if (!first) {
+    return null;
+  }
+  let xmin = first[0];
+  let xmax = first[0];
+  let ymin = first[1];
+  let ymax = first[1];
+
+  for (const point of ring) {
+    if (point[0] < xmin) {
+      xmin = point[0];
+    }
+    if (point[0] > xmax) {
+      xmax = point[0];
+    }
+    if (point[1] < ymin) {
+      ymin = point[1];
+    }
+    if (point[1] > ymax) {
+      ymax = point[1];
+    }
+  }
+
+  return { xmax, xmin, ymax, ymin };
+}
+
+function expandExtentMeters(
+  extent: { xmax: number; xmin: number; ymax: number; ymin: number },
+  padMeters: number
+): { xmax: number; xmin: number; ymax: number; ymin: number } {
+  const centerLat = (extent.ymin + extent.ymax) / 2;
+  const latPad = padMeters / 111_320;
+  const lngPad =
+    padMeters /
+    (111_320 * Math.max(Math.cos((centerLat * Math.PI) / 180), 1e-6));
+
+  return {
+    xmax: extent.xmax + lngPad,
+    xmin: extent.xmin - lngPad,
+    ymax: extent.ymax + latPad,
+    ymin: extent.ymin - latPad,
+  };
+}
+
+function addUniquePoint(points: LngLatTuple[], point: LngLatTuple): void {
+  const key = `${point[0].toFixed(6)}:${point[1].toFixed(6)}`;
+  const exists = points.some(
+    (existing) => `${existing[0].toFixed(6)}:${existing[1].toFixed(6)}` === key
+  );
+  if (!exists) {
+    points.push(point);
+  }
+}
+
+function buildBoundaryCandidates(
+  polygon: GeoJSON.Feature<GeoJSON.Polygon, { APN: string }>
+): LngLatTuple[] {
+  const ring = getOuterRing(polygon);
+  if (ring.length < 4) {
+    return [];
+  }
+  const openRing = ring.slice(0, -1);
+  const candidates: LngLatTuple[] = [];
+
+  for (let i = 0; i < openRing.length; i += 1) {
+    const current = openRing[i];
+    const next = openRing[(i + 1) % openRing.length];
+    if (!(current && next)) {
+      continue;
+    }
+
+    addUniquePoint(candidates, current);
+    const segmentLength = distanceBetweenPointsMeters(current, next);
+    if (segmentLength > 18) {
+      addUniquePoint(candidates, [
+        (current[0] + next[0]) / 2,
+        (current[1] + next[1]) / 2,
+      ]);
+    }
+  }
+
+  return candidates;
+}
+
+async function queryStreetLayer(
+  layerId: number,
+  extent: { xmax: number; xmin: number; ymax: number; ymin: number }
+): Promise<StreetFeature[]> {
+  const params = new URLSearchParams({
+    f: "json",
+    geometry: `${extent.xmin},${extent.ymin},${extent.xmax},${extent.ymax}`,
+    geometryType: "esriGeometryEnvelope",
+    inSR: "4326",
+    outFields: "*",
+    outSR: "4326",
+    resultRecordCount: "200",
+    returnGeometry: "true",
+    spatialRel: "esriSpatialRelIntersects",
+    where: "1=1",
+  });
+
+  const response = await fetch(
+    `${STREET_CENTERLINE_SERVICE_BASE_URL}/${layerId}/query?${params.toString()}`
+  );
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = (await response.json()) as {
+    error?: unknown;
+    features?: Array<{
+      attributes?: Record<string, unknown>;
+      geometry?: { paths?: number[][][] };
+    }>;
+  };
+  if (data.error || !data.features?.length) {
+    return [];
+  }
+
+  const features: StreetFeature[] = [];
+  for (const feature of data.features) {
+    const attrs = feature.attributes ?? {};
+    const paths = feature.geometry?.paths ?? [];
+    for (const path of paths) {
+      if (path.length < 2) {
+        continue;
+      }
+      const coords: LngLatTuple[] = [];
+      for (const pair of path) {
+        const lng = pair[0];
+        const lat = pair[1];
+        if (typeof lng !== "number" || typeof lat !== "number") {
+          continue;
+        }
+        coords.push([lng, lat]);
+      }
+      if (coords.length < 2) {
+        continue;
+      }
+      const fullStreetName =
+        typeof attrs.FullStreetName === "string" ? attrs.FullStreetName : null;
+      const highwayName =
+        typeof attrs.HighwayName === "string" ? attrs.HighwayName : null;
+      const streetName =
+        typeof attrs.StreetName === "string" ? attrs.StreetName : null;
+      const prefixDirection =
+        typeof attrs.PrefixDirection === "string"
+          ? attrs.PrefixDirection
+          : null;
+      const postDirection =
+        typeof attrs.PostDirection === "string" ? attrs.PostDirection : null;
+      const streetType =
+        typeof attrs.StreetType === "string" ? attrs.StreetType : null;
+      const highwayType =
+        typeof attrs.HighwayType === "string" ? attrs.HighwayType : null;
+      const classification =
+        typeof attrs.Classification === "string" ? attrs.Classification : null;
+      const assembledStreetName = [
+        prefixDirection,
+        streetName,
+        streetType,
+        postDirection,
+      ]
+        .filter((part) => typeof part === "string" && part.trim().length > 0)
+        .join(" ");
+      const name = fullStreetName ?? highwayName ?? assembledStreetName ?? null;
+      const resolvedClassification = classification ?? highwayType ?? null;
+
+      features.push({
+        classification: resolvedClassification,
+        name,
+        path: coords,
+      });
+    }
+  }
+
+  return features;
+}
+
+export async function inferParcelAccessPoints(
+  polygon: GeoJSON.Feature<GeoJSON.Polygon, { APN: string }>,
+  options?: {
+    maxAccessPoints?: number;
+    maxRoadDistanceMeters?: number;
+    minPointSeparationMeters?: number;
+    searchRadiusMeters?: number;
+  }
+): Promise<AccessPointCandidate[]> {
+  const maxAccessPoints = Math.max(1, options?.maxAccessPoints ?? 2);
+  const maxRoadDistanceMeters = Math.max(
+    5,
+    options?.maxRoadDistanceMeters ?? 200
+  );
+  const minPointSeparationMeters = Math.max(
+    3,
+    options?.minPointSeparationMeters ?? 20
+  );
+  const searchRadiusMeters = Math.max(20, options?.searchRadiusMeters ?? 500);
+
+  const extent = getPolygonExtent(polygon);
+  if (!extent) {
+    return [];
+  }
+  const expandedExtent = expandExtentMeters(extent, searchRadiusMeters);
+
+  const boundaryCandidates = buildBoundaryCandidates(polygon);
+  if (boundaryCandidates.length === 0) {
+    return [];
+  }
+
+  const streetLists = await Promise.all(
+    STREET_CENTERLINE_LAYER_IDS.map((layerId) =>
+      queryStreetLayer(layerId, expandedExtent)
+    )
+  );
+  const streets = streetLists.flat();
+  if (streets.length === 0) {
+    return [];
+  }
+
+  const centerLng = (extent.xmin + extent.xmax) / 2;
+  const centerLat = (extent.ymin + extent.ymax) / 2;
+  const origin: LngLatTuple = [centerLng, centerLat];
+  const cosLat = Math.max(Math.cos((centerLat * Math.PI) / 180), 1e-6);
+
+  const scored: AccessPointCandidate[] = [];
+  const allScored: AccessPointCandidate[] = [];
+  for (const candidate of boundaryCandidates) {
+    const p = pointToLocalMeters(candidate, origin, cosLat);
+    let bestDistance = Number.POSITIVE_INFINITY;
+    let bestStreetName: string | null = null;
+    let bestStreetClassification: string | null = null;
+
+    for (const street of streets) {
+      for (let i = 0; i < street.path.length - 1; i += 1) {
+        const aRaw = street.path[i];
+        const bRaw = street.path[i + 1];
+        if (!(aRaw && bRaw)) {
+          continue;
+        }
+        const a = pointToLocalMeters(aRaw, origin, cosLat);
+        const b = pointToLocalMeters(bRaw, origin, cosLat);
+        const distance = distancePointToSegmentMeters(p, a, b);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestStreetName = street.name;
+          bestStreetClassification = street.classification;
+        }
+      }
+    }
+
+    const scoredCandidate = {
+      distanceToRoadMeters: bestDistance,
+      nearStreetClassification: bestStreetClassification,
+      nearStreetName: bestStreetName,
+      point: candidate,
+    };
+    allScored.push(scoredCandidate);
+
+    if (bestDistance <= maxRoadDistanceMeters) {
+      scored.push(scoredCandidate);
+    }
+  }
+
+  const pool = scored.length > 0 ? scored : allScored;
+  pool.sort((a, b) => a.distanceToRoadMeters - b.distanceToRoadMeters);
+  const selected: AccessPointCandidate[] = [];
+  for (const candidate of pool) {
+    const tooClose = selected.some(
+      (chosen) =>
+        distanceBetweenPointsMeters(chosen.point, candidate.point) <
+        minPointSeparationMeters
+    );
+    if (tooClose) {
+      continue;
+    }
+    selected.push(candidate);
+    if (selected.length >= maxAccessPoints) {
+      break;
+    }
+  }
+
+  return selected;
 }

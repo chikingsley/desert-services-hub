@@ -7,10 +7,34 @@
     "ultracite/biome/react"
   ],
   "javascript": {
-    "globals": ["Bun", "Deno", "HTMLRewriter"]
+    "globals": ["Bun", "Deno", "HTMLRewriter", "__ENV", "__VU", "__ITER"]
   },
   "files": {
-    "includes": ["**/*", "!**/*.html"]
+    "includes": [
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.cjs",
+      "**/*.mjs",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.cts",
+      "**/*.mts",
+      "**/*.json",
+      "**/*.jsonc",
+      "!**/*.html",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/.next",
+      "!**/coverage",
+      "!**/.turbo",
+      "!**/.tmp",
+      "!tmp",
+      "!apps/inbox-zero",
+      "!apps/dust-permits/experiments",
+      "!apps/cf-workers/docusign-file-automation/_reference",
+      "!apps/cf-workers/inspections-email-worker/inspections-app-idea"
+    ]
   },
   "linter": {
     "rules": {
@@ -85,6 +109,110 @@
           },
           "correctness": {
             "useImageSize": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["tests/**", "evals/**", "ops/load-tests/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off",
+            "noVoid": "off"
+          },
+          "nursery": {
+            "noExcessiveLinesPerFile": "off"
+          },
+          "performance": {
+            "noBarrelFile": "off"
+          },
+          "suspicious": {
+            "noEmptyBlockStatements": "off",
+            "noMisplacedAssertion": "off",
+            "useAwait": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["root/docker/resource-broker/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off",
+            "noVoid": "off"
+          },
+          "nursery": {
+            "noExcessiveLinesPerFile": "off"
+          },
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/trigger-dev/src/trigger/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          },
+          "nursery": {
+            "noExcessiveLinesPerFile": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/frontend/pages/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          },
+          "nursery": {
+            "noExcessiveLinesPerFile": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/bc-worker/src/api/auth.ts",
+        "apps/dust-permits-mcp/src/tools.ts",
+        "lib/email/sync.ts"
+      ],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noExcessiveLinesPerFile": "off"
+          },
+          "performance": {
+            "noBarrelFile": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/hatchet/src/tasks/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "packages/takeoff/src/pdf-takeoff/components/use-pdf-highlighter.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "useExhaustiveDependencies": "off"
           }
         }
       }

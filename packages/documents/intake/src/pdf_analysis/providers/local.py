@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 import asyncio
-import base64
-import sys
+import os
+import shutil
 import time
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from typing import Any, cast
+from typing import Any
 
 import httpx
-from kreuzberg import render_page_to_image
+from kreuzberg import ExtractionConfig, OcrConfig, PageConfig, extract_file_sync
 
 from pdf_analysis.config import Settings
 from pdf_analysis.types import (
@@ -30,9 +29,7 @@ from pdf_analysis.utils import extract_json_from_text, sanitize_filename
 class LocalProvider:
     name = ProviderName.LOCAL
     cost_per_1k_pages = 0.0
-    _MAX_RETRIES = 5
-    _RETRY_BACKOFF = [5, 15, 30, 60, 90]
-    _RENDER_DPI = 144
+    _KREUZBERG_OCR_MODEL = "kreuzberg:paddleocr"
 
     def __init__(self, settings: Settings):
         self.settings = settings
@@ -41,9 +38,9 @@ class LocalProvider:
         self.manager_endpoint = manager.rstrip("/") if manager else None
         self.model = settings.ollama_model
         self.chat_model = settings.ollama_chat_model
-        self.timeout = settings.http_timeout_seconds
+        self.health_timeout = min(settings.http_timeout_seconds, 10.0)
+        self.chat_timeout = settings.ollama_chat_timeout_seconds
         self._resolved_completion_endpoint: str | None = None
-        self._rapidocr_engine: Any | None = None
 
     async def is_available(self) -> bool:
         if self.manager_endpoint:
@@ -55,7 +52,7 @@ class LocalProvider:
             f"{root_endpoint}/api/tags",
         ]
 
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx.AsyncClient(timeout=self.health_timeout) as client:
             for url in urls:
                 try:
                     response = await client.get(url)
@@ -65,7 +62,7 @@ class LocalProvider:
                     continue
 
                 body = response.text.lower()
-                model = self.model.lower().strip()
+                model = self.chat_model.lower().strip()
                 if model and model in body:
                     return True
 
@@ -86,76 +83,52 @@ class LocalProvider:
         if not pdf_path.exists():
             raise FileNotFoundError(f"File not found: {pdf_path}")
 
-        rendered_pages: list[tuple[int, Path]] = []
-        with TemporaryDirectory(prefix="pdf-analysis-local-") as temp_dir:
-            if pdf_path.suffix.lower() == ".pdf":
-                rendered_pages = self._render_pdf_pages(pdf_path, Path(temp_dir), pages)
-            else:
-                rendered_pages = [(1, pdf_path)]
+        extraction_result = await asyncio.to_thread(self._run_kreuzberg_paddle_ocr, pdf_path)
+        page_text = self._collect_page_text(extraction_result)
+        available_pages = sorted(page_text.keys())
+        if not available_pages:
+            raw_text = str(getattr(extraction_result, "content", "") or "").strip()
+            if raw_text:
+                page_text = {1: raw_text}
+                available_pages = [1]
 
-            chunks: list[str] = []
-            page_numbers: list[int] = []
-            failed_pages: list[int] = []
-            elements: list[dict[str, Any]] = []
-            bbox_errors: list[str] = []
-            total = len(rendered_pages)
+        if not available_pages:
+            raise RuntimeError("Kreuzberg OCR produced no page content")
 
-            # Incremental write: truncate output file if provided
-            if output_path:
-                output_path.write_text("", encoding="utf-8")
-
-            for page_number, image_path in rendered_pages:
-                image_b64 = base64.b64encode(image_path.read_bytes()).decode("utf-8")
-                try:
-                    content = await self._ocr_page_with_retry(
-                        image_b64, page_number, total,
-                    )
-                except Exception as e:
-                    print(
-                        f"[ocr] page {page_number} FAILED after {self._MAX_RETRIES} "
-                        f"retries ({type(e).__name__}), skipping",
-                        file=sys.stderr,
-                    )
-                    failed_pages.append(page_number)
-                    content = f"[OCR FAILED: {type(e).__name__}]"
-
-                page_numbers.append(page_number)
-                chunk = f"<!-- Page {page_number} -->\n{content.strip()}"
-                chunks.append(chunk)
-                try:
-                    elements.extend(
-                        self._extract_page_elements(image_path=image_path, page_number=page_number)
-                    )
-                except Exception as e:
-                    bbox_errors.append(f"page {page_number}: {type(e).__name__}: {e}")
-
-                # Write incrementally so completed pages are never lost
-                if output_path:
-                    with open(output_path, "a", encoding="utf-8") as f:
-                        if len(chunks) > 1:
-                            f.write("\n\n---\n\n")
-                        f.write(chunk)
-
-            if failed_pages:
-                print(
-                    f"[ocr] completed with {len(failed_pages)} failed pages: {failed_pages}",
-                    file=sys.stderr,
+        if pages:
+            requested_pages = pages
+            missing_pages = [p for p in requested_pages if p not in page_text]
+            if missing_pages:
+                max_page = max(available_pages)
+                raise ValueError(
+                    f"Requested page(s) {missing_pages} outside extracted bounds 1-{max_page}"
                 )
+            selected_pages = requested_pages
+        else:
+            selected_pages = available_pages
 
+        chunks = [f"<!-- Page {page_num} -->\n{page_text[page_num]}" for page_num in selected_pages]
+        rendered_text = "\n\n---\n\n".join(chunks)
+        if output_path:
+            output_path.write_text(rendered_text, encoding="utf-8")
+
+        elements = self._collect_ocr_elements(getattr(extraction_result, "ocr_elements", None))
         elapsed_ms = int((time.perf_counter() - started) * 1000)
         metadata: dict[str, Any] = {
             "elements": elements,
             "elements_count": len(elements),
-            "elements_provider": "rapidocr",
+            "elements_provider": "kreuzberg_paddleocr",
+            "ocr_backend": self.settings.kreuzberg_ocr_backend,
+            "ocr_language": self.settings.kreuzberg_ocr_language,
+            "page_count": len(available_pages),
         }
-        if bbox_errors:
-            metadata["elements_errors"] = bbox_errors
+
         return OCRResult(
             provider=self.name,
-            text="\n\n---\n\n".join(chunks),
-            pages=page_numbers,
+            text=rendered_text,
+            pages=selected_pages,
             processing_time_ms=elapsed_ms,
-            model=self.model,
+            model=self._KREUZBERG_OCR_MODEL,
             metadata=metadata,
         )
 
@@ -192,7 +165,7 @@ class LocalProvider:
             f"Document text:\n{ocr_result.text[:120000]}"
         )
 
-        raw = await self._chat_completion(prompt=extraction_prompt)
+        raw = await self._chat_completion(prompt=extraction_prompt, model_override=self.chat_model)
         data = extract_json_from_text(raw)
 
         elapsed_ms = int((time.perf_counter() - started) * 1000)
@@ -200,7 +173,7 @@ class LocalProvider:
             provider=self.name,
             data=data,
             processing_time_ms=elapsed_ms,
-            model=self.model,
+            model=self.chat_model,
             confidence=0.75,
             raw_text=raw,
         )
@@ -243,7 +216,7 @@ class LocalProvider:
             confidence=float(result.data.get("confidence", 0.6) or 0.6),
             indicators=[str(v) for v in result.data.get("indicators", [])][:10],
             processing_time_ms=elapsed_ms,
-            model=self.model,
+            model=self.chat_model,
             suggested_filename=suggested,
         )
 
@@ -290,200 +263,178 @@ class LocalProvider:
             compliance=self._normalize_compliance(result.data.get("compliance", {})),
             findings=findings,
             processing_time_ms=elapsed_ms,
-            model=self.model,
+            model=self.chat_model,
             confidence=float(result.data.get("confidence", 0.65) or 0.65),
         )
 
-    async def _ocr_page_with_retry(
-        self, image_b64: str, page_num: int, total: int,
-    ) -> str:
-        """OCR a single page with retry on transient errors."""
-        last_err: Exception | None = None
-        for attempt in range(1, self._MAX_RETRIES + 1):
-            try:
-                print(
-                    f"[ocr] page {page_num}/{total}"
-                    + (f" (retry {attempt})" if attempt > 1 else ""),
-                    file=sys.stderr,
-                )
-                return await self._chat_completion(
-                    prompt=(
-                        "Extract all visible text from this page. Preserve structure, "
-                        "tables, and section headings in markdown."
-                    ),
-                    image_base64=image_b64,
-                )
-            except (
-                httpx.ReadTimeout,
-                httpx.ConnectError,
-                httpx.RemoteProtocolError,
-                httpx.ReadError,
-                httpx.HTTPStatusError,
-            ) as e:
-                last_err = e
-                if attempt < self._MAX_RETRIES:
-                    wait = self._RETRY_BACKOFF[attempt - 1]
-                    print(
-                        f"[ocr] page {page_num} failed ({type(e).__name__}), "
-                        f"retrying in {wait}s...",
-                        file=sys.stderr,
-                    )
-                    await asyncio.sleep(wait)
-                    continue
-                raise
-        raise last_err  # type: ignore[misc]
-
-    def _render_pdf_pages(
-        self,
-        pdf_path: Path,
-        temp_dir: Path,
-        pages: list[int] | None,
-    ) -> list[tuple[int, Path]]:
-        from kreuzberg import extract_file_sync
-
-        pdf_bytes = pdf_path.read_bytes()
-        result = extract_file_sync(str(pdf_path))
-        total_pages = result.metadata.get("page_count", 0)
-        selected_pages = pages or list(range(1, total_pages + 1))
-
-        rendered: list[tuple[int, Path]] = []
-        for page_num in selected_pages:
-            if page_num < 1 or page_num > total_pages:
-                raise ValueError(
-                    f"Requested page {page_num} outside document bounds 1-{total_pages}"
-                )
-            # dpi=144 = 2x zoom from 72 DPI base
-            png_data = render_page_to_image(pdf_bytes, page_num - 1, dpi=self._RENDER_DPI)
-            path = temp_dir / f"page_{page_num:04d}.png"
-            path.write_bytes(png_data)
-            rendered.append((page_num, path))
-        return rendered
-
-    def _get_rapidocr_engine(self) -> Any:
-        if self._rapidocr_engine is not None:
-            return self._rapidocr_engine
-
+    def _run_kreuzberg_paddle_ocr(self, file_path: Path) -> Any:
+        self._prepare_onnxruntime_runtime()
+        config = self._build_kreuzberg_ocr_config()
         try:
-            from rapidocr import RapidOCR
-        except ImportError as exc:
+            return extract_file_sync(str(file_path), config=config)
+        except BaseException as exc:
             raise RuntimeError(
-                "RapidOCR dependency missing for word bbox extraction. "
-                f"Install rapidocr and onnxruntime. Import error: {exc}"
+                "Kreuzberg OCR failed. "
+                "Verify onnxruntime dependencies and PaddleOCR configuration."
             ) from exc
 
-        self._rapidocr_engine = RapidOCR()
-        return self._rapidocr_engine
+    @staticmethod
+    def _prepare_onnxruntime_runtime() -> None:
+        try:
+            import onnxruntime  # type: ignore[import-not-found]
+        except Exception:
+            return
 
-    def _extract_page_elements(
-        self,
-        *,
-        image_path: Path,
-        page_number: int,
-    ) -> list[dict[str, Any]]:
-        engine = self._get_rapidocr_engine()
-        raw = engine(str(image_path), return_word_box=True)
-        payload = raw[0] if isinstance(raw, tuple) else raw
-        zoom = self._RENDER_DPI / 72
-        return self._rapidocr_payload_to_elements(payload, page_number=page_number, zoom=zoom)
+        capi_dir = Path(onnxruntime.__file__).resolve().parent / "capi"
+        if not capi_dir.exists():
+            return
+
+        shared_candidates = sorted(capi_dir.glob("libonnxruntime.so*"))
+        if not shared_candidates:
+            return
+
+        symlink_path = capi_dir / "libonnxruntime.so"
+        target_path = next(
+            (path for path in shared_candidates if path.name != "libonnxruntime.so"),
+            shared_candidates[0],
+        )
+
+        if not symlink_path.exists():
+            try:
+                symlink_path.symlink_to(target_path.name)
+            except Exception:
+                try:
+                    shutil.copy2(target_path, symlink_path)
+                except Exception:
+                    pass
+
+        ld_parts = [part for part in os.environ.get("LD_LIBRARY_PATH", "").split(":") if part]
+        if str(capi_dir) not in ld_parts:
+            ld_parts.insert(0, str(capi_dir))
+            os.environ["LD_LIBRARY_PATH"] = ":".join(ld_parts)
+
+        os.environ.setdefault(
+            "ORT_DYLIB_PATH",
+            str(symlink_path if symlink_path.exists() else target_path),
+        )
+
+    def _build_kreuzberg_ocr_config(self) -> ExtractionConfig:
+        paddle_ocr_config: dict[str, Any] = {
+            "language_code": self.settings.kreuzberg_ocr_language,
+            "use_doc_orientation_classify": self.settings.kreuzberg_paddle_use_doc_orientation_classify,
+            "use_textline_orientation": self.settings.kreuzberg_paddle_use_textline_orientation,
+            "use_doc_unwarping": self.settings.kreuzberg_paddle_use_doc_unwarping,
+            "det_limit_side_len": self.settings.kreuzberg_paddle_det_limit_side_len,
+            "det_limit_type": self.settings.kreuzberg_paddle_det_limit_type,
+            "rec_batch_num": self.settings.kreuzberg_paddle_rec_batch_num,
+        }
+        return ExtractionConfig(
+            force_ocr=True,
+            ocr=OcrConfig(
+                backend=self.settings.kreuzberg_ocr_backend,
+                language=self.settings.kreuzberg_ocr_language,
+                paddle_ocr_config=paddle_ocr_config,
+            ),
+            pages=PageConfig(extract_pages=True, insert_page_markers=False),
+            output_format="plain",
+        )
 
     @staticmethod
-    def _rapidocr_payload_to_elements(
-        payload: Any,
-        *,
-        page_number: int,
-        zoom: float,
-    ) -> list[dict[str, Any]]:
+    def _collect_page_text(extraction_result: Any) -> dict[int, str]:
+        page_text: dict[int, str] = {}
+        raw_pages = getattr(extraction_result, "pages", None)
+        if not isinstance(raw_pages, list):
+            return page_text
+
+        for page in raw_pages:
+            if not isinstance(page, dict):
+                continue
+            raw_page_number = page.get("page_number")
+            try:
+                page_number = int(raw_page_number)
+            except (TypeError, ValueError):
+                continue
+            if page_number < 1:
+                continue
+            content = str(page.get("content", "") or "").strip()
+            page_text[page_number] = content
+
+        return page_text
+
+    @classmethod
+    def _collect_ocr_elements(cls, raw_elements: Any) -> list[dict[str, Any]]:
+        if not isinstance(raw_elements, list):
+            return []
+
         elements: list[dict[str, Any]] = []
+        for entry in raw_elements:
+            if not isinstance(entry, dict):
+                continue
 
-        # Newer payload style (object with `word_results`)
-        word_results = getattr(payload, "word_results", None)
-        if isinstance(word_results, (list, tuple)):
-            for line_words in word_results:
-                if not isinstance(line_words, (list, tuple)):
-                    continue
-                for word_entry in line_words:
-                    if not isinstance(word_entry, (list, tuple)) or len(word_entry) < 3:
+            text = str(entry.get("text", "") or "").strip()
+            if not text:
+                continue
+
+            raw_page = entry.get("page", entry.get("page_number"))
+            try:
+                page = int(raw_page)
+            except (TypeError, ValueError):
+                continue
+            if page < 1:
+                continue
+
+            x0 = entry.get("x0")
+            y0 = entry.get("y0")
+            x1 = entry.get("x1")
+            y1 = entry.get("y1")
+
+            if None in (x0, y0, x1, y1):
+                bbox = entry.get("bbox")
+                points = entry.get("points")
+                if isinstance(bbox, (list, tuple)) and len(bbox) >= 4:
+                    x0, y0, x1, y1 = bbox[:4]
+                elif isinstance(points, list):
+                    parsed = cls._points_to_bbox(points)
+                    if parsed is None:
                         continue
-                    text = str(word_entry[0]).strip()
-                    points = word_entry[2]
-                    if hasattr(points, "tolist"):
-                        points = points.tolist()
-                    points = cast(list[Any], points)
-                    LocalProvider._append_bbox_element(
-                        elements, page_number=page_number, text=text, points=points, zoom=zoom
-                    )
-            return elements
-
-        # Alternative payload style (`txts` + `boxes`)
-        txts = getattr(payload, "txts", None)
-        boxes = getattr(payload, "boxes", None)
-        if isinstance(txts, (list, tuple)) and boxes is not None:
-            box_list = boxes.tolist() if hasattr(boxes, "tolist") else boxes
-            if isinstance(box_list, (list, tuple)):
-                count = min(len(txts), len(box_list))
-                for idx in range(count):
-                    text = str(txts[idx]).strip()
-                    points = box_list[idx]
-                    if isinstance(points, (list, tuple)):
-                        LocalProvider._append_bbox_element(
-                            elements,
-                            page_number=page_number,
-                            text=text,
-                            points=list(points),
-                            zoom=zoom,
-                        )
-                return elements
-
-        # Fallback payload style (list[[box,text,score], ...])
-        if isinstance(payload, list):
-            for entry in payload:
-                if not isinstance(entry, list) or len(entry) < 2:
+                    x0, y0, x1, y1 = parsed
+                else:
                     continue
-                points = entry[0]
-                text = str(entry[1]).strip()
-                if isinstance(points, list):
-                    LocalProvider._append_bbox_element(
-                        elements, page_number=page_number, text=text, points=points, zoom=zoom
-                    )
+
+            try:
+                elements.append(
+                    {
+                        "page": page,
+                        "text": text,
+                        "x0": float(x0),
+                        "y0": float(y0),
+                        "x1": float(x1),
+                        "y1": float(y1),
+                    }
+                )
+            except (TypeError, ValueError):
+                continue
 
         return elements
 
     @staticmethod
-    def _append_bbox_element(
-        elements: list[dict[str, Any]],
-        *,
-        page_number: int,
-        text: str,
-        points: list[Any],
-        zoom: float,
-    ) -> None:
-        if not text or len(points) < 4:
-            return
-
+    def _points_to_bbox(points: list[Any]) -> tuple[float, float, float, float] | None:
         xs: list[float] = []
         ys: list[float] = []
+
         for point in points:
             if not isinstance(point, (list, tuple)) or len(point) < 2:
                 continue
             try:
-                xs.append(float(point[0]) / zoom)
-                ys.append(float(point[1]) / zoom)
+                xs.append(float(point[0]))
+                ys.append(float(point[1]))
             except (TypeError, ValueError):
                 continue
 
         if not xs or not ys:
-            return
+            return None
 
-        elements.append(
-            {
-                "page": page_number,
-                "text": text,
-                "x0": min(xs),
-                "y0": min(ys),
-                "x1": max(xs),
-                "y1": max(ys),
-            }
-        )
+        return (min(xs), min(ys), max(xs), max(ys))
 
     async def _chat_completion(
         self, prompt: str, image_base64: str | None = None, model_override: str | None = None
@@ -500,11 +451,11 @@ class LocalProvider:
             ]
 
         payload: dict[str, Any] = {
-            "model": model_override or self.model,
+            "model": model_override or self.chat_model,
             "messages": [{"role": "user", "content": message_content}],
         }
 
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx.AsyncClient(timeout=self.chat_timeout) as client:
             endpoints = await self._candidate_completion_endpoints(client)
             response: httpx.Response | None = None
             errors: list[str] = []
@@ -568,7 +519,7 @@ class LocalProvider:
         assert self.manager_endpoint is not None
 
         # Best-effort activation. If this fails, status may still expose a usable endpoint.
-        for body in [{"model": self.model}, {}]:
+        for body in [{"model": self.chat_model}, {"model": self.model}, {}]:
             try:
                 await client.post(f"{self.manager_endpoint}/activate/ocr", json=body)
                 break
@@ -604,7 +555,7 @@ class LocalProvider:
         if not self.manager_endpoint:
             return False
 
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx.AsyncClient(timeout=self.health_timeout) as client:
             # Must have healthy control plane first.
             try:
                 health = await client.get(f"{self.manager_endpoint}/health")
@@ -632,7 +583,6 @@ class LocalProvider:
         if base.endswith("/v1"):
             return [f"{base}/chat/completions"]
         return [f"{base}/chat/completions", f"{base}/v1/chat/completions"]
-
     @staticmethod
     def _to_float_map(value: Any) -> dict[str, float]:
         if not isinstance(value, dict):
@@ -666,3 +616,17 @@ class LocalProvider:
             "failed": [str(v) for v in value.get("failed", []) if v is not None],
             "warnings": [str(v) for v in value.get("warnings", []) if v is not None],
         }
+
+
+class LocalPublicProvider(LocalProvider):
+    name = ProviderName.LOCAL_PUBLIC
+
+    def __init__(self, settings: Settings):
+        super().__init__(settings)
+        self.endpoint = settings.ollama_public_endpoint.rstrip("/")
+        manager = (settings.ollama_public_manager_endpoint or "").strip()
+        self.manager_endpoint = manager.rstrip("/") if manager else None
+        self.model = settings.ollama_public_model
+        self.chat_model = settings.ollama_public_chat_model
+        self.chat_timeout = settings.ollama_public_chat_timeout_seconds
+        self._resolved_completion_endpoint = None

@@ -734,7 +734,7 @@ export const DEFAULTS: FormData = {
   },
 
   propertyOwner: {
-    isDifferent: false,
+    isDifferent: true,
   },
 
   // Page 3

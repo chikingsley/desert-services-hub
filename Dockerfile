@@ -63,7 +63,9 @@ COPY apps/dust-permits-mcp/client.ts apps/dust-permits-mcp/types.ts ./apps/dust-
 COPY packages/sharepoint ./packages/sharepoint
 COPY packages/documents ./packages/documents
 COPY packages/contracts ./packages/contracts
+COPY packages/email ./packages/email
 COPY packages/monday ./packages/monday
+COPY packages/projects ./packages/projects
 COPY packages/estimates ./packages/estimates
 COPY packages/takeoff ./packages/takeoff
 COPY packages/enrichment ./packages/enrichment

@@ -87,7 +87,7 @@ async function main() {
   const corpusPath = join(DIR, "corpus.jsonl");
   writeFileSync(
     corpusPath,
-    projects
+    `${projects
       .map((p) =>
         JSON.stringify({
           _id: `proj_${p.id}`,
@@ -97,7 +97,7 @@ async function main() {
             .join(" | "),
         })
       )
-      .join("\n") + "\n"
+      .join("\n")}\n`
   );
   console.log(`  Wrote ${corpusPath}`);
 
@@ -116,7 +116,7 @@ async function main() {
   }));
   writeFileSync(
     queriesPath,
-    queries.map((q) => JSON.stringify(q)).join("\n") + "\n"
+    `${queries.map((q) => JSON.stringify(q)).join("\n")}\n`
   );
   console.log(`  Wrote ${queriesPath}`);
 
@@ -126,7 +126,7 @@ async function main() {
   for (const e of sampled) {
     qrelsLines.push(`q_${e.id}\tproj_${e.project_id}\t1`);
   }
-  writeFileSync(qrelsPath, qrelsLines.join("\n") + "\n");
+  writeFileSync(qrelsPath, `${qrelsLines.join("\n")}\n`);
   console.log(`  Wrote ${qrelsPath}`);
 
   console.log("\nDone. Run eval with: bun run evals/eval.ts");

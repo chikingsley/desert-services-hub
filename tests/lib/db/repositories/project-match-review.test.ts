@@ -4,11 +4,11 @@ import {
   getProjectMatchReview,
   resolveProjectMatchReview,
   upsertProjectMatchReview,
-} from "@lib/db/repositories/project-match-review";
+} from "@projects/db/project-match-review";
 import {
   normalizeProjectAlias,
   normalizeProjectNameKey,
-} from "@lib/db/repositories/project-matching-utils";
+} from "@projects/db/project-matching-utils";
 import type { ProjectMatchResult } from "@lib/db/repositories/types";
 
 const RUN_TAG = crypto.randomUUID().slice(0, 8).toLowerCase();

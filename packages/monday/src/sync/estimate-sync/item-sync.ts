@@ -1,5 +1,5 @@
 import { db } from "@lib/db/client";
-import { ensureEstimateHasCurrentVersion } from "@lib/db/repositories/estimate-version";
+import { ensureEstimateHasCurrentVersion } from "@estimates/db/estimate-version";
 import { getItemRich } from "@monday/client/rich";
 import { SKIP_GROUPS } from "@monday/sync/helpers";
 import { ESTIMATING_COLUMNS } from "@monday/types/schema";

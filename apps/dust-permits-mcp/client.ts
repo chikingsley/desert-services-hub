@@ -22,6 +22,14 @@ import type {
   HealthResponse,
   InvoicePdfRequest,
   InvoicePdfResponse,
+  MaricopaLookupRequest,
+  MaricopaLookupResponse,
+  NoiCreateRequest,
+  NoiCreateResponse,
+  NoiResolveRequest,
+  NoiResolveResponse,
+  PimaLookupRequest,
+  PimaLookupResponse,
   RenewAndPayRequest,
   RenewAndPayResponse,
   RenewRequest,
@@ -32,10 +40,13 @@ import type {
   ScrapePdfResponse,
   ScrapeResponse,
   SearchPermitsRequest,
+  SubmitDraftAndPayRequest,
+  SubmitDraftAndPayResponse,
   SyncResponse,
 } from "./types";
 
 export type { RenewAndPayRequest } from "./types";
+export type { SubmitDraftAndPayRequest } from "./types";
 
 // ============================================================================
 // Config
@@ -50,6 +61,8 @@ export interface PermitClientConfig {
 
 const DEFAULT_BASE_URL = "http://permit-worker:47822";
 const DEFAULT_TIMEOUT_MS = 60_000;
+const SCRAPE_TIMEOUT_MS = 180_000;
+const SCRAPE_PDF_TIMEOUT_MS = 180_000;
 const TRAILING_SLASH_RE = /\/$/;
 
 // ============================================================================
@@ -173,15 +186,41 @@ export class PermitClient {
   }
 
   // --------------------------------------------------------------------------
+  // NOI (Notice of Intent)
+  // --------------------------------------------------------------------------
+
+  async resolveNoi(req: NoiResolveRequest): Promise<NoiResolveResponse> {
+    return await this.request("POST", "/api/noi/resolve", req);
+  }
+
+  async createFromNoi(req: NoiCreateRequest): Promise<NoiCreateResponse> {
+    return await this.request("POST", "/api/noi/create", req);
+  }
+
+  async maricopaLookup(
+    req: MaricopaLookupRequest
+  ): Promise<MaricopaLookupResponse> {
+    return await this.request("POST", "/api/maricopa/lookup", req);
+  }
+
+  async pimaLookup(req: PimaLookupRequest): Promise<PimaLookupResponse> {
+    return await this.request("POST", "/api/pima/lookup", req);
+  }
+
+  // --------------------------------------------------------------------------
   // Scrape
   // --------------------------------------------------------------------------
 
   async scrapePdf(req: ScrapePdfRequest): Promise<ScrapePdfResponse> {
-    return await this.request("POST", "/api/scrape/pdf", req);
+    return await this.request("POST", "/api/scrape/pdf", req, {
+      timeoutMs: SCRAPE_PDF_TIMEOUT_MS,
+    });
   }
 
   async scrape(permitId: string): Promise<ScrapeResponse> {
-    return await this.request("GET", `/api/scrape/${permitId}`);
+    return await this.request("GET", `/api/scrape/${permitId}`, undefined, {
+      timeoutMs: SCRAPE_TIMEOUT_MS,
+    });
   }
 
   // --------------------------------------------------------------------------
@@ -231,6 +270,17 @@ export class PermitClient {
     req: RenewAndPayRequest
   ): Promise<RenewAndPayResponse> {
     return await this.request("POST", `/api/permits/${id}/renew-and-pay`, req);
+  }
+
+  async submitDraftAndPay(
+    id: string,
+    req?: SubmitDraftAndPayRequest
+  ): Promise<SubmitDraftAndPayResponse> {
+    return await this.request(
+      "POST",
+      `/api/permits/${id}/submit-draft-and-pay`,
+      req ?? {}
+    );
   }
 
   async closePermit(id: string, req?: CloseRequest): Promise<CloseResponse> {

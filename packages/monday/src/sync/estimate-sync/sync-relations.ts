@@ -81,6 +81,10 @@ interface SqlContactIdRow {
   monday_item_id: string;
 }
 
+interface ExistingContactMatchRow extends SqlContactIdRow {
+  normalized_email: string | null;
+}
+
 // ── Shared utilities ───────────────────────────────────────────────────
 
 export function sanitizeMondayId(
@@ -127,6 +131,15 @@ function readLinkedIds(
 ): string[] {
   const col = columnValues.find((cv) => cv.id === columnId);
   return uniqueNumericIds(col?.linkedItemIds ?? []);
+}
+
+function normalizeContactEmail(email: string | null | undefined): string | null {
+  const normalized = email?.trim().toLowerCase();
+  return normalized ? normalized : null;
+}
+
+function isSyntheticEmailContact(mondayItemId: string): boolean {
+  return mondayItemId.startsWith("email:");
 }
 
 // ── Contact pair collection ────────────────────────────────────────────
@@ -311,55 +324,164 @@ export async function syncContactsToDb(
   }
 
   for (const batch of chunk(rows, SQL_WRITE_BATCH_SIZE)) {
-    const valuesSql = batch
-      .map((_, idx) => {
-        const start = idx * 14 + 1;
-        const placeholders = Array.from(
-          { length: 14 },
-          (_, colIdx) => `$${start + colIdx}`
-        ).join(", ");
-        return `(${placeholders}, now(), now())`;
-      })
-      .join(", ");
-    const args: Array<string | number | null> = [];
+    const mondayIds = batch.map((row) => row.mondayItemId);
+    const normalizedEmails = batch
+      .map((row) => normalizeContactEmail(row.email))
+      .filter((email): email is string => Boolean(email));
 
-    for (const row of batch) {
-      args.push(
-        row.mondayItemId,
-        row.name,
-        row.email,
-        row.phone,
-        row.title,
-        row.priority,
-        row.contractorMondayId
-          ? (accountIdByMondayId.get(row.contractorMondayId) ?? null)
-          : null,
-        row.contractorMondayId,
-        row.groupId,
-        row.groupTitle,
-        row.mobilePhone,
-        row.officePhone,
-        row.companyPhone,
-        row.companyFax
+    const conditions: string[] = [];
+    const args: string[] = [];
+
+    if (mondayIds.length > 0) {
+      conditions.push(
+        `monday_item_id IN (${mondayIds
+          .map((_, idx) => `$${args.push(mondayIds[idx] as string)}`)
+          .join(", ")})`
       );
     }
 
-    // Add-only: insert new contacts, skip existing ones
-    await db.run(
-      `INSERT INTO contacts (
-         monday_item_id, name, email, phone, title, priority,
-         account_id, contractor_monday_id,
-         group_id, group_title,
-         mobile_phone, office_phone, company_phone, company_fax,
-         synced_at, updated_at
-       ) VALUES ${valuesSql}
-       ON CONFLICT (monday_item_id) DO NOTHING`,
-      args
-    );
+    if (normalizedEmails.length > 0) {
+      conditions.push(
+        `LOWER(email) IN (${normalizedEmails
+          .map((_, idx) => `$${args.push(normalizedEmails[idx] as string)}`)
+          .join(", ")})`
+      );
+    }
+
+    const existingMatches = conditions.length
+      ? await db
+          .query<ExistingContactMatchRow>(
+            `SELECT id, monday_item_id, LOWER(email) AS normalized_email
+             FROM contacts
+             WHERE ${conditions.join(" OR ")}`
+          )
+          .all(...args)
+      : [];
+
+    const existingByMondayId = new Map<string, ExistingContactMatchRow>();
+    const syntheticByEmail = new Map<string, ExistingContactMatchRow>();
+
+    for (const existing of existingMatches) {
+      existingByMondayId.set(existing.monday_item_id, existing);
+      if (
+        existing.normalized_email &&
+        isSyntheticEmailContact(existing.monday_item_id)
+      ) {
+        syntheticByEmail.set(existing.normalized_email, existing);
+      }
+    }
+
+    for (const row of batch) {
+      const normalizedEmail = normalizeContactEmail(row.email);
+      const accountId = row.contractorMondayId
+        ? (accountIdByMondayId.get(row.contractorMondayId) ?? null)
+        : null;
+
+      const existingByMonday = existingByMondayId.get(row.mondayItemId);
+      if (existingByMonday) {
+        contactIdByMondayId.set(row.mondayItemId, existingByMonday.id);
+        continue;
+      }
+
+      const adoptedSynthetic =
+        normalizedEmail ? syntheticByEmail.get(normalizedEmail) : undefined;
+
+      if (adoptedSynthetic) {
+        const adopted = (await db.run(
+          `UPDATE contacts
+           SET monday_item_id = $1,
+               name = $2,
+               email = COALESCE($3, email),
+               phone = COALESCE($4, phone),
+               title = COALESCE($5, title),
+               priority = COALESCE($6, priority),
+               account_id = COALESCE($7, account_id),
+               contractor_monday_id = COALESCE($8, contractor_monday_id),
+               group_id = COALESCE($9, group_id),
+               group_title = COALESCE($10, group_title),
+               mobile_phone = COALESCE($11, mobile_phone),
+               office_phone = COALESCE($12, office_phone),
+               company_phone = COALESCE($13, company_phone),
+               company_fax = COALESCE($14, company_fax),
+               synced_at = now(),
+               updated_at = now()
+           WHERE id = $15
+           RETURNING id`,
+          [
+            row.mondayItemId,
+            row.name,
+            row.email,
+            row.phone,
+            row.title,
+            row.priority,
+            accountId,
+            row.contractorMondayId,
+            row.groupId,
+            row.groupTitle,
+            row.mobilePhone,
+            row.officePhone,
+            row.companyPhone,
+            row.companyFax,
+            adoptedSynthetic.id,
+          ]
+        )) as Array<{ id: number }>;
+
+        const adoptedId = adopted[0]?.id ?? adoptedSynthetic.id;
+        contactIdByMondayId.set(row.mondayItemId, adoptedId);
+        existingByMondayId.set(row.mondayItemId, {
+          id: adoptedId,
+          monday_item_id: row.mondayItemId,
+          normalized_email: normalizedEmail,
+        });
+        if (normalizedEmail) {
+          syntheticByEmail.delete(normalizedEmail);
+        }
+        continue;
+      }
+
+      const inserted = (await db.run(
+        `INSERT INTO contacts (
+           monday_item_id, name, email, phone, title, priority,
+           account_id, contractor_monday_id,
+           group_id, group_title,
+           mobile_phone, office_phone, company_phone, company_fax,
+           synced_at, updated_at
+         ) VALUES (
+           $1, $2, $3, $4, $5, $6,
+           $7, $8,
+           $9, $10,
+           $11, $12, $13, $14,
+           now(), now()
+         )
+         ON CONFLICT (monday_item_id) DO NOTHING
+         RETURNING id`,
+        [
+          row.mondayItemId,
+          row.name,
+          row.email,
+          row.phone,
+          row.title,
+          row.priority,
+          accountId,
+          row.contractorMondayId,
+          row.groupId,
+          row.groupTitle,
+          row.mobilePhone,
+          row.officePhone,
+          row.companyPhone,
+          row.companyFax,
+        ]
+      )) as Array<{ id: number }>;
+
+      const insertedId = inserted[0]?.id;
+      if (insertedId) {
+        contactIdByMondayId.set(row.mondayItemId, insertedId);
+      }
+    }
   }
 
-  const mondayIds = rows.map((row) => row.mondayItemId);
-  for (const batch of chunk(mondayIds, SQL_WRITE_BATCH_SIZE)) {
+  const allMondayIds = rows.map((row) => row.mondayItemId);
+  for (const batch of chunk(allMondayIds, SQL_WRITE_BATCH_SIZE)) {
     const contactPlaceholders = batch.map((_, idx) => `$${idx + 1}`).join(", ");
     const existing = await db
       .query<SqlContactIdRow>(

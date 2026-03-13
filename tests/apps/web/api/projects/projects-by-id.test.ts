@@ -3,7 +3,7 @@ import { db } from "@lib/db/client";
 import {
   linkEstimateToProject,
   setCanonicalEstimateForProject,
-} from "@lib/db/repositories/project-estimate";
+} from "@projects/db/project-estimate";
 import { createEstimate } from "@/api/estimates/estimates";
 import { getProjectFinalSov } from "@/api/projects/projects-by-id";
 import { findItem } from "@/packages/estimates/catalog/catalog";

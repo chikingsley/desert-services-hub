@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-03-12T23:29:02.807Z",
+  "startedAt": "2026-03-12T23:27:20.030Z",
+  "totals": {
+    "exactMatches": 1,
+    "ambiguousRenamePaths": 11,
+    "extraSharePointFolders": 835,
+    "highConfidenceRenameCandidates": 169,
+    "missingCanonicalFolders": 887,
+    "proposedRenames": 144,
+    "sharepointProjects": 836,
+    "sourceProjects": 888,
+    "unresolvedMissingCanonical": 718
+  }
+}

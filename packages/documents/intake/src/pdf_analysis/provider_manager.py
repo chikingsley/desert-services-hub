@@ -16,7 +16,8 @@ from pdf_analysis.types import (
 )
 
 from .providers.gemini import GeminiProvider
-from .providers.local import LocalProvider
+from .providers.local import LocalProvider, LocalPublicProvider
+from .providers.openrouter import OpenRouterProvider
 
 ProviderResult = OCRResult | ExtractResult | IdentifyResult | PlanAnalysisResult
 TResult = TypeVar("TResult", bound=ProviderResult)
@@ -55,6 +56,8 @@ class ProviderManager:
         self.providers: dict[ProviderName, Provider] = {
             ProviderName.GEMINI: GeminiProvider(self.settings),
             ProviderName.LOCAL: LocalProvider(self.settings),
+            ProviderName.LOCAL_PUBLIC: LocalPublicProvider(self.settings),
+            ProviderName.OPENROUTER: OpenRouterProvider(self.settings),
         }
         self.order = self._resolve_order(self.settings.pdf_analysis_provider_order)
 
@@ -212,10 +215,6 @@ class ProviderManager:
                 parsed.append(provider)
 
         if not parsed:
-            parsed = [ProviderName.LOCAL, ProviderName.GEMINI]
-
-        for provider in [ProviderName.LOCAL, ProviderName.GEMINI]:
-            if provider not in parsed:
-                parsed.append(provider)
+            return [ProviderName.LOCAL]
 
         return parsed

@@ -6,6 +6,7 @@ export interface ApiEstimateResponse {
   client_email: string | null;
   client_name: string | null;
   client_phone: string | null;
+  created_at?: string;
   current_version?: {
     id: string;
     total: number;
@@ -31,9 +32,40 @@ export interface ApiEstimateResponse {
   estimator: string | null;
   estimator_email: string | null;
   id: string;
+  is_locked?: number;
   job_address: string | null;
   job_name: string;
+  linked_takeoff?: { id: string; name: string } | null;
+  notes?: string | null;
+  status?: string;
+  takeoff_id?: string | null;
   updated_at: string;
+}
+
+function normalizeAddress(address: string | null | undefined): string {
+  return (address ?? "").replaceAll("\n", ", ");
+}
+
+function buildBaseEditorEstimate(api: ApiEstimateResponse): EditorEstimate {
+  return {
+    estimateNumber: api.base_number,
+    date: api.created_at || new Date().toISOString(),
+    estimator: api.estimator || "",
+    estimatorEmail: api.estimator_email || "",
+    billTo: {
+      companyName: api.client_name || "",
+      address: normalizeAddress(api.client_address),
+      email: api.client_email || "",
+      phone: api.client_phone || "",
+    },
+    jobInfo: {
+      siteName: api.job_name || "",
+      address: normalizeAddress(api.job_address),
+    },
+    sections: [],
+    lineItems: [],
+    total: 0,
+  };
 }
 
 function getLineItemRateAndTotal(item: {
@@ -68,16 +100,13 @@ export function apiToEditorEstimate(
     estimatorEmail: api.estimator_email ?? current.estimatorEmail,
     billTo: {
       companyName: api.client_name ?? "",
-      address: (api.client_address ?? current.billTo.address).replaceAll(
-        "\n",
-        ", "
-      ),
+      address: normalizeAddress(api.client_address ?? current.billTo.address),
       email: api.client_email ?? "",
       phone: api.client_phone ?? "",
     },
     jobInfo: {
       siteName: api.job_name,
-      address: (api.job_address ?? "").replaceAll("\n", ", "),
+      address: normalizeAddress(api.job_address),
     },
     sections: version.sections.map((s) => ({
       id: s.id,
@@ -101,6 +130,13 @@ export function apiToEditorEstimate(
     }),
     total: version.total,
   };
+}
+
+export function apiToInitialEditorEstimate(
+  api: ApiEstimateResponse
+): EditorEstimate {
+  const initial = buildBaseEditorEstimate(api);
+  return apiToEditorEstimate(api, initial);
 }
 
 export function editorToApiPayload(estimate: EditorEstimate) {

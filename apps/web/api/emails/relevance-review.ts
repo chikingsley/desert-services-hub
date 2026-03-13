@@ -26,7 +26,13 @@ const MAX_LIST_LIMIT = 200;
 const MAX_BODY_CHARS = 12_000;
 
 const reviewStatusSchema = z.enum(["approved", "needs_work", "unreviewed"]);
-const providerSchema = z.enum(["auto", "gemini", "local", "openrouter"]);
+const providerSchema = z.enum([
+  "auto",
+  "gemini",
+  "local",
+  "local_public",
+  "openrouter",
+]);
 
 const runRequestSchema = z.object({
   limit: z

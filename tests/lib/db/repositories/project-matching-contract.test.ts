@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { db } from "@lib/db/client";
-import { findProjectCandidates } from "@lib/db/repositories/project-matching";
-import { normalizeProjectNameKey } from "@lib/db/repositories/project-matching-utils";
+import { findProjectCandidates } from "@projects/db/project-matching";
+import { normalizeProjectNameKey } from "@projects/db/project-matching-utils";
 
 const RUN_TAG = crypto.randomUUID().slice(0, 8).toLowerCase();
 const TEST_PREFIX = `_TEST_DELETE_ME_PROJECT_MATCH_${RUN_TAG}_`;

@@ -13,7 +13,7 @@ export function StatCard({
   return (
     <div className="rounded-xl border border-border/50 bg-card/80 px-4 py-3">
       <div
-        className={`font-display font-semibold text-2xl ${accent ? "text-primary" : "text-foreground"}`}
+        className={`break-all font-display font-semibold text-2xl leading-tight ${accent ? "text-primary" : "text-foreground"}`}
       >
         {value}
       </div>

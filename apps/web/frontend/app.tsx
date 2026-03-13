@@ -5,6 +5,7 @@ import React, { Suspense } from "react";
 import {
   createBrowserRouter,
   isRouteErrorResponse,
+  Navigate,
   Outlet,
   RouterProvider,
   useNavigate,
@@ -31,6 +32,7 @@ import { DocumentsPage } from "@/apps/web/frontend/pages/documents";
 import { EmailsPage } from "@/apps/web/frontend/pages/emails";
 import { EstimateEditorPage } from "@/apps/web/frontend/pages/estimate-editor";
 import { EstimatesPage } from "@/apps/web/frontend/pages/estimates";
+import { SenderReviewPage } from "@/apps/web/frontend/pages/sender-review";
 import { SettingsPage } from "@/apps/web/frontend/pages/settings";
 import { TakeoffEditorPage } from "@/apps/web/frontend/pages/takeoff-editor";
 import { TakeoffsPage } from "@/apps/web/frontend/pages/takeoffs";
@@ -132,6 +134,14 @@ const router = createBrowserRouter([
       {
         path: "documents",
         element: <DocumentsPage />,
+      },
+      {
+        path: "senders",
+        element: <SenderReviewPage />,
+      },
+      {
+        path: "docs",
+        element: <Navigate replace to="/documents" />,
       },
       {
         path: "catalog",

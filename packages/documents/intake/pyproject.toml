@@ -88,4 +88,4 @@ all = "error"
 error-on-warning = true
 
 [tool.uv.sources]
-kreuzberg = { path = "vendor/kreuzberg-4.3.3-cp310-abi3-linux_x86_64.whl" }
+kreuzberg = { path = "vendor/kreuzberg-4.4.2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl" }

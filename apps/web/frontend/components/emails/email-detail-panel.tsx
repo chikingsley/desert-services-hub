@@ -7,8 +7,8 @@
 
 import type { Email } from "@lib/db/types";
 import { Ban, ExternalLink, Mail, Paperclip, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
 import useSWR from "swr";
+import { EmailBodyViewer } from "@/apps/web/frontend/components/emails/email-body-viewer";
 import { Badge } from "@/apps/web/frontend/components/ui/badge";
 import { Button } from "@/apps/web/frontend/components/ui/button";
 import { Separator } from "@/apps/web/frontend/components/ui/separator";
@@ -41,134 +41,6 @@ interface EmailAttachmentsResponse {
   attachments: EmailAttachmentItem[];
   source: "db" | "graph" | "none";
   unavailableReason?: string;
-}
-
-const EMAIL_VIEWER_CSS = `
-  :root { color-scheme: light; }
-  html, body { margin: 0; padding: 0; }
-  body {
-    padding: 14px 16px;
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    font-size: 14px;
-    line-height: 1.45;
-    color: #0f172a;
-    background: #ffffff;
-  }
-  * { box-sizing: border-box; }
-  img { max-width: 100%; height: auto; }
-  table { max-width: 100%; }
-  pre { white-space: pre-wrap; word-break: break-word; }
-  blockquote {
-    margin: 0 0 0 12px;
-    padding-left: 12px;
-    border-left: 3px solid #e2e8f0;
-  }
-  hr { border: 0; border-top: 1px solid #e2e8f0; margin: 12px 0; }
-  a { color: #0b5fff; }
-`;
-
-const HTML_HEAD_TAG_RE = /<head\b[^>]*>/i;
-const HTML_HTML_TAG_RE = /<html\b[^>]*>/i;
-
-function looksLikeHtml(raw: string): boolean {
-  const s = raw.trim().slice(0, 2000).toLowerCase();
-  if (!s) {
-    return false;
-  }
-  return (
-    s.includes("<html") ||
-    s.includes("<body") ||
-    s.includes("<div") ||
-    s.includes("<p") ||
-    s.includes("<table") ||
-    s.includes("<br") ||
-    s.includes("<span") ||
-    s.includes("</")
-  );
-}
-
-function buildEmailSrcDoc(rawHtml: string): string {
-  const injected = `<base target="_blank" /><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><style>${EMAIL_VIEWER_CSS}</style>`;
-
-  // If there's already a <head>, inject inside it.
-  if (HTML_HEAD_TAG_RE.test(rawHtml)) {
-    return rawHtml.replace(HTML_HEAD_TAG_RE, (m) => `${m}${injected}`);
-  }
-
-  // If there's an <html> but no <head>, add one.
-  if (HTML_HTML_TAG_RE.test(rawHtml)) {
-    return rawHtml.replace(
-      HTML_HTML_TAG_RE,
-      (m) => `${m}<head>${injected}</head>`
-    );
-  }
-
-  // Otherwise treat as a fragment.
-  return `<!doctype html><html><head>${injected}</head><body>${rawHtml}</body></html>`;
-}
-
-function buildSrcDocIfHtml(bodyHtml: string | null | undefined): string | null {
-  if (!bodyHtml) {
-    return null;
-  }
-  if (!looksLikeHtml(bodyHtml)) {
-    return null;
-  }
-  return buildEmailSrcDoc(bodyHtml);
-}
-
-function handleIframeLoad(
-  iframe: HTMLIFrameElement,
-  setHeight: (h: number) => void
-): void {
-  const doc = iframe.contentDocument;
-  if (!doc?.body) {
-    return;
-  }
-  // Force links out of the sandbox so JS-enabled pages don't render
-  // inside the iframe (which triggers "JavaScript disabled").
-  for (const a of Array.from(doc.querySelectorAll("a[href]"))) {
-    a.setAttribute("target", "_blank");
-    a.setAttribute("rel", "noopener noreferrer");
-  }
-
-  // Also intercept clicks to ensure the iframe never navigates.
-  // (Some HTML email templates override target or use weird markup.)
-  doc.addEventListener(
-    "click",
-    (ev) => {
-      const t = ev.target as Element | null;
-      const a = t?.closest?.("a[href]") as HTMLAnchorElement | null;
-      if (!a) {
-        return;
-      }
-
-      const href = a.getAttribute("href") ?? "";
-      if (
-        !href ||
-        href.startsWith("#") ||
-        href.toLowerCase().startsWith("javascript:")
-      ) {
-        return;
-      }
-
-      ev.preventDefault();
-      ev.stopPropagation();
-
-      const resolved = (() => {
-        try {
-          return new URL(href, doc.baseURI).toString();
-        } catch {
-          return href;
-        }
-      })();
-
-      window.open(resolved, "_blank", "noopener,noreferrer");
-    },
-    { capture: true }
-  );
-
-  setHeight(Math.max(300, doc.body.scrollHeight + 32));
 }
 
 function AttachmentsSection({
@@ -413,20 +285,6 @@ export function EmailDetailPanel({
     isLoading: attachmentsLoading,
   } = useSWR<EmailAttachmentsResponse>(attachmentsKey, fetcher);
 
-  // Auto-resize iframe to content height
-  const [iframeHeight, setIframeHeight] = useState(400);
-
-  // Reset iframe height when switching emails; onLoad will then compute the final height.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: we intentionally reset only on emailId changes.
-  useEffect(() => {
-    setIframeHeight(400);
-  }, [emailId]);
-
-  const iframeSrcDoc = useMemo(
-    () => buildSrcDocIfHtml(email?.bodyHtml),
-    [email?.bodyHtml]
-  );
-
   return (
     <Sheet onOpenChange={(isOpen) => !isOpen && onClose()} open={open}>
       <SheetContent
@@ -522,26 +380,13 @@ export function EmailDetailPanel({
 
             {/* Email body */}
             <div className="flex-1 px-4 pb-4">
-              {iframeSrcDoc ? (
-                // biome-ignore lint/a11y/noNoninteractiveElementInteractions: iframe onLoad is used to tweak sandboxed HTML.
-                <iframe
-                  className="w-full rounded-lg border border-border bg-white"
-                  onLoad={(e) =>
-                    handleIframeLoad(e.currentTarget, setIframeHeight)
-                  }
-                  sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-                  srcDoc={iframeSrcDoc}
-                  style={{ height: iframeHeight }}
-                  title="Email content"
-                />
-              ) : (
-                <pre className="whitespace-pre-wrap rounded-lg border border-border bg-muted/30 p-4 text-sm">
-                  {email.bodyFull ||
-                    email.bodyHtml ||
-                    email.bodyPreview ||
-                    "(no content)"}
-                </pre>
-              )}
+              <EmailBodyViewer
+                bodyHtml={email.bodyHtml}
+                bodyText={
+                  email.bodyFull || email.bodyHtml || email.bodyPreview || null
+                }
+                title="Email content"
+              />
             </div>
           </>
         )}

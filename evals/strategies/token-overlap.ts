@@ -31,12 +31,14 @@ const STOPWORDS = new Set([
   "corp",
   "company",
 ]);
+const NON_ALNUM_OR_SPACE_RE = /[^a-z0-9\s]/g;
+const WHITESPACE_RE = /\s+/;
 
 function tokenize(text: string): string[] {
   return text
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ")
-    .split(/\s+/)
+    .replace(NON_ALNUM_OR_SPACE_RE, " ")
+    .split(WHITESPACE_RE)
     .filter((t) => t.length > 2 && !STOPWORDS.has(t));
 }
 

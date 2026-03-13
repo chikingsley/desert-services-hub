@@ -1,7 +1,11 @@
 import maplibregl from "maplibre-gl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MapControls } from "./map-controls";
-import type { LowestPoint, ParcelInfo } from "./map-helpers";
+import type {
+  AccessPointCandidate,
+  LowestPoint,
+  ParcelInfo,
+} from "./map-helpers";
 import {
   buildParcelSamplePoints,
   EMPTY_FC,
@@ -9,6 +13,7 @@ import {
   fetchApnLabels,
   findLowestPoint,
   findLowestTerrainPoint,
+  inferParcelAccessPoints,
   isEsriQueryResult,
   metersToFeet,
   PARCEL_QUERY_URL,
@@ -65,6 +70,7 @@ export function MapPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const lowestPointJobRef = useRef(0);
+  const accessPointJobRef = useRef(0);
   const [isSatellite, setIsSatellite] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searching, setSearching] = useState(false);
@@ -104,6 +110,64 @@ export function MapPage() {
       });
     },
     []
+  );
+
+  const setAccessPointMarkers = useCallback(
+    (map: maplibregl.Map, points: AccessPointCandidate[]) => {
+      const src = map.getSource("access-points") as
+        | maplibregl.GeoJSONSource
+        | undefined;
+      if (!src) {
+        return;
+      }
+      if (points.length === 0) {
+        src.setData(EMPTY_FC);
+        return;
+      }
+
+      src.setData({
+        type: "FeatureCollection",
+        features: points.map((candidate, idx) => {
+          const road =
+            candidate.nearStreetName ??
+            candidate.nearStreetClassification ??
+            "Road";
+          return {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: candidate.point,
+            },
+            properties: {
+              id: `${idx}`,
+              label: `${road} (${candidate.distanceToRoadMeters.toFixed(0)}m)`,
+            },
+          };
+        }),
+      });
+    },
+    []
+  );
+
+  const analyzeAccessPoints = useCallback(
+    async (
+      map: maplibregl.Map,
+      parcel: GeoJSON.Feature<GeoJSON.Polygon, { APN: string }>
+    ) => {
+      const jobId = ++accessPointJobRef.current;
+      setAccessPointMarkers(map, []);
+
+      try {
+        const points = await inferParcelAccessPoints(parcel);
+        if (accessPointJobRef.current !== jobId) {
+          return;
+        }
+        setAccessPointMarkers(map, points);
+      } catch (err) {
+        console.error("[map] access-point inference failed:", err);
+      }
+    },
+    [setAccessPointMarkers]
   );
 
   const analyzeLowestPoint = useCallback(
@@ -294,6 +358,35 @@ export function MapPage() {
           "text-halo-width": 1.5,
         },
       });
+      map.addSource("access-points", { type: "geojson", data: EMPTY_FC });
+      map.addLayer({
+        id: "access-point-markers",
+        type: "circle",
+        source: "access-points",
+        paint: {
+          "circle-radius": 5.5,
+          "circle-color": "#43a047",
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 2,
+        },
+      });
+      map.addLayer({
+        id: "access-point-labels",
+        type: "symbol",
+        source: "access-points",
+        layout: {
+          "text-field": ["get", "label"],
+          "text-size": 11,
+          "text-offset": [0, 1.3],
+          "text-anchor": "top",
+          "text-font": ["Noto Sans Regular"],
+        },
+        paint: {
+          "text-color": "#123d16",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 1.4,
+        },
+      });
 
       map.on("click", async (e) => {
         if (map.getZoom() < 14) {
@@ -329,7 +422,10 @@ export function MapPage() {
           ) as maplibregl.GeoJSONSource;
           src.setData(result.geojson);
           setSelected(result.info);
-          await analyzeLowestPoint(map, result.geojson);
+          await Promise.all([
+            analyzeLowestPoint(map, result.geojson),
+            analyzeAccessPoints(map, result.geojson),
+          ]);
         } catch (err) {
           console.error("[map] click query failed:", err);
         }
@@ -345,7 +441,7 @@ export function MapPage() {
       map.remove();
       mapRef.current = null;
     };
-  }, [analyzeLowestPoint]);
+  }, [analyzeAccessPoints, analyzeLowestPoint]);
 
   const toggleSatellite = useCallback(() => {
     const map = mapRef.current;
@@ -367,11 +463,18 @@ export function MapPage() {
     lowestPointJobRef.current += 1;
     setFindingLowestPoint(false);
     setLowestPoint(null);
+    accessPointJobRef.current += 1;
     const lowestSrc = mapRef.current?.getSource("lowest-point") as
       | maplibregl.GeoJSONSource
       | undefined;
     if (lowestSrc) {
       lowestSrc.setData(EMPTY_FC);
+    }
+    const accessSrc = mapRef.current?.getSource("access-points") as
+      | maplibregl.GeoJSONSource
+      | undefined;
+    if (accessSrc) {
+      accessSrc.setData(EMPTY_FC);
     }
     const cleanApn = q.replace(/[-\s.]/g, "");
     const params = new URLSearchParams({
@@ -408,7 +511,10 @@ export function MapPage() {
       const src = map.getSource("selected-parcel") as maplibregl.GeoJSONSource;
       src.setData(result.geojson);
       setSelected(result.info);
-      await analyzeLowestPoint(map, result.geojson);
+      await Promise.all([
+        analyzeLowestPoint(map, result.geojson),
+        analyzeAccessPoints(map, result.geojson),
+      ]);
 
       const bounds = new maplibregl.LngLatBounds();
       const coords = (result.geojson.geometry as GeoJSON.Polygon)
@@ -422,7 +528,7 @@ export function MapPage() {
     }
 
     setSearching(false);
-  }, [analyzeLowestPoint, searchQuery]);
+  }, [analyzeAccessPoints, analyzeLowestPoint, searchQuery]);
 
   const clearSelection = useCallback(() => {
     const src = mapRef.current?.getSource("selected-parcel") as
@@ -437,7 +543,14 @@ export function MapPage() {
     if (lowestSrc) {
       lowestSrc.setData(EMPTY_FC);
     }
+    const accessSrc = mapRef.current?.getSource("access-points") as
+      | maplibregl.GeoJSONSource
+      | undefined;
+    if (accessSrc) {
+      accessSrc.setData(EMPTY_FC);
+    }
     lowestPointJobRef.current += 1;
+    accessPointJobRef.current += 1;
     setFindingLowestPoint(false);
     setLowestPoint(null);
     setSelected(null);

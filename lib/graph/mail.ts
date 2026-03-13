@@ -1,4 +1,4 @@
-import { graphGet, graphGetBinary } from "./http";
+import { graphGet, graphGetBinary, graphPatch } from "./http";
 
 export interface GraphEmailClient {
   downloadAttachment(
@@ -20,8 +20,35 @@ export interface GraphEmailClient {
       isInline?: boolean;
       name: string;
       size?: number;
-    }>
+      }>
   >;
+  getMessage(
+    messageId: string,
+    mailboxEmail: string
+  ): Promise<{
+    body?: {
+      content?: string;
+      contentType?: string;
+    };
+    ccRecipients?: Array<{
+      emailAddress?: { address?: string; name?: string };
+    }>;
+    id: string;
+    isRead?: boolean;
+    subject?: string;
+    toRecipients?: Array<{
+      emailAddress?: { address?: string; name?: string };
+    }>;
+  }>;
+  getMessageReadState(
+    messageId: string,
+    mailboxEmail: string
+  ): Promise<boolean>;
+  setMessageReadState(
+    messageId: string,
+    mailboxEmail: string,
+    isRead: boolean
+  ): Promise<void>;
 }
 
 function escapeODataString(value: string): string {
@@ -109,6 +136,53 @@ export function createGraphClient(): GraphEmailClient {
       return graphGetBinary(
         `users/${user}/messages/${msg}/attachments/${att}/$value`
       );
+    },
+
+  getMessage(
+    messageId: string,
+    mailboxEmail: string
+  ): Promise<{
+    body?: {
+      content?: string;
+      contentType?: string;
+    };
+    ccRecipients?: Array<{
+      emailAddress?: { address?: string; name?: string };
+    }>;
+      id: string;
+      isRead?: boolean;
+      subject?: string;
+      toRecipients?: Array<{
+        emailAddress?: { address?: string; name?: string };
+      }>;
+    }> {
+      const user = encodeURIComponent(mailboxEmail);
+      const msg = encodeURIComponent(messageId);
+      return graphGet(
+        `users/${user}/messages/${msg}?$select=id,subject,isRead,toRecipients,ccRecipients,body`
+      );
+    },
+
+    async getMessageReadState(
+      messageId: string,
+      mailboxEmail: string
+    ): Promise<boolean> {
+      const user = encodeURIComponent(mailboxEmail);
+      const msg = encodeURIComponent(messageId);
+      const data = await graphGet<{ isRead?: boolean }>(
+        `users/${user}/messages/${msg}?$select=isRead`
+      );
+      return data.isRead === true;
+    },
+
+    async setMessageReadState(
+      messageId: string,
+      mailboxEmail: string,
+      isRead: boolean
+    ): Promise<void> {
+      const user = encodeURIComponent(mailboxEmail);
+      const msg = encodeURIComponent(messageId);
+      await graphPatch(`users/${user}/messages/${msg}`, { isRead });
     },
   };
 }

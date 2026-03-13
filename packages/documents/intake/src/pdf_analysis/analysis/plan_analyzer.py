@@ -5,6 +5,7 @@ For analyzing Civil, Grading, Drainage, and SWPPP plans
 
 import json
 import os
+import subprocess
 import tempfile
 from dataclasses import asdict, dataclass
 from typing import Any, cast
@@ -315,17 +316,33 @@ Return results in this JSON structure:
 
     def _pdf_to_image(self, pdf_path: str, page: int = 0) -> str:
         """Convert PDF page to image for analysis"""
-        from pathlib import Path
+        fd, prefix = tempfile.mkstemp(prefix="plan-page-", suffix="")
+        os.close(fd)
+        os.unlink(prefix)
 
-        from kreuzberg import render_page_to_image
+        try:
+            subprocess.run(
+                [
+                    "pdftoppm",
+                    "-f",
+                    str(page + 1),
+                    "-singlefile",
+                    "-png",
+                    pdf_path,
+                    prefix,
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            stderr = (exc.stderr or "").strip()
+            raise RuntimeError(f"pdftoppm failed converting PDF page {page + 1}: {stderr}") from exc
 
-        pdf_bytes = Path(pdf_path).read_bytes()
-        # dpi=144 = 2x zoom from 72 DPI base
-        png_data = render_page_to_image(pdf_bytes, page, dpi=144)
-
-        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-            tmp.write(png_data)
-            return tmp.name
+        image_path = f"{prefix}.png"
+        if not os.path.exists(image_path):
+            raise RuntimeError(f"Expected rendered image not found: {image_path}")
+        return image_path
 
     def export_report(self, result: AnalysisResult, output_path: str):
         """Export analysis result to JSON file"""

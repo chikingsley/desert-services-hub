@@ -13,6 +13,7 @@ import {
   computeDomainEnrichment,
   extractDomain,
   extractRealSender,
+  extractRealSenderWithLlm,
   findOrCreateAccount,
   findOrCreateContact,
   linkContactToEmail,
@@ -38,6 +39,7 @@ const FULL_HISTORY_SINCE_ISO = "1970-01-01T00:00:00.000Z";
 const EMAIL_FIELDS = [
   "id",
   "conversationId",
+  "parentFolderId",
   "subject",
   "from",
   "toRecipients",
@@ -82,10 +84,16 @@ export interface GraphEmail {
   hasAttachments?: boolean;
   id: string;
   internetMessageHeaders?: GraphInternetHeader[];
+  parentFolderId?: string;
   receivedDateTime: string;
   subject: string;
   toRecipients?: GraphRecipient[];
   webLink?: string;
+}
+
+interface GraphMailFolder {
+  displayName?: string;
+  id: string;
 }
 
 interface GraphListResponse {
@@ -154,7 +162,8 @@ function extractInternetMessageId(
 
 export function graphEmailToInsertData(
   email: GraphEmail,
-  mailboxId: number
+  mailboxId: number,
+  folderNamesById?: ReadonlyMap<string, string>
 ): InsertEmailData {
   const bodyHtml =
     email.body?.contentType === "html" ? email.body.content : null;
@@ -170,6 +179,10 @@ export function graphEmailToInsertData(
     internetMessageId: extractInternetMessageId(email.internetMessageHeaders),
     mailboxId,
     conversationId: email.conversationId ?? null,
+    folderId: email.parentFolderId ?? null,
+    folderName: email.parentFolderId
+      ? folderNamesById?.get(email.parentFolderId) ?? null
+      : null,
     subject: email.subject,
     fromEmail: email.from?.emailAddress.address ?? null,
     fromName: email.from?.emailAddress.name ?? null,
@@ -182,6 +195,43 @@ export function graphEmailToInsertData(
     bodyHtml,
     webUrl: email.webLink ?? null,
   };
+}
+
+async function hydrateFolderNames(
+  mailboxEmail: string,
+  emails: GraphEmail[],
+  folderNamesById: Map<string, string>
+): Promise<void> {
+  const missingFolderIds = Array.from(
+    new Set(
+      emails
+        .map((email) => email.parentFolderId?.trim() ?? "")
+        .filter((folderId) => folderId.length > 0 && !folderNamesById.has(folderId))
+    )
+  );
+
+  if (missingFolderIds.length === 0) {
+    return;
+  }
+
+  const userPath = encodeURIComponent(mailboxEmail);
+
+  for (const folderId of missingFolderIds) {
+    try {
+      const folder = await graphGet<GraphMailFolder>(
+        `users/${userPath}/mailFolders/${encodeURIComponent(folderId)}?$select=id,displayName`
+      );
+      if (folder.displayName?.trim()) {
+        folderNamesById.set(folderId, folder.displayName.trim());
+      }
+    } catch (error) {
+      console.warn("[email-sync] Folder lookup failed", {
+        folderId,
+        mailboxEmail,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
 }
 
 export function buildSinceFilter(hoursAgo: number): string {
@@ -311,12 +361,14 @@ export async function enrichEmail(
     bodyPreview
   );
 
-  const platform = extractRealSender(
-    domainData.fromDomain,
-    fromName,
-    bodyFull,
-    subject
-  );
+  const platform =
+    (await extractRealSenderWithLlm(
+      domainData.fromDomain,
+      fromName,
+      bodyFull ?? bodyPreview,
+      subject
+    )) ??
+    extractRealSender(domainData.fromDomain, fromName, bodyFull, subject);
 
   const effectiveDomain =
     platform?.realSenderDomain ??
@@ -429,9 +481,16 @@ export async function processOneEmail(
   email: GraphEmail,
   mailboxEmail: string,
   mailboxId: number,
-  options: { forceReprocessExisting?: boolean } = {}
+  options: {
+    forceReprocessExisting?: boolean;
+    folderNamesById?: ReadonlyMap<string, string>;
+  } = {}
 ): Promise<EmailProcessResult> {
-  const data = graphEmailToInsertData(email, mailboxId);
+  const data = graphEmailToInsertData(
+    email,
+    mailboxId,
+    options.folderNamesById
+  );
   const inserted = await insertEmail(data);
   const emailId = inserted.id;
 
@@ -531,9 +590,11 @@ async function processPage(
   mailboxId: number,
   result: MailboxSyncResult,
   senderFilter: string | undefined,
-  forceReprocessExisting: boolean
+  forceReprocessExisting: boolean,
+  folderNamesById: Map<string, string>
 ): Promise<void> {
   const normalizedSenderFilter = normalizeSenderFilter(senderFilter);
+  await hydrateFolderNames(mailboxEmail, page, folderNamesById);
 
   for (const email of page) {
     if (
@@ -556,6 +617,7 @@ async function processPage(
       try {
         const r = await processOneEmail(email, mailboxEmail, mailboxId, {
           forceReprocessExisting: true,
+          folderNamesById,
         });
         if (r.outcome === "stored") {
           result.stored++;
@@ -576,7 +638,9 @@ async function processPage(
     }
 
     try {
-      const r = await processOneEmail(email, mailboxEmail, mailboxId);
+      const r = await processOneEmail(email, mailboxEmail, mailboxId, {
+        folderNamesById,
+      });
       if (r.outcome === "stored") {
         result.stored++;
         result.attachments += r.attachments;
@@ -708,7 +772,8 @@ export async function syncThreadSiblings(
   mailboxId: number,
   conversationId: string,
   excludeMessageId: string,
-  anchorReceivedDateTime: string
+  anchorReceivedDateTime: string,
+  folderNamesById: Map<string, string> = new Map()
 ): Promise<number> {
   const existingRows = await db
     .query<{ message_id: string }, [string]>(
@@ -743,6 +808,8 @@ export async function syncThreadSiblings(
     return 0;
   }
 
+  await hydrateFolderNames(mailboxEmail, siblings, folderNamesById);
+
   console.info("[email-sync] Syncing thread siblings", {
     conversationId,
     total: threadMessages.length,
@@ -755,7 +822,9 @@ export async function syncThreadSiblings(
   let syncedEnriched = 0;
   for (const sibling of siblings) {
     try {
-      const result = await processOneEmail(sibling, mailboxEmail, mailboxId);
+      const result = await processOneEmail(sibling, mailboxEmail, mailboxId, {
+        folderNamesById,
+      });
       if (result.outcome !== "stored") {
         continue;
       }
@@ -807,6 +876,7 @@ export async function syncOneMailbox(
     skipped: 0,
     stored: 0,
   };
+  const folderNamesById = new Map<string, string>();
 
   try {
     for await (const page of fetchEmailPages(mailboxEmail, sinceIso)) {
@@ -822,7 +892,8 @@ export async function syncOneMailbox(
         mailboxId,
         result,
         senderFilter,
-        forceReprocessExisting
+        forceReprocessExisting,
+        folderNamesById
       );
     }
 

@@ -60,6 +60,9 @@ export function VncPanel({
       <VncScreen
         autoConnect
         background="#000000"
+        clipViewport={false}
+        compressionLevel={2}
+        dragViewport={false}
         onClipboard={(e) => {
           const text =
             (e as unknown as { detail?: { text?: string } })?.detail?.text ??
@@ -72,6 +75,8 @@ export function VncPanel({
         onDisconnect={() => setIsConnected(false)}
         ref={vncRef}
         retryDuration={3000}
+        resizeSession={false}
+        qualityLevel={6}
         scaleViewport
         style={{ width: "100%", height: "100%" }}
         url={wsUrl}

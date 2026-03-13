@@ -73,14 +73,20 @@ export async function handleGetThread(
       `users/${mailbox}/messages`,
       {
         $filter: `conversationId eq '${conversationId}'`,
-        $orderby: "receivedDateTime asc",
         $select: config.EMAIL_SELECT_FIELDS,
         $top: 50,
       },
       50
     );
 
-    const messages = response.value ?? [];
+    const messages = (response.value ?? []).sort((a, b) => {
+      const aTime = Date.parse(a.receivedDateTime);
+      const bTime = Date.parse(b.receivedDateTime);
+      if (!(Number.isFinite(aTime) && Number.isFinite(bTime))) {
+        return 0;
+      }
+      return aTime - bTime;
+    });
     if (messages.length === 0) {
       return {
         content: [

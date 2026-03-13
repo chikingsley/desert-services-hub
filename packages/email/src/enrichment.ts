@@ -1,11 +1,5 @@
-/**
- * Email Enrichment — domain detection, platform extraction, account/contact linking.
- *
- * Pure functions + single-row DB operations used by email-sync after insert.
- * No batch processing, no PDL — just fast local enrichment at ingest time.
- */
-
 import { createHash } from "node:crypto";
+import { z } from "zod";
 
 // ── Domain & Forward Detection ──────────────────────────────────
 
@@ -296,6 +290,9 @@ export interface PlatformExtraction {
 }
 
 const BODY_EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/g;
+export const PLATFORM_SENDER_LLM_PROVIDER =
+  process.env.PLATFORM_SENDER_LLM_PROVIDER?.trim() || "openrouter";
+export const PLATFORM_SENDER_PROMPT_VERSION = "platform_sender_v1";
 
 const PLATFORM_EMAIL_DOMAINS = new Set([
   "buildingconnected.com",
@@ -314,12 +311,190 @@ const PLATFORM_EMAIL_DOMAINS = new Set([
   "desertservices.app",
 ]);
 
+const PLATFORM_SENDER_LLM_DOMAINS = new Set([
+  "bbbid.thebluebook.com",
+  "bidmail.com",
+  "buildingconnected.com",
+  "com2.smartbidnet.com",
+  "docusign.com",
+  "docusign.net",
+  "message.planhub.com",
+  "planhub.com",
+  "procore.com",
+  "procoretech.com",
+  "pype.io",
+  "smartbidnet.com",
+  "thebluebook.com",
+  "us02.procoretech.com",
+]);
+
+const platformSenderLlmSchema = z.object({
+  companyDomain: z.string().trim().min(1).nullable().optional(),
+  companyName: z.string().trim().min(1).nullable().optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  personEmail: z.string().trim().min(1).nullable().optional(),
+  personName: z.string().trim().min(1).nullable().optional(),
+  reason: z.string().trim().min(1).nullable().optional(),
+});
+
 function extractEmailsFromBody(body: string): string[] {
   const found = body.match(BODY_EMAIL_RE) ?? [];
   return [...new Set(found)].filter((email) => {
     const d = email.split("@")[1]?.toLowerCase();
     return Boolean(d && !PLATFORM_EMAIL_DOMAINS.has(d));
   });
+}
+
+function normalizeOptionalString(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
+function normalizeStrictEmail(value: string | null | undefined): string | null {
+  const email = normalizeOptionalString(value)?.toLowerCase() ?? null;
+  if (!email) {
+    return null;
+  }
+
+  const at = email.lastIndexOf("@");
+  if (at <= 0) {
+    return null;
+  }
+
+  const rawDomain = email
+    .slice(at + 1)
+    .trim()
+    .replace(/^<+|>+$/g, "")
+    .replace(/["')\],;:]+$/g, "");
+  const normalizedDomain = extractDomain(email);
+  if (!normalizedDomain || rawDomain !== normalizedDomain) {
+    return null;
+  }
+
+  return email;
+}
+
+function normalizeStrictDomain(value: string | null | undefined): string | null {
+  const domain = normalizeOptionalString(value)?.toLowerCase() ?? null;
+  if (!domain) {
+    return null;
+  }
+
+  const normalizedDomain = sanitizeDomain(domain);
+  if (!normalizedDomain || normalizedDomain !== domain) {
+    return null;
+  }
+
+  return normalizedDomain;
+}
+
+function getPlatformName(domain: string): string {
+  return PLATFORM_DOMAINS[domain]?.name ?? {
+    "procore.com": "Procore",
+    "thebluebook.com": "BlueBook",
+  }[domain] ?? domain;
+}
+
+export function buildPlatformSenderPrompt(
+  domain: string,
+  fromName: string | null,
+  body: string | null,
+  subject: string | null
+): string {
+  return `Prompt version: "${PLATFORM_SENDER_PROMPT_VERSION}"
+
+You extract the real external sender identity from platform relay emails for Desert Services, a construction services company.
+
+The relay platform domain is "${domain}".
+
+Return ONLY valid JSON:
+{
+  "personName": string | null,
+  "personEmail": string | null,
+  "companyName": string | null,
+  "companyDomain": string | null,
+  "confidence": number,
+  "reason": string
+}
+
+Rules:
+- Extract the real external sender, not the relay platform.
+- If you cannot confidently determine a field, return null for that field.
+- "personEmail" must be the exact external sender email when present.
+- "companyDomain" must be the external company domain, never the relay platform domain.
+- Do not invent data.
+
+Context:
+${JSON.stringify(
+    {
+      body: body?.slice(0, 12_000) ?? null,
+      fromName,
+      subject,
+    },
+    null,
+    2
+  )}`;
+}
+
+function normalizePlatformSenderResult(
+  relayDomain: string,
+  data: z.infer<typeof platformSenderLlmSchema>
+): PlatformExtraction | null {
+  const realSenderName = normalizeOptionalString(data.personName);
+  const realSenderCompany = normalizeOptionalString(data.companyName);
+  const personEmailCandidate = normalizeStrictEmail(data.personEmail);
+  const companyDomainCandidate = normalizeStrictDomain(data.companyDomain);
+
+  const realSenderEmail = personEmailCandidate;
+  const emailDomain = realSenderEmail ? extractDomain(realSenderEmail) : null;
+  const companyDomain = companyDomainCandidate;
+  const realSenderDomain = emailDomain ?? companyDomain;
+
+  if (realSenderDomain && PLATFORM_EMAIL_DOMAINS.has(realSenderDomain)) {
+    return null;
+  }
+
+  if (!(realSenderEmail || realSenderDomain)) {
+    return null;
+  }
+
+  if (!(realSenderName || realSenderCompany || realSenderEmail || realSenderDomain)) {
+    return null;
+  }
+
+  return {
+    platformName: getPlatformName(relayDomain),
+    realSenderCompany,
+    realSenderDomain,
+    realSenderEmail,
+    realSenderName,
+  };
+}
+
+export async function extractRealSenderWithLlm(
+  domain: string | null,
+  fromName: string | null,
+  body: string | null,
+  subject: string | null
+): Promise<PlatformExtraction | null> {
+  const relayDomain = domain?.toLowerCase().trim() ?? "";
+  if (!relayDomain || !PLATFORM_SENDER_LLM_DOMAINS.has(relayDomain)) {
+    return null;
+  }
+
+  const prompt = buildPlatformSenderPrompt(relayDomain, fromName, body, subject);
+  const { chat } = await import("@documents-intake/pdf-analysis");
+
+  try {
+    const response = await chat(prompt, PLATFORM_SENDER_LLM_PROVIDER);
+    const parsed = platformSenderLlmSchema.safeParse(response.data);
+    if (!parsed.success) {
+      return null;
+    }
+    return normalizePlatformSenderResult(relayDomain, parsed.data);
+  } catch {
+    return null;
+  }
 }
 
 function isExcludedSubject(

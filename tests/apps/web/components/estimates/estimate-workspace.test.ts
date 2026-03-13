@@ -1,577 +1,234 @@
-/**
- * Tests for Estimate Workspace utility functions
- *
- * Tests the apiToEditorEstimate conversion and related logic
- * used for auto-refresh when external updates are detected.
- */
 import { describe, expect, it } from "bun:test";
 import type { EditorEstimate } from "@lib/db/types";
+import {
+  type ApiEstimateResponse,
+  apiToEditorEstimate,
+  apiToInitialEditorEstimate,
+  editorToApiPayload,
+} from "@/apps/web/frontend/components/estimates/estimate-workspace-helpers";
 
-// ============================================================================
-// Types (matching estimate-workspace.tsx)
-// ============================================================================
-
-interface ApiEstimateResponse {
-  base_number: string;
-  client_address?: string | null;
-  client_email: string | null;
-  client_name: string | null;
-  client_phone: string | null;
-  current_version?: {
-    id: string;
-    total: number;
-    sections: Array<{ id: string; name: string; sort_order: number }>;
-    line_items: Array<{
-      id: string;
-      section_id: string | null;
-      item_name?: string | null;
-      description: string;
-      quantity: number;
-      unit: string;
-      unit_price: number;
-      is_excluded: number;
-      notes: string | null;
-      sort_order: number;
-    }>;
-  };
-  id: string;
-  job_address: string | null;
-  job_name: string;
-  updated_at: string;
-}
-
-// ============================================================================
-// Function Under Test (extracted from estimate-workspace.tsx)
-// ============================================================================
-
-function apiToEditorEstimate(
-  api: ApiEstimateResponse,
-  current: EditorEstimate
-): EditorEstimate {
-  const version = api.current_version;
-  if (!version) {
-    return current;
-  }
-
-  return {
-    estimateNumber: api.base_number,
-    date: current.date,
-    estimator: current.estimator,
-    estimatorEmail: current.estimatorEmail,
-    billTo: {
-      companyName: api.client_name ?? "",
-      address: api.client_address ?? current.billTo.address,
-      email: api.client_email ?? "",
-      phone: api.client_phone ?? "",
-    },
-    jobInfo: {
-      siteName: api.job_name,
-      address: api.job_address ?? "",
-    },
-    sections: version.sections.map((s) => ({
-      id: s.id,
-      name: s.name,
-    })),
-    lineItems: version.line_items.map((item) => ({
-      id: item.id,
-      item: item.item_name ?? item.description,
-      description: item.description || item.notes || "",
-      qty: item.quantity,
-      uom: item.unit,
-      cost: item.unit_price,
-      total: item.quantity * item.unit_price,
-      sectionId: item.section_id ?? undefined,
-      isStruck: item.is_excluded === 1,
-    })),
-    total: version.total,
-  };
-}
-
-// ============================================================================
-// Test Data
-// ============================================================================
-
-const mockCurrentEstimate: EditorEstimate = {
+const currentEstimate: EditorEstimate = {
   estimateNumber: "250101001",
   date: "2025-01-01T00:00:00Z",
-  estimator: "John Doe",
-  estimatorEmail: "john@example.com",
+  estimator: "Existing Estimator",
+  estimatorEmail: "existing@example.com",
   billTo: {
-    companyName: "Old Client",
-    address: "123 Old St",
-    email: "old@example.com",
+    companyName: "Existing Client",
+    address: "123 Existing St",
+    email: "existing-client@example.com",
     phone: "555-0100",
   },
   jobInfo: {
-    siteName: "Old Job",
-    address: "456 Old Ave",
+    siteName: "Existing Job",
+    address: "456 Existing Ave",
   },
   sections: [],
   lineItems: [],
   total: 0,
 };
 
-// ============================================================================
-// Tests
-// ============================================================================
-
-describe("apiToEditorEstimate", () => {
-  it("returns current estimate if no current_version", () => {
+describe("estimate workspace helpers", () => {
+  it("keeps the current editor estimate when the API has no current version", () => {
     const api: ApiEstimateResponse = {
       id: "estimate-1",
-      base_number: "250101002",
-      job_name: "New Job",
-      job_address: "789 New Blvd",
+      base_number: "250101777",
+      client_address: null,
+      client_email: null,
+      client_name: "Fresh Client",
+      client_phone: null,
+      estimator: "Fresh Estimator",
+      estimator_email: "fresh@example.com",
+      job_address: null,
+      job_name: "Fresh Job",
+      updated_at: "2025-01-02T00:00:00Z",
+    };
+
+    expect(apiToEditorEstimate(api, currentEstimate)).toBe(currentEstimate);
+  });
+
+  it("maps the current version into editor state and normalizes newline addresses", () => {
+    const api: ApiEstimateResponse = {
+      id: "estimate-2",
+      base_number: "250101888",
+      client_address: "230 S Siesta Lane\nTempe, Arizona 85288",
+      client_email: "client@example.com",
       client_name: "New Client",
-      client_email: "new@example.com",
       client_phone: "555-0200",
-      updated_at: "2025-01-02T00:00:00Z",
-      // No current_version
-    };
-
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result).toBe(mockCurrentEstimate);
-  });
-
-  it("updates estimate number from API", () => {
-    const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101999",
-      job_name: "Test Job",
-      job_address: null,
-      client_name: null,
-      client_email: null,
-      client_phone: null,
+      estimator: "New Estimator",
+      estimator_email: "new-estimator@example.com",
+      job_address: "3633 E Thunderbird Road\nPhoenix, Arizona 85032",
+      job_name: "Thunderbird Job",
       updated_at: "2025-01-02T00:00:00Z",
       current_version: {
-        id: "v1",
-        total: 0,
-        sections: [],
-        line_items: [],
-      },
-    };
-
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.estimateNumber).toBe("250101999");
-  });
-
-  it("preserves date, estimator, and estimatorEmail from current", () => {
-    const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101002",
-      job_name: "Test Job",
-      job_address: null,
-      client_name: null,
-      client_email: null,
-      client_phone: null,
-      updated_at: "2025-01-02T00:00:00Z",
-      current_version: {
-        id: "v1",
-        total: 0,
-        sections: [],
-        line_items: [],
-      },
-    };
-
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.date).toBe(mockCurrentEstimate.date);
-    expect(result.estimator).toBe(mockCurrentEstimate.estimator);
-    expect(result.estimatorEmail).toBe(mockCurrentEstimate.estimatorEmail);
-  });
-
-  it("updates billTo with API data while preserving address", () => {
-    const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101002",
-      job_name: "Test Job",
-      job_address: null,
-      client_name: "New Client Name",
-      client_email: "newclient@example.com",
-      client_phone: "555-9999",
-      updated_at: "2025-01-02T00:00:00Z",
-      current_version: {
-        id: "v1",
-        total: 0,
-        sections: [],
-        line_items: [],
-      },
-    };
-
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.billTo.companyName).toBe("New Client Name");
-    expect(result.billTo.email).toBe("newclient@example.com");
-    expect(result.billTo.phone).toBe("555-9999");
-    expect(result.billTo.address).toBe(mockCurrentEstimate.billTo.address);
-  });
-
-  it("handles null values in billTo fields", () => {
-    const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101002",
-      job_name: "Test Job",
-      job_address: null,
-      client_name: null,
-      client_email: null,
-      client_phone: null,
-      updated_at: "2025-01-02T00:00:00Z",
-      current_version: {
-        id: "v1",
-        total: 0,
-        sections: [],
-        line_items: [],
-      },
-    };
-
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.billTo.companyName).toBe("");
-    expect(result.billTo.email).toBe("");
-    expect(result.billTo.phone).toBe("");
-  });
-
-  it("updates jobInfo from API", () => {
-    const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101002",
-      job_name: "Phoenix Construction",
-      job_address: "1234 Phoenix Way",
-      client_name: null,
-      client_email: null,
-      client_phone: null,
-      updated_at: "2025-01-02T00:00:00Z",
-      current_version: {
-        id: "v1",
-        total: 0,
-        sections: [],
-        line_items: [],
-      },
-    };
-
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.jobInfo.siteName).toBe("Phoenix Construction");
-    expect(result.jobInfo.address).toBe("1234 Phoenix Way");
-  });
-
-  it("handles null job_address", () => {
-    const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101002",
-      job_name: "Test Job",
-      job_address: null,
-      client_name: null,
-      client_email: null,
-      client_phone: null,
-      updated_at: "2025-01-02T00:00:00Z",
-      current_version: {
-        id: "v1",
-        total: 0,
-        sections: [],
-        line_items: [],
-      },
-    };
-
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.jobInfo.address).toBe("");
-  });
-
-  it("converts sections correctly", () => {
-    const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101002",
-      job_name: "Test Job",
-      job_address: null,
-      client_name: null,
-      client_email: null,
-      client_phone: null,
-      updated_at: "2025-01-02T00:00:00Z",
-      current_version: {
-        id: "v1",
-        total: 0,
+        id: "version-1",
+        total: 999,
         sections: [
-          { id: "sec-1", name: "Fencing", sort_order: 0 },
-          { id: "sec-2", name: "Gates", sort_order: 1 },
-        ],
-        line_items: [],
-      },
-    };
-
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.sections).toHaveLength(2);
-    expect(result.sections[0]).toEqual({ id: "sec-1", name: "Fencing" });
-    expect(result.sections[1]).toEqual({ id: "sec-2", name: "Gates" });
-  });
-
-  it("converts line items correctly", () => {
-    const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101002",
-      job_name: "Test Job",
-      job_address: null,
-      client_name: null,
-      client_email: null,
-      client_phone: null,
-      updated_at: "2025-01-02T00:00:00Z",
-      current_version: {
-        id: "v1",
-        total: 250,
-        sections: [],
-        line_items: [
           {
-            id: "item-1",
-            section_id: null,
-            description: "Temp Fence Install",
-            quantity: 100,
-            unit: "LF",
-            unit_price: 2.5,
-            is_excluded: 0,
-            notes: "Standard installation",
+            id: "section-1",
+            name: "Mobilization",
+            title: "Site Setup",
             sort_order: 0,
           },
         ],
-      },
-    };
-
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.lineItems).toHaveLength(1);
-
-    const item = result.lineItems[0];
-    expect(item.id).toBe("item-1");
-    expect(item.item).toBe("Temp Fence Install");
-    expect(item.description).toBe("Temp Fence Install");
-    expect(item.qty).toBe(100);
-    expect(item.uom).toBe("LF");
-    expect(item.cost).toBe(2.5);
-    expect(item.total).toBe(250);
-    expect(item.sectionId).toBeUndefined();
-    expect(item.isStruck).toBe(false);
-  });
-
-  it("handles line item with section_id", () => {
-    const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101002",
-      job_name: "Test Job",
-      job_address: null,
-      client_name: null,
-      client_email: null,
-      client_phone: null,
-      updated_at: "2025-01-02T00:00:00Z",
-      current_version: {
-        id: "v1",
-        total: 100,
-        sections: [{ id: "sec-1", name: "Fencing", sort_order: 0 }],
         line_items: [
           {
-            id: "item-1",
-            section_id: "sec-1",
-            description: "Item in section",
-            quantity: 10,
+            id: "line-1",
+            section_id: "section-1",
+            item_name: null,
+            description: "Primary scope",
+            quantity: 3,
             unit: "EA",
-            unit_price: 10,
-            is_excluded: 0,
-            notes: null,
-            sort_order: 0,
-          },
-        ],
-      },
-    };
-
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.lineItems[0].sectionId).toBe("sec-1");
-  });
-
-  it("handles struck/excluded line items", () => {
-    const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101002",
-      job_name: "Test Job",
-      job_address: null,
-      client_name: null,
-      client_email: null,
-      client_phone: null,
-      updated_at: "2025-01-02T00:00:00Z",
-      current_version: {
-        id: "v1",
-        total: 0, // Excluded items don't count
-        sections: [],
-        line_items: [
-          {
-            id: "item-1",
-            section_id: null,
-            description: "Struck item",
-            quantity: 100,
-            unit: "EA",
-            unit_price: 100,
+            unit_price: 125,
             is_excluded: 1,
-            notes: null,
+            notes: "backup text",
             sort_order: 0,
           },
         ],
       },
     };
 
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.lineItems[0].isStruck).toBe(true);
+    const result = apiToEditorEstimate(api, currentEstimate);
+
+    expect(result).toEqual({
+      estimateNumber: "250101888",
+      date: currentEstimate.date,
+      estimator: "New Estimator",
+      estimatorEmail: "new-estimator@example.com",
+      billTo: {
+        companyName: "New Client",
+        address: "230 S Siesta Lane, Tempe, Arizona 85288",
+        email: "client@example.com",
+        phone: "555-0200",
+      },
+      jobInfo: {
+        siteName: "Thunderbird Job",
+        address: "3633 E Thunderbird Road, Phoenix, Arizona 85032",
+      },
+      sections: [
+        {
+          id: "section-1",
+          name: "Mobilization",
+          title: "Site Setup",
+        },
+      ],
+      lineItems: [
+        {
+          id: "line-1",
+          item: "Primary scope",
+          description: "Primary scope",
+          qty: 3,
+          uom: "EA",
+          cost: 125,
+          total: 375,
+          sectionId: "section-1",
+          isAlternate: true,
+        },
+      ],
+      total: 999,
+    });
   });
 
-  it("handles null notes in line items", () => {
+  it("builds an empty editor estimate when the API row has no current version", () => {
     const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101002",
-      job_name: "Test Job",
-      job_address: null,
-      client_name: null,
-      client_email: null,
-      client_phone: null,
-      updated_at: "2025-01-02T00:00:00Z",
-      current_version: {
-        id: "v1",
-        total: 100,
-        sections: [],
-        line_items: [
-          {
-            id: "item-1",
-            section_id: null,
-            description: "Item without notes",
-            quantity: 10,
-            unit: "EA",
-            unit_price: 10,
-            is_excluded: 0,
-            notes: null,
-            sort_order: 0,
-          },
-        ],
-      },
+      id: "estimate-3",
+      base_number: "250101999",
+      client_address: "230 S Siesta Lane\nTempe, Arizona 85288",
+      client_email: "client@example.com",
+      client_name: "No Version Client",
+      client_phone: "555-0300",
+      created_at: "2025-01-03T00:00:00Z",
+      estimator: "No Version Estimator",
+      estimator_email: "no-version@example.com",
+      job_address: "3633 E Thunderbird Road\nPhoenix, Arizona 85032",
+      job_name: "No Version Job",
+      updated_at: "2025-01-03T00:00:00Z",
     };
 
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.lineItems[0].description).toBe("Item without notes");
+    expect(apiToInitialEditorEstimate(api)).toEqual({
+      estimateNumber: "250101999",
+      date: "2025-01-03T00:00:00Z",
+      estimator: "No Version Estimator",
+      estimatorEmail: "no-version@example.com",
+      billTo: {
+        companyName: "No Version Client",
+        address: "230 S Siesta Lane, Tempe, Arizona 85288",
+        email: "client@example.com",
+        phone: "555-0300",
+      },
+      jobInfo: {
+        siteName: "No Version Job",
+        address: "3633 E Thunderbird Road, Phoenix, Arizona 85032",
+      },
+      sections: [],
+      lineItems: [],
+      total: 0,
+    });
   });
 
-  it("calculates line item total correctly", () => {
-    const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101002",
-      job_name: "Test Job",
-      job_address: null,
-      client_name: null,
-      client_email: null,
-      client_phone: null,
-      updated_at: "2025-01-02T00:00:00Z",
-      current_version: {
-        id: "v1",
-        total: 825,
-        sections: [],
-        line_items: [
-          {
-            id: "item-1",
-            section_id: null,
-            description: "Fence",
-            quantity: 330,
-            unit: "LF",
-            unit_price: 2.5,
-            is_excluded: 0,
-            notes: null,
-            sort_order: 0,
-          },
-        ],
+  it("serializes editor state back to the API payload and drops blank line items", () => {
+    const estimate: EditorEstimate = {
+      ...currentEstimate,
+      estimateNumber: "250101123",
+      billTo: {
+        companyName: "Serialized Client",
+        address: "123 Serialized St",
+        email: "serialized@example.com",
+        phone: "555-0400",
       },
+      jobInfo: {
+        siteName: "Serialized Job",
+        address: "456 Serialized Ave",
+      },
+      sections: [{ id: "section-1", name: "Earthwork", title: "Earthwork" }],
+      lineItems: [
+        {
+          id: "line-1",
+          item: "Mobilization",
+          description: "Mobilize crew",
+          qty: 2,
+          uom: "EA",
+          cost: 100,
+          total: 200,
+          sectionId: "section-1",
+        },
+        {
+          id: "line-2",
+          item: "   ",
+          description: "Should be filtered out",
+          qty: 1,
+          uom: "EA",
+          cost: 999,
+          total: 999,
+        },
+      ],
+      total: 1199,
     };
 
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.lineItems[0].total).toBe(825); // 330 * 2.5
-    expect(result.total).toBe(825);
-  });
-
-  it("handles multiple line items", () => {
-    const api: ApiEstimateResponse = {
-      id: "estimate-1",
-      base_number: "250101002",
-      job_name: "Test Job",
-      job_address: null,
-      client_name: null,
-      client_email: null,
-      client_phone: null,
-      updated_at: "2025-01-02T00:00:00Z",
-      current_version: {
-        id: "v1",
-        total: 650,
-        sections: [],
-        line_items: [
-          {
-            id: "item-1",
-            section_id: null,
-            description: "Fence Install",
-            quantity: 100,
-            unit: "LF",
-            unit_price: 2.5,
-            is_excluded: 0,
-            notes: null,
-            sort_order: 0,
-          },
-          {
-            id: "item-2",
-            section_id: null,
-            description: "Gate",
-            quantity: 2,
-            unit: "EA",
-            unit_price: 200,
-            is_excluded: 0,
-            notes: null,
-            sort_order: 1,
-          },
-        ],
-      },
-    };
-
-    const result = apiToEditorEstimate(api, mockCurrentEstimate);
-    expect(result.lineItems).toHaveLength(2);
-    expect(result.lineItems[0].total).toBe(250); // 100 * 2.5
-    expect(result.lineItems[1].total).toBe(400); // 2 * 200
-    expect(result.total).toBe(650);
-  });
-});
-
-describe("external update detection logic", () => {
-  // Helper to check for external changes (mirrors component logic)
-  function hasExternalChange(
-    lastKnown: string | null,
-    newTimestamp: string
-  ): boolean {
-    return Boolean(lastKnown && newTimestamp !== lastKnown);
-  }
-
-  // Helper to check if we should poll (mirrors component logic)
-  function shouldCheckForUpdates(
-    saveStatus: "saved" | "saving" | "unsaved"
-  ): boolean {
-    return saveStatus !== "unsaved" && saveStatus !== "saving";
-  }
-
-  it("detects change when updated_at differs", () => {
-    expect(
-      hasExternalChange("2025-01-01T10:00:00Z", "2025-01-01T10:05:00Z")
-    ).toBe(true);
-  });
-
-  it("no change when updated_at matches", () => {
-    expect(
-      hasExternalChange("2025-01-01T10:00:00Z", "2025-01-01T10:00:00Z")
-    ).toBe(false);
-  });
-
-  it("no change detection when lastKnown is null", () => {
-    expect(hasExternalChange(null, "2025-01-01T10:05:00Z")).toBe(false);
-  });
-
-  it("skips check when saveStatus is unsaved", () => {
-    expect(shouldCheckForUpdates("unsaved")).toBe(false);
-  });
-
-  it("skips check when saveStatus is saving", () => {
-    expect(shouldCheckForUpdates("saving")).toBe(false);
-  });
-
-  it("allows check when saveStatus is saved", () => {
-    expect(shouldCheckForUpdates("saved")).toBe(true);
+    expect(editorToApiPayload(estimate)).toEqual({
+      base_number: "250101123",
+      job_name: "Serialized Job",
+      job_address: "456 Serialized Ave",
+      estimator: "Existing Estimator",
+      estimator_email: "existing@example.com",
+      client_name: "Serialized Client",
+      client_address: "123 Serialized St",
+      client_email: "serialized@example.com",
+      client_phone: "555-0400",
+      status: "draft",
+      total: 200,
+      sections: [{ id: "section-1", name: "Earthwork", title: "Earthwork" }],
+      line_items: [
+        {
+          section_id: "section-1",
+          item_name: "Mobilization",
+          description: "Mobilize crew",
+          quantity: 2,
+          unit: "EA",
+          unit_price: 100,
+          notes: null,
+          is_excluded: 0,
+        },
+      ],
+    });
   });
 });

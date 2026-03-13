@@ -1,4 +1,4 @@
-import { graphPost } from "./http";
+import { graphPatch, graphPost } from "./http";
 
 interface Recipient {
   email: string;
@@ -6,6 +6,7 @@ interface Recipient {
 }
 
 interface GraphDraftMessage {
+  "@odata.etag"?: string;
   id: string;
   subject: string;
 }
@@ -34,6 +35,23 @@ interface CreateReplyDraftParams {
   userId: string;
 }
 
+interface CreateReplyAllDraftParams {
+  messageId: string;
+  userId: string;
+}
+
+interface UpdateDraftParams {
+  bcc?: Recipient[];
+  body?: string;
+  bodyType?: "html" | "text";
+  cc?: Recipient[];
+  draftId: string;
+  ifMatch?: string;
+  subject?: string;
+  to?: Recipient[];
+  userId: string;
+}
+
 interface AddFileAttachmentParams {
   contentBytesBase64: string;
   contentType: string;
@@ -47,8 +65,12 @@ export interface GraphComposeClient {
     params: AddFileAttachmentParams
   ): Promise<GraphDraftAttachment>;
   createDraft(params: CreateDraftParams): Promise<GraphDraftMessage>;
+  createReplyAllDraft(
+    params: CreateReplyAllDraftParams
+  ): Promise<GraphDraftMessage>;
   createReplyDraft(params: CreateReplyDraftParams): Promise<GraphDraftMessage>;
   sendDraft(draftId: string, mailbox: string): Promise<void>;
+  updateDraft(params: UpdateDraftParams): Promise<GraphDraftMessage>;
 }
 
 function toGraphRecipients(
@@ -102,6 +124,48 @@ export function createComposeClient(): GraphComposeClient {
         {
           comment: params.body,
         }
+      );
+    },
+
+    createReplyAllDraft(
+      params: CreateReplyAllDraftParams
+    ): Promise<GraphDraftMessage> {
+      const user = encodeURIComponent(params.userId);
+      const msg = encodeURIComponent(params.messageId);
+      return graphPost<GraphDraftMessage>(
+        `users/${user}/messages/${msg}/createReplyAll`,
+        {}
+      );
+    },
+
+    updateDraft(params: UpdateDraftParams): Promise<GraphDraftMessage> {
+      const user = encodeURIComponent(params.userId);
+      const msg = encodeURIComponent(params.draftId);
+      const body: Record<string, unknown> = {};
+
+      if (params.subject !== undefined) {
+        body.subject = params.subject;
+      }
+      if (params.body !== undefined) {
+        body.body = {
+          contentType: params.bodyType === "html" ? "HTML" : "Text",
+          content: params.body,
+        };
+      }
+      if (params.to) {
+        body.toRecipients = toGraphRecipients(params.to);
+      }
+      if (params.cc) {
+        body.ccRecipients = toGraphRecipients(params.cc);
+      }
+      if (params.bcc) {
+        body.bccRecipients = toGraphRecipients(params.bcc);
+      }
+
+      return graphPatch<GraphDraftMessage>(
+        `users/${user}/messages/${msg}`,
+        body,
+        { ifMatch: params.ifMatch }
       );
     },
 

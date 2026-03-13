@@ -1,6 +1,7 @@
 import {
   type CSSProperties,
   type MouseEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
   useEffect,
   useRef,
@@ -363,10 +364,34 @@ export const TextHighlight = ({
           <div
             className={`TextHighlight__part ${getPartStyleClass()}`}
             key={`${rect.left}-${rect.top}-${rect.width}-${rect.height}`}
+            onBlur={(event) =>
+              onMouseOut?.(
+                event as unknown as MouseEvent<
+                  HTMLDivElement,
+                  globalThis.MouseEvent
+                >
+              )
+            }
             onClick={onClick}
+            onFocus={(event) =>
+              onMouseOver?.(
+                event as unknown as MouseEvent<
+                  HTMLDivElement,
+                  globalThis.MouseEvent
+                >
+              )
+            }
+            onKeyDown={(event: ReactKeyboardEvent<HTMLDivElement>) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                event.currentTarget.click();
+              }
+            }}
             onMouseOut={onMouseOut}
             onMouseOver={onMouseOver}
+            role="button"
             style={getPartStyle(rect)}
+            tabIndex={0}
           />
         ))}
       </div>

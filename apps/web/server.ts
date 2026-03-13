@@ -53,6 +53,7 @@ import {
   getDocumentReviewFile,
   listDocumentReview,
   rerunDocumentReview,
+  updateDocumentReviewState,
 } from "@/api/documents/review";
 import {
   downloadEmailAttachment,
@@ -68,6 +69,21 @@ import {
   setDomainRule,
   setEmailClassification,
 } from "@/api/emails/emails";
+import {
+  getEmailRelevanceReviewDetail,
+  getEmailRelevanceRunStatus,
+  listEmailRelevanceReview,
+  runEmailRelevanceReview,
+  updateEmailRelevanceReview,
+} from "@/api/emails/relevance-review";
+import {
+  approveDomainClassification,
+  classifyDomains,
+  getClassifyStatus,
+  getSenderReviewAudit,
+  listSenderReview,
+  refreshDomainEmailStats,
+} from "@/api/emails/sender-review";
 // -- Estimates --
 import { createEstimate, listEstimates } from "@/api/estimates/estimates";
 import {
@@ -86,7 +102,7 @@ import {
   listWritableMailboxes,
   replyToThread,
   sendDraftEmail,
-} from "@/api/inbox/compose";
+} from "@/apps/web/api/emails/compose";
 import { searchMonday } from "@/api/monday";
 // -- Takeoffs --
 import { createTakeoff, listTakeoffs } from "@/api/takeoffs/takeoffs";
@@ -192,7 +208,6 @@ const server = serve({
       GET: h(getTakeoffItems),
     },
 
-
     // Browser Automation / Permit Worker
     "/api/browser/status": {
       GET: h(getAutomationStatus),
@@ -270,8 +285,16 @@ const server = serve({
     "/api/documents/review/:id": {
       GET: h(getDocumentReviewDetail),
     },
+    "/api/documents/review/:id/review": {
+      PUT: h(updateDocumentReviewState),
+    },
     "/api/documents/review/:id/file": {
       GET: h(getDocumentReviewFile),
+    },
+    "/docs": {
+      GET(req) {
+        return Response.redirect(new URL("/documents", req.url), 302);
+      },
     },
 
     // Email compose/reply (used by ComposeModal on Emails page)
@@ -295,6 +318,38 @@ const server = serve({
     "/api/emails/senders": {
       GET: h(listEmailSenders),
     },
+    "/api/emails/sender-review": {
+      GET: h(listSenderReview),
+    },
+    "/api/emails/sender-review/classify": {
+      GET: h(getClassifyStatus),
+      POST: h(classifyDomains),
+    },
+    "/api/emails/sender-review/classify/:domain": {
+      POST: h(approveDomainClassification),
+    },
+    "/api/emails/sender-review/:domain/audit": {
+      GET: h(getSenderReviewAudit),
+    },
+    "/api/emails/sender-review/refresh": {
+      POST: h(() => {
+        refreshDomainEmailStats();
+        return Response.json({ ok: true });
+      }),
+    },
+    "/api/emails/relevance-review": {
+      GET: h(listEmailRelevanceReview),
+    },
+    "/api/emails/relevance-review/run": {
+      GET: h(getEmailRelevanceRunStatus),
+      POST: h(runEmailRelevanceReview),
+    },
+    "/api/emails/relevance-review/:id": {
+      GET: h(getEmailRelevanceReviewDetail),
+    },
+    "/api/emails/relevance-review/:id/review": {
+      PUT: h(updateEmailRelevanceReview),
+    },
     "/api/emails/spam": {
       POST: h(markDomainAsSpam),
     },
@@ -317,7 +372,6 @@ const server = serve({
     "/api/emails/:id/attachments/:attachmentId/download": {
       GET: h(downloadEmailAttachment),
     },
-
 
     // Monday.com
     "/api/monday/search": {
@@ -350,6 +404,10 @@ const server = serve({
     "/contracts/*": homepage,
     "/emails": homepage,
     "/emails/*": homepage,
+    "/senders": homepage,
+    "/senders/*": homepage,
+    "/documents": homepage,
+    "/documents/*": homepage,
     "/catalog": homepage,
     "/map": homepage,
     "/maricopa": homepage,
@@ -360,8 +418,9 @@ const server = serve({
     "/main.js": BUNDLED_MAIN_JS,
   },
 
-  // Fallback handler for unmatched routes
-  // Serves static files from package public dirs or falls back to SPA
+  // Fallback handler for unmatched routes.
+  // Serve static files only; unknown routes should 404 instead of silently
+  // aliasing to the SPA shell.
   async fetch(req) {
     const url = new URL(req.url);
     const pathname = url.pathname;
@@ -372,11 +431,13 @@ const server = serve({
       return new Response(staticFile);
     }
 
-    // SPA fallback - serve index.html for client-side routing.
-    // Note: HTMLBundle can't be returned from fetch(), so use file().
-    const indexHtml = file("./apps/web/frontend/index.html");
-    return new Response(indexHtml, {
-      headers: { "Content-Type": "text/html" },
+    if (pathname.startsWith("/api/")) {
+      return Response.json({ error: "Not Found" }, { status: 404 });
+    }
+
+    return new Response("Not Found", {
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+      status: 404,
     });
   },
 

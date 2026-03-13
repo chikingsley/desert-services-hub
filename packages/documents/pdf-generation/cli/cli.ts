@@ -100,10 +100,10 @@ async function handleSafetyInit(
 }
 
 const ssspGenerateSchema = z.strictObject({
-    in: z.string().trim().min(1),
-    out: z.string().trim().min(1),
-    sections: z.string().trim().optional(),
-  });
+  in: z.string().trim().min(1),
+  out: z.string().trim().min(1),
+  sections: z.string().trim().optional(),
+});
 
 async function handleSafetySsspGenerate(argv: string[]): Promise<void> {
   const { values } = parseArgs({
@@ -179,11 +179,11 @@ async function handleSafetyGenerate(
 }
 
 const quotingEstimateGenerateSchema = z.strictObject({
-    backpage: z.boolean().optional(),
-    id: z.string().trim().min(1),
-    "include-back-page": z.boolean().optional(),
-    output: z.string().trim().min(1).optional(),
-  });
+  backpage: z.boolean().optional(),
+  id: z.string().trim().min(1),
+  "include-back-page": z.boolean().optional(),
+  output: z.string().trim().min(1).optional(),
+});
 
 async function handleQuotingEstimateGenerate(argv: string[]): Promise<void> {
   const { values } = parseArgs({

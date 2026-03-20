@@ -5,22 +5,24 @@
  * Used by both the Hatchet worker and (legacy) Trigger.dev tasks.
  */
 
-import { db } from "@lib/db/client";
 import { insertAttachment } from "@documents-intake/db/attachment";
-import type { InsertEmailData } from "@lib/db/types";
-import { graphGet } from "@lib/graph/http";
+import { insertEmail } from "@email/db/email";
+import { updateMailboxSyncState } from "@email/db/mailbox";
 import {
   computeDomainEnrichment,
   extractDomain,
-  extractRealSender,
-  extractRealSenderWithLlm,
   findOrCreateAccount,
   findOrCreateContact,
   linkContactToEmail,
   updateEmailEnrichment,
 } from "@email/enrichment";
-import { insertEmail } from "@email/db/email";
-import { updateMailboxSyncState } from "@email/db/mailbox";
+import {
+  extractRealSender,
+  extractRealSenderWithLlm,
+} from "@email/platform-sender";
+import { db } from "@lib/db/client";
+import type { InsertEmailData } from "@lib/db/types";
+import { graphGet } from "@lib/graph/http";
 
 /* -------------------------------------------------------------------------- */
 /*  Constants                                                                  */
@@ -181,7 +183,7 @@ export function graphEmailToInsertData(
     conversationId: email.conversationId ?? null,
     folderId: email.parentFolderId ?? null,
     folderName: email.parentFolderId
-      ? folderNamesById?.get(email.parentFolderId) ?? null
+      ? (folderNamesById?.get(email.parentFolderId) ?? null)
       : null,
     subject: email.subject,
     fromEmail: email.from?.emailAddress.address ?? null,
@@ -206,7 +208,9 @@ async function hydrateFolderNames(
     new Set(
       emails
         .map((email) => email.parentFolderId?.trim() ?? "")
-        .filter((folderId) => folderId.length > 0 && !folderNamesById.has(folderId))
+        .filter(
+          (folderId) => folderId.length > 0 && !folderNamesById.has(folderId)
+        )
     )
   );
 
@@ -367,8 +371,7 @@ export async function enrichEmail(
       fromName,
       bodyFull ?? bodyPreview,
       subject
-    )) ??
-    extractRealSender(domainData.fromDomain, fromName, bodyFull, subject);
+    )) ?? extractRealSender(domainData.fromDomain, fromName, bodyFull, subject);
 
   const effectiveDomain =
     platform?.realSenderDomain ??

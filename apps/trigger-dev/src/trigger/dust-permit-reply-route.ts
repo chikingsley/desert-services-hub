@@ -1,6 +1,7 @@
 import { db } from "@lib/db/client";
 import { parseBoolInt, parseJsonArray } from "@lib/db/parsers";
 import { normalizeProjectNameKey } from "@projects/db/project-matching-utils";
+import { getEmailById } from "@email/db/email";
 import { logger, schemaTask, tasks } from "@trigger.dev/sdk";
 import { z } from "zod";
 
@@ -18,6 +19,9 @@ const ROUTABLE_NOTIFICATION_TYPES = [
 ] as const;
 const FROM_MAILBOX = "chi@desertservices.net";
 const MAX_CANDIDATES = 100;
+const MARICOPA_APPLICATION_RE =
+  /dust control permit application\s*(D\d{7})/i;
+const FACILITY_NAME_RE = /Facility Name:\s*([^\r\n]+)/i;
 
 function parseEmailArray(value: unknown): string[] {
   return parseJsonArray(value)
@@ -25,15 +29,94 @@ function parseEmailArray(value: unknown): string[] {
     .filter((entry) => entry.length > 0);
 }
 
+function coerceString(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function getEmailText(email: {
+  bodyFull?: string | null;
+  bodyPreview?: string | null;
+  subject?: string | null;
+}): string {
+  return [email.subject, email.bodyFull, email.bodyPreview]
+    .filter((value): value is string => Boolean(value))
+    .join("\n");
+}
+
+function extractApplicationNumber(text: string): string | null {
+  return text.match(MARICOPA_APPLICATION_RE)?.[1] ?? null;
+}
+
+function extractFacilityName(text: string): string | null {
+  return text.match(FACILITY_NAME_RE)?.[1]?.trim() ?? null;
+}
+
 async function resolvePermit(input: {
   permitId?: string;
   projectQuery?: string;
+  sourceEmailId?: number;
 }): Promise<{
   companyName: string | null;
   id: string;
   projectId: number | null;
   projectName: string | null;
 } | null> {
+  if (input.sourceEmailId) {
+    const sourceEmail = await getEmailById(input.sourceEmailId);
+    if (!sourceEmail) {
+      throw new Error(`Source email ${input.sourceEmailId} not found`);
+    }
+
+    const sourceText = getEmailText(sourceEmail);
+    const extractedPermitId = input.permitId ?? extractApplicationNumber(sourceText);
+    const extractedProjectName =
+      input.projectQuery ?? extractFacilityName(sourceText);
+
+    let permit: {
+      company_name: string | null;
+      id: string;
+      project_id: number | null;
+      project_name: string | null;
+    } | null = null;
+
+    if (extractedPermitId) {
+      permit = await db
+        .query<{
+          company_name: string | null;
+          id: string;
+          project_id: number | null;
+          project_name: string | null;
+        }, [string]>(
+          `SELECT id, project_id, project_name, company_name
+           FROM dust_permits_filed_by_desert_services
+           WHERE id = $1
+           LIMIT 1`
+        )
+        .get(extractedPermitId);
+    }
+
+    if (!(permit || extractedPermitId || extractedProjectName)) {
+      return null;
+    }
+
+    const projectName =
+      permit?.project_name ?? coerceString(extractedProjectName) ?? null;
+    const projectId =
+      permit?.project_id ??
+      (projectName ? await resolveProjectIdFromProjectName(projectName) : null);
+
+    return {
+      companyName: permit?.company_name ?? null,
+      id: permit?.id ?? extractedPermitId ?? `source-email-${input.sourceEmailId}`,
+      projectId,
+      projectName,
+    };
+  }
+
   if (input.permitId) {
     const permit = await db
       .query<{
@@ -310,11 +393,21 @@ const INPUT_SCHEMA = z
       .optional(),
     projectQuery: z.string().trim().min(1).optional(),
     recipients: z.array(z.email()).optional(),
+    sourceEmailId: z.number().int().positive().optional(),
     type: z.enum(ROUTABLE_NOTIFICATION_TYPES),
   })
-  .refine((value) => Boolean(value.permitId || value.projectQuery), {
-    message: "Provide permitId or projectQuery",
-  });
+  .refine(
+    (value) => Boolean(value.permitId || value.projectQuery || value.sourceEmailId),
+    {
+      message: "Provide permitId, projectQuery, or sourceEmailId",
+    }
+  );
+
+function isPermitId(value: string | null | undefined): value is string {
+  return /^D\d{7}$/.test(value ?? "");
+}
+
+const OUTPUT_ROUTE_REASON_FALLBACK = "no candidates found";
 
 export const dustPermitReplyRoute = schemaTask({
   id: "dust-permit-reply-route",
@@ -362,6 +455,7 @@ export async function runDustPermitReplyRoute(
   const permit = await resolvePermit({
     permitId: input.permitId,
     projectQuery: input.projectQuery,
+    sourceEmailId: input.sourceEmailId,
   });
 
   if (!permit) {
@@ -369,7 +463,8 @@ export async function runDustPermitReplyRoute(
   }
 
   const searchTerms = buildPermitReplySearchTerms({
-    permitId: permit.id,
+    companyName: permit.companyName,
+    permitId: isPermitId(permit.id) ? permit.id : null,
     projectName: permit.projectName,
   });
   const candidates = await findReplyRouteCandidates({
@@ -388,6 +483,7 @@ export async function runDustPermitReplyRoute(
 
   const canTrigger =
     !input.dryRun &&
+    (isPermitId(permit.id) || Boolean(input.sourceEmailId)) &&
     (route.mode === "reply-all" ||
       Boolean(downstreamRecipients && downstreamRecipients.length > 0));
 
@@ -401,9 +497,16 @@ export async function runDustPermitReplyRoute(
     const payload: Record<string, unknown> = {
       cc: input.cc,
       draft: input.draft,
-      permitId: permit.id,
       type: input.type,
     };
+
+    if (isPermitId(permit.id)) {
+      payload.permitId = permit.id;
+    }
+
+    if (input.sourceEmailId) {
+      payload.sourceEmailId = input.sourceEmailId;
+    }
 
     if (route.mode === "reply-all" && route.replyToEmailId) {
       payload.replyToEmailId = route.replyToEmailId;
@@ -439,7 +542,7 @@ export async function runDustPermitReplyRoute(
     route: {
       matchedRecipients: route.matchedRecipients,
       mode: route.mode,
-      reason: route.reason,
+      reason: route.reason || OUTPUT_ROUTE_REASON_FALLBACK,
       replyToEmailId: route.replyToEmailId,
       selectedCandidateEmailId: route.selectedCandidateEmailId,
     },

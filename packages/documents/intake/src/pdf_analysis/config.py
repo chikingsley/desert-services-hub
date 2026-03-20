@@ -20,17 +20,17 @@ class Settings(BaseSettings):
     openrouter_base_url: str = "https://openrouter.ai/api/v1/chat/completions"
     openrouter_timeout_seconds: float = 180.0
 
-    ollama_endpoint: str = "https://ollama.peacockery.studio/v1"
-    ollama_model: str = "glm-ocr:latest"
-    ollama_chat_model: str = "granite4:latest"
-    ollama_chat_timeout_seconds: float = 60.0
-    ollama_manager_endpoint: str | None = None
+    local_llm_endpoint: str = "http://100.113.195.95:8800/v1"
+    local_llm_model: str = "mlx-community/GLM-OCR-bf16"
+    local_llm_chat_model: str = "mlx-community/Qwen3.5-9B-MLX-4bit"
+    local_llm_chat_timeout_seconds: float = 60.0
+    local_llm_manager_endpoint: str | None = None
 
-    ollama_public_endpoint: str = "https://llama.peacockery.studio/v1"
-    ollama_public_model: str = "glm-ocr:latest"
-    ollama_public_chat_model: str = "granite4:latest"
-    ollama_public_chat_timeout_seconds: float = 60.0
-    ollama_public_manager_endpoint: str | None = None
+    local_llm_public_endpoint: str = "https://llama.peacockery.studio/v1"
+    local_llm_public_model: str = "mlx-community/GLM-OCR-bf16"
+    local_llm_public_chat_model: str = "mlx-community/Qwen3.5-9B-MLX-4bit"
+    local_llm_public_chat_timeout_seconds: float = 60.0
+    local_llm_public_manager_endpoint: str | None = None
 
     # Rust-native OCR via Kreuzberg (PaddleOCR backend)
     kreuzberg_ocr_backend: str = "paddleocr"
@@ -42,21 +42,21 @@ class Settings(BaseSettings):
     kreuzberg_paddle_det_limit_type: str = "max"
     kreuzberg_paddle_rec_batch_num: int = 8
 
-    pdf_analysis_provider_order: str = "openrouter"
+    pdf_analysis_provider_order: str = "local"
     http_timeout_seconds: float = 7200.0
 
     @field_validator(
         "openrouter_model",
         "openrouter_base_url",
         "openrouter_timeout_seconds",
-        "ollama_endpoint",
-        "ollama_model",
-        "ollama_chat_model",
-        "ollama_chat_timeout_seconds",
-        "ollama_public_endpoint",
-        "ollama_public_model",
-        "ollama_public_chat_model",
-        "ollama_public_chat_timeout_seconds",
+        "local_llm_endpoint",
+        "local_llm_model",
+        "local_llm_chat_model",
+        "local_llm_chat_timeout_seconds",
+        "local_llm_public_endpoint",
+        "local_llm_public_model",
+        "local_llm_public_chat_model",
+        "local_llm_public_chat_timeout_seconds",
         "kreuzberg_ocr_backend",
         "kreuzberg_ocr_language",
         "kreuzberg_paddle_det_limit_type",
@@ -69,21 +69,21 @@ class Settings(BaseSettings):
             value = value.strip()
             if value == "":
                 defaults: dict[str, str] = {
-                    "ollama_endpoint": "https://ollama.peacockery.studio/v1",
-                    "ollama_model": "glm-ocr:latest",
-                    "ollama_chat_model": "granite4:latest",
-                    "ollama_chat_timeout_seconds": "60.0",
-                    "ollama_public_endpoint": "https://llama.peacockery.studio/v1",
-                    "ollama_public_model": "glm-ocr:latest",
-                    "ollama_public_chat_model": "granite4:latest",
-                    "ollama_public_chat_timeout_seconds": "60.0",
+                    "local_llm_endpoint": "http://100.113.195.95:8800/v1",
+                    "local_llm_model": "mlx-community/GLM-OCR-bf16",
+                    "local_llm_chat_model": "mlx-community/Qwen3.5-9B-MLX-4bit",
+                    "local_llm_chat_timeout_seconds": "60.0",
+                    "local_llm_public_endpoint": "https://llama.peacockery.studio/v1",
+                    "local_llm_public_model": "mlx-community/GLM-OCR-bf16",
+                    "local_llm_public_chat_model": "mlx-community/Qwen3.5-9B-MLX-4bit",
+                    "local_llm_public_chat_timeout_seconds": "60.0",
                     "openrouter_model": "google/gemini-3.1-flash-lite-preview",
                     "openrouter_base_url": "https://openrouter.ai/api/v1/chat/completions",
                     "openrouter_timeout_seconds": "180.0",
                     "kreuzberg_ocr_backend": "paddleocr",
                     "kreuzberg_ocr_language": "en",
                     "kreuzberg_paddle_det_limit_type": "max",
-                    "pdf_analysis_provider_order": "openrouter",
+                    "pdf_analysis_provider_order": "local",
                 }
                 return defaults.get(info.field_name or "", value)
         return value

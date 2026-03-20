@@ -34,18 +34,6 @@ export interface BrowserOptions {
   operation: keyof typeof config.scripts;
 }
 
-export interface BrowserClipboardWriteResult {
-  inserted: boolean;
-  reason?: string;
-  success: boolean;
-}
-
-export interface BrowserClipboardReadResult {
-  reason?: string;
-  success: boolean;
-  text: string;
-}
-
 // ============================================================================
 // Constants
 // ============================================================================
@@ -296,74 +284,6 @@ export function getSessionPageAndContext(): {
 /**
  * Paste provided text into the active element of the browser session.
  */
-export async function pasteBrowserClipboardText(
-  text: string
-): Promise<BrowserClipboardWriteResult> {
-  if (!text.length) {
-    return {
-      inserted: false,
-      reason: "Clipboard text is empty",
-      success: false,
-    };
-  }
-
-  const session = await ensureBrowserSessionReady();
-  return await withBrowserSessionOperation("clipboard-paste", async () => {
-    try {
-      await session.instance.page.keyboard.insertText(text);
-      return {
-        inserted: true,
-        success: true,
-      };
-    } catch (error) {
-      return {
-        inserted: false,
-        reason: error instanceof Error ? error.message : String(error),
-        success: false,
-      };
-    }
-  });
-}
-
-/**
- * Read selected text from the active element/window selection.
- */
-export async function copyBrowserSelectionText(): Promise<BrowserClipboardReadResult> {
-  const session = await ensureBrowserSessionReady();
-  return await withBrowserSessionOperation("clipboard-copy", async () => {
-    try {
-      const text = await session.instance.page.evaluate(() => {
-        const active = document.activeElement;
-
-        if (
-          active instanceof HTMLInputElement ||
-          active instanceof HTMLTextAreaElement
-        ) {
-          const start = active.selectionStart ?? 0;
-          const end = active.selectionEnd ?? 0;
-          if (end > start) {
-            return active.value.slice(start, end);
-          }
-          return "";
-        }
-
-        return window.getSelection()?.toString() ?? "";
-      });
-
-      return {
-        success: true,
-        text: typeof text === "string" ? text : "",
-      };
-    } catch (error) {
-      return {
-        reason: error instanceof Error ? error.message : String(error),
-        success: false,
-        text: "",
-      };
-    }
-  });
-}
-
 // ============================================================================
 // One-Off Browser Operations (withBrowser)
 // ============================================================================

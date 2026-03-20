@@ -1,4 +1,4 @@
-import { getPermitById } from "@lib/db/repositories/dust-permit";
+import { getPermitById } from "@dust-permits/db/dust-permit";
 import type { BrowserContext, Page } from "playwright";
 import type { DeepPartial, FormData } from "@/form-data";
 import { DEFAULTS, deepMerge, oneYearFromNow, today } from "@/form-data";

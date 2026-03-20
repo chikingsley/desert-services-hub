@@ -22,7 +22,11 @@ services:
       BC_WORKER_BASE_URL: ${BC_WORKER_BASE_URL:-http://bc-worker:47824}
       BUILDINGCONNECTED_AUTH_VNC_PORT: ${BUILDINGCONNECTED_AUTH_VNC_PORT:-6081}
       BUILDINGCONNECTED_AUTH_VNC_URL: ${BUILDINGCONNECTED_AUTH_VNC_URL:-https://buildingconnected-vnc.desertservices.app/vnc.html?autoconnect=true&resize=scale&reconnect=true&reconnect_delay=2000&view_only=false&shared=true}
+      MARICOPA_KASM_HOST: ${MARICOPA_KASM_HOST:-maricopa-kasm.desertservices.app}
       PERMIT_WORKER_URL: http://permit-worker:47822
+      PERMIT_WORKER_KASM_URL: ${PERMIT_WORKER_KASM_URL:-http://permit-worker-kasm:47822}
+      PERMIT_WORKER_KASM_PUBLIC_URL: ${PERMIT_WORKER_KASM_PUBLIC_URL:-https://maricopa-kasm.desertservices.app}
+      KASMVNC_BASIC_AUTH: ${KASMVNC_BASIC_AUTH:-}
       PERMIT_WORKER_VNC_WS_URL: ${PERMIT_WORKER_VNC_WS_URL:-wss://maricopa-vnc.desertservices.app}
       PERMIT_WORKER_VNC_PORT: ${PERMIT_WORKER_VNC_PORT:-6080}
       BUILDINGCONNECTED_AUTH_VNC_WS_URL: ${BUILDINGCONNECTED_AUTH_VNC_WS_URL:-wss://buildingconnected-vnc.desertservices.app}
@@ -72,12 +76,12 @@ services:
     env_file: .env
     environment:
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-google/gemini-3.1-flash-lite-preview}
-      PDF_ANALYSIS_PROVIDER_ORDER: ${PDF_ANALYSIS_PROVIDER_ORDER:-openrouter}
-      OLLAMA_ENDPOINT: ${OLLAMA_ENDPOINT:-http://host.docker.internal:11434/v1}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-glm-ocr:latest}
-      OLLAMA_CHAT_MODEL: ${OLLAMA_CHAT_MODEL:-granite4:latest}
-      OLLAMA_CHAT_TIMEOUT_SECONDS: ${OLLAMA_CHAT_TIMEOUT_SECONDS:-60}
-      OLLAMA_MANAGER_ENDPOINT: ${OLLAMA_MANAGER_ENDPOINT:-}
+      PDF_ANALYSIS_PROVIDER_ORDER: ${PDF_ANALYSIS_PROVIDER_ORDER:-local}
+      LOCAL_LLM_ENDPOINT: ${LOCAL_LLM_ENDPOINT:-http://100.113.195.95:8800/v1}
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-mlx-community/GLM-OCR-bf16}
+      LOCAL_LLM_CHAT_MODEL: ${LOCAL_LLM_CHAT_MODEL:-mlx-community/Qwen3.5-9B-MLX-4bit}
+      LOCAL_LLM_CHAT_TIMEOUT_SECONDS: ${LOCAL_LLM_CHAT_TIMEOUT_SECONDS:-60}
+      LOCAL_LLM_MANAGER_ENDPOINT: ${LOCAL_LLM_MANAGER_ENDPOINT:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -98,6 +102,8 @@ services:
     build:
       context: .
       dockerfile: apps/dust-permits/Dockerfile
+      args:
+        REMOTE_DESKTOP_BACKEND: novnc
     container_name: desert-permit-worker
     init: true  # Prevent zombie Chromium renderer processes (PID 1 reaping)
     ports:
@@ -129,6 +135,75 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
+    restart: unless-stopped
+
+  # ==========================================================================
+  # Permit Worker (Kasm) — Browser automation for Maricopa with KasmVNC
+  # ==========================================================================
+  permit-worker-kasm:
+    build:
+      context: .
+      dockerfile: apps/dust-permits/Dockerfile
+      args:
+        REMOTE_DESKTOP_BACKEND: kasmvnc
+    container_name: desert-permit-worker-kasm
+    init: true
+    ports:
+      - "47825:47822"  # API server
+      - "8444:8444/udp" # KasmVNC WebRTC UDP path
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      HEADLESS: "false"
+      DOCKER_CONTAINER: "true"
+      REMOTE_DESKTOP_BACKEND: "kasmvnc"
+      VNC_RESOLUTION: 1920x1080
+      DISPLAY: ":1"
+      KASMVNC_PORT: 8444
+      KASMVNC_REQUIRE_SSL: "false"
+      KASMVNC_USERNAME: ${KASMVNC_USERNAME:-operator}
+      KASMVNC_PASSWORD: ${KASMVNC_PASSWORD:-desertservices}
+      KASMVNC_PUBLIC_IP: ${KASMVNC_PUBLIC_IP:-}
+      DATABASE_URL: postgresql://postgres.pooler-dev:postgres@host.docker.internal:54329/postgres
+      WEB_APP_URL: http://web:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - permit-kasm-data:/app/data
+    ipc: host
+    cap_drop:
+      - ALL
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - seccomp=unconfined
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:47822/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  # ==========================================================================
+  # Permit Worker (Kasm) Caddy — Public HTTPS frontend for the Kasm browser UI
+  # ==========================================================================
+  permit-worker-kasm-caddy:
+    image: caddy:2.10-alpine
+    container_name: desert-permit-worker-kasm-caddy
+    depends_on:
+      permit-worker-kasm:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      MARICOPA_KASM_HOST: ${MARICOPA_KASM_HOST:-maricopa-kasm.desertservices.app}
+      KASMVNC_BASIC_AUTH: ${KASMVNC_BASIC_AUTH:-}
+    volumes:
+      - ./ops/caddy/maricopa-kasm.Caddyfile:/etc/caddy/Caddyfile:ro
+      - permit-kasm-caddy-data:/data
+      - permit-kasm-caddy-config:/config
     restart: unless-stopped
 
   # ==========================================================================
@@ -489,6 +564,9 @@ services:
 volumes:
   webhooks-data:
   permit-data:
+  permit-kasm-data:
+  permit-kasm-caddy-data:
+  permit-kasm-caddy-config:
   aqdata-data:
   trigger-shared:
     name: trigger_shared
@@ -519,6 +597,8 @@ volumes:
 # BC Auth VNC:    http://localhost:6081 (buildingconnected-vnc.desertservices.app)
 # Permit Worker:  http://localhost:47822 (API + Dashboard)
 # Permit VNC:     http://localhost:6080 (watch browser automation / maricopa-vnc.desertservices.app)
+# Permit Kasm:    https://maricopa-kasm.desertservices.app (Caddy frontend)
+# Permit Kasm UDP: udp://<host>:8444 (KasmVNC WebRTC media path)
 #
 # Logs:           docker compose logs -f web
 #                 docker compose logs -f permit-worker

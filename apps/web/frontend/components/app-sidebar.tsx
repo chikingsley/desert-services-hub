@@ -55,12 +55,31 @@ export const manageItems = [
     icon: Monitor,
     alsoActive: ["/maricopa", "/buildingconnected"],
   },
+  {
+    title: "Maricopa Kasm",
+    href: "/maricopa-kasm",
+    icon: Monitor,
+  },
 ];
 
 const utilityItems = [
   { title: "Search", href: "/search", icon: Search, disabled: true },
   { title: "Settings", href: "/settings", icon: Settings },
 ];
+
+function matchesNavPath(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export function isNavItemActive(
+  pathname: string,
+  item: { href: string; alsoActive?: string[] }
+): boolean {
+  return (
+    matchesNavPath(pathname, item.href) ||
+    item.alsoActive?.some((href) => matchesNavPath(pathname, href)) === true
+  );
+}
 
 // Desert sun logo component
 function DesertSunLogo() {
@@ -92,6 +111,7 @@ function DesertSunLogo() {
 export function AppSidebar() {
   const location = useLocation();
   const pathname = location.pathname;
+  const forceDocumentReload = false;
   const { data: automationStatus } = useSWR<AutomationSidebarStatus>(
     "/api/automation/status",
     fetcher,
@@ -122,7 +142,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg" tooltip="Desert Services Hub">
-              <Link to="/">
+              <Link reloadDocument={forceDocumentReload} to="/">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary">
                   <DesertSunLogo />
                 </div>
@@ -147,7 +167,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNavItems.map((item) => {
-                const isActive = pathname.startsWith(item.href);
+                const isActive = isNavItemActive(pathname, item);
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
@@ -155,7 +175,7 @@ export function AppSidebar() {
                       isActive={isActive}
                       tooltip={item.title}
                     >
-                      <Link to={item.href}>
+                      <Link reloadDocument={forceDocumentReload} to={item.href}>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
@@ -175,10 +195,10 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {manageItems.map((item) => {
-                const isActive =
-                  pathname.startsWith(item.href) ||
-                  ("alsoActive" in item &&
-                    item.alsoActive?.some((p) => pathname.startsWith(p)));
+                const isActive = isNavItemActive(pathname, item);
+                const reloadDocument =
+                  item.href === "/maricopa-kasm" ||
+                  pathname === "/maricopa-kasm";
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
@@ -186,7 +206,7 @@ export function AppSidebar() {
                       isActive={isActive}
                       tooltip={item.title}
                     >
-                      <Link to={item.href}>
+                      <Link reloadDocument={reloadDocument} to={item.href}>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
@@ -213,7 +233,10 @@ export function AppSidebar() {
                     isActive={pathname === item.href}
                     tooltip={item.title}
                   >
-                    <Link to={item.disabled ? "#" : item.href}>
+                    <Link
+                      reloadDocument={forceDocumentReload}
+                      to={item.disabled ? "#" : item.href}
+                    >
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>

@@ -15,6 +15,13 @@ up:
     @echo
     @just check
 
+# Web-only dev startup: bind-mounted source + Bun hot reload.
+web-dev:
+    @echo "Starting web in dev mode (docker-compose.yml + docker-compose.dev.yml)..."
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d web
+    @echo
+    @docker compose -f docker-compose.yml -f docker-compose.dev.yml ps web
+
 # Full project startup including Trigger.dev self-host stack.
 up-all:
     @echo "Bringing up core Docker services..."

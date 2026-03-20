@@ -3,11 +3,8 @@
  * No DB, no network — just regex and string logic.
  */
 import { describe, expect, test } from "bun:test";
-import {
-  computeDomainEnrichment,
-  extractDomain,
-  extractRealSender,
-} from "@email/enrichment";
+import { computeDomainEnrichment, extractDomain } from "@email/enrichment";
+import { extractRealSender } from "@email/platform-sender";
 
 // ── extractDomain ───────────────────────────────────────────────
 

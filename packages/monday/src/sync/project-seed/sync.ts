@@ -203,7 +203,7 @@ async function updateProjectForGroup(
            THEN $6::int
          ELSE NULL
        END,
-       contractor = COALESCE(contractor, $7),
+       contractor = COALESCE($7, contractor),
        seed_key = CASE
          WHEN seed_key IS NULL THEN $8
          ELSE seed_key

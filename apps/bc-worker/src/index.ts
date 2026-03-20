@@ -1,7 +1,5 @@
 import { serve } from "bun";
 import {
-  handleBuildingConnectedAuthClipboardCopy,
-  handleBuildingConnectedAuthClipboardPaste,
   handleBuildingConnectedAuthStart,
   handleBuildingConnectedAuthStatus,
   handleBuildingConnectedAuthStop,
@@ -33,13 +31,6 @@ serve({
     },
     "/api/buildingconnected/auth/stop": {
       POST: handleBuildingConnectedAuthStop,
-    },
-    "/api/buildingconnected/auth/clipboard/paste": {
-      POST: ((req: Request) =>
-        handleBuildingConnectedAuthClipboardPaste(req)) as never,
-    },
-    "/api/buildingconnected/auth/clipboard/copy": {
-      POST: handleBuildingConnectedAuthClipboardCopy,
     },
     "/api/buildingconnected/files": {
       POST: ((req: Request) => handleBuildingConnectedFiles(req)) as never,

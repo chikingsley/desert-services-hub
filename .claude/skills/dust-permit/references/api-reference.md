@@ -40,5 +40,3 @@ Permit operations are exposed as MCP tools from `apps/dust-permits-mcp/`. Config
 | `POST` | `/api/browser/ready` | none |
 | `POST` | `/api/browser/keepalive` | none |
 | `POST` | `/api/browser/stop` | none |
-| `POST` | `/api/browser/clipboard/paste` | `{ text }` |
-| `POST` | `/api/browser/clipboard/copy` | none |

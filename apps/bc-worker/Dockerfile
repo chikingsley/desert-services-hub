@@ -21,7 +21,7 @@ RUN bun install || true
 # -----------------------------------------------------------------------------
 FROM mcr.microsoft.com/playwright:v1.58.2-noble AS runner
 
-# VNC stack + clipboard tools (xdotool/xclip for X11 clipboard bridge)
+# VNC stack for remote auth workflow
 RUN apt-get update && apt-get install -y --no-install-recommends \
   unzip \
   tigervnc-standalone-server \
@@ -30,8 +30,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   novnc \
   websockify \
   openbox \
-  xdotool \
-  xclip \
   && rm -rf /var/lib/apt/lists/* \
   && ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 

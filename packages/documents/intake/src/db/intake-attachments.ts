@@ -70,7 +70,14 @@ const getIntakeAttachmentRowsStmt = db.query<IntakeAttachmentRow, [number]>(`
     )
     AND (d.email_id IS NULL OR e.classification IS NULL OR e.classification NOT IN ('SPAM', 'HR', 'IT'))
     AND (d.outlook_attachment_id NOT LIKE 'bodylink:%' OR d.storage_path IS NOT NULL)
-  ORDER BY d.created_at ASC
+  ORDER BY
+    CASE
+      WHEN d.extraction_status IS NULL OR d.extraction_status = 'pending' THEN 0
+      WHEN d.extraction_status = 'downloaded' THEN 1
+      ELSE 2
+    END,
+    COALESCE(d.last_attempted_at, d.created_at) DESC,
+    d.id DESC
   LIMIT $1
 `);
 

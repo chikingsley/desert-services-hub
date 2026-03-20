@@ -25,10 +25,10 @@ export interface RunMondayRelationBackfillOptions {
 }
 
 interface BoardItem {
+  columns: Record<string, string[]>;
+  groupTitle: string;
   id: string;
   name: string;
-  groupTitle: string;
-  columns: Record<string, string[]>;
 }
 
 interface BackfillChain {
@@ -59,7 +59,7 @@ interface ItemsPage {
   }[];
 }
 
-const FETCH_PAGE_SIZE = 200;
+const FETCH_PAGE_SIZE = 500;
 const CONTACT_BATCH_SIZE = 50;
 const LEGACY_CONTACTS_COLUMN_ID = ESTIMATING_COLUMNS.CONTACTS.id;
 const DIRECT_CONTACTS_COLUMN_ID = ESTIMATING_COLUMNS.CONTACTS_DIRECT.id;
@@ -83,37 +83,63 @@ async function fetchBoardItems(
   let cursor: string | null = null;
   const columnIdsLiteral = columnIds.map((id) => `"${id}"`).join(", ");
 
-  do {
-    const cursorPart: string = cursor
-      ? `, cursor: ${JSON.stringify(cursor)}`
-      : "";
+  const itemFields = `
+    id
+    name
+    group { title }
+    column_values(ids: [${columnIdsLiteral}]) {
+      id
+      ... on BoardRelationValue {
+        linked_item_ids
+      }
+    }
+  `;
 
-    const data: {
-      boards: {
-        items_page: ItemsPage;
-      }[];
+  // First page: nested in boards
+  const firstData: {
+    boards: { items_page: ItemsPage }[];
+  } = await mondayQuery(`
+    query {
+      boards(ids: ${boardId}) {
+        items_page(limit: ${FETCH_PAGE_SIZE}) {
+          cursor
+          items { ${itemFields} }
+        }
+      }
+    }
+  `);
+
+  const firstPage = firstData.boards[0]?.items_page;
+  if (firstPage) {
+    for (const item of firstPage.items) {
+      const columns: Record<string, string[]> = {};
+      for (const col of item.column_values) {
+        columns[col.id] = col.linked_item_ids ?? [];
+      }
+      results.push({
+        id: item.id,
+        name: item.name,
+        groupTitle: item.group.title,
+        columns,
+      });
+    }
+    cursor = firstPage.cursor;
+  }
+
+  // Subsequent pages: next_items_page at root level
+  while (cursor) {
+    const nextData: {
+      next_items_page: ItemsPage;
     } = await mondayQuery(`
       query {
-        boards(ids: ${boardId}) {
-          items_page(limit: ${FETCH_PAGE_SIZE}${cursorPart}) {
-            cursor
-            items {
-              id
-              name
-              group { title }
-              column_values(ids: [${columnIdsLiteral}]) {
-                id
-                ... on BoardRelationValue {
-                  linked_item_ids
-                }
-              }
-            }
-          }
+        next_items_page(limit: ${FETCH_PAGE_SIZE}, cursor: ${JSON.stringify(cursor)}) {
+          cursor
+          items { ${itemFields} }
         }
       }
     `);
 
-    const page: ItemsPage | undefined = data.boards[0]?.items_page;
+    const page = nextData.next_items_page;
     if (!page) {
       break;
     }
@@ -132,7 +158,7 @@ async function fetchBoardItems(
     }
 
     cursor = page.cursor;
-  } while (cursor);
+  }
 
   return results;
 }
@@ -184,6 +210,7 @@ async function fetchContactContractorMap(
   return result;
 }
 
+// biome-ignore lint/suspicious/useAwait: interface requires Promise return for consistency with async resolvers
 async function resolveContactsDirect(
   items: BoardItem[]
 ): Promise<Map<string, string[]>> {

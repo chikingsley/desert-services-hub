@@ -32,6 +32,7 @@ import { DocumentsPage } from "@/apps/web/frontend/pages/documents";
 import { EmailsPage } from "@/apps/web/frontend/pages/emails";
 import { EstimateEditorPage } from "@/apps/web/frontend/pages/estimate-editor";
 import { EstimatesPage } from "@/apps/web/frontend/pages/estimates";
+import MaricopaKasmPage from "@/apps/web/frontend/pages/maricopa-kasm";
 import { SenderReviewPage } from "@/apps/web/frontend/pages/sender-review";
 import { SettingsPage } from "@/apps/web/frontend/pages/settings";
 import { TakeoffEditorPage } from "@/apps/web/frontend/pages/takeoff-editor";
@@ -158,6 +159,10 @@ const router = createBrowserRouter([
       {
         path: "buildingconnected",
         element: <AutomationPage />,
+      },
+      {
+        path: "maricopa-kasm",
+        element: <MaricopaKasmPage />,
       },
       {
         path: "map",

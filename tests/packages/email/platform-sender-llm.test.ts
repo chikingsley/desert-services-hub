@@ -24,7 +24,7 @@ mock.module("@documents-intake/pdf-analysis", () => ({
   },
 }));
 
-const { extractRealSenderWithLlm } = await import("@email/enrichment");
+const { extractRealSenderWithLlm } = await import("@email/platform-sender");
 
 describe("extractRealSenderWithLlm", () => {
   beforeEach(() => {
@@ -65,7 +65,7 @@ describe("extractRealSenderWithLlm", () => {
       realSenderCompany: "Willmeng Construction",
     });
     expect(state.calls).toHaveLength(1);
-    expect(state.calls[0]?.provider).toBe("openrouter");
+    expect(state.calls[0]?.provider).toBe("local");
   });
 
   test("returns null for non-platform domains without calling llm", async () => {

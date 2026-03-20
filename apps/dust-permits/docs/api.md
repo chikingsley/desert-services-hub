@@ -7,9 +7,6 @@ Base URL: `http://localhost:47822`
 > source-of-truth typed client contract lives in `packages/permits/src/client.ts`
 > + `packages/permits/src/types.ts`.
 >
-> This document includes legacy sections below that may reference removed
-> endpoints. For runtime callers, use `@permits/client` methods as canonical.
-
 ## Endpoints Overview
 
 | Method | Endpoint | Description |
@@ -37,8 +34,6 @@ Base URL: `http://localhost:47822`
 | `POST` | `/api/browser/keepalive` | Trigger keepalive |
 | `POST` | `/api/browser/stop` | Stop browser session |
 | `POST` | `/api/browser/abort` | Emergency kill switch for in-flight operations |
-| `POST` | `/api/browser/clipboard/paste` | Paste text from host clipboard |
-| `POST` | `/api/browser/clipboard/copy` | Copy text from page to host clipboard |
 
 ---
 

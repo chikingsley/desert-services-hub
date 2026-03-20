@@ -22,6 +22,13 @@ import {
   postPermitSubmitDraftAndPay,
 } from "@/api/automation";
 import {
+  getAutomationKasmStatus,
+  postAutomationKasmKeepAlive,
+  postAutomationKasmReady,
+  postAutomationKasmStart,
+  postAutomationKasmStop,
+} from "@/api/automation-kasm";
+import {
   getBuildingConnectedAuthStatus,
   postBuildingConnectedAuthStart,
   postBuildingConnectedAuthStop,
@@ -96,13 +103,6 @@ import {
   updateEstimate,
 } from "@/api/estimates/estimates-by-id";
 import { healthCheck } from "@/api/health";
-// -- Email compose (inbox API) --
-import {
-  composeEmail,
-  listWritableMailboxes,
-  replyToThread,
-  sendDraftEmail,
-} from "@/apps/web/api/emails/compose";
 import { searchMonday } from "@/api/monday";
 // -- Takeoffs --
 import { createTakeoff, listTakeoffs } from "@/api/takeoffs/takeoffs";
@@ -114,33 +114,31 @@ import {
   updateTakeoff,
 } from "@/api/takeoffs/takeoffs-by-id";
 import { checkPdfExists, uploadPdf } from "@/api/upload";
+// -- Email compose (inbox API) --
+import {
+  composeEmail,
+  listWritableMailboxes,
+  replyToThread,
+  sendDraftEmail,
+} from "@/apps/web/api/emails/compose";
+import {
+  buildWebFrontendBundle,
+  createKasmUpstreamSocket,
+  findWebStaticFile,
+  getKasmViewerWebSocketUrl,
+  getMaricopaKasmShell,
+  type KasmProxySocketData,
+  proxyKasmViewer,
+} from "@/apps/web/server/runtime-assets";
 
 // Bun.serve route handlers expect BunRequest<path> but our API handlers use standard
 // Request. Cloudflare Workers types also pollute the global Request generic, causing
 // type conflicts. This helper bridges the gap.
 const h = (handler: unknown) => handler as never;
 
-// Frontend - HTML entry point (Bun bundles automatically)
-import homepage from "@/apps/web/frontend/index.html";
+const homepage = file("./apps/web/frontend/index.html");
 
-const STATIC_DIRS = [
-  "./apps/web/frontend/public",
-  "./apps/web/frontend/.bundle/apps/web/frontend",
-];
-
-const BUNDLED_MAIN_JS = file(
-  "./apps/web/frontend/.bundle/apps/web/frontend/main.js"
-);
-
-async function findStaticFile(pathname: string) {
-  for (const dir of STATIC_DIRS) {
-    const staticFile = file(`${dir}${pathname}`);
-    if (await staticFile.exists()) {
-      return staticFile;
-    }
-  }
-  return null;
-}
+await buildWebFrontendBundle();
 
 const server = serve({
   port: process.env.PORT || 3000,
@@ -215,17 +213,32 @@ const server = serve({
     "/api/automation/status": {
       GET: h(getAutomationStatus),
     },
+    "/api/automation/kasm/status": {
+      GET: h(getAutomationKasmStatus),
+    },
     "/api/automation/start": {
       POST: h(postAutomationStart),
+    },
+    "/api/automation/kasm/start": {
+      POST: h(postAutomationKasmStart),
     },
     "/api/automation/ready": {
       POST: h(postAutomationReady),
     },
+    "/api/automation/kasm/ready": {
+      POST: h(postAutomationKasmReady),
+    },
     "/api/automation/keepalive": {
       POST: h(postAutomationKeepAlive),
     },
+    "/api/automation/kasm/keepalive": {
+      POST: h(postAutomationKasmKeepAlive),
+    },
     "/api/automation/stop": {
       POST: h(postAutomationStop),
+    },
+    "/api/automation/kasm/stop": {
+      POST: h(postAutomationKasmStop),
     },
     "/api/buildingconnected/auth/status": {
       GET: h(getBuildingConnectedAuthStatus),
@@ -411,22 +424,47 @@ const server = serve({
     "/catalog": homepage,
     "/map": homepage,
     "/maricopa": homepage,
+    "/maricopa-kasm": {
+      GET(_req, server) {
+        return getMaricopaKasmShell(
+          Number(server.port || process.env.PORT || 3000)
+        );
+      },
+    },
     "/buildingconnected": homepage,
     "/automation": homepage,
     "/settings": homepage,
-    "/main.tsx": BUNDLED_MAIN_JS,
-    "/main.js": BUNDLED_MAIN_JS,
   },
 
   // Fallback handler for unmatched routes.
   // Serve static files only; unknown routes should 404 instead of silently
   // aliasing to the SPA shell.
-  async fetch(req) {
+  async fetch(req, server) {
     const url = new URL(req.url);
     const pathname = url.pathname;
 
+    if (pathname === "/kasm/websockify" || pathname === "/websockify") {
+      if (
+        server.upgrade(req, {
+          data: {
+            pendingMessages: [],
+            upstream: null,
+            upstreamUrl: getKasmViewerWebSocketUrl(req),
+          } satisfies KasmProxySocketData,
+        })
+      ) {
+        return;
+      }
+
+      return new Response("WebSocket upgrade failed", { status: 500 });
+    }
+
+    if (pathname === "/kasm" || pathname.startsWith("/kasm/")) {
+      return proxyKasmViewer(req);
+    }
+
     // Try to serve static file from web package public directory
-    const staticFile = await findStaticFile(pathname);
+    const staticFile = await findWebStaticFile(pathname);
     if (staticFile) {
       return new Response(staticFile);
     }
@@ -445,6 +483,58 @@ const server = serve({
   development: process.env.NODE_ENV !== "production" && {
     hmr: true,
     console: true,
+  },
+
+  websocket: {
+    data: {} as KasmProxySocketData,
+    open(ws) {
+      const data = ws.data as KasmProxySocketData;
+      const upstream = createKasmUpstreamSocket(data.upstreamUrl);
+
+      upstream.binaryType = "arraybuffer";
+      data.upstream = upstream;
+
+      upstream.addEventListener("open", () => {
+        for (const message of data.pendingMessages) {
+          upstream.send(message);
+        }
+        data.pendingMessages = [];
+      });
+
+      upstream.addEventListener("message", (event) => {
+        ws.send(event.data);
+      });
+
+      upstream.addEventListener("close", (event) => {
+        ws.close(event.code, event.reason);
+      });
+
+      upstream.addEventListener("error", () => {
+        ws.close(1011, "Upstream websocket error");
+      });
+    },
+    message(ws, message) {
+      const data = ws.data as KasmProxySocketData;
+
+      if (!data.upstream || data.upstream.readyState === WebSocket.CONNECTING) {
+        data.pendingMessages.push(message);
+        return;
+      }
+
+      if (data.upstream.readyState === WebSocket.OPEN) {
+        data.upstream.send(message);
+      }
+    },
+    close(ws, code, reason) {
+      const data = ws.data as KasmProxySocketData;
+      if (
+        data.upstream &&
+        data.upstream.readyState !== WebSocket.CLOSING &&
+        data.upstream.readyState !== WebSocket.CLOSED
+      ) {
+        data.upstream.close(code, reason);
+      }
+    },
   },
 
   // Error handling

@@ -195,10 +195,6 @@ export interface InvoicePdfRequest {
   outputDir?: string;
 }
 
-export interface ClipboardPasteRequest {
-  text: string;
-}
-
 export interface BrowserAbortRequest {
   reason?: string;
 }
@@ -330,12 +326,6 @@ export interface BrowserActionResponse extends BaseResponse {
   keepAlive?: Record<string, unknown>;
   portalReady?: boolean;
   status?: Record<string, unknown>;
-}
-
-export interface ClipboardResponse extends BaseResponse {
-  clipboard?: Record<string, unknown>;
-  status?: Record<string, unknown>;
-  text?: string;
 }
 
 export interface BrowserAbortResponse extends BaseResponse {

@@ -33,13 +33,13 @@ class LocalProvider:
 
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.endpoint = settings.ollama_endpoint.rstrip("/")
-        manager = (settings.ollama_manager_endpoint or "").strip()
+        self.endpoint = settings.local_llm_endpoint.rstrip("/")
+        manager = (settings.local_llm_manager_endpoint or "").strip()
         self.manager_endpoint = manager.rstrip("/") if manager else None
-        self.model = settings.ollama_model
-        self.chat_model = settings.ollama_chat_model
+        self.model = settings.local_llm_model
+        self.chat_model = settings.local_llm_chat_model
         self.health_timeout = min(settings.http_timeout_seconds, 10.0)
-        self.chat_timeout = settings.ollama_chat_timeout_seconds
+        self.chat_timeout = settings.local_llm_chat_timeout_seconds
         self._resolved_completion_endpoint: str | None = None
 
     async def is_available(self) -> bool:
@@ -450,12 +450,34 @@ class LocalProvider:
                 },
             ]
 
-        payload: dict[str, Any] = {
-            "model": model_override or self.chat_model,
-            "messages": [{"role": "user", "content": message_content}],
-        }
+        model = model_override or self.chat_model
+        timeout = httpx.Timeout(connect=10.0, read=300.0, write=10.0, pool=10.0)
 
-        async with httpx.AsyncClient(timeout=self.chat_timeout) as client:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            # Try Ollama native /api/chat first — avoids known 40-50x slowdown
+            # on /v1/chat/completions over the network (ollama/ollama#13899).
+            root = self.endpoint[:-3] if self.endpoint.endswith("/v1") else self.endpoint
+            native_url = f"{root}/api/chat"
+            try:
+                native_payload: dict[str, Any] = {
+                    "model": model,
+                    "messages": [{"role": "user", "content": message_content}],
+                    "stream": False,
+                }
+                attempt = await client.post(native_url, json=native_payload)
+                if attempt.status_code not in {404, 405}:
+                    attempt.raise_for_status()
+                    result = attempt.json()
+                    content = result.get("message", {}).get("content", "")
+                    return content if isinstance(content, str) else str(content)
+            except Exception:
+                pass  # Fall through to OpenAI-compatible endpoint
+
+            # Fallback: OpenAI-compatible /v1/chat/completions (llama.cpp, etc.)
+            payload: dict[str, Any] = {
+                "model": model,
+                "messages": [{"role": "user", "content": message_content}],
+            }
             endpoints = await self._candidate_completion_endpoints(client)
             response: httpx.Response | None = None
             errors: list[str] = []
@@ -475,8 +497,8 @@ class LocalProvider:
             if response is None:
                 joined = " | ".join(errors[:4])
                 raise RuntimeError(
-                    "No working local OCR completion endpoint. "
-                    f"Tried: {', '.join(endpoints)}. Errors: {joined}"
+                    "No working local completion endpoint. "
+                    f"Tried: {native_url}, {', '.join(endpoints)}. Errors: {joined}"
                 )
 
             result = response.json()
@@ -623,10 +645,10 @@ class LocalPublicProvider(LocalProvider):
 
     def __init__(self, settings: Settings):
         super().__init__(settings)
-        self.endpoint = settings.ollama_public_endpoint.rstrip("/")
-        manager = (settings.ollama_public_manager_endpoint or "").strip()
+        self.endpoint = settings.local_llm_public_endpoint.rstrip("/")
+        manager = (settings.local_llm_public_manager_endpoint or "").strip()
         self.manager_endpoint = manager.rstrip("/") if manager else None
-        self.model = settings.ollama_public_model
-        self.chat_model = settings.ollama_public_chat_model
-        self.chat_timeout = settings.ollama_public_chat_timeout_seconds
+        self.model = settings.local_llm_public_model
+        self.chat_model = settings.local_llm_public_chat_model
+        self.chat_timeout = settings.local_llm_public_chat_timeout_seconds
         self._resolved_completion_endpoint = None

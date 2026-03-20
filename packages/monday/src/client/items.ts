@@ -1,11 +1,18 @@
 /**
  * Item-level fetchers.
+ *
+ * Pagination follows Monday's recommended pattern:
+ *   - First page:  boards { items_page(limit, query_params) }
+ *   - Next pages:  next_items_page(cursor, limit) at root level
+ *
+ * This avoids the complexity cost of re-nesting items_page inside boards
+ * on every page. See: https://developer.monday.com/api-reference/docs/items-page
  */
 import type { MondayItem } from "@monday/types/schema";
 import { query } from "./query";
 
 const DEFAULT_MAX_ITEMS = 10_000;
-const PAGE_SIZE = 100; // NOT 500 - causes timeouts per SYNC-KNOWLEDGE.md
+const PAGE_SIZE = 500;
 
 interface RawColumnValue {
   id: string;
@@ -28,6 +35,13 @@ interface ItemsPageResponse {
   }[];
 }
 
+interface NextItemsPageResponse {
+  next_items_page: {
+    cursor: string | null;
+    items: RawItem[];
+  };
+}
+
 function buildItemUrl(boardId: string, itemId: string): string {
   return `https://monday.com/boards/${boardId}/pulses/${itemId}`;
 }
@@ -45,6 +59,19 @@ function mapRawItemToMondayItem(item: RawItem, boardId: string): MondayItem {
   };
 }
 
+const ITEM_FIELDS = `
+  id
+  name
+  group {
+    id
+    title
+  }
+  column_values {
+    id
+    text
+  }
+`;
+
 /**
  * Get items from a board (auto-paginates to fetch all items).
  */
@@ -54,44 +81,44 @@ export async function getItems(
 ): Promise<MondayItem[]> {
   const maxItems = options.maxItems ?? DEFAULT_MAX_ITEMS;
   const allItems: MondayItem[] = [];
-  let cursor: string | null = null;
 
-  do {
-    const cursorParam: string = cursor ? `, cursor: "${cursor}"` : "";
+  // First page: nested in boards
+  const firstResult = await query<ItemsPageResponse>(`
+    query {
+      boards(ids: ${boardId}) {
+        items_page(limit: ${PAGE_SIZE}) {
+          cursor
+          items { ${ITEM_FIELDS} }
+        }
+      }
+    }
+  `);
 
-    const result: ItemsPageResponse = await query<ItemsPageResponse>(`
+  const firstPage = firstResult.boards[0]?.items_page;
+  for (const item of firstPage?.items ?? []) {
+    allItems.push(mapRawItemToMondayItem(item, boardId));
+  }
+
+  let cursor = firstPage?.cursor ?? null;
+
+  // Subsequent pages: next_items_page at root level (lower complexity cost)
+  while (cursor && allItems.length < maxItems) {
+    const nextResult = await query<NextItemsPageResponse>(`
       query {
-        boards(ids: ${boardId}) {
-          items_page(limit: ${PAGE_SIZE}${cursorParam}) {
-            cursor
-            items {
-              id
-              name
-              group {
-                id
-                title
-              }
-              column_values {
-                id
-                text
-              }
-            }
-          }
+        next_items_page(limit: ${PAGE_SIZE}, cursor: "${cursor}") {
+          cursor
+          items { ${ITEM_FIELDS} }
         }
       }
     `);
 
-    const itemsPage:
-      | ItemsPageResponse["boards"][number]["items_page"]
-      | undefined = result.boards[0]?.items_page;
-    const items = itemsPage?.items ?? [];
-
-    for (const item of items) {
+    const page = nextResult.next_items_page;
+    for (const item of page?.items ?? []) {
       allItems.push(mapRawItemToMondayItem(item, boardId));
     }
 
-    cursor = itemsPage?.cursor ?? null;
-  } while (cursor && allItems.length < maxItems);
+    cursor = page?.cursor ?? null;
+  }
 
   return allItems;
 }

@@ -7,37 +7,38 @@
 // https://trigger.dev/docs/triggering (batchTriggerAndWait, max 500 items)
 // https://trigger.dev/docs/queue-concurrency (concurrencyLimit on child task)
 
-import { db } from "@lib/db/client";
 import { insertAttachment } from "@documents-intake/db/attachment";
-import { insertEmail } from "@email/db/email";
+import { getEmailByMessageId, insertEmail } from "@email/db/email";
 import {
   getAllMailboxes,
   getOrCreateMailbox,
   updateMailboxSyncState,
 } from "@email/db/mailbox";
-import type { InsertEmailData } from "@lib/db/types";
-import { graphGet } from "@lib/graph/http";
-import { logger, schedules, schemaTask, tasks } from "@trigger.dev/sdk";
-import { z } from "zod";
-import {
-  taskQueue,
-} from "./queue";
 import {
   computeDomainEnrichment,
   extractDomain,
-  extractRealSender,
-  extractRealSenderWithLlm,
   findOrCreateAccount,
   findOrCreateContact,
   linkContactToEmail,
   updateEmailEnrichment,
 } from "@email/enrichment";
+import {
+  extractRealSender,
+  extractRealSenderWithLlm,
+} from "@email/platform-sender";
+import { db } from "@lib/db/client";
+import type { InsertEmailData } from "@lib/db/types";
+import { graphGet } from "@lib/graph/http";
+import { logger, schedules, schemaTask, tasks } from "@trigger.dev/sdk";
+import { z } from "zod";
+import { extractBillingEmailDetails } from "./dust-permit-billing-values";
+import { taskQueue } from "./queue";
 
 export const LOOKBACK_HOURS = 6;
 const EMAIL_SYNC_QUEUE = taskQueue(
   "email-sync",
   "EMAIL_SYNC_QUEUE_CONCURRENCY",
-  16
+  4
 );
 const MAILBOX_SYNC_CONTROL_QUEUE = taskQueue(
   "mailbox-sync-control",
@@ -59,6 +60,16 @@ const THREAD_SIBLING_MAX_PAGES = 10;
 const THREAD_SIBLING_FALLBACK_LOOKBACK_DAYS = 30;
 const THREAD_SIBLING_FALLBACK_MAX_PAGES = 8;
 const FULL_HISTORY_SINCE_ISO = "1970-01-01T00:00:00.000Z";
+const AUTO_DRAFT_MAILBOX = "chi@desertservices.net";
+const POINT_AND_PAY_SENDER = "noreply@pointandpay.com";
+const MARICOPA_ISSUED_SUBJECT_RE = /dust permit issued/i;
+const MARICOPA_APPLICATION_RE =
+  /dust control permit application\s*(D\d{7})/i;
+const MARICOPA_ISSUED_SENDERS = new Set([
+  "aqdimpact@maricopa.gov",
+  "no-reply@maricopa.gov",
+  "noreply@permitcenter.maricopa.gov",
+]);
 
 const EMAIL_FIELDS = [
   "id",
@@ -178,7 +189,7 @@ function graphEmailToInsertData(
     conversationId: email.conversationId ?? null,
     folderId: email.parentFolderId ?? null,
     folderName: email.parentFolderId
-      ? folderNamesById?.get(email.parentFolderId) ?? null
+      ? (folderNamesById?.get(email.parentFolderId) ?? null)
       : null,
     subject: email.subject,
     fromEmail: email.from?.emailAddress.address ?? null,
@@ -203,7 +214,9 @@ async function hydrateFolderNames(
     new Set(
       emails
         .map((email) => email.parentFolderId?.trim() ?? "")
-        .filter((folderId) => folderId.length > 0 && !folderNamesById.has(folderId))
+        .filter(
+          (folderId) => folderId.length > 0 && !folderNamesById.has(folderId)
+        )
     )
   );
 
@@ -236,19 +249,6 @@ export function buildSinceFilter(hoursAgo: number): string {
   return since.toISOString();
 }
 
-async function getExistingMessageIds(
-  mailboxId: number,
-  sinceIso: string
-): Promise<Set<string>> {
-  const rows = await db
-    .query<{ message_id: string }, [number, string]>(
-      `SELECT message_id FROM emails
-       WHERE mailbox_id = $1 AND received_at >= $2`
-    )
-    .all(mailboxId, sinceIso);
-  return new Set(rows.map((r) => r.message_id));
-}
-
 async function getExistingMessageIdsForPage(
   mailboxId: number,
   messageIds: string[]
@@ -257,9 +257,7 @@ async function getExistingMessageIdsForPage(
     return new Set();
   }
 
-  const placeholders = messageIds
-    .map((_, idx) => `$${idx + 2}`)
-    .join(", ");
+  const placeholders = messageIds.map((_, idx) => `$${idx + 2}`).join(", ");
   const rows = await db
     .query<{ message_id: string }, [number, ...string[]]>(
       `SELECT message_id FROM emails
@@ -342,8 +340,7 @@ async function enrichEmail(
       fromName,
       bodyFull ?? bodyPreview,
       subject
-    )) ??
-    extractRealSender(domainData.fromDomain, fromName, bodyFull, subject);
+    )) ?? extractRealSender(domainData.fromDomain, fromName, bodyFull, subject);
 
   const effectiveDomain =
     platform?.realSenderDomain ??
@@ -398,7 +395,9 @@ async function findRecipientAccountId(
   }
 
   const existing = await db
-    .query<{ id: number }, [string]>("SELECT id FROM accounts WHERE domain = $1")
+    .query<{ id: number }, [string]>(
+      "SELECT id FROM accounts WHERE domain = $1"
+    )
     .get(recipientDomain);
 
   return existing?.id ?? null;
@@ -453,10 +452,118 @@ interface EmailProcessResult {
   outcome: EmailOutcome;
 }
 
+export type DustPermitAutoDraftSeed =
+  | { kind: "billing" }
+  | { kind: "issued"; permitId: string };
+
 interface FanOutOptions {
+  enableAutoDrafts?: boolean;
+  forceReprocessExisting?: boolean;
   mailboxEmails?: string[];
   senderFilter?: string;
-  forceReprocessExisting?: boolean;
+}
+
+function buildEmailText(parts: Array<string | null | undefined>): string {
+  return parts
+    .map((value) => value?.trim())
+    .filter((value): value is string => Boolean(value))
+    .join("\n");
+}
+
+export function detectDustPermitAutoDraftSeed(params: {
+  bodyText?: string | null;
+  fromEmail?: string | null;
+  subject?: string | null;
+}): DustPermitAutoDraftSeed | null {
+  const fromEmail = params.fromEmail?.trim().toLowerCase() ?? "";
+  const subject = params.subject ?? "";
+  const bodyText = params.bodyText ?? "";
+  const combinedText = buildEmailText([subject, bodyText]);
+
+  if (fromEmail === POINT_AND_PAY_SENDER) {
+    const billingDetails = extractBillingEmailDetails(combinedText);
+    if (billingDetails?.invoiceNumber?.startsWith("IV")) {
+      return { kind: "billing" };
+    }
+  }
+
+  if (
+    MARICOPA_ISSUED_SENDERS.has(fromEmail) &&
+    MARICOPA_ISSUED_SUBJECT_RE.test(subject)
+  ) {
+    const permitId = combinedText.match(MARICOPA_APPLICATION_RE)?.[1];
+    if (permitId) {
+      return { kind: "issued", permitId };
+    }
+  }
+
+  return null;
+}
+
+async function resolveDustPermitNotificationType(
+  permitId: string
+): Promise<"issued" | "renewed"> {
+  const permit = await db
+    .query<{ previous_app_id: string | null }, [string]>(
+      `SELECT previous_app_id
+       FROM dust_permits_filed_by_desert_services
+       WHERE id = $1
+       LIMIT 1`
+    )
+    .get(permitId);
+
+  return permit?.previous_app_id ? "renewed" : "issued";
+}
+
+async function maybeTriggerDustPermitAutoDraft(params: {
+  bodyText: string | null;
+  emailId: number;
+  enableAutoDrafts: boolean;
+  fromEmail: string | null;
+  mailboxEmail: string;
+  subject: string | null;
+}): Promise<void> {
+  if (
+    !params.enableAutoDrafts ||
+    params.mailboxEmail.trim().toLowerCase() !== AUTO_DRAFT_MAILBOX
+  ) {
+    return;
+  }
+
+  const seed = detectDustPermitAutoDraftSeed({
+    bodyText: params.bodyText,
+    fromEmail: params.fromEmail,
+    subject: params.subject,
+  });
+
+  if (!seed) {
+    return;
+  }
+
+  if (seed.kind === "billing") {
+    await tasks.trigger("dust-permit-notification", {
+      draft: true,
+      emailId: params.emailId,
+    });
+    logger.info("Triggered dust permit billing auto-draft", {
+      emailId: params.emailId,
+    });
+    return;
+  }
+
+  const type = await resolveDustPermitNotificationType(seed.permitId);
+  await tasks.trigger("dust-permit-reply-route", {
+    draft: true,
+    dryRun: false,
+    permitId: seed.permitId,
+    sourceEmailId: params.emailId,
+    type,
+  });
+  logger.info("Triggered dust permit issued auto-draft route", {
+    emailId: params.emailId,
+    permitId: seed.permitId,
+    type,
+  });
 }
 
 /** Insert one email + stubs + enrichment. Used by syncOneMailbox bulk loop. */
@@ -465,6 +572,7 @@ async function processOneEmail(
   mailboxEmail: string,
   mailboxId: number,
   options: {
+    enableAutoDrafts?: boolean;
     forceReprocessExisting?: boolean;
     folderNamesById?: ReadonlyMap<string, string>;
   } = {}
@@ -534,6 +642,24 @@ async function processOneEmail(
     });
   }
 
+  try {
+    await maybeTriggerDustPermitAutoDraft({
+      bodyText: buildEmailText([data.bodyFull ?? null, data.bodyPreview ?? null]),
+      emailId,
+      enableAutoDrafts: options.enableAutoDrafts ?? false,
+      fromEmail: data.fromEmail ?? null,
+      mailboxEmail,
+      subject: data.subject ?? null,
+    });
+  } catch (error) {
+    logger.warn("Dust permit auto-draft trigger failed", {
+      emailId,
+      error: error instanceof Error ? error.message : String(error),
+      mailboxEmail,
+      subject: data.subject ?? null,
+    });
+  }
+
   return { attachments, enriched, outcome: "stored" };
 }
 
@@ -584,7 +710,8 @@ async function processPage(
   result: MailboxSyncResult,
   senderFilter: string | undefined,
   forceReprocessExisting: boolean,
-  folderNamesById: Map<string, string>
+  folderNamesById: Map<string, string>,
+  enableAutoDrafts: boolean
 ): Promise<void> {
   const normalizedSenderFilter = normalizeSenderFilter(senderFilter);
   await hydrateFolderNames(mailboxEmail, page, folderNamesById);
@@ -609,6 +736,7 @@ async function processPage(
 
       try {
         const r = await processOneEmail(email, mailboxEmail, mailboxId, {
+          enableAutoDrafts: false,
           forceReprocessExisting: true,
           folderNamesById,
         });
@@ -632,6 +760,7 @@ async function processPage(
 
     try {
       const r = await processOneEmail(email, mailboxEmail, mailboxId, {
+        enableAutoDrafts,
         folderNamesById,
       });
       if (r.outcome === "stored") {
@@ -659,7 +788,8 @@ export async function syncOneMailbox(
   mailboxId: number,
   sinceIso: string,
   senderFilter?: string,
-  forceReprocessExisting = false
+  forceReprocessExisting = false,
+  enableAutoDrafts = false
 ): Promise<MailboxSyncResult> {
   const result: MailboxSyncResult = {
     attachments: 0,
@@ -689,7 +819,8 @@ export async function syncOneMailbox(
         result,
         senderFilter,
         forceReprocessExisting,
-        folderNamesById
+        folderNamesById,
+        enableAutoDrafts
       );
     }
 
@@ -932,13 +1063,13 @@ function aggregateBatchResults(
     }
     const r = run.output;
     totalStored += r.stored;
-      totalFetched += r.fetched;
-      totalAttachments += r.attachments;
-      totalEnriched += r.enriched;
-      totalFiltered += r.filtered;
-      if (r.error) {
-        errors++;
-      }
+    totalFetched += r.fetched;
+    totalAttachments += r.attachments;
+    totalEnriched += r.enriched;
+    totalFiltered += r.filtered;
+    if (r.error) {
+      errors++;
+    }
   }
 
   return {
@@ -994,8 +1125,11 @@ export const emailSync = schemaTask({
   }),
   maxDuration: 120,
   retry: { maxAttempts: 3 },
-  run: async ({ messageId, mailboxEmail }) => {
+  run: async ({ messageId, mailboxEmail, changeType }) => {
     const mailbox = await getOrCreateMailbox(mailboxEmail);
+    const existingEmail = await getEmailByMessageId(messageId);
+    const enableAutoDrafts =
+      !existingEmail && changeType === "created";
 
     try {
       let email: GraphEmail;
@@ -1106,6 +1240,24 @@ export const emailSync = schemaTask({
         });
       }
 
+      try {
+        await maybeTriggerDustPermitAutoDraft({
+          bodyText: buildEmailText([data.bodyFull ?? null, data.bodyPreview ?? null]),
+          emailId,
+          enableAutoDrafts,
+          fromEmail: data.fromEmail ?? null,
+          mailboxEmail,
+          subject: data.subject ?? null,
+        });
+      } catch (error) {
+        logger.warn("Dust permit auto-draft trigger failed in email-sync", {
+          emailId,
+          error: error instanceof Error ? error.message : String(error),
+          mailboxEmail,
+          subject: data.subject ?? null,
+        });
+      }
+
       let siblingsSynced = 0;
       if (email.conversationId) {
         try {
@@ -1163,6 +1315,7 @@ export const syncOneMailboxTask = schemaTask({
   queue: MAILBOX_SYNC_MAILBOX_QUEUE,
   schema: z.object({
     email: z.email(),
+    enableAutoDrafts: z.boolean().optional(),
     mailboxId: z.number(),
     sinceIso: z.string(),
     senderFilter: z.string().trim().toLowerCase().optional(),
@@ -1170,13 +1323,21 @@ export const syncOneMailboxTask = schemaTask({
   }),
   maxDuration: 7200, // 2 hours — large mailboxes may have 50k+ emails
   retry: { maxAttempts: 2 },
-  run: ({ email, mailboxId, sinceIso, senderFilter, forceReprocessExisting }) =>
+  run: ({
+    email,
+    mailboxId,
+    sinceIso,
+    senderFilter,
+    forceReprocessExisting,
+    enableAutoDrafts,
+  }) =>
     syncOneMailbox(
       email,
       mailboxId,
       sinceIso,
       senderFilter,
-      forceReprocessExisting ?? false
+      forceReprocessExisting ?? false,
+      enableAutoDrafts ?? false
     ),
 });
 
@@ -1232,7 +1393,11 @@ async function fanOutSync(
   }
 
   const normalizedMailboxEmails = options.mailboxEmails
-    ? [...new Set(options.mailboxEmails.map((mailbox) => mailbox.toLowerCase()))]
+    ? [
+        ...new Set(
+          options.mailboxEmails.map((mailbox) => mailbox.toLowerCase())
+        ),
+      ]
     : [];
   const filteredMailboxes = normalizedMailboxEmails.length
     ? mailboxes.filter((mailbox) =>
@@ -1258,7 +1423,9 @@ async function fanOutSync(
 
   logger.info(`Starting ${label}`, {
     mailboxes: filteredMailboxes.length,
-    requestedMailboxes: normalizedMailboxEmails.length ? normalizedMailboxEmails : undefined,
+    requestedMailboxes: normalizedMailboxEmails.length
+      ? normalizedMailboxEmails
+      : undefined,
     senderFilter: options.senderFilter,
     since: sinceIso,
   });
@@ -1279,6 +1446,7 @@ async function fanOutSync(
       batch.map((m) => ({
         payload: {
           email: m.email,
+          enableAutoDrafts: options.enableAutoDrafts,
           mailboxId: m.id,
           sinceIso,
           senderFilter: options.senderFilter,
@@ -1329,7 +1497,9 @@ function resolveBackfillSinceIso(
   if (trimmedSince) {
     const parsed = Date.parse(trimmedSince);
     if (!Number.isFinite(parsed)) {
-      throw new Error(`Invalid sinceIso provided to mailbox-backfill: ${trimmedSince}`);
+      throw new Error(
+        `Invalid sinceIso provided to mailbox-backfill: ${trimmedSince}`
+      );
     }
     return new Date(parsed).toISOString();
   }
@@ -1348,7 +1518,10 @@ export const mailboxSync = schedules.task({
   queue: MAILBOX_SYNC_CONTROL_QUEUE,
   cron: "*/15 * * * *",
   maxDuration: 300,
-  run: () => fanOutSync("mailbox sync", buildSinceFilter(LOOKBACK_HOURS)),
+  run: () =>
+    fanOutSync("mailbox sync", buildSinceFilter(LOOKBACK_HOURS), {
+      enableAutoDrafts: true,
+    }),
 });
 
 // On-demand backfill — configurable lookback, no per-mailbox limit.
@@ -1361,15 +1534,8 @@ export const mailboxBackfill = schemaTask({
   schema: z.object({
     lookbackHours: z.number().min(1).optional(),
     sinceIso: z.string().trim().optional(),
-    senderFilter: z
-      .string()
-      .trim()
-      .min(1)
-      .toLowerCase()
-      .optional(),
-    mailboxEmails: z
-      .array(z.string().toLowerCase().trim())
-      .optional(),
+    senderFilter: z.string().trim().min(1).toLowerCase().optional(),
+    mailboxEmails: z.array(z.string().toLowerCase().trim()).optional(),
     forceReprocessExisting: z.boolean().optional().default(false),
   }),
   maxDuration: 7200,

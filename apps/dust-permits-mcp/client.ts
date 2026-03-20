@@ -10,8 +10,6 @@ import type {
   BrowserAbortResponse,
   BrowserActionResponse,
   BrowserStatusResponse,
-  ClipboardPasteRequest,
-  ClipboardResponse,
   CloseRequest,
   CloseResponse,
   CreateRequest,
@@ -348,14 +346,6 @@ export class PermitClient {
 
   async browserAbort(req?: BrowserAbortRequest): Promise<BrowserAbortResponse> {
     return await this.request("POST", "/api/browser/abort", req ?? {});
-  }
-
-  async clipboardPaste(req: ClipboardPasteRequest): Promise<ClipboardResponse> {
-    return await this.request("POST", "/api/browser/clipboard/paste", req);
-  }
-
-  async clipboardCopy(): Promise<ClipboardResponse> {
-    return await this.request("POST", "/api/browser/clipboard/copy");
   }
 
   // --------------------------------------------------------------------------

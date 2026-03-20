@@ -170,6 +170,102 @@ describe("project seed sync integration", () => {
     expect(canonical?.monday_item_id).toBe(mondayB);
   });
 
+  test("updates project contractor when a different estimate becomes the won canonical", async () => {
+    const suffix = uniqueSuffix();
+    const baseName = `${TEST_PREFIX}Contractor Switch ${suffix}`;
+    const mondayMarkham = `${TEST_MONDAY_PREFIX}MARKHAM_${suffix}`;
+    const mondayLayton = `${TEST_MONDAY_PREFIX}LAYTON_${suffix}`;
+
+    const inserted = (await db.run(
+      `INSERT INTO estimates (
+         monday_item_id,
+         name,
+         job_name,
+         contractor,
+         bid_status,
+         awarded,
+         location,
+         updated_at
+       )
+       VALUES
+         ($1, $2, $3, $4, $5, $6, $7, now() + interval '1 minute'),
+         ($8, $9, $10, $11, $12, $13, $14, now())
+       RETURNING id, monday_item_id`,
+      [
+        mondayMarkham,
+        baseName,
+        baseName,
+        "Markham Contracting Co.",
+        "Bid Sent",
+        0,
+        "Phoenix AZ",
+        mondayLayton,
+        baseName,
+        null,
+        "Layton Construction",
+        "Bid Sent",
+        0,
+        "Phoenix AZ",
+      ]
+    )) as Array<{ id: number; monday_item_id: string }>;
+
+    expect(inserted).toHaveLength(2);
+
+    await syncProjectSeedsFromEstimates({ limit: 200 });
+
+    const linked = (await db
+      .query<{ project_id: number }>(
+        `SELECT DISTINCT pe.project_id
+         FROM project_estimates pe
+         JOIN estimates e ON e.id = pe.estimate_id
+         WHERE e.monday_item_id IN ($1, $2)`
+      )
+      .all(mondayMarkham, mondayLayton)) as Array<{ project_id: number }>;
+
+    expect(linked).toHaveLength(1);
+    const projectId = linked[0]?.project_id;
+    expect(projectId).toBeTruthy();
+    if (!projectId) {
+      throw new Error("expected linked project id");
+    }
+
+    const initialProject = (await db
+      .query<{ contractor: string | null }>(
+        "SELECT contractor FROM projects WHERE id = $1"
+      )
+      .get(projectId)) as { contractor: string | null } | null;
+    expect(initialProject?.contractor).toBe("Markham Contracting Co.");
+
+    await db.run(
+      `UPDATE estimates
+       SET bid_status = 'Won',
+           updated_at = now() + interval '2 minutes'
+       WHERE monday_item_id = $1`,
+      [mondayLayton]
+    );
+
+    await syncProjectSeedsFromEstimates({ limit: 200 });
+
+    const nextProject = (await db
+      .query<{ contractor: string | null }>(
+        "SELECT contractor FROM projects WHERE id = $1"
+      )
+      .get(projectId)) as { contractor: string | null } | null;
+    expect(nextProject?.contractor).toBe("Layton Construction");
+
+    const canonical = (await db
+      .query<{ contractor: string | null }>(
+        `SELECT e.contractor
+         FROM project_estimates pe
+         JOIN estimates e ON e.id = pe.estimate_id
+         WHERE pe.project_id = $1
+           AND pe.is_canonical = TRUE
+         LIMIT 1`
+      )
+      .get(projectId)) as { contractor: string | null } | null;
+    expect(canonical?.contractor).toBe("Layton Construction");
+  });
+
   test("marks stale seed projects as lost", async () => {
     const suffix = uniqueSuffix();
     const baseName = `${TEST_PREFIX}Stale Seed ${suffix}`;

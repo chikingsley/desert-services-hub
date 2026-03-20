@@ -24,59 +24,70 @@ interface GroupItem {
   name: string;
 }
 
-interface GroupItemsPageResponse {
-  boards: Array<{
-    groups: Array<{
-      items_page: {
-        cursor: string | null;
-        items: Array<{
-          id: string;
-          name: string;
-          column_values: Array<{ label?: string }>;
-        }>;
-      };
-    }>;
+interface ItemsPage {
+  cursor: string | null;
+  items: Array<{
+    id: string;
+    name: string;
+    column_values: Array<{ label?: string }>;
   }>;
+}
+
+function collectGroupItems(page: ItemsPage | null, into: GroupItem[]) {
+  for (const item of page?.items ?? []) {
+    into.push({
+      id: item.id,
+      name: item.name,
+      bidStatus: item.column_values?.[0]?.label ?? null,
+    });
+  }
 }
 
 async function getItemsFromGroup(groupId: string): Promise<GroupItem[]> {
   const items: GroupItem[] = [];
-  let cursor: string | null = null;
 
-  do {
-    const cursorPart: string = cursor ? `, cursor: "${cursor}"` : "";
+  const itemFields = `
+    id
+    name
+    column_values(ids: ["${ESTIMATING_COLUMNS.BID_STATUS.id}"]) {
+      ... on StatusValue { label }
+    }
+  `;
 
-    const data: GroupItemsPageResponse = await query<GroupItemsPageResponse>(`
-      query {
-        boards(ids: ${BOARD_IDS.ESTIMATING}) {
-          groups(ids: "${groupId}") {
-            items_page(limit: 500${cursorPart}) {
-              cursor
-              items {
-                id
-                name
-                column_values(ids: ["${ESTIMATING_COLUMNS.BID_STATUS.id}"]) {
-                  ... on StatusValue { label }
-                }
-              }
-            }
+  // First page: nested in boards/groups
+  const firstData = await query<{
+    boards: Array<{ groups: Array<{ items_page: ItemsPage }> }>;
+  }>(`
+    query {
+      boards(ids: ${BOARD_IDS.ESTIMATING}) {
+        groups(ids: "${groupId}") {
+          items_page(limit: 500) {
+            cursor
+            items { ${itemFields} }
           }
+        }
+      }
+    }
+  `);
+
+  const firstPage = firstData.boards?.[0]?.groups?.[0]?.items_page ?? null;
+  collectGroupItems(firstPage, items);
+  let cursor = firstPage?.cursor ?? null;
+
+  // Subsequent pages: next_items_page at root level
+  while (cursor) {
+    const nextData = await query<{ next_items_page: ItemsPage }>(`
+      query {
+        next_items_page(limit: 500, cursor: "${cursor}") {
+          cursor
+          items { ${itemFields} }
         }
       }
     `);
 
-    const page = data.boards?.[0]?.groups?.[0]?.items_page ?? null;
-    if (page?.items) {
-      for (const item of page.items) {
-        items.push({
-          id: item.id,
-          name: item.name,
-          bidStatus: item.column_values?.[0]?.label ?? null,
-        });
-      }
-    }
-    cursor = page?.cursor ?? null;
-  } while (cursor);
+    collectGroupItems(nextData.next_items_page, items);
+    cursor = nextData.next_items_page?.cursor ?? null;
+  }
 
   return items;
 }

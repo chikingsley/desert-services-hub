@@ -24,11 +24,33 @@ import type { Email } from "@lib/db/types";
 import { createComposeClient } from "@lib/graph/compose";
 import { createGraphClient } from "@lib/graph/mail";
 import { logger, schemaTask } from "@trigger.dev/sdk";
+import { readFile } from "node:fs/promises";
+import { basename } from "node:path";
 import { z } from "zod";
 
 import {
-  extractPointAndPayBillingDetails,
+  resolveManualBillingPermitBaseVars,
+  type ManualBillingPermitInput,
+} from "./dust-permit-manual-billing";
+import {
+  dustPermitClosing,
+  dustPermitGreeting,
+  wrapDustPermitEmail,
+} from "./dust-permit-email-template";
+import {
+  renderDustPermitBillingTemplate,
+  type DustPermitBillingTemplateVars,
+} from "./dust-permit-billing-template";
+import {
+  extractBillingEmailDetails,
+  lookupBillingScheduleValue,
+  resolveBillingDraftDetails,
+  type ManualBillingDetailsInput,
 } from "./dust-permit-billing-values";
+import {
+  DUST_PERMIT_BILLING_CC,
+  DUST_PERMIT_BILLING_TO,
+} from "./dust-permit-default-recipients";
 import {
   extractReplyAllExternalRecipients,
 } from "./dust-permit-notification-recipients";
@@ -44,14 +66,7 @@ import {
 // ── Constants ───────────────────────────────────────────────────
 
 const FROM_MAILBOX = "chi@desertservices.net";
-const BILLING_TO = ["eva@desertservices.net", "jayson@desertservices.net"];
-const BILLING_CC = [
-  "don@desertservices.net",
-  "francine@desertservices.net",
-  "kendra@desertservices.net",
-];
 
-const DEFAULT_VENDOR_NAME = "Maricopa County ADEQ";
 const INTERNAL_DOMAIN = "@desertservices.net";
 const PDF_FILE_RE = /\.pdf$/i;
 const MARICOPA_SOURCE_SENDERS = [
@@ -79,36 +94,6 @@ interface RecipientResolution {
 interface SourceEmailContext {
   email: Email;
   mailboxEmail: string;
-}
-
-// ── ADEQ fee → schedule value lookup ────────────────────────────
-// From packages/estimates/catalog/definitions/category-dust-control-maricopa.ts
-// ADEQ fee tier → full catalog price (ADEQ + admin).
-const ADEQ_FEE_TO_SCHEDULE: Record<number, number> = {
-  570: 1070, // <1 acre
-  1130: 1630, // 1-10 acres
-  4120: 4870, // 10-50 acres
-  6870: 7870, // 50-100 acres
-  10310: 11_560, // 100-500 acres
-  16490: 18_490, // 500+ acres
-};
-
-function parseDollarAmount(amount: string): number | null {
-  const cleaned = amount.replace(/[$,]/g, "");
-  const num = Number.parseFloat(cleaned);
-  return Number.isFinite(num) ? Math.round(num) : null;
-}
-
-function lookupScheduleValue(permitCostStr: string): string | null {
-  const adeqCost = parseDollarAmount(permitCostStr);
-  if (adeqCost == null) {
-    return null;
-  }
-  const schedule = ADEQ_FEE_TO_SCHEDULE[adeqCost];
-  if (schedule == null) {
-    return null;
-  }
-  return `$${schedule.toLocaleString("en-US")}`;
 }
 
 function coerceString(value: unknown): string | null {
@@ -154,8 +139,10 @@ function sanitizeFilenamePart(value: string): string {
   return cleaned.length > 0 ? cleaned : "permit";
 }
 
-function buildPermitPdfName(permitId: string, projectName: string): string {
-  return `${sanitizeFilenamePart(permitId)}-${sanitizeFilenamePart(projectName)}.pdf`;
+function buildPermitPdfName(projectName: string, facilityId: string): string {
+  return `Dust-Permit_${sanitizeFilenamePart(projectName)}_${sanitizeFilenamePart(
+    facilityId
+  )}.pdf`;
 }
 
 async function getMailboxEmailById(
@@ -186,40 +173,14 @@ async function getContactNameByEmail(
 }
 
 // ── HTML template helpers ───────────────────────────────────────
-// Outlook-safe HTML: <b> not <strong>, no <p> tags, skipSignature: true.
-
-function wrap(content: string): string {
-  return `<html>
-<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<body>${content}</body>
-</html>`;
-}
-
-function li(label: string, value: string | null | undefined): string {
-  if (value == null || value === "") {
-    return "";
-  }
-  return `<li><div><b>${label}:</b> ${value}</div></li>`;
-}
+// Outlook-safe HTML: <b> not <strong>, no <p> tags.
 
 function liPlain(text: string): string {
   return `<li><div>${text}</div></li>`;
 }
 
-function separator(): string {
-  return "<li><div>----</div></li>";
-}
-
 function ul(items: string): string {
   return `<ul style="margin-top:0; margin-bottom:0;">${items}</ul>`;
-}
-
-function greeting(name: string): string {
-  return `<div>${name},</div><div><br></div>`;
-}
-
-function closing(): string {
-  return "<div><br></div><div>Let me know if you have any questions!</div>";
 }
 
 function dustPermitInfoBlock(): string {
@@ -263,8 +224,8 @@ function issuedEmail(v: {
 }): EmailTemplate {
   return {
     subject: `Dust Permit Issued \u2014 ${v.projectName} (${v.applicationNumber})`,
-    body: wrap(
-      greeting(v.recipientName) +
+    body: wrapDustPermitEmail(
+      dustPermitGreeting() +
         `<div>The dust control permit for <b>${v.accountName}</b> on project \u201c<b>${v.projectName}</b>\u201d has been issued (see attached).</div>
 <div><br></div>
 <div>Here are the key details:</div>
@@ -279,7 +240,7 @@ ${ul(
     liPlain(`Expiration Date: ${v.expirationDate}`)
 )}` +
         (v.showPermitInfo !== false ? dustPermitInfoBlock() : "") +
-        closing()
+        dustPermitClosing()
     ),
   };
 }
@@ -300,8 +261,8 @@ function renewedEmail(v: {
 }): EmailTemplate {
   return {
     subject: `Dust Permit Renewed \u2014 ${v.projectName} (${v.applicationNumber})`,
-    body: wrap(
-      greeting(v.recipientName) +
+    body: wrapDustPermitEmail(
+      dustPermitGreeting() +
         `<div>The dust control permit for <b>${v.accountName}</b> on project \u201c<b>${v.projectName}</b>\u201d has been renewed (see attached).</div>
 <div><br></div>
 <div>Here are the key details:</div>
@@ -317,7 +278,7 @@ ${ul(
     liPlain(`Expiration Date: ${v.expirationDate}`)
 )}` +
         dustPermitInfoBlock() +
-        closing()
+        dustPermitClosing()
     ),
   };
 }
@@ -339,8 +300,8 @@ function submittedEmail(v: {
 
   return {
     subject: `Dust Permit Submitted \u2014 ${v.projectName} (${v.applicationNumber})`,
-    body: wrap(
-      greeting(v.recipientName) +
+    body: wrapDustPermitEmail(
+      dustPermitGreeting() +
         `<div>A dust permit application for <b>${v.accountName}</b> on project \u201c<b>${v.projectName}</b>\u201d has been submitted to Maricopa County (see attached).</div>
 <div><br></div>
 <div>Here are the key details:</div>
@@ -354,7 +315,7 @@ ${ul(
 )}` +
         `<div><br></div>
 <div>Processing typically takes 5-10 business days. If you need expedited processing, please reach out immediately.</div>` +
-        closing()
+        dustPermitClosing()
     ),
   };
 }
@@ -375,8 +336,8 @@ function revisedEmail(v: {
 }): EmailTemplate {
   return {
     subject: `Dust Permit Revised \u2014 ${v.projectName} (${v.applicationNumber})`,
-    body: wrap(
-      greeting(v.recipientName) +
+    body: wrapDustPermitEmail(
+      dustPermitGreeting() +
         `<div>The dust control permit for <b>${v.accountName}</b> on project \u201c<b>${v.projectName}</b>\u201d has been revised (see attached).</div>
 <div><br></div>
 <div>Here are the key details:</div>
@@ -393,7 +354,7 @@ ${ul(
         (v.changesHtml
           ? `<div><br></div><div>Changes Made:</div>${ul(v.changesHtml)}`
           : "") +
-        closing()
+        dustPermitClosing()
     ),
   };
 }
@@ -411,8 +372,8 @@ function reminderEmail(v: {
 }): EmailTemplate {
   return {
     subject: `Dust Permit Expiring \u2014 ${v.projectName} (${v.applicationNumber})`,
-    body: wrap(
-      greeting(v.recipientName) +
+    body: wrapDustPermitEmail(
+      dustPermitGreeting() +
         `<div>This is a friendly reminder that the dust control permit for <b>${v.accountName}</b> on project \u201c<b>${v.projectName}</b>\u201d is approaching its expiration date.</div>
 <div><br></div>
 <div>Here are the key details:</div>
@@ -428,130 +389,7 @@ ${ul(
 ${ul(
   liPlain("<b>Renew</b> the permit for another year") +
     liPlain("<b>Close out</b> the permit (if the site is fully stabilized)")
-)}`
-    ),
-  };
-}
-
-// -- Billing --
-
-interface BillingVars {
-  acceleratedFee?: string | null;
-  acceleratedProcessing: string;
-  accountName: string;
-  address: string;
-  adminFee?: string | null;
-  applicationNumber: string;
-  cardholderName: string;
-  cardLastFour?: string;
-  changesHtml?: string;
-  confirmationId?: string | null;
-  invoiceDate?: string | null;
-  invoiceNumber: string;
-  paymentDate?: string | null;
-  paymentMethod: string;
-  permitCost: string;
-  permitNumber?: string | null;
-  projectName: string;
-  recipientName: string;
-  scheduleValue: string;
-  supersededApplicationNumber?: string;
-  vendorName: string;
-}
-
-function billingNewEmail(v: BillingVars): EmailTemplate {
-  return {
-    subject: `Dust Permit Billing - ${v.projectName}`,
-    body: wrap(
-      greeting(v.recipientName) +
-        `<div>A dust permit application has been submitted to Maricopa County. Please prepare for billing.</div>
-<ul style="margin-top:0; margin-bottom:0;">
-${li("Customer", v.accountName)}
-${li("Project", v.projectName)}
-${li("Site Address", v.address)}
-${li("Application #", v.applicationNumber)}
-${v.permitNumber ? li("Permit # (Facility ID)", v.permitNumber) : ""}
-${li("Accelerated Processing", v.acceleratedProcessing)}
-${separator()}
-${li("Vendor Paid", v.vendorName)}
-${li("Permit Cost (ADEQ)", v.permitCost)}
-${v.adminFee ? li("Admin Fee", v.adminFee) : ""}
-${li("Schedule Charge", v.scheduleValue)}
-${v.confirmationId ? li("Confirmation #", v.confirmationId) : ""}
-${li("Invoice #", v.invoiceNumber)}
-${separator()}
-${li("Payment Method", v.paymentMethod)}
-${li("Cardholder", v.cardholderName)}
-${v.paymentDate ? li("Payment Date", v.paymentDate) : ""}
-${v.invoiceDate ? li("Invoice Date", v.invoiceDate) : ""}
-</ul>` +
-        closing()
-    ),
-  };
-}
-
-function billingRenewedEmail(v: BillingVars): EmailTemplate {
-  return {
-    subject: `Dust Permit Billing (Renewal) - ${v.projectName}`,
-    body: wrap(
-      greeting(v.recipientName) +
-        `<div>A dust permit renewal has been submitted to Maricopa County. Please prepare for billing.</div>
-<ul style="margin-top:0; margin-bottom:0;">
-${li("Customer", v.accountName)}
-${li("Project", v.projectName)}
-${li("Site Address", v.address)}
-${li("Application #", v.applicationNumber)}
-${li("Superseded Application #", v.supersededApplicationNumber ?? "N/A")}
-${li("Permit # (Facility ID)", v.permitNumber ?? "N/A")}
-${li("Accelerated Processing", v.acceleratedProcessing)}
-${li("Vendor Paid", v.vendorName)}
-${li("Permit Cost", v.permitCost)}
-${v.acceleratedFee ? li("Accelerated Fee", v.acceleratedFee) : ""}
-${li("Schedule Value", v.scheduleValue)}
-${li("Payment Method", v.paymentMethod)}
-${v.paymentDate ? li("Payment Date", v.paymentDate) : ""}
-${v.confirmationId ? li("Confirmation #", v.confirmationId) : ""}
-${li("Card Last 4", v.cardLastFour ?? "N/A")}
-${li("Cardholder", v.cardholderName)}
-${li("Invoice #", v.invoiceNumber)}
-${v.invoiceDate ? li("Invoice Date", v.invoiceDate) : ""}
-</ul>` +
-        closing()
-    ),
-  };
-}
-
-function billingRevisedEmail(v: BillingVars): EmailTemplate {
-  return {
-    subject: `Dust Permit Billing (Revision) - ${v.projectName}`,
-    body: wrap(
-      greeting(v.recipientName) +
-        `<div>A dust permit revision has been submitted to Maricopa County. Please prepare for billing.</div>
-<ul style="margin-top:0; margin-bottom:0;">
-${li("Customer", v.accountName)}
-${li("Project", v.projectName)}
-${li("Site Address", v.address)}
-${li("Application #", v.applicationNumber)}
-${li("Superseded Application #", v.supersededApplicationNumber ?? "N/A")}
-${li("Permit # (Facility ID)", v.permitNumber ?? "N/A")}
-${li("Accelerated Processing", v.acceleratedProcessing)}
-${li("Vendor Paid", v.vendorName)}
-${li("Permit Cost", v.permitCost)}
-${v.acceleratedFee ? li("Accelerated Fee", v.acceleratedFee) : ""}
-${li("Schedule Value", v.scheduleValue)}
-${li("Payment Method", v.paymentMethod)}
-${v.paymentDate ? li("Payment Date", v.paymentDate) : ""}
-${v.confirmationId ? li("Confirmation #", v.confirmationId) : ""}
-${li("Card Last 4", v.cardLastFour ?? "N/A")}
-${li("Cardholder", v.cardholderName)}
-${li("Invoice #", v.invoiceNumber)}
-${v.invoiceDate ? li("Invoice Date", v.invoiceDate) : ""}
-</ul>` +
-        (v.changesHtml
-          ? `<div><b>Changes Made:</b></div>
-<ul style="margin-top:0; margin-bottom:0;">${v.changesHtml}</ul>`
-          : "") +
-        closing()
+)}${dustPermitClosing()}`
     ),
   };
 }
@@ -570,6 +408,64 @@ const NOTIFICATION_TYPES = [
 ] as const;
 
 type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+type BillingNotificationType = Extract<
+  NotificationType,
+  "billing" | "billing-renewed" | "billing-revised"
+>;
+type BillingBaseVars = Pick<
+  DustPermitBillingTemplateVars,
+  | "acceleratedProcessing"
+  | "accountName"
+  | "address"
+  | "applicationNumber"
+  | "permitNumber"
+  | "projectName"
+  | "recipientName"
+  | "supersededApplicationNumber"
+> &
+  Partial<
+    Pick<
+      DustPermitBillingTemplateVars,
+      | "applicationLabel"
+      | "introText"
+      | "invoiceLabel"
+      | "permitCostLabel"
+      | "permitLabel"
+      | "scheduleLabel"
+    >
+  >;
+
+const manualBillingDetailsSchema = z
+  .object({
+    cardLastFour: z.string().trim().min(1).optional(),
+    cardholderName: z.string().trim().min(1).optional(),
+    confirmationId: z.string().trim().min(1).optional(),
+    invoiceDate: z.string().trim().min(1).optional(),
+    invoiceNumber: z.string().trim().min(1).optional(),
+    paymentDate: z.string().trim().min(1).optional(),
+    paymentMethod: z.string().trim().min(1).optional(),
+    paymentMovedFromInvoiceNumber: z.string().trim().min(1).optional(),
+    permitCost: z.string().trim().min(1).optional(),
+    vendorName: z.string().trim().min(1).optional(),
+  })
+  .partial();
+
+const manualBillingPermitSchema = z.object({
+  accountName: z.string().trim().min(1),
+  acceleratedProcessing: z.string().trim().min(1).optional(),
+  address: z.string().trim().min(1),
+  applicationLabel: z.string().trim().min(1).optional(),
+  applicationNumber: z.string().trim().min(1),
+  introText: z.string().trim().min(1).optional(),
+  invoiceLabel: z.string().trim().min(1).optional(),
+  permitNumber: z.string().trim().min(1).optional(),
+  permitCostLabel: z.string().trim().min(1).optional(),
+  permitLabel: z.string().trim().min(1).optional(),
+  projectName: z.string().trim().min(1),
+  recipientName: z.string().trim().min(1).optional(),
+  scheduleLabel: z.string().trim().min(1).optional(),
+  supersededApplicationNumber: z.string().trim().min(1).optional(),
+});
 
 const SOURCE_SUBJECT_HINTS: Partial<Record<NotificationType, string>> = {
   issued: "Dust Permit Issued",
@@ -585,9 +481,11 @@ const TEMPLATE_MAP: Record<NotificationType, (vars: any) => EmailTemplate> = {
   submitted: submittedEmail,
   revised: revisedEmail,
   reminder: reminderEmail,
-  billing: billingNewEmail,
-  "billing-renewed": billingRenewedEmail,
-  "billing-revised": billingRevisedEmail,
+  billing: (vars) => renderDustPermitBillingTemplate("billing", vars),
+  "billing-renewed": (vars) =>
+    renderDustPermitBillingTemplate("billing-renewed", vars),
+  "billing-revised": (vars) =>
+    renderDustPermitBillingTemplate("billing-revised", vars),
 };
 
 // ── Shared: look up permit + build base vars ────────────────────
@@ -891,6 +789,7 @@ async function loadSourceEmailAttachments(
 
 async function resolveNotificationAttachments(
   params: {
+    facilityId?: string | null;
     permitId: string;
     projectName: string;
     sourceEmail: SourceEmailContext | null;
@@ -918,14 +817,153 @@ async function resolveNotificationAttachments(
     targetAttachment.id,
     params.sourceEmail.mailboxEmail
   );
+  const facilityId =
+    coerceString(params.facilityId) ??
+    extractFacilityId(getEmailText(params.sourceEmail.email)) ??
+    params.permitId;
 
   return [
     {
-      name: buildPermitPdfName(params.permitId, params.projectName),
+      name: buildPermitPdfName(params.projectName, facilityId),
       contentType: "application/pdf",
       contentBytesBase64: bytes.toString("base64"),
     },
   ];
+}
+
+function billingNotificationToSourceType(
+  billingType: BillingNotificationType
+): NotificationType {
+  switch (billingType) {
+    case "billing-renewed":
+      return "renewed";
+    case "billing-revised":
+      return "revised";
+    default:
+      return "submitted";
+  }
+}
+
+async function parseBillingDetailsFromEmailId(
+  db: DbClient,
+  emailId: number
+) {
+  const email = await db
+    .query<{
+      body_full: string | null;
+      body_preview: string | null;
+      id: number;
+      subject: string;
+    }>(
+      `SELECT id, subject, body_full, body_preview
+       FROM emails
+       WHERE id = $1`
+    )
+    .get(emailId);
+
+  if (!email) {
+    throw new Error(`Email ${emailId} not found`);
+  }
+
+  const bodyText =
+    (email.body_full as string) || (email.body_preview as string) || "";
+
+  logger.info("Parsing billing details from email", {
+    emailId,
+    subject: email.subject,
+  });
+
+  const paymentDetails = extractBillingEmailDetails(bodyText);
+  if (!paymentDetails) {
+    throw new Error(
+      `Email ${emailId} does not contain recognizable billing details`
+    );
+  }
+
+  return paymentDetails;
+}
+
+async function resolveAttachmentsFromEmailIds(
+  db: DbClient,
+  emailIds: number[]
+): Promise<NotificationDraftAttachment[]> {
+  if (emailIds.length === 0) {
+    return [];
+  }
+
+  const graph = createGraphClient();
+  const resolved: NotificationDraftAttachment[] = [];
+
+  for (const emailId of emailIds) {
+    const email = await getEmailById(emailId);
+    if (!email) {
+      throw new Error(`Attachment email ${emailId} not found`);
+    }
+
+    const mailboxEmail = await getMailboxEmailById(db, email.mailboxId);
+    if (!mailboxEmail) {
+      throw new Error(
+        `Mailbox ${email.mailboxId} not found for attachment email ${emailId}`
+      );
+    }
+
+    const { messageId, attachments } = await loadSourceEmailAttachments(graph, {
+      email,
+      mailboxEmail,
+    });
+
+    for (const attachment of attachments.filter((item) => !item.isInline)) {
+      const bytes = await graph.downloadAttachment(
+        messageId,
+        attachment.id,
+        mailboxEmail
+      );
+      resolved.push({
+        name: attachment.name,
+        contentType: attachment.contentType ?? "application/octet-stream",
+        contentBytesBase64: bytes.toString("base64"),
+      });
+    }
+  }
+
+  return resolved;
+}
+
+async function resolveAttachmentsFromFilePaths(
+  filePaths: string[]
+): Promise<NotificationDraftAttachment[]> {
+  const resolved: NotificationDraftAttachment[] = [];
+
+  for (const filePath of filePaths) {
+    const bytes = await readFile(filePath);
+    resolved.push({
+      name: basename(filePath),
+      contentType: PDF_FILE_RE.test(filePath)
+        ? "application/pdf"
+        : "application/octet-stream",
+      contentBytesBase64: bytes.toString("base64"),
+    });
+  }
+
+  return resolved;
+}
+
+function dedupeAttachmentsByName(
+  attachments: NotificationDraftAttachment[]
+): NotificationDraftAttachment[] {
+  const seen = new Set<string>();
+  const deduped: NotificationDraftAttachment[] = [];
+
+  for (const attachment of attachments) {
+    const key = attachment.name.trim().toLowerCase();
+    if (!key || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    deduped.push(attachment);
+  }
+
+  return deduped;
 }
 
 async function loadReplyTargetMessageState(
@@ -1120,7 +1158,6 @@ async function createNotificationDraft(opts: {
       bodyType: "html",
       to: opts.to.map((email) => ({ email })),
       cc: opts.cc?.map((email) => ({ email })),
-      skipSignature: true,
     });
   }
 
@@ -1164,19 +1201,29 @@ export const dustPermitNotification = schemaTask({
       billingType: z
         .enum(["billing", "billing-renewed", "billing-revised"])
         .optional(),
+      billingDetails: manualBillingDetailsSchema.optional(),
+      manualPermit: manualBillingPermitSchema.optional(),
       cc: z.array(z.email()).optional(),
       draft: z.boolean().default(true),
       extraVars: z.record(z.string(), z.string()).optional(),
+      attachmentEmailIds: z.array(z.number().int().positive()).optional(),
+      attachmentFilePaths: z.array(z.string().trim().min(1)).optional(),
+      paymentEmailId: z.number().int().positive().optional(),
       recipients: z.array(z.email()).optional(),
       scheduleValue: z.string().optional(),
     })
     .refine(
       (d) =>
         Boolean(d.emailId) ||
+        Boolean(
+          d.billingType &&
+            (d.manualPermit || d.permitId || d.projectQuery) &&
+            (d.paymentEmailId || d.billingDetails)
+        ) ||
         Boolean(d.type && (d.permitId || d.projectQuery || d.sourceEmailId)),
       {
         message:
-          "Provide emailId (billing) OR type + (permitId | projectQuery | sourceEmailId)",
+          "Provide emailId (billing), OR billingType + (manualPermit | permitId | projectQuery) + (paymentEmailId | billingDetails), OR type + (permitId | projectQuery | sourceEmailId)",
       }
     ),
   maxDuration: 60,
@@ -1186,36 +1233,13 @@ export const dustPermitNotification = schemaTask({
 
     // ── Billing from email flow ─────────────────────────────
     if (input.emailId) {
-      const email = await db
-        .query<{
-          id: number;
-          subject: string;
-          body_full: string | null;
-          body_preview: string | null;
-        }>(
-          `SELECT id, subject, body_full, body_preview
-         FROM emails WHERE id = $1`
-        )
-        .get(input.emailId);
-
-      if (!email) {
-        throw new Error(`Email ${input.emailId} not found`);
-      }
-
-      const bodyText =
-        (email.body_full as string) || (email.body_preview as string) || "";
-
-      logger.info("Parsing Point and Pay email", {
-        emailId: input.emailId,
-        subject: email.subject,
-      });
-
-      // Parse payment details — only Point and Pay confirmations have IV###### format
-      const paymentDetails = extractPointAndPayBillingDetails(bodyText);
-      if (!paymentDetails) {
+      let paymentDetails;
+      try {
+        paymentDetails = await parseBillingDetailsFromEmailId(db, input.emailId);
+      } catch (error) {
         logger.info("Not a Point and Pay confirmation — skipping", {
           emailId: input.emailId,
-          subject: email.subject,
+          error: error instanceof Error ? error.message : String(error),
         });
         return {
           status: "skipped",
@@ -1226,11 +1250,18 @@ export const dustPermitNotification = schemaTask({
 
       const {
         cardLastFour,
+        cardholderName,
         confirmationId,
+        invoiceDate,
         invoiceNumber,
         paymentDate,
+        paymentMovedFromInvoiceNumber,
+        paymentMethod,
         permitCost,
-      } = paymentDetails;
+        vendorName,
+      } = resolveBillingDraftDetails({
+        parsedPaymentDetails: paymentDetails,
+      });
 
       logger.info("Extracted payment details", {
         invoiceNumber,
@@ -1238,7 +1269,7 @@ export const dustPermitNotification = schemaTask({
         confirmationId,
         paymentDate,
         cardLastFour,
-        derivedScheduleValue: lookupScheduleValue(permitCost),
+        derivedScheduleValue: lookupBillingScheduleValue(permitCost),
       });
 
       // Look up permit by invoice
@@ -1283,21 +1314,22 @@ export const dustPermitNotification = schemaTask({
           ? "billing-renewed"
           : "billing");
 
-      const vars: BillingVars = {
+      const vars: DustPermitBillingTemplateVars = {
         ...baseVars,
         cardLastFour: cardLastFour ?? "N/A",
-        cardholderName: cardLastFour
-          ? `Company Card (ending ${cardLastFour})`
-          : "Company Card",
+        cardholderName,
         confirmationId,
-        invoiceDate: paymentDate,
+        invoiceDate: invoiceDate ?? paymentDate,
         invoiceNumber,
         paymentDate,
-        paymentMethod: "Credit Card",
+        paymentMethod,
+        paymentMovedFromInvoiceNumber,
         permitCost,
         scheduleValue:
-          input.scheduleValue ?? lookupScheduleValue(permitCost) ?? "Unknown",
-        vendorName: DEFAULT_VENDOR_NAME,
+          input.scheduleValue ??
+          lookupBillingScheduleValue(permitCost) ??
+          "Unknown",
+        vendorName,
       };
 
       const templateFn = TEMPLATE_MAP[billingType];
@@ -1312,8 +1344,8 @@ export const dustPermitNotification = schemaTask({
       const draftResult = await createNotificationDraft({
         subject,
         body,
-        to: input.recipients?.length ? input.recipients : BILLING_TO,
-        cc: input.cc?.length ? input.cc : BILLING_CC,
+        to: input.recipients?.length ? input.recipients : DUST_PERMIT_BILLING_TO,
+        cc: input.cc?.length ? input.cc : DUST_PERMIT_BILLING_CC,
         draft: input.draft,
       });
 
@@ -1332,7 +1364,139 @@ export const dustPermitNotification = schemaTask({
         permitId,
         scheduleValue: vars.scheduleValue,
         subject,
-        to: input.recipients?.length ? input.recipients : BILLING_TO,
+        to: input.recipients?.length ? input.recipients : DUST_PERMIT_BILLING_TO,
+        type: billingType,
+      };
+    }
+
+    // ── Manual billing flow ────────────────────────────────
+    if (
+      input.billingType &&
+      (input.manualPermit || input.permitId || input.projectQuery) &&
+      (input.paymentEmailId || input.billingDetails)
+    ) {
+      const billingType = input.billingType;
+      const parsedPaymentDetails = input.paymentEmailId
+        ? await parseBillingDetailsFromEmailId(db, input.paymentEmailId)
+        : null;
+      const resolvedBillingDetails = resolveBillingDraftDetails({
+        parsedPaymentDetails,
+        overrides: input.billingDetails as ManualBillingDetailsInput | undefined,
+      });
+      const manualPermit = input.manualPermit as ManualBillingPermitInput | undefined;
+      let permit: Record<string, unknown> | null = null;
+      let permitId = input.permitId ?? null;
+      let sourceEmail: SourceEmailContext | null = null;
+      let baseVars: BillingBaseVars;
+      let permitAttachments: NotificationDraftAttachment[] = [];
+
+      if (manualPermit) {
+        baseVars = resolveManualBillingPermitBaseVars(manualPermit);
+        permitId =
+          manualPermit.permitNumber?.trim() || manualPermit.applicationNumber.trim();
+      } else {
+        if (permitId) {
+          permit = await db
+            .query<Record<string, unknown>>(
+              "SELECT * FROM dust_permits_filed_by_desert_services WHERE id = $1"
+            )
+            .get(permitId);
+        } else if (input.projectQuery) {
+          permit = await resolvePermitByProjectQuery(db, input.projectQuery);
+          permitId = coerceString(permit?.id) ?? null;
+        }
+
+        if (!(permit && permitId)) {
+          throw new Error(
+            `Could not resolve dust permit for billing type ${input.billingType}. Provide manualPermit, permitId, or projectQuery.`
+          );
+        }
+
+        const billingSourceType = billingNotificationToSourceType(billingType);
+        sourceEmail = await resolveSourceEmailContext(db, {
+          permitId,
+          projectName: coerceString(permit.project_name) ?? permitId,
+          sourceEmailId: input.sourceEmailId,
+          type: billingSourceType,
+        });
+
+        baseVars = await buildPermitBaseVars(db, permit, permitId, {
+          recipientName: "Team",
+          sourceEmail: sourceEmail?.email,
+        });
+        permitAttachments = await resolveNotificationAttachments({
+          facilityId: coerceString(permit.facility_id),
+          permitId,
+          projectName: coerceString(permit.project_name) ?? permitId,
+          sourceEmail,
+        });
+      }
+
+      const vars: DustPermitBillingTemplateVars = {
+        ...baseVars,
+        cardLastFour: resolvedBillingDetails.cardLastFour ?? "N/A",
+        cardholderName: resolvedBillingDetails.cardholderName,
+        confirmationId: resolvedBillingDetails.confirmationId,
+        invoiceDate:
+          resolvedBillingDetails.invoiceDate ??
+          resolvedBillingDetails.paymentDate,
+        invoiceNumber: resolvedBillingDetails.invoiceNumber,
+        paymentDate: resolvedBillingDetails.paymentDate,
+        paymentMethod: resolvedBillingDetails.paymentMethod,
+        paymentMovedFromInvoiceNumber:
+          resolvedBillingDetails.paymentMovedFromInvoiceNumber,
+        permitCost: resolvedBillingDetails.permitCost,
+        scheduleValue:
+          input.scheduleValue ??
+          lookupBillingScheduleValue(resolvedBillingDetails.permitCost) ??
+          "Unknown",
+        vendorName: resolvedBillingDetails.vendorName,
+      };
+
+      const templateFn = TEMPLATE_MAP[billingType];
+      const { subject, body } = templateFn(vars);
+
+      const attachments = dedupeAttachmentsByName([
+        ...permitAttachments,
+        ...(await resolveAttachmentsFromEmailIds(db, input.attachmentEmailIds ?? [])),
+        ...(await resolveAttachmentsFromFilePaths(input.attachmentFilePaths ?? [])),
+      ]);
+
+      logger.info("Rendered manual billing notification", {
+        attachmentCount: attachments.length,
+        billingType,
+        invoiceNumber: vars.invoiceNumber,
+        paymentEmailId: input.paymentEmailId ?? null,
+        permitId,
+        subject,
+      });
+
+      const draftResult = await createNotificationDraft({
+        attachments,
+        body,
+        cc: input.cc?.length ? input.cc : DUST_PERMIT_BILLING_CC,
+        draft: input.draft,
+        subject,
+        to: input.recipients?.length ? input.recipients : DUST_PERMIT_BILLING_TO,
+      });
+
+      logger.info("Created manual billing draft", {
+        attachedFiles: draftResult.attachedFiles,
+        draftId: draftResult.draftMsg.id,
+        subject,
+      });
+
+      return {
+        attachedFiles: draftResult.attachedFiles,
+        draftId: draftResult.draftMsg.id,
+        invoiceNumber: vars.invoiceNumber,
+        mode: input.draft ? ("draft" as const) : ("sent" as const),
+        paymentEmailId: input.paymentEmailId ?? null,
+        permitCost: vars.permitCost,
+        permitId,
+        scheduleValue: vars.scheduleValue,
+        subject,
+        to: input.recipients?.length ? input.recipients : DUST_PERMIT_BILLING_TO,
         type: billingType,
       };
     }
@@ -1409,6 +1573,7 @@ export const dustPermitNotification = schemaTask({
           recipientResolution.recipientName
         : recipientResolution.recipientName;
     const attachments = await resolveNotificationAttachments({
+      facilityId: coerceString(permit.facility_id),
       permitId,
       projectName: coerceString(permit.project_name) ?? permitId,
       sourceEmail,

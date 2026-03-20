@@ -1,5 +1,7 @@
 /**
  * Rich item fetches that include relation and mirror column data.
+ *
+ * Uses next_items_page for pagination (same pattern as items.ts).
  */
 import type { MondayItem } from "@monday/types/schema";
 import { query } from "./query";
@@ -43,8 +45,15 @@ interface ItemsPageRichResponse {
   }[];
 }
 
+interface NextItemsPageRichResponse {
+  next_items_page: {
+    cursor: string | null;
+    items: RawRichItem[];
+  };
+}
+
 const DEFAULT_MAX_ITEMS = 10_000;
-const PAGE_SIZE = 100; // NOT 500 - causes timeouts per SYNC-KNOWLEDGE.md
+const PAGE_SIZE = 500;
 const RELATION_COLUMN_TYPES = new Set(["board_relation", "mirror"]);
 
 function getColumnDisplayValue(col: RawRichColumnValue): string | null {
@@ -91,6 +100,28 @@ function mapRawItemToMondayItemRich(
   };
 }
 
+const RICH_ITEM_FIELDS = `
+  id
+  name
+  group {
+    id
+    title
+  }
+  column_values {
+    id
+    type
+    text
+    value
+    ... on BoardRelationValue {
+      linked_item_ids
+      display_value
+    }
+    ... on MirrorValue {
+      display_value
+    }
+  }
+`;
+
 /**
  * Get items with full column data including linked items and mirror values.
  */
@@ -100,53 +131,44 @@ export async function getItemsRich(
 ): Promise<MondayItemRich[]> {
   const maxItems = options.maxItems ?? DEFAULT_MAX_ITEMS;
   const allItems: MondayItemRich[] = [];
-  let cursor: string | null = null;
 
-  do {
-    const cursorParam: string = cursor ? `, cursor: "${cursor}"` : "";
+  // First page: nested in boards
+  const firstResult = await query<ItemsPageRichResponse>(`
+    query {
+      boards(ids: ${boardId}) {
+        items_page(limit: ${PAGE_SIZE}) {
+          cursor
+          items { ${RICH_ITEM_FIELDS} }
+        }
+      }
+    }
+  `);
 
-    const result: ItemsPageRichResponse = await query<ItemsPageRichResponse>(`
+  const firstPage = firstResult.boards[0]?.items_page;
+  for (const item of firstPage?.items ?? []) {
+    allItems.push(mapRawItemToMondayItemRich(item, boardId));
+  }
+
+  let cursor = firstPage?.cursor ?? null;
+
+  // Subsequent pages: next_items_page at root level
+  while (cursor && allItems.length < maxItems) {
+    const nextResult = await query<NextItemsPageRichResponse>(`
       query {
-        boards(ids: ${boardId}) {
-          items_page(limit: ${PAGE_SIZE}${cursorParam}) {
-            cursor
-            items {
-              id
-              name
-              group {
-                id
-                title
-              }
-              column_values {
-                id
-                type
-                text
-                value
-                ... on BoardRelationValue {
-                  linked_item_ids
-                  display_value
-                }
-                ... on MirrorValue {
-                  display_value
-                }
-              }
-            }
-          }
+        next_items_page(limit: ${PAGE_SIZE}, cursor: "${cursor}") {
+          cursor
+          items { ${RICH_ITEM_FIELDS} }
         }
       }
     `);
 
-    const itemsPage:
-      | ItemsPageRichResponse["boards"][number]["items_page"]
-      | undefined = result.boards[0]?.items_page;
-    const items = itemsPage?.items ?? [];
-
-    for (const item of items) {
+    const page = nextResult.next_items_page;
+    for (const item of page?.items ?? []) {
       allItems.push(mapRawItemToMondayItemRich(item, boardId));
     }
 
-    cursor = itemsPage?.cursor ?? null;
-  } while (cursor && allItems.length < maxItems);
+    cursor = page?.cursor ?? null;
+  }
 
   return allItems;
 }

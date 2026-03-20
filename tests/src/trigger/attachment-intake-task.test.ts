@@ -339,7 +339,7 @@ describe("attachmentIntake task", () => {
     );
   });
 
-  test("gates the batch when provider capacity is exhausted", async () => {
+  test("marks provider-capacity failures as failed so the queue can advance", async () => {
     installMocks();
     state.attachments = [makeRow()];
     state.multipartError =
@@ -358,13 +358,21 @@ describe("attachmentIntake task", () => {
     expect(result).toMatchObject({
       deduped: 0,
       extracted: 0,
-      failed: 0,
-      gated: 1,
+      failed: 1,
+      gated: 0,
       notFoundLikeFailures: 0,
       processed: 1,
-      providerCapacityGated: true,
+      providerCapacityGated: false,
       skipped: 0,
     });
-    expect(state.updateExtractionCalls).toHaveLength(0);
+    expect(state.updateExtractionCalls).toEqual([
+      {
+        attachmentId: 101,
+        error:
+          'pdf-analysis /native-text-extraction/upload failed (429): {"detail":"All providers failed for \\"chat\\". Errors: local: unavailable | gemini: ClientError: 429 RESOURCE_EXHAUSTED"}',
+        extractedText: null,
+        status: "failed",
+      },
+    ]);
   });
 });

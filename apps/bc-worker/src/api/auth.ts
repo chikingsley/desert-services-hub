@@ -1,4 +1,4 @@
-// BuildingConnected auth process control and VNC clipboard bridge.
+// BuildingConnected auth process control.
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { stat } from "node:fs/promises";
 import { bcSession } from "../lib/browser";
@@ -7,11 +7,8 @@ const LOG = "[bc-worker-auth-api]";
 const DEFAULT_START_URL = "https://app.buildingconnected.com/";
 const DEFAULT_STATE_PATH = "/app/data/attachments/body-links-auth/state.json";
 const DEFAULT_MANUAL_TIMEOUT_MS = 20 * 60 * 1000;
-const DEFAULT_DISPLAY = ":1";
 const DEFAULT_RESOLUTION_WIDTH = 1920;
 const DEFAULT_RESOLUTION_HEIGHT = 1080;
-const DISPLAY_COMMAND_TIMEOUT_MS = 10_000;
-const CLIPBOARD_COPY_SETTLE_MS = 150;
 const MAX_LOG_LINES = 200;
 const VNC_RESOLUTION_PATTERN = /^(\d{2,5})x(\d{2,5})$/i;
 
@@ -78,13 +75,6 @@ const runState: BootstrapRunState = {
 
 let activeProcess: ChildProcessWithoutNullStreams | null = null;
 
-interface DisplayCommandResult {
-  code: number | null;
-  signal: string | null;
-  stderr: string;
-  stdout: string;
-}
-
 function pushLog(chunk: string): void {
   const lines = chunk
     .split(/\r?\n/g)
@@ -130,10 +120,6 @@ function getDefaultManualAuthTimeoutMs(): number {
   );
 }
 
-function getDisplay(): string {
-  return process.env.DISPLAY?.trim() || DEFAULT_DISPLAY;
-}
-
 export function parseBuildingConnectedVncResolution(raw: string | undefined): {
   height: number;
   width: number;
@@ -157,14 +143,6 @@ export function parseBuildingConnectedVncResolution(raw: string | undefined): {
   }
 
   return { height, width };
-}
-
-export function normalizeBuildingConnectedClipboardPasteRequest(
-  raw: unknown
-): string {
-  const body =
-    raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
-  return typeof body.text === "string" ? body.text : "";
 }
 
 export function normalizeBuildingConnectedAuthStartRequest(
@@ -361,162 +339,6 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-async function runDisplayCommand(
-  command: string,
-  args: string[],
-  options?: {
-    inputText?: string;
-    timeoutMs?: number;
-  }
-): Promise<DisplayCommandResult> {
-  return await new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      env: {
-        ...process.env,
-        DISPLAY: getDisplay(),
-      },
-      stdio: "pipe",
-    });
-
-    let stdout = "";
-    let stderr = "";
-    let timedOut = false;
-    const timeoutMs = options?.timeoutMs ?? DISPLAY_COMMAND_TIMEOUT_MS;
-    const timer = setTimeout(() => {
-      timedOut = true;
-      child.kill("SIGKILL");
-    }, timeoutMs);
-
-    child.stdout.on("data", (buffer: Buffer) => {
-      stdout += buffer.toString("utf8");
-    });
-
-    child.stderr.on("data", (buffer: Buffer) => {
-      stderr += buffer.toString("utf8");
-    });
-
-    child.once("error", (error) => {
-      clearTimeout(timer);
-      reject(error);
-    });
-
-    child.once("close", (code, signal) => {
-      clearTimeout(timer);
-      if (timedOut) {
-        reject(
-          new Error(
-            `${command} timed out after ${timeoutMs}ms (${args.join(" ")})`
-          )
-        );
-        return;
-      }
-      resolve({
-        code,
-        signal,
-        stderr,
-        stdout,
-      });
-    });
-
-    if (options?.inputText !== undefined) {
-      child.stdin.write(options.inputText);
-    }
-    child.stdin.end();
-  });
-}
-
-function summarizeDisplayFailure(
-  command: string,
-  result: DisplayCommandResult
-): string {
-  const trimmedError = result.stderr.trim();
-  const detail = trimmedError || result.stdout.trim() || "no output";
-  return `${command} failed (code=${result.code ?? "null"}, signal=${result.signal ?? "null"}): ${detail}`;
-}
-
-async function focusChromiumWindow(): Promise<void> {
-  await runDisplayCommand("xdotool", [
-    "search",
-    "--onlyvisible",
-    "--class",
-    "chromium",
-    "windowfocus",
-    "--sync",
-  ]).catch(() => {
-    // Non-fatal: if search fails we fall through to the key event anyway.
-  });
-}
-
-async function pasteToActiveVncWindow(text: string): Promise<void> {
-  const writeClipboardResult = await runDisplayCommand(
-    "xclip",
-    ["-selection", "clipboard", "-in"],
-    { inputText: text }
-  );
-  if (writeClipboardResult.code !== 0) {
-    throw new Error(
-      summarizeDisplayFailure("xclip write", writeClipboardResult)
-    );
-  }
-
-  await focusChromiumWindow();
-
-  const ctrlVResult = await runDisplayCommand("xdotool", [
-    "key",
-    "--clearmodifiers",
-    "ctrl+v",
-  ]);
-  if (ctrlVResult.code === 0) {
-    return;
-  }
-
-  const shiftInsertResult = await runDisplayCommand("xdotool", [
-    "key",
-    "--clearmodifiers",
-    "Shift+Insert",
-  ]);
-  if (shiftInsertResult.code !== 0) {
-    throw new Error(
-      summarizeDisplayFailure("xdotool paste", shiftInsertResult)
-    );
-  }
-}
-
-async function copyFromActiveVncWindow(): Promise<string> {
-  const copyKeyResult = await runDisplayCommand("xdotool", [
-    "key",
-    "--clearmodifiers",
-    "ctrl+c",
-  ]);
-  if (copyKeyResult.code !== 0) {
-    throw new Error(summarizeDisplayFailure("xdotool copy", copyKeyResult));
-  }
-
-  await new Promise((resolve) => setTimeout(resolve, CLIPBOARD_COPY_SETTLE_MS));
-
-  const readClipboardResult = await runDisplayCommand("xclip", [
-    "-selection",
-    "clipboard",
-    "-out",
-  ]);
-  if (readClipboardResult.code !== 0) {
-    throw new Error(summarizeDisplayFailure("xclip read", readClipboardResult));
-  }
-
-  return readClipboardResult.stdout;
-}
-
-function runningConflictResponse(message: string): Response {
-  return Response.json(
-    {
-      error: message,
-      success: false,
-      timestamp: new Date().toISOString(),
-    },
-    { status: 409 }
-  );
-}
-
 export async function handleBuildingConnectedAuthStatus(): Promise<Response> {
   return Response.json(await getStatusPayload());
 }
@@ -563,73 +385,4 @@ export async function handleBuildingConnectedAuthStop(): Promise<Response> {
     },
     { status: stopped ? 200 : 409 }
   );
-}
-
-export async function handleBuildingConnectedAuthClipboardPaste(
-  req: Request
-): Promise<Response> {
-  if (!(runState.running || bcSession.getStatus().active)) {
-    return runningConflictResponse(
-      "BuildingConnected auth session is not running"
-    );
-  }
-
-  try {
-    const body = (await req.json().catch(() => ({}))) as unknown;
-    const text = normalizeBuildingConnectedClipboardPasteRequest(body);
-    if (!text.length) {
-      return Response.json(
-        {
-          error: "Clipboard text is required",
-          success: false,
-          timestamp: new Date().toISOString(),
-        },
-        { status: 400 }
-      );
-    }
-
-    await pasteToActiveVncWindow(text);
-    return Response.json({
-      inserted: true,
-      success: true,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    return Response.json(
-      {
-        error: getErrorMessage(error),
-        inserted: false,
-        success: false,
-        timestamp: new Date().toISOString(),
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function handleBuildingConnectedAuthClipboardCopy(): Promise<Response> {
-  if (!(runState.running || bcSession.getStatus().active)) {
-    return runningConflictResponse(
-      "BuildingConnected auth session is not running"
-    );
-  }
-
-  try {
-    const text = await copyFromActiveVncWindow();
-    return Response.json({
-      success: true,
-      text,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    return Response.json(
-      {
-        error: getErrorMessage(error),
-        success: false,
-        text: "",
-        timestamp: new Date().toISOString(),
-      },
-      { status: 500 }
-    );
-  }
 }

@@ -117,54 +117,66 @@ export async function getLeadsWithEstimates(
     .map((columnId) => `"${columnId}"`)
     .join(", ");
 
-  interface LeadsPageResponse {
-    boards: Array<{
-      items_page: {
-        cursor: string | null;
-        items: Array<{
-          id: string;
-          name: string;
-          column_values: ItemColumnValue[];
-        }>;
-      };
+  interface ItemsPage {
+    cursor: string | null;
+    items: Array<{
+      id: string;
+      name: string;
+      column_values: ItemColumnValue[];
     }>;
   }
 
-  do {
-    const cursorPart: string = cursor ? `, cursor: "${cursor}"` : "";
+  const itemFields = `
+    id
+    name
+    column_values(ids: [${columnIdsLiteral}]) {
+      id
+      text
+      ... on BoardRelationValue { linked_item_ids }
+      ... on StatusValue { label }
+      ... on MirrorValue { display_value }
+    }
+  `;
 
-    const data: LeadsPageResponse = await query<LeadsPageResponse>(`
+  function collectLeads(page: ItemsPage | null) {
+    for (const item of page?.items ?? []) {
+      const lead = parseLeadFromItem(item, options);
+      if (lead) {
+        leads.push(lead);
+      }
+    }
+  }
+
+  // First page: nested in boards
+  const firstData = await query<{ boards: Array<{ items_page: ItemsPage }> }>(`
+    query {
+      boards(ids: ${BOARD_IDS.LEADS}) {
+        items_page(limit: 500) {
+          cursor
+          items { ${itemFields} }
+        }
+      }
+    }
+  `);
+
+  const firstPage = firstData.boards?.[0]?.items_page ?? null;
+  collectLeads(firstPage);
+  cursor = firstPage?.cursor ?? null;
+
+  // Subsequent pages: next_items_page at root level
+  while (cursor) {
+    const nextData = await query<{ next_items_page: ItemsPage }>(`
       query {
-        boards(ids: ${BOARD_IDS.LEADS}) {
-          items_page(limit: 200${cursorPart}) {
-            cursor
-            items {
-              id
-              name
-              column_values(ids: [${columnIdsLiteral}]) {
-                id
-                text
-                ... on BoardRelationValue { linked_item_ids }
-                ... on StatusValue { label }
-                ... on MirrorValue { display_value }
-              }
-            }
-          }
+        next_items_page(limit: 500, cursor: "${cursor}") {
+          cursor
+          items { ${itemFields} }
         }
       }
     `);
 
-    const page = data.boards?.[0]?.items_page ?? null;
-    if (page?.items) {
-      for (const item of page.items) {
-        const lead = parseLeadFromItem(item, options);
-        if (lead) {
-          leads.push(lead);
-        }
-      }
-    }
-    cursor = page?.cursor ?? null;
-  } while (cursor);
+    collectLeads(nextData.next_items_page);
+    cursor = nextData.next_items_page?.cursor ?? null;
+  }
 
   return leads;
 }

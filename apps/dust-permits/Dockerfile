@@ -3,8 +3,9 @@
 # =============================================================================
 # Desert Services Hub - Permit Worker Dockerfile
 # =============================================================================
-# Playwright + VNC + Bun for browser automation with visual feedback.
-# Portal scraping, permit sync, and dust permit automation.
+# Playwright + remote desktop + Bun for browser automation with visual feedback.
+# Supports the legacy TigerVNC/noVNC stack and a KasmVNC variant from the same
+# application codebase.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -24,17 +25,39 @@ RUN bun install || true
 # -----------------------------------------------------------------------------
 FROM mcr.microsoft.com/playwright:v1.58.2-noble AS runner
 
-# Install VNC components + unzip (needed for Bun)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  unzip \
-  tigervnc-standalone-server \
-  tigervnc-common \
-  tigervnc-tools \
-  novnc \
-  websockify \
-  openbox \
-  && rm -rf /var/lib/apt/lists/* \
-  && ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html
+ARG REMOTE_DESKTOP_BACKEND=novnc
+ARG KASMVNC_VERSION=1.4.0
+
+# Install remote desktop components + unzip (needed for Bun)
+RUN set -eux; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    dbus-x11 \
+    openbox \
+    unzip \
+    xauth; \
+  if [ "${REMOTE_DESKTOP_BACKEND}" = "novnc" ]; then \
+    apt-get install -y --no-install-recommends \
+      novnc \
+      tigervnc-common \
+      tigervnc-standalone-server \
+      tigervnc-tools \
+      websockify; \
+    ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html; \
+  elif [ "${REMOTE_DESKTOP_BACKEND}" = "kasmvnc" ]; then \
+    arch="$(dpkg --print-architecture)"; \
+    curl -fsSL \
+      -o /tmp/kasmvncserver.deb \
+      "https://github.com/kasmtech/KasmVNC/releases/download/v${KASMVNC_VERSION}/kasmvncserver_noble_${KASMVNC_VERSION}_${arch}.deb"; \
+    apt-get install -y --no-install-recommends /tmp/kasmvncserver.deb; \
+    rm -f /tmp/kasmvncserver.deb; \
+  else \
+    echo "Unsupported REMOTE_DESKTOP_BACKEND=${REMOTE_DESKTOP_BACKEND}" >&2; \
+    exit 1; \
+  fi; \
+  rm -rf /var/lib/apt/lists/*
 
 # Install Bun
 COPY --from=oven/bun:1.3 /usr/local/bin/bun /usr/local/bin/bun
@@ -63,6 +86,7 @@ COPY lib ./lib
 
 # Shared VNC startup (already in lib/ from COPY lib above)
 RUN chmod +x /app/lib/vnc/start-vnc.sh
+RUN chmod +x /app/lib/vnc/start-kasmvnc.sh /app/lib/vnc/start-remote-desktop.sh
 
 # Startup script
 COPY apps/dust-permits/start-stack.sh /start-stack.sh
@@ -72,14 +96,16 @@ RUN chmod +x /start-stack.sh
 RUN mkdir -p /app/data /app/tmp
 
 # Expose ports
-# 6080 = noVNC web interface (watch the browser)
+# 6080 = noVNC web interface (legacy)
+# 8444 = KasmVNC browser client + websocket/webrtc port
 # 47822 = API server (also serves frontend)
-EXPOSE 6080 47822
+EXPOSE 6080 8444/tcp 8444/udp 47822
 
 # Environment Defaults
 ENV DISPLAY=:1
 ENV HEADLESS=false
 ENV NODE_ENV=production
+ENV REMOTE_DESKTOP_BACKEND=novnc
 
 # Start everything: VNC + Server
 ENTRYPOINT ["/start-stack.sh"]

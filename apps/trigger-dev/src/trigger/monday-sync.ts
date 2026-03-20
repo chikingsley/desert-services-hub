@@ -25,10 +25,7 @@ import {
 } from "@monday/sync/project-seed/sync";
 import { logger, schedules, schemaTask, tasks } from "@trigger.dev/sdk";
 import { z } from "zod";
-import {
-  readPositiveIntEnv,
-  taskQueue,
-} from "./queue";
+import { readPositiveIntEnv, taskQueue } from "./queue";
 
 const PROJECT_SEED_STALE_DAYS = 45;
 const DEFAULT_MONDAY_FILE_BATCH_SIZE = 25;
@@ -531,48 +528,22 @@ export const mondaySyncIncremental = schedules.task({
       scanTruncateReason: result.metadata.reason ?? null,
     });
 
-    if (result.mode === "full_recommended") {
-      logger.warn(
-        `Activity log returned ${result.changedItemIds} changed items — scheduling full sync fallback`
-      );
-
-      await tasks.trigger("monday-sync", {}).catch((error) => {
-        const message = error instanceof Error ? error.message : String(error);
-        logger.error("Failed to schedule monday-sync fallback", {
-          error: message,
-        });
-      });
-
-      if (latestTimestamp) {
-        await setIncrementalSyncCursor(latestTimestamp);
-      }
-
-      return {
-        ...result,
-        filesDownloaded: 0,
-        fallbackScheduled: true,
-      };
-    }
-
+    // When activity log reports many changes, queue them individually
+    // instead of triggering a full board dump (which times out).
     if (
-      result.mode === "incremental" &&
-      estimateItemIds.length > MONDAY_INCREMENTAL_TASK_MAX_CHANGED_ITEMS
+      result.mode === "full_recommended" ||
+      (result.mode === "incremental" &&
+        estimateItemIds.length > MONDAY_INCREMENTAL_TASK_MAX_CHANGED_ITEMS)
     ) {
       logger.warn(
-        "Incremental run exceeded hard cap for changed items — scheduling full sync fallback",
+        `Activity log returned ${result.changedItemIds} changed items — syncing individually (no full dump)`,
         {
-          requested: estimateItemIds.length,
-          hardCap: MONDAY_INCREMENTAL_TASK_MAX_CHANGED_ITEMS,
           mode: result.mode,
+          itemCount: estimateItemIds.length,
         }
       );
 
-      await tasks.trigger("monday-sync", {}).catch((error) => {
-        const message = error instanceof Error ? error.message : String(error);
-        logger.error("Failed to schedule monday-sync fallback", {
-          error: message,
-        });
-      });
+      const queueResult = await queueItemSyncs(estimateItemIds);
 
       if (latestTimestamp) {
         await setIncrementalSyncCursor(latestTimestamp);
@@ -580,10 +551,10 @@ export const mondaySyncIncremental = schedules.task({
 
       return {
         ...result,
-        synced: 0,
-        errors: 0,
-        filesDownloaded: 0,
-        fallbackScheduled: true,
+        synced: queueResult.queued,
+        errors: queueResult.failed,
+        filesDownloaded: queueResult.queued,
+        fallbackScheduled: false,
       };
     }
 
@@ -601,32 +572,13 @@ export const mondaySyncIncremental = schedules.task({
 
     if (queueResult.truncated) {
       logger.warn(
-        "Incremental queue budget exhausted — scheduling full sync fallback",
+        "Incremental queue budget exhausted — remaining items will be picked up next cycle",
         {
           requested: estimateItemIds.length,
           queued: queueResult.queued,
           failed: queueResult.failed,
         }
       );
-
-      await tasks.trigger("monday-sync", {}).catch((error) => {
-        const message = error instanceof Error ? error.message : String(error);
-        logger.error("Failed to schedule monday-sync fallback", {
-          error: message,
-        });
-      });
-
-      if (latestTimestamp) {
-        await setIncrementalSyncCursor(latestTimestamp);
-      }
-
-      return {
-        ...result,
-        synced: queueResult.queued,
-        errors: queueResult.failed,
-        filesDownloaded: queueResult.queued,
-        fallbackScheduled: true,
-      };
     }
 
     if (queueResult.queued === estimateItemIds.length && latestTimestamp) {
@@ -662,12 +614,12 @@ export const mondaySyncIncremental = schedules.task({
   },
 });
 
-/** Full sync — every 6 hours as a safety net. */
+/** Full sync — daily at 2am as a drift-correction safety net. */
 export const mondaySync = schedules.task({
   id: "monday-sync",
   queue: MONDAY_SYNC_PIPELINE_QUEUE,
-  cron: "0 */6 * * *",
-  maxDuration: 1200,
+  cron: "0 2 * * *",
+  maxDuration: 1800,
   retry: { maxAttempts: 1 },
   run: () => runFullMondaySync(),
 });

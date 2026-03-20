@@ -40,8 +40,8 @@ import { readPositiveIntEnv, taskQueue } from "./queue";
 
 const DEFAULT_BATCH_SIZE = 100;
 const DEFAULT_DOWNLOAD_TIMEOUT_MS = 30_000;
-const DEFAULT_TASK_LOOP_BUDGET_MS = 7_100_000;
-const DEFAULT_MAX_DURATION_SECONDS = 7200;
+const DEFAULT_TASK_LOOP_BUDGET_MS = 240_000;
+const DEFAULT_MAX_DURATION_SECONDS = 300;
 const DEFAULT_MONDAY_ASSET_DOWNLOAD_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_ATTACHMENT_SIZE_MB = 50;
 
@@ -559,27 +559,6 @@ function isNotFoundLikeFailure(message: string): boolean {
   );
 }
 
-function isProviderCapacityFailure(message: string): boolean {
-  const m = message.toLowerCase();
-  return (
-    m.includes("resource_exhausted") ||
-    m.includes("exceeded your current quota") ||
-    m.includes("rate limit") ||
-    m.includes("all providers failed") ||
-    m.includes("provider unavailable") ||
-    m.includes("local: unavailable") ||
-    m.includes("failed (429)") ||
-    m.includes("failed (503)")
-  );
-}
-
-class ProviderCapacityGateError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ProviderCapacityGateError";
-  }
-}
-
 export async function loadEmailAttachmentBuffer(
   att: IntakeAttachmentRow
 ): Promise<Buffer> {
@@ -793,9 +772,6 @@ async function processEmailAttachment(
   }
 
   const errMsg = results[0]?.error ?? "No document created";
-  if (isProviderCapacityFailure(errMsg)) {
-    throw new ProviderCapacityGateError(errMsg);
-  }
   await updateAttachmentExtraction(
     att.attachment_id_pk,
     "failed",
@@ -904,23 +880,6 @@ export const attachmentIntake = schedules.task({
         });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        if (
-          err instanceof ProviderCapacityGateError ||
-          isProviderCapacityFailure(msg)
-        ) {
-          addFailureReason(msg);
-          counts.gated++;
-          logger.warn(
-            "Attachment intake provider capacity gate hit; stopping early to prevent failure flood",
-            {
-              id: att.attachment_id_pk,
-              name: att.name,
-              error: msg,
-            }
-          );
-          break;
-        }
-
         logger.warn("Attachment processing failed", {
           id: att.attachment_id_pk,
           name: att.name,

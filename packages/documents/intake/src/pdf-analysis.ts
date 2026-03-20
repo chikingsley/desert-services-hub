@@ -17,7 +17,7 @@
 const PDF_ANALYSIS_URL = (
   process.env.PDF_ANALYSIS_URL ?? "http://localhost:4848"
 ).replace(/\/$/, "");
-const DEFAULT_PDF_ANALYSIS_TIMEOUT_MS = 7_200_000;
+const DEFAULT_PDF_ANALYSIS_TIMEOUT_MS = 60_000;
 
 function readPositiveIntEnv(key: string, fallback: number): number {
   const raw = process.env[key]?.trim();
@@ -222,7 +222,7 @@ async function postMultipart<T>(
 
 export function nativeExtract(
   filePath: string,
-  provider = "local"
+  provider = "auto"
 ): Promise<ExtractionResult> {
   return post<ExtractionResult>("/native-text-extraction", {
     path: filePath,
@@ -233,7 +233,7 @@ export function nativeExtract(
 export function nativeExtractMultipart(
   buffer: Buffer,
   filename: string,
-  provider = "local"
+  provider = "auto"
 ): Promise<ExtractionResult> {
   return postMultipart<ExtractionResult>(
     "/native-text-extraction/upload",

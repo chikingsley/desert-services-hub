@@ -9,6 +9,7 @@ describe("dust permit reply route values", () => {
   test("builds a short project alias for text-first email search", () => {
     expect(
       buildPermitReplySearchTerms({
+        companyName: "Stevens Leinweber Construction Inc",
         permitId: "D0065531",
         projectName: "LPC 75TH AVE TRAILER PARKING",
       })
@@ -16,6 +17,8 @@ describe("dust permit reply route values", () => {
       "D0065531",
       "LPC 75TH AVE TRAILER PARKING",
       "LPC 75TH AVE",
+      "Stevens Leinweber Construction Inc",
+      "Stevens Leinweber Construction",
     ]);
   });
 
@@ -169,5 +172,58 @@ describe("dust permit reply route values", () => {
       "rmasi@stevensleinweber.com",
     ]);
     expect(selection.rankedCandidates[0]?.emailId).toBe(1181870);
+  });
+
+  test("prefers customer thread over county expedite thread", () => {
+    const selection = selectPermitReplyRoute(
+      [
+        {
+          bodyText:
+            "Good morning Chi, that application is set for final review today.",
+          ccEmails: [],
+          chiEmailId: 1216823,
+          emailId: 1216823,
+          fromEmail: "Susan.Jerabek@maricopa.gov",
+          hasChiCopy: true,
+          isForwarded: false,
+          isInternal: false,
+          mailboxEmail: "chi@desertservices.net",
+          receivedAt: "2026-03-20T15:53:02.000Z",
+          subject: 'RE: Expedite Request: D0065566 "Tru Grocer FCU"',
+          toEmails: ["chi@desertservices.net"],
+        },
+        {
+          bodyText:
+            "Please reach out to me directly with any questions. We'd like to get going asap on BMP installation and filing for dust control permit.",
+          ccEmails: [
+            "danielr@desertservices.net",
+            "francine@desertservices.net",
+            "Jayson@desertservices.net",
+          ],
+          chiEmailId: 1187093,
+          emailId: 1187093,
+          fromEmail: "justin@colleycontracting.com",
+          hasChiCopy: true,
+          isForwarded: false,
+          isInternal: false,
+          mailboxEmail: "chi@desertservices.net",
+          receivedAt: "2026-03-11T17:06:59.000Z",
+          subject: "Re: Tru Grocer Tolleson Dust Permit",
+          toEmails: ["contracts@desertservices.net"],
+        },
+      ],
+      {
+        permitId: "D0065566",
+        projectName: "Tru Grocer FCU",
+      }
+    );
+
+    expect(selection.mode).toBe("reply-all");
+    expect(selection.replyToEmailId).toBe(1187093);
+    expect(selection.selectedCandidateEmailId).toBe(1187093);
+    expect(selection.matchedRecipients).toEqual([
+      "justin@colleycontracting.com",
+    ]);
+    expect(selection.rankedCandidates[0]?.emailId).toBe(1187093);
   });
 });

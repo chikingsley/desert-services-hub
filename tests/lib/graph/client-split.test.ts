@@ -116,6 +116,66 @@ describe("graph module split", () => {
     });
   });
 
+  test("http module retries 429 responses using Retry-After", async () => {
+    process.env.AZURE_TENANT_ID = "tenant-123";
+    process.env.AZURE_CLIENT_ID = "client-123";
+    process.env.AZURE_CLIENT_SECRET = "secret-123";
+
+    const fetchCalls: FetchCall[] = [];
+    let graphAttempts = 0;
+    globalThis.fetch = (async (url, init) => {
+      const requestUrl = String(url);
+      fetchCalls.push({ url: requestUrl, init });
+      if (requestUrl.includes("login.microsoftonline.com")) {
+        return jsonResponse({
+          access_token: "token-retry",
+          expires_in: 3600,
+        });
+      }
+
+      graphAttempts += 1;
+      if (graphAttempts === 1) {
+        return new Response(
+          JSON.stringify({
+            error: {
+              code: "ApplicationThrottled",
+              message: "Application is over its MailboxConcurrency limit.",
+            },
+          }),
+          {
+            status: 429,
+            headers: {
+              "Content-Type": "application/json",
+              "Retry-After": "0",
+            },
+          }
+        );
+      }
+
+      return jsonResponse({ ok: true });
+    }) as typeof fetch;
+
+    const { graphGet } = await import(
+      withCacheBuster("../../../lib/graph/http.ts")
+    );
+
+    expect(await graphGet<{ ok: boolean }>("users/user-1/messages")).toEqual({
+      ok: true,
+    });
+
+    const graphCalls = fetchCalls.filter((call) =>
+      call.url.includes("graph.microsoft.com")
+    );
+
+    expect(graphCalls).toHaveLength(2);
+    expect(graphCalls[0]?.url).toBe(
+      "https://graph.microsoft.com/v1.0/users/user-1/messages"
+    );
+    expect(graphCalls[1]?.url).toBe(
+      "https://graph.microsoft.com/v1.0/users/user-1/messages"
+    );
+  });
+
   test("mail attachment client preserves existing attachment endpoints", async () => {
     process.env.AZURE_TENANT_ID = "tenant-123";
     process.env.AZURE_CLIENT_ID = "client-123";

@@ -15,6 +15,7 @@ const REPLY_SIGNAL_TERMS = [
 ];
 const BILLING_SIGNAL_TERMS = ["billing", "invoice", "point and pay", "pointandpay"];
 const INTERNAL_DOMAIN = "@desertservices.net";
+const COUNTY_PERMIT_DOMAIN = "@maricopa.gov";
 const HAS_DIGIT_RE = /\d/;
 const MARICOPA_SOURCE_SENDERS = new Set([
   "aqdimpact@maricopa.gov",
@@ -61,8 +62,8 @@ function parseDateMs(value: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function buildProjectVariants(projectName: string | null | undefined): string[] {
-  const trimmed = projectName?.trim();
+function buildTextVariants(value: string | null | undefined): string[] {
+  const trimmed = value?.trim();
   if (!trimmed) {
     return [];
   }
@@ -85,12 +86,14 @@ function buildProjectVariants(projectName: string | null | undefined): string[] 
 }
 
 export function buildPermitReplySearchTerms(params: {
+  companyName?: string | null;
   permitId?: string | null;
   projectName?: string | null;
 }): string[] {
   return uniqueStrings([
     params.permitId,
-    ...buildProjectVariants(params.projectName),
+    ...buildTextVariants(params.projectName),
+    ...buildTextVariants(params.companyName),
   ]);
 }
 
@@ -103,6 +106,10 @@ function isInternalSender(candidate: PermitReplyRouteCandidate): boolean {
     candidate.isInternal ||
     candidate.fromEmail?.toLowerCase().endsWith(INTERNAL_DOMAIN) === true
   );
+}
+
+function isCountyPermitSender(candidate: PermitReplyRouteCandidate): boolean {
+  return candidate.fromEmail?.toLowerCase().endsWith(COUNTY_PERMIT_DOMAIN) === true;
 }
 
 function isSystemPermitSender(candidate: PermitReplyRouteCandidate): boolean {
@@ -130,12 +137,19 @@ function scorePermitReplyRouteCandidate(
     reasons.push("no-chi-copy");
   }
 
-  if (!isInternalSender(candidate) && !isSystemPermitSender(candidate)) {
+  if (
+    !isInternalSender(candidate) &&
+    !isSystemPermitSender(candidate) &&
+    !isCountyPermitSender(candidate)
+  ) {
     score += 60;
     reasons.push("external-sender");
   } else if (isSystemPermitSender(candidate)) {
     score -= 80;
     reasons.push("system-permit-sender");
+  } else if (isCountyPermitSender(candidate)) {
+    score -= 140;
+    reasons.push("county-permit-sender");
   } else {
     score -= 120;
     reasons.push("internal-sender");
@@ -172,7 +186,7 @@ function scorePermitReplyRouteCandidate(
     reasons.push("billing-signal");
   }
 
-  const projectVariants = buildProjectVariants(params.projectName);
+  const projectVariants = buildTextVariants(params.projectName);
   const phraseMatch = projectVariants.find((variant) =>
     haystack.includes(normalizeText(variant))
   );
@@ -223,13 +237,16 @@ export function selectPermitReplyRoute(
         candidate.chiEmailId &&
         !candidate.isForwarded &&
         !isInternalSender(candidate) &&
-        !isSystemPermitSender(candidate)
+        !isSystemPermitSender(candidate) &&
+        !isCountyPermitSender(candidate)
     ) ?? null;
   const selected =
     replyAllCandidate ??
     rankedCandidates.find(
       (candidate) =>
-        !isInternalSender(candidate) && !isSystemPermitSender(candidate)
+        !isInternalSender(candidate) &&
+        !isSystemPermitSender(candidate) &&
+        !isCountyPermitSender(candidate)
     ) ??
     rankedCandidates.find((candidate) => !isSystemPermitSender(candidate)) ??
     rankedCandidates[0] ??

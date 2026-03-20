@@ -8,8 +8,6 @@
 import { serve } from "bun";
 import {
   handleBrowserAbort,
-  handleBrowserClipboardCopy,
-  handleBrowserClipboardPaste,
   handleBrowserKeepAlive,
   handleBrowserReady,
   handleBrowserStart,
@@ -203,16 +201,6 @@ serve({
     "/api/browser/abort": {
       POST(req) {
         return handleBrowserAbort(req);
-      },
-    },
-    "/api/browser/clipboard/paste": {
-      POST(req) {
-        return handleBrowserClipboardPaste(req);
-      },
-    },
-    "/api/browser/clipboard/copy": {
-      POST() {
-        return handleBrowserClipboardCopy();
       },
     },
   },

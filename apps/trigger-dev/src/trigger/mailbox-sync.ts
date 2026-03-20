@@ -31,7 +31,6 @@ import type { InsertEmailData } from "@lib/db/types";
 import { graphGet } from "@lib/graph/http";
 import { logger, schedules, schemaTask, tasks } from "@trigger.dev/sdk";
 import { z } from "zod";
-import { extractBillingEmailDetails } from "./dust-permit-billing-values";
 import { taskQueue } from "./queue";
 
 export const LOOKBACK_HOURS = 6;
@@ -62,14 +61,11 @@ const THREAD_SIBLING_FALLBACK_MAX_PAGES = 8;
 const FULL_HISTORY_SINCE_ISO = "1970-01-01T00:00:00.000Z";
 const AUTO_DRAFT_MAILBOX = "chi@desertservices.net";
 const POINT_AND_PAY_SENDER = "noreply@pointandpay.com";
+const POINT_AND_PAY_INVOICE_RE = /Account Number:\s*(IV\d+)/i;
 const MARICOPA_ISSUED_SUBJECT_RE = /dust permit issued/i;
 const MARICOPA_APPLICATION_RE =
   /dust control permit application\s*(D\d{7})/i;
-const MARICOPA_ISSUED_SENDERS = new Set([
-  "aqdimpact@maricopa.gov",
-  "no-reply@maricopa.gov",
-  "noreply@permitcenter.maricopa.gov",
-]);
+const MARICOPA_ISSUED_SENDERS = new Set(["no-reply@maricopa.gov"]);
 
 const EMAIL_FIELDS = [
   "id",
@@ -481,8 +477,7 @@ export function detectDustPermitAutoDraftSeed(params: {
   const combinedText = buildEmailText([subject, bodyText]);
 
   if (fromEmail === POINT_AND_PAY_SENDER) {
-    const billingDetails = extractBillingEmailDetails(combinedText);
-    if (billingDetails?.invoiceNumber?.startsWith("IV")) {
+    if (POINT_AND_PAY_INVOICE_RE.test(combinedText)) {
       return { kind: "billing" };
     }
   }
@@ -541,9 +536,10 @@ async function maybeTriggerDustPermitAutoDraft(params: {
   }
 
   if (seed.kind === "billing") {
-    await tasks.trigger("dust-permit-notification", {
+    await tasks.trigger("dust-permit-submitted-billing-notification", {
       draft: true,
       emailId: params.emailId,
+      mode: "payment-email",
     });
     logger.info("Triggered dust permit billing auto-draft", {
       emailId: params.emailId,
@@ -552,14 +548,16 @@ async function maybeTriggerDustPermitAutoDraft(params: {
   }
 
   const type = await resolveDustPermitNotificationType(seed.permitId);
-  await tasks.trigger("dust-permit-reply-route", {
+  await tasks.trigger("dust-permit-issued-notification", {
     draft: true,
-    dryRun: false,
-    permitId: seed.permitId,
-    sourceEmailId: params.emailId,
+    selector: {
+      kind: "source-email",
+      permitId: seed.permitId,
+      sourceEmailId: params.emailId,
+    },
     type,
   });
-  logger.info("Triggered dust permit issued auto-draft route", {
+  logger.info("Triggered dust permit issued auto-draft", {
     emailId: params.emailId,
     permitId: seed.permitId,
     type,

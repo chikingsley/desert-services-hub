@@ -1,10 +1,13 @@
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { ESTIMATING_COLUMNS } from "@monday/types/schema";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /** Where downloaded files are stored (inside Docker volume). */
 export const FILES_DIR =
   process.env.MONDAY_FILES_DIR ??
-  join(import.meta.dir, "../../lib/db/monday-files");
+  join(__dirname, "../../lib/db/monday-files");
 
 /**
  * File columns on the ESTIMATING board -> storage path columns in estimates table.

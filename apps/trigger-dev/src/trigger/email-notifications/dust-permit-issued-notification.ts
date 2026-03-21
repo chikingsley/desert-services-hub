@@ -38,6 +38,7 @@ const MARICOPA_APPLICATION_RE =
 const MARICOPA_FACILITY_ID_RE = /Facility ID#:\s*(F\d{6,})/i;
 
 type DbClient = typeof import("@lib/db/client").db;
+type SqlParam = import("@lib/db/client").SqlParam;
 const NOTIFICATION_TYPES = [
   "issued",
   "renewed",
@@ -946,7 +947,7 @@ async function queryReplyRouteCandidates(
     "COALESCE(e.is_excluded, 0) = 0",
     "e.received_at >= now() - interval '365 days'",
   ];
-  const paramsList: unknown[] = [];
+  const paramsList: SqlParam[] = [];
 
   if (typeof params.projectId === "number") {
     paramsList.push(params.projectId);

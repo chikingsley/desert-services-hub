@@ -1,30 +1,10 @@
 import { defineConfig } from "@trigger.dev/sdk";
 
-const BUN_IMPORT_RE = /^bun$/;
-
 export default defineConfig({
-  project: "proj_cebbbbrvbstcozdvvnri",
-  runtime: "bun",
+  project: "proj_wkzoqdssbjqgovmwhvjq",
+  runtime: "node",
   maxDuration: 7200,
   dirs: ["./apps/trigger-dev/src/trigger"],
-  build: {
-    external: ["bun"],
-    extensions: [
-      {
-        name: "bun-external",
-        onBuildStart(context) {
-          context.registerPlugin({
-            name: "bun-external-plugin",
-            setup(build) {
-              build.onResolve({ filter: BUN_IMPORT_RE }, () => ({
-                external: true,
-              }));
-            },
-          });
-        },
-      },
-    ],
-  },
   retries: {
     enabledInDev: true,
     default: {

@@ -1,6 +1,6 @@
 import { databasePath } from "@lib/db/client";
 import { logger, schemaTask } from "@trigger.dev/sdk";
-import { SQL as BunSQL } from "bun";
+import postgres from "postgres";
 import { z } from "zod";
 import { taskQueue } from "./queue";
 
@@ -19,8 +19,8 @@ const loadTestSchema = z.object({
   label: z.string().trim().max(120).optional(),
 });
 
-async function closeClients(clients: BunSQL[]): Promise<void> {
-  await Promise.allSettled(clients.map((client) => client.close()));
+async function closeClients(clients: postgres.Sql[]): Promise<void> {
+  await Promise.allSettled(clients.map((client) => client.end()));
 }
 
 export const loadTestDbSaturation = schemaTask({
@@ -56,7 +56,7 @@ export const loadTestDbSaturation = schemaTask({
 
     const clients = Array.from(
       { length: boundedConnections },
-      () => new BunSQL(dbUrl, { max: 1, prepare: false })
+      () => postgres(dbUrl, { max: 1, prepare: false })
     );
 
     try {

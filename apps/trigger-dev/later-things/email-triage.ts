@@ -8,6 +8,7 @@
  */
 
 import { db } from "@lib/db/client";
+import type { SqlParam } from "@lib/db/client";
 import { updateEmailClassification } from "@email/db/email";
 import { findEstimateCandidatesForEmail, linkEmailToEstimate } from "@estimates/db/estimate-email";
 import { upsertProjectMatchReview } from "@projects/db/project-match-review";
@@ -235,7 +236,7 @@ async function getBackfillCandidateEmailIds(params: {
     "e.project_id IS NULL",
     "COALESCE(e.is_excluded, 0) = 0",
   ];
-  const values: unknown[] = [];
+  const values: SqlParam[] = [];
 
   const projectQuery = trimToNull(params.projectQuery);
   if (projectQuery) {

@@ -54,8 +54,10 @@ interface UpdateDraftParams {
 
 interface AddFileAttachmentParams {
   contentBytesBase64: string;
+  contentId?: string;
   contentType: string;
   draftId: string;
+  isInline?: boolean;
   name: string;
   userId: string;
 }
@@ -95,6 +97,8 @@ export function createComposeClient(): GraphComposeClient {
           name: params.name,
           contentType: params.contentType,
           contentBytes: params.contentBytesBase64,
+          ...(params.contentId ? { contentId: params.contentId } : {}),
+          ...(params.isInline != null ? { isInline: params.isInline } : {}),
         }
       );
     },

@@ -98,7 +98,12 @@ export async function resolvePermitId(
   }
 
   if (!input.permitId) throw new Error("manual mode requires permitId");
-  return { permitId: input.permitId, paymentDate: null };
+  const permit = await db
+    .query<{ submitted_date: string | null }, [string]>(
+      "SELECT submitted_date FROM dust_permits_filed_by_desert_services WHERE id = $1"
+    )
+    .get(input.permitId);
+  return { permitId: input.permitId, paymentDate: permit?.submitted_date ?? null };
 }
 
 // ── PDF naming ───────────────────────────────────────────────────────────────

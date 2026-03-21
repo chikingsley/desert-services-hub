@@ -29,6 +29,11 @@ export function signatureHtml(): string {
 <div><img src="cid:logo" alt="Desert Services LLC" width="264" style="max-width:100%"></div>`;
 }
 
+/** Render a labeled list item — skips if value is null/undefined */
+export function li(label: string, value: string | null | undefined): string {
+  return value ? `<li><div><b>${escapeHtml(label)}:</b> ${escapeHtml(value)}</div></li>` : "";
+}
+
 /**
  * Desert Services logo as an inline email attachment.
  * Use with Graph API's addFileAttachment — set contentId and isInline

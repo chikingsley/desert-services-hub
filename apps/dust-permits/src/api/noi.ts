@@ -5,6 +5,15 @@ import {
 import { z } from "zod";
 import { handleCreatePermit } from "@/api/permits";
 import { DEFAULTS, type DeepPartial, type FormData } from "@/form-data";
+import type { LatLng } from "@/lib/dust-features";
+import type {
+  GeometrySource,
+  ResolvedGeometrySource,
+} from "@/lib/geometry-source";
+import {
+  GeometrySourceSchema,
+  resolveGeometrySource,
+} from "@/lib/geometry-source";
 import { queryParcelByCoordinates } from "@/lib/assessor";
 import type { AzdeqCgpRecord } from "@/lib/noi-endpoints";
 import {
@@ -13,7 +22,10 @@ import {
   parseNoiCoordinates,
   resolveNoiRecord,
 } from "@/lib/noi-endpoints";
-import { evaluateParcelAcreageDecision } from "@/lib/noi-triage";
+import {
+  evaluateParcelAcreageDecision,
+  getMaricopaPermitPricingTier,
+} from "@/lib/noi-triage";
 import { approximatePolygonAreaM2, m2ToAcres } from "@/lib/site-drawing";
 
 const resolveNoiSchema = z.object({
@@ -22,6 +34,7 @@ const resolveNoiSchema = z.object({
   flow: z.enum(["new-company", "existing-company"]).optional(),
   companyName: z.string().min(1).optional(),
   copyFromApp: z.string().min(1).optional(),
+  geometrySource: GeometrySourceSchema.optional(),
 });
 
 const createNoiSchema = resolveNoiSchema.extend({
@@ -217,6 +230,36 @@ function jsonError(
   );
 }
 
+function buildGeometryChecks(
+  geometrySource: GeometrySource,
+  geometry: ResolvedGeometrySource
+): {
+  approved: boolean;
+  centroid: LatLng | null;
+  disturbedAcres: number | null;
+  disturbedTier: string | null;
+  geometryOverride: true;
+  kind: GeometrySource["kind"];
+  parcelAcreageCheckSkipped: true;
+  targetParcelDashed: string | null;
+} {
+  const disturbedTier =
+    geometry.disturbedAcres !== null
+      ? getMaricopaPermitPricingTier(geometry.disturbedAcres)
+      : null;
+
+  return {
+    approved: disturbedTier !== null,
+    centroid: geometry.centroid,
+    disturbedAcres: geometry.disturbedAcres,
+    disturbedTier,
+    geometryOverride: true,
+    kind: geometrySource.kind,
+    parcelAcreageCheckSkipped: true,
+    targetParcelDashed: geometry.targetParcelDashed ?? null,
+  };
+}
+
 async function resolveNoiAndChecks(
   input: z.infer<typeof resolveNoiSchema>
 ): Promise<
@@ -236,6 +279,7 @@ async function resolveNoiAndChecks(
           copyFromApp?: string;
           flow: "new-company" | "existing-company";
           formData: DeepPartial<FormData>;
+          geometrySource?: GeometrySource;
         };
         noi: Record<string, unknown>;
       };
@@ -264,7 +308,26 @@ async function resolveNoiAndChecks(
     };
   }
 
-  const disturbedAcres = input.disturbedAcres ?? parseNoiAcres(record);
+  let resolvedGeometry: ResolvedGeometrySource | undefined;
+  if (input.geometrySource) {
+    try {
+      resolvedGeometry = await resolveGeometrySource(input.geometrySource);
+    } catch (error) {
+      return {
+        error: jsonError(
+          `Failed to resolve geometrySource: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        ),
+        ok: false,
+      };
+    }
+  }
+
+  const disturbedAcres =
+    input.disturbedAcres ??
+    resolvedGeometry?.disturbedAcres ??
+    parseNoiAcres(record);
   if (disturbedAcres === null || disturbedAcres <= 0) {
     return {
       error: jsonError("Unable to resolve disturbed acres from NOI", 422, {
@@ -286,38 +349,50 @@ async function resolveNoiAndChecks(
     };
   }
 
-  const parcel = await queryParcelByCoordinates(latitude, longitude);
-  if (!parcel) {
+  const siteLatitude = resolvedGeometry?.centroid?.lat ?? latitude;
+  const siteLongitude = resolvedGeometry?.centroid?.lng ?? longitude;
+
+  const parcel = await queryParcelByCoordinates(siteLatitude, siteLongitude);
+  if (!parcel && !resolvedGeometry) {
     return {
       error: jsonError("No parcel found at NOI coordinates", 422, {
-        latitude,
-        longitude,
+        latitude: siteLatitude,
+        longitude: siteLongitude,
       }),
       ok: false,
     };
   }
 
-  const geometryAcres = parcelAcresFromGeometry(parcel.polygon);
-  const parcelAcres =
-    typeof parcel.acres === "number" &&
-    Number.isFinite(parcel.acres) &&
-    parcel.acres > 0
-      ? parcel.acres
-      : geometryAcres;
-  if (!parcelAcres || parcelAcres <= 0) {
-    return {
-      error: jsonError(
-        "Unable to resolve parcel acreage from assessor data",
-        422,
-        {
+  let decision: ReturnType<typeof evaluateParcelAcreageDecision> | ReturnType<typeof buildGeometryChecks>;
+  if (resolvedGeometry && input.geometrySource) {
+    decision = buildGeometryChecks(input.geometrySource, resolvedGeometry);
+  } else {
+    if (!parcel) {
+      return {
+        error: jsonError("No parcel found at NOI coordinates", 422, {
+          latitude: siteLatitude,
+          longitude: siteLongitude,
+        }),
+        ok: false,
+      };
+    }
+    const geometryAcres = parcelAcresFromGeometry(parcel.polygon);
+    const parcelAcres =
+      typeof parcel.acres === "number" &&
+      Number.isFinite(parcel.acres) &&
+      parcel.acres > 0
+        ? parcel.acres
+        : geometryAcres;
+    if (!parcelAcres || parcelAcres <= 0) {
+      return {
+        error: jsonError("Unable to resolve parcel acreage from assessor data", 422, {
           apn: parcel.apn,
-        }
-      ),
-      ok: false,
-    };
+        }),
+        ok: false,
+      };
+    }
+    decision = evaluateParcelAcreageDecision(disturbedAcres, parcelAcres);
   }
-
-  const decision = evaluateParcelAcreageDecision(disturbedAcres, parcelAcres);
 
   // Company check: look up the NOI company in our permits database
   const noiCompanyName = clean(input.companyName) ?? clean(record.companyName);
@@ -335,8 +410,8 @@ async function resolveNoiAndChecks(
   const formData = buildFormDataOverrides(
     record,
     disturbedAcres,
-    latitude,
-    longitude
+    siteLatitude,
+    siteLongitude
   );
 
   const createPayload = {
@@ -344,6 +419,7 @@ async function resolveNoiAndChecks(
     ...(input.copyFromApp ? { copyFromApp: input.copyFromApp } : {}),
     flow,
     formData,
+    ...(input.geometrySource ? { geometrySource: input.geometrySource } : {}),
   };
 
   return {
@@ -367,6 +443,8 @@ async function resolveNoiAndChecks(
         conEndDate: clean(record.conEndDate),
         conStartDate: clean(record.conStartDate),
         facilityName: clean(record.facilityName),
+        latitude: siteLatitude,
+        longitude: siteLongitude,
         identifier: resolved.identifier,
         ltfIdno: clean(record.ltfIdno),
         permitAuthCode: clean(record.permitAuthCode),

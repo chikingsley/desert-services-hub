@@ -3,7 +3,7 @@
  *
  * CRUD and query operations for dust_permits_filed_by_desert_services.
  */
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import type { Database } from "@lib/db/generated/database.types";
 import { parseBoolInt } from "@lib/db/parsers";
 import type { Permit, PermitStatus, UpsertPermitData } from "@lib/db/types";
@@ -41,7 +41,7 @@ function parsePermitRow(row: PermitRow): Permit {
   };
 }
 
-function toPermitUpsertParams(data: UpsertPermitData): unknown[] {
+function toPermitUpsertParams(data: UpsertPermitData): SqlParam[] {
   return [
     data.id,
     data.projectName ?? null,

@@ -1,4 +1,4 @@
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import type {
   EstimateLineItemRow,
   EstimateRow,
@@ -83,7 +83,7 @@ export async function handleDuplicateEstimate(
 
       const sectionIdMap = new Map<string, string>();
       if (originalSections.length > 0) {
-        const sectionValues: unknown[] = [];
+        const sectionValues: SqlParam[] = [];
         const sectionPlaceholders: string[] = [];
 
         for (const section of originalSections) {
@@ -111,7 +111,7 @@ export async function handleDuplicateEstimate(
       }
 
       if (originalLineItems.length > 0) {
-        const itemValues: unknown[] = [];
+        const itemValues: SqlParam[] = [];
         const itemPlaceholders: string[] = [];
 
         for (const item of originalLineItems) {

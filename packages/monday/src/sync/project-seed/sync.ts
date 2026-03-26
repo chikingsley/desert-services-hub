@@ -116,7 +116,7 @@ async function createProjectForGroup(
     state.stats.movedToLost++;
   }
 
-  const inserted = (await db.run(
+  const inserted = await db.query<ProjectSeedRow>(
     `INSERT INTO projects (
        name, normalized_name, address,
        account_id, contractor, lifecycle_state,
@@ -134,8 +134,8 @@ async function createProjectForGroup(
      )
      RETURNING
        id, lifecycle_state, seed_key, seed_source,
-       name, normalized_name, address, account_id, contractor`,
-    [
+       name, normalized_name, address, account_id, contractor`
+  ).all(
       group.representativeName,
       group.normalizedName,
       group.representativeAddress,
@@ -146,8 +146,7 @@ async function createProjectForGroup(
       desiredState,
       desiredState,
       group.latestEvidenceAt,
-    ]
-  )) as ProjectSeedRow[];
+    );
 
   const project = inserted[0] ?? null;
   const projectId = project?.id ?? null;
@@ -181,7 +180,7 @@ async function updateProjectForGroup(
     return;
   }
 
-  const updated = (await db.run(
+  const updated = await db.query<ProjectSeedRow>(
     `UPDATE projects
      SET
        name = CASE
@@ -227,8 +226,8 @@ async function updateProjectForGroup(
      WHERE id = $14
      RETURNING
        id, lifecycle_state, seed_key, seed_source,
-       name, normalized_name, address, account_id, contractor`,
-    [
+       name, normalized_name, address, account_id, contractor`
+  ).all(
       group.representativeName,
       group.normalizedName,
       group.representativeAddress,
@@ -243,8 +242,7 @@ async function updateProjectForGroup(
       desiredState,
       group.latestEvidenceAt,
       projectId,
-    ]
-  )) as ProjectSeedRow[];
+    );
 
   const next = updated[0];
   if (next) {
@@ -504,16 +502,15 @@ export async function markStaleProjectSeeds(
   let moved = 0;
   for (const batch of chunk(ids, SQL_BATCH_SIZE)) {
     const placeholders = batch.map((_, index) => `$${index + 1}`).join(", ");
-    const rows = (await db.run(
+    const rows = await db.query<{ id: number }>(
       `UPDATE projects
        SET lifecycle_state = 'lost',
            lost_at = COALESCE(lost_at, now()),
            updated_at = now()
        WHERE id IN (${placeholders})
          AND lifecycle_state = 'seed'
-       RETURNING id`,
-      batch
-    )) as Array<{ id: number }>;
+       RETURNING id`
+    ).all(...batch);
     moved += rows.length;
   }
 

@@ -4,7 +4,7 @@
  * Visibility + supervised rerun workspace for processed documents.
  */
 
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import {
   buildListQuery,
   getReviewDetailRow,
@@ -45,7 +45,7 @@ export async function listDocumentReview(req: Request): Promise<Response> {
       async () =>
         await db.transaction(async () => {
           const items = await db
-            .query<ReviewListRow, unknown[]>(sql)
+            .query<ReviewListRow, SqlParam[]>(sql)
             .all(...params);
           const statsRow = await db
             .query<ReviewStatsRow>(

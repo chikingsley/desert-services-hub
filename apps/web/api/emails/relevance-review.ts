@@ -1,5 +1,5 @@
 import { chat } from "@documents-intake/pdf-analysis";
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import { z } from "zod";
 import {
   type CandidateRow,
@@ -133,10 +133,10 @@ function parseOptionalQuery(raw: string | null): string | null {
 }
 
 function buildListQuery(url: URL): {
-  params: unknown[];
+  params: SqlParam[];
   sql: string;
 } {
-  const params: unknown[] = [];
+  const params: SqlParam[] = [];
   const where: string[] = [];
   const query = parseOptionalQuery(url.searchParams.get("q"));
   const reviewStatus = parseOptionalQuery(url.searchParams.get("reviewStatus"));
@@ -381,7 +381,7 @@ export async function listEmailRelevanceReview(
       },
       async () =>
         await db.transaction(async () => {
-          const items = await db.query<ListRow, unknown[]>(sql).all(...params);
+          const items = await db.query<ListRow, SqlParam[]>(sql).all(...params);
           const stats = await db
             .query<StatsRow>(
               `SELECT

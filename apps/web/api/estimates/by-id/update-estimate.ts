@@ -1,4 +1,4 @@
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import type { EstimateRow, EstimateVersionRow } from "@lib/db/types";
 import {
   type BunRequest,
@@ -163,7 +163,7 @@ async function insertSections(
     return { sectionIdMap, validSectionIds };
   }
 
-  const sectionValues: unknown[] = [];
+  const sectionValues: SqlParam[] = [];
   const sectionPlaceholders: string[] = [];
 
   let sortOrder = 0;
@@ -231,7 +231,7 @@ async function insertLineItems(
     return;
   }
 
-  const itemValues: unknown[] = [];
+  const itemValues: SqlParam[] = [];
   const itemPlaceholders: string[] = [];
 
   let sortOrder = 0;

@@ -1,7 +1,7 @@
 /**
  * Estimate Repository
  */
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import type { Database } from "@lib/db/generated/database.types";
 import { parseBoolInt } from "@lib/db/parsers";
 import { likeSearch } from "@lib/db/search";
@@ -38,7 +38,7 @@ function parseEstimateRow(row: EstimateDbRow): Estimate {
   };
 }
 
-function toEstimateUpsertParams(data: UpsertEstimateData): unknown[] {
+function toEstimateUpsertParams(data: UpsertEstimateData): SqlParam[] {
   return [
     data.mondayItemId,
     data.name,

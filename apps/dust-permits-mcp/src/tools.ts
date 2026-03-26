@@ -16,6 +16,96 @@ import { PermitWorkerError } from "@/apps/dust-permits-mcp/client";
 const PERMIT_ID_DESC =
   "Maricopa County dust permit number in D0XXXXXX format (e.g., D0063827)";
 
+const geometryPointSchema = z.object({
+  lat: z.number().describe("Latitude in WGS84 decimal degrees"),
+  lng: z.number().describe("Longitude in WGS84 decimal degrees"),
+});
+
+const geometrySourceSchema = z
+  .discriminatedUnion("kind", [
+    z.object({
+      kind: z.literal("manual"),
+      disturbedArea: z
+        .array(geometryPointSchema)
+        .min(3)
+        .describe("Disturbed-area polygon vertices in drawing order"),
+      accessPoints: z
+        .array(geometryPointSchema)
+        .optional()
+        .describe("Optional access-point coordinates"),
+      disturbedAcres: z
+        .number()
+        .optional()
+        .describe(
+          "Optional explicit disturbed acres. If omitted, the worker computes acreage from the polygon."
+        ),
+      targetParcel: z
+        .string()
+        .optional()
+        .describe(
+          "Optional parcel/APN to prefer when selecting the Page 2 location row"
+        ),
+    }),
+    z.object({
+      kind: z.literal("kml-file"),
+      path: z
+        .string()
+        .describe("Absolute path to a .kml file on the permit-worker filesystem"),
+      disturbedAcres: z
+        .number()
+        .optional()
+        .describe(
+          "Optional explicit disturbed acres. If omitted, the worker computes acreage from the KML polygon."
+        ),
+      targetParcel: z
+        .string()
+        .optional()
+        .describe(
+          "Optional parcel/APN to prefer when selecting the Page 2 location row"
+        ),
+    }),
+    z.object({
+      kind: z.literal("kml-text"),
+      text: z
+        .string()
+        .describe("Raw KML document text containing the disturbed-area geometry"),
+      disturbedAcres: z
+        .number()
+        .optional()
+        .describe(
+          "Optional explicit disturbed acres. If omitted, the worker computes acreage from the KML polygon."
+        ),
+      targetParcel: z
+        .string()
+        .optional()
+        .describe(
+          "Optional parcel/APN to prefer when selecting the Page 2 location row"
+        ),
+    }),
+    z.object({
+      kind: z.literal("kml-url"),
+      url: z
+        .string()
+        .url()
+        .describe("HTTP(S) URL that returns a KML document"),
+      disturbedAcres: z
+        .number()
+        .optional()
+        .describe(
+          "Optional explicit disturbed acres. If omitted, the worker computes acreage from the KML polygon."
+        ),
+      targetParcel: z
+        .string()
+        .optional()
+        .describe(
+          "Optional parcel/APN to prefer when selecting the Page 2 location row"
+        ),
+    }),
+  ])
+  .describe(
+    "Optional explicit geometry override. When provided, the worker uses this geometry instead of parcel-derived map drawing."
+  );
+
 function json(data: unknown): {
   content: Array<{ type: "text"; text: string }>;
 } {
@@ -345,6 +435,7 @@ export function registerPermitTools(
           .describe(
             "Permit application ID to copy form data from (e.g., D0063827-01)"
           ),
+        geometrySource: geometrySourceSchema.optional(),
       },
       annotations: {
         readOnlyHint: true,
@@ -352,7 +443,14 @@ export function registerPermitTools(
         idempotentHint: true,
       },
     },
-    async ({ identifier, disturbedAcres, companyName, flow, copyFromApp }) =>
+    async ({
+      identifier,
+      disturbedAcres,
+      companyName,
+      flow,
+      copyFromApp,
+      geometrySource,
+    }) =>
       wrap(() =>
         client.resolveNoi({
           identifier,
@@ -360,6 +458,7 @@ export function registerPermitTools(
           companyName,
           flow,
           copyFromApp,
+          geometrySource,
         })
       )
   );
@@ -398,6 +497,7 @@ export function registerPermitTools(
           .describe(
             "Permit application ID to copy form data from (e.g., D0063827-01)"
           ),
+        geometrySource: geometrySourceSchema.optional(),
         create: z
           .boolean()
           .optional()
@@ -418,6 +518,7 @@ export function registerPermitTools(
       companyName,
       flow,
       copyFromApp,
+      geometrySource,
       create,
     }) =>
       wrap(() =>
@@ -427,6 +528,7 @@ export function registerPermitTools(
           companyName,
           flow,
           copyFromApp,
+          geometrySource,
           create: create ?? true,
         })
       )
@@ -596,6 +698,7 @@ export function registerPermitTools(
           .describe(
             "Path to a JSON file on the permit-worker filesystem containing form data overrides"
           ),
+        geometrySource: geometrySourceSchema.optional(),
       },
       annotations: {
         readOnlyHint: false,
@@ -603,7 +706,14 @@ export function registerPermitTools(
         idempotentHint: false,
       },
     },
-    async ({ flow, companyName, copyFromApp, formData, formDataPath }) =>
+    async ({
+      flow,
+      companyName,
+      copyFromApp,
+      formData,
+      formDataPath,
+      geometrySource,
+    }) =>
       wrap(() =>
         client.createPermit({
           flow,
@@ -611,6 +721,7 @@ export function registerPermitTools(
           copyFromApp,
           formData,
           formDataPath,
+          geometrySource,
         })
       )
   );

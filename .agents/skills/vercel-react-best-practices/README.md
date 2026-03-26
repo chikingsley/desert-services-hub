@@ -73,7 +73,7 @@ Brief explanation of the rule and why it matters.
 // Bad code example
 ```
 
-**Correct (description of what's right):**
+__Correct (description of what's right):__
 
 ```typescript
 // Good code example

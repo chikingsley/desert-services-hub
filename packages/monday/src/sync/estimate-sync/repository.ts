@@ -1,7 +1,7 @@
 import { db } from "@lib/db/client";
 import type { EstimateUpsertRow } from "./types";
 
-const upsertEstimate = db.query(`
+const upsertEstimate = db.query<{ id: number }>(`
   INSERT INTO estimates (
     monday_item_id, name, estimate_number, contractor,
     group_id, group_title, monday_url,
@@ -38,7 +38,7 @@ const upsertEstimate = db.query(`
 export async function upsertEstimateRow(
   row: EstimateUpsertRow
 ): Promise<number | null> {
-  const result = (await upsertEstimate.run(
+  const result = await upsertEstimate.all(
     row.mondayItemId,
     row.name,
     row.estimateNumber,
@@ -59,7 +59,7 @@ export async function upsertEstimateRow(
     row.lat,
     row.lng,
     row.sharepointUrl
-  )) as Array<{ id: number }>;
+  );
 
   return result[0]?.id ?? null;
 }

@@ -1,9 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { SQL as BunSQL, type SQL } from "bun";
+import postgres from "postgres";
 
-// Explicit connection with prepare: false for Supavisor transaction-mode pooling.
-// Named prepared statements are connection-specific but Supavisor rotates backend
-// connections between requests, causing "prepared statement already exists" errors.
 const databaseUrl = process.env.DATABASE_URL ?? "";
 const DEFAULT_DB_POOL_MAX = 2;
 const TEST_DEFAULT_DB_POOL_MAX = 1;
@@ -46,45 +43,54 @@ export function getDbPoolOptions(): { max: number; prepare: false } {
   };
 }
 
-let pool: SQL | null = null;
+let pool: postgres.Sql | null = null;
 
-function getPool(): SQL {
+function getPool(): postgres.Sql {
   if (pool) {
     return pool;
   }
-  pool = new BunSQL(databaseUrl, getDbPoolOptions());
+  pool = postgres(databaseUrl, getDbPoolOptions());
   return pool;
 }
 
-const txStore = new AsyncLocalStorage<SQL>();
+// Sql and TransactionSql both have unsafe() — this is the shared shape
+type SqlConnection = Pick<postgres.Sql, "unsafe">;
 
-function conn(): SQL {
+const txStore = new AsyncLocalStorage<SqlConnection>();
+
+function conn(): SqlConnection {
   return txStore.getStore() ?? getPool();
 }
 
+// Exact parameter type that postgres.js unsafe() accepts
+export type SqlParam = postgres.ParameterOrJSON<never>;
+
+// Row constraint for db.query<T>() — re-exported so callers don't need to import postgres
+export type DbRow = postgres.Row;
+
 export const db = {
-  async run(query: string, params?: unknown[]) {
+  async run(query: string, params?: SqlParam[]) {
     return await conn().unsafe(query, params);
   },
 
-  query<T, _P = unknown>(query: string) {
+  query<T extends postgres.Row = postgres.Row, _P = unknown>(query: string) {
     return {
-      async all(...params: unknown[]): Promise<T[]> {
-        return (await conn().unsafe(query, params)) as T[];
+      async all(...params: SqlParam[]): Promise<T[]> {
+        return await conn().unsafe<T[]>(query, params);
       },
-      async get(...params: unknown[]): Promise<T | null> {
-        const rows = await conn().unsafe(query, params);
-        return (rows[0] as T) ?? null;
+      async get(...params: SqlParam[]): Promise<T | null> {
+        const rows = await conn().unsafe<T[]>(query, params);
+        return rows[0] ?? null;
       },
-      async run(...params: unknown[]) {
+      async run(...params: SqlParam[]) {
         return await conn().unsafe(query, params);
       },
     };
   },
 
-  async transaction<T>(fn: () => T | Promise<T>): Promise<T> {
+  async transaction<T>(fn: () => T | Promise<T>) {
     return await getPool().begin(async (tx) => {
-      return await txStore.run(tx as unknown as SQL, async () => await fn());
+      return await txStore.run(tx, async () => await fn());
     });
   },
 };

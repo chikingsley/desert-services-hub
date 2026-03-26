@@ -17,7 +17,7 @@ Get Trigger.dev running in your project in minutes.
 ## Prerequisites
 
 - Node.js 18+ or Bun
-- A Trigger.dev account (https://cloud.trigger.dev)
+- A Trigger.dev account (<https://cloud.trigger.dev>)
 
 ## Quick Start
 
@@ -108,14 +108,17 @@ TRIGGER_SECRET_KEY=tr_dev_xxxxx  # From dashboard > API Keys
 ## Common Issues
 
 ### "No tasks found"
+
 - Ensure tasks are **exported** from files in `dirs` folders
 - Check `trigger.config.ts` points to correct directories
 
 ### "Project not found"
+
 - Verify `project` in config matches dashboard
 - Check `TRIGGER_SECRET_KEY` is set
 
 ### "Task not registered"
+
 - Restart `npx trigger dev` after adding new tasks
 - Tasks must use `task()` or `schemaTask()` from `@trigger.dev/sdk`
 

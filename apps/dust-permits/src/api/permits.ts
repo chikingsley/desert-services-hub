@@ -20,6 +20,16 @@ import {
   validateBuiltFormData,
   validateFormDataOverrides,
 } from "@/lib/form-data-validation";
+import type {
+  GeometrySource,
+  ResolvedGeometrySource,
+} from "@/lib/geometry-source";
+import {
+  GeometrySourceSchema,
+  resolveGeometrySource,
+  splitFormDataAndGeometrySource,
+  validateGeometrySource,
+} from "@/lib/geometry-source";
 import {
   deleteAllDraftPermitRecords,
   deletePermitRecord,
@@ -126,6 +136,9 @@ const apiCreateSchema = z.object({
     .string()
     .optional()
     .describe("Path to form data JSON overrides on worker filesystem"),
+  geometrySource: GeometrySourceSchema.optional().describe(
+    "Optional explicit geometry override for Page 2. When provided, the worker uses this geometry instead of parcel-derived map drawing."
+  ),
 });
 
 const apiReviseSchema = z.object({
@@ -202,8 +215,19 @@ function transformPermitForDashboard(dbPermit: DbPermit): DashboardPermit {
 // ─── Map preflight validation ────────────────────────────────────────
 
 async function validateCreateMapPreflight(
-  formData: FormData
+  formData: FormData,
+  geometry?: ResolvedGeometrySource
 ): Promise<{ valid: true } | { valid: false; error: string }> {
+  if (geometry) {
+    if (!geometry.mapData.disturbedArea) {
+      return {
+        error: "Geometry source did not produce a disturbed-area polygon",
+        valid: false,
+      };
+    }
+    return { valid: true };
+  }
+
   const { latitude, longitude, acresDisturbed } = formData.site;
   if (typeof latitude !== "number" || typeof longitude !== "number") {
     return { valid: true };
@@ -288,7 +312,10 @@ export async function handleExpiringPermits(req: Request): Promise<Response> {
 /** Load and validate form data overrides from a JSON file path. */
 async function loadOverridesFromFile(
   formDataPath: string
-): Promise<{ data: DeepPartial<FormData> } | { error: Response }> {
+): Promise<
+  | { data: DeepPartial<FormData>; geometrySource?: GeometrySource }
+  | { error: Response }
+> {
   let overridesInput: unknown;
   try {
     const file = Bun.file(formDataPath);
@@ -304,11 +331,86 @@ async function loadOverridesFromFile(
     };
   }
 
-  const validation = validateFormDataOverrides(overridesInput);
+  let formDataInput = overridesInput;
+  let geometrySourceInput: unknown;
+
+  try {
+    const split = splitFormDataAndGeometrySource(overridesInput);
+    formDataInput = split.formData;
+    geometrySourceInput = split.geometrySource;
+  } catch (error) {
+    return {
+      error: jsonError(
+        `Invalid create config in ${formDataPath}: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      ),
+    };
+  }
+
+  const validation = validateFormDataOverrides(formDataInput);
   if (!validation.success) {
     return { error: jsonError(validation.error) };
   }
-  return { data: validation.data };
+
+  if (geometrySourceInput === undefined) {
+    return { data: validation.data };
+  }
+
+  const geometryValidation = validateGeometrySource(geometrySourceInput);
+  if (!geometryValidation.success) {
+    return {
+      error: jsonError(
+        `Invalid geometrySource in ${formDataPath}.\n${geometryValidation.error}`
+      ),
+    };
+  }
+
+  return {
+    data: validation.data,
+    geometrySource: geometryValidation.data,
+  };
+}
+
+function applyGeometryToFormData(
+  formData: FormData,
+  geometry: ResolvedGeometrySource
+): FormData {
+  if (geometry.centroid) {
+    formData.site.latitude = geometry.centroid.lat;
+    formData.site.longitude = geometry.centroid.lng;
+  }
+
+  if (
+    geometry.disturbedAcresSource === "explicit" &&
+    geometry.disturbedAcres !== null
+  ) {
+    formData.site.acresDisturbed = geometry.disturbedAcres;
+    return formData;
+  }
+
+  const currentAcres = formData.site.acresDisturbed;
+  if (
+    geometry.disturbedAcres !== null &&
+    (currentAcres === null || currentAcres === undefined)
+  ) {
+    formData.site.acresDisturbed = geometry.disturbedAcres;
+    return formData;
+  }
+
+  if (
+    geometry.disturbedAcresSource === "computed" &&
+    geometry.disturbedAcres !== null &&
+    typeof currentAcres === "number" &&
+    Number.isFinite(currentAcres) &&
+    Math.abs(currentAcres - geometry.disturbedAcres) > 0.05
+  ) {
+    console.warn(
+      `[create] geometry acreage (${geometry.disturbedAcres.toFixed(2)} ac) differs from FormData.site.acresDisturbed (${currentAcres.toFixed(2)} ac); keeping explicit FormData value`
+    );
+  }
+
+  return formData;
 }
 
 /**
@@ -326,9 +428,11 @@ export async function handleCreatePermit(body: unknown): Promise<Response> {
     copyFromApp,
     formDataPath,
     formData: inlineFormData,
+    geometrySource: inlineGeometrySource,
   } = parsed.data;
 
   let overrides: DeepPartial<FormData> | undefined;
+  let geometrySource: GeometrySource | undefined;
   if (inlineFormData) {
     // Already validated by FormDataOverridesSchema in apiCreateSchema.safeParse
     overrides = inlineFormData;
@@ -338,14 +442,36 @@ export async function handleCreatePermit(body: unknown): Promise<Response> {
       return loaded.error;
     }
     overrides = loaded.data;
+    geometrySource = loaded.geometrySource;
   }
 
+  geometrySource = inlineGeometrySource ?? geometrySource;
+
   const formData = buildFormData({ overrides });
+  let resolvedGeometry: ResolvedGeometrySource | undefined;
+  if (geometrySource) {
+    try {
+      resolvedGeometry = await resolveGeometrySource(geometrySource);
+    } catch (error) {
+      return jsonError(
+        `Failed to resolve geometrySource: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+  if (resolvedGeometry) {
+    applyGeometryToFormData(formData, resolvedGeometry);
+  }
+
   const formValidation = validateBuiltFormData(formData);
   if (!formValidation.success) {
     return jsonError(formValidation.error);
   }
-  const mapValidation = await validateCreateMapPreflight(formData);
+  const mapValidation = await validateCreateMapPreflight(
+    formData,
+    resolvedGeometry
+  );
   if (mapValidation.valid === false) {
     console.warn(`[create] Map preflight warning: ${mapValidation.error}`);
     // Continue anyway — new development sites may not have assessor parcel data yet
@@ -365,6 +491,7 @@ export async function handleCreatePermit(body: unknown): Promise<Response> {
         await createApplicationFull(page, context, flow, formData, {
           companyName,
           copyFromApp,
+          geometry: resolvedGeometry,
         })
     );
 

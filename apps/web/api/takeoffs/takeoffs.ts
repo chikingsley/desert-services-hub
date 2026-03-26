@@ -9,7 +9,7 @@ import {
   searchParam,
   sortParam,
 } from "@/api/validation";
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import { z } from "zod";
 
 const SORT_FIELDS = ["updated_at", "created_at", "name", "status"] as const;
@@ -63,7 +63,7 @@ export async function listTakeoffs(req: Request): Promise<Response> {
     );
 
     const conditions: string[] = [];
-    const params: unknown[] = [];
+    const params: SqlParam[] = [];
 
     if (status.length > 0) {
       const offset = params.length;

@@ -10,7 +10,7 @@ import {
   searchParam,
   sortParam,
 } from "@/api/validation";
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import { z } from "zod";
 import {
   formatErrorForLog,
@@ -109,7 +109,7 @@ export async function listEstimates(req: Request): Promise<Response> {
     } = parseQuery(url, estimatesQuerySchema);
 
     const conditions: string[] = [];
-    const params: unknown[] = [];
+    const params: SqlParam[] = [];
 
     if (query) {
       const like = `%${query}%`;
@@ -354,7 +354,7 @@ async function insertEstimateSections(
     return sectionIdMap;
   }
 
-  const sectionValues: unknown[] = [];
+  const sectionValues: SqlParam[] = [];
   const sectionPlaceholders: string[] = [];
   let sortOrder = 0;
 
@@ -395,7 +395,7 @@ async function insertEstimateLineItems(params: {
     return;
   }
 
-  const itemValues: unknown[] = [];
+  const itemValues: SqlParam[] = [];
   const itemPlaceholders: string[] = [];
   let sortOrder = 0;
 

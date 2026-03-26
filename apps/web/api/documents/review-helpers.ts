@@ -1,6 +1,6 @@
 // biome-ignore lint/nursery/noExcessiveLinesPerFile: shared query/preview/rerun helpers stay together for the review workspace
 import { existsSync } from "node:fs";
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import {
   buildCleanMarkdownArtifact,
   buildExtractionMetadata,
@@ -177,10 +177,10 @@ export function parseSource(raw: string | null): DocumentSource | null {
 }
 
 export function buildListQuery(url: URL): {
-  params: unknown[];
+  params: SqlParam[];
   sql: string;
 } {
-  const params: unknown[] = [];
+  const params: SqlParam[] = [];
   const where: string[] = [];
   const status = parseOptionalQuery(url.searchParams.get("status"));
   const source = parseSource(url.searchParams.get("source"));

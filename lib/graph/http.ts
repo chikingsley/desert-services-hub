@@ -1,5 +1,15 @@
 import { getGraphToken } from "./auth";
 
+export class GraphApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "GraphApiError";
+    this.status = status;
+  }
+}
+
 const GRAPH_API_BASE = "https://graph.microsoft.com/v1.0";
 const GRAPH_RETRYABLE_STATUS_CODES = new Set([429, 502, 503, 504]);
 const GRAPH_MAX_ATTEMPTS = 5;
@@ -66,7 +76,7 @@ async function graphRequest(
     }
 
     const text = await response.text();
-    throw new Error(`Graph API ${response.status}: ${text}`);
+    throw new GraphApiError(response.status, `Graph API ${response.status}: ${text}`);
   }
 
   throw new Error("Graph request retry loop exhausted unexpectedly");
@@ -101,6 +111,10 @@ export async function graphPost<T>(
     return {} as T;
   }
   return (await res.json()) as T;
+}
+
+export async function graphDelete(path: string): Promise<void> {
+  await graphRequest(path, { method: "DELETE" });
 }
 
 export async function graphPatch<T>(

@@ -3,6 +3,7 @@
  * Centralizes chunk(), batch-fetch patterns, and placeholder generation.
  */
 import { db } from "@lib/db/client";
+import type { DbRow, SqlParam } from "@lib/db/client";
 
 /**
  * Split an array into batches of `size`.
@@ -18,8 +19,8 @@ export function chunk<T>(items: T[], size: number): T[][] {
 /**
  * Fetch rows in batches using positional placeholders, returning a flat array.
  */
-export async function batchFetchRows<R>(
-  keys: unknown[],
+export async function batchFetchRows<R extends DbRow>(
+  keys: SqlParam[],
   batchSize: number,
   buildSql: (placeholders: string) => string
 ): Promise<R[]> {
@@ -40,8 +41,8 @@ export async function batchFetchRows<R>(
  * Fetch rows in batches and collect into a Map (one value per key).
  * `getKey` extracts the map key from each row.
  */
-export async function batchFetchMap<K, R>(
-  keys: unknown[],
+export async function batchFetchMap<K, R extends DbRow>(
+  keys: SqlParam[],
   batchSize: number,
   buildSql: (placeholders: string) => string,
   getKey: (row: R) => K | null
@@ -61,8 +62,8 @@ export async function batchFetchMap<K, R>(
  * Fetch rows in batches and collect into a Map (array of values per key).
  * `getKey` extracts the grouping key from each row.
  */
-export async function batchFetchGroupMap<K, R>(
-  keys: unknown[],
+export async function batchFetchGroupMap<K, R extends DbRow>(
+  keys: SqlParam[],
   batchSize: number,
   buildSql: (placeholders: string) => string,
   getKey: (row: R) => K | null

@@ -1,6 +1,6 @@
 import { flagParam, multiFilter, searchParam } from "@/api/validation";
 import { parseEmailRow } from "@email/db/email";
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import { z } from "zod";
 
 const LIST_COLUMNS = `
@@ -277,7 +277,7 @@ async function tryListFromDedupMv(
 async function addSearchCondition(
   search: string,
   conditions: string[],
-  values: unknown[]
+  values: SqlParam[]
 ): Promise<void> {
   if (!search) {
     return;
@@ -340,7 +340,7 @@ function addVisibilityCondition(
 function addFromCondition(
   from: string,
   conditions: string[],
-  values: unknown[]
+  values: SqlParam[]
 ): void {
   if (!from) {
     return;
@@ -360,7 +360,7 @@ function addFromCondition(
 function addClassificationCondition(
   classification: string,
   conditions: string[],
-  values: unknown[]
+  values: SqlParam[]
 ): void {
   if (!classification) {
     return;
@@ -374,7 +374,7 @@ function addClassificationCondition(
 function addSenderCondition(
   senders: string[],
   conditions: string[],
-  values: unknown[]
+  values: SqlParam[]
 ): void {
   if (senders.length === 0) {
     return;
@@ -399,7 +399,7 @@ function addSenderCondition(
 function addExcludeClassificationsCondition(
   excludeClassifications: string[],
   conditions: string[],
-  values: unknown[]
+  values: SqlParam[]
 ): void {
   if (excludeClassifications.length === 0) {
     return;
@@ -426,9 +426,9 @@ function addAttachmentCondition(
 
 async function buildWhereClause(
   params: EmailListParams
-): Promise<{ where: string; values: unknown[] }> {
+): Promise<{ where: string; values: SqlParam[] }> {
   const conditions: string[] = [];
-  const values: unknown[] = [];
+  const values: SqlParam[] = [];
 
   addVisibilityCondition(params, conditions);
   await addSearchCondition(params.search, conditions, values);

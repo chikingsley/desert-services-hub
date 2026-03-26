@@ -19,47 +19,46 @@ describe("outlook webhook subscription helpers", () => {
     process.env.WEBHOOK_BASE_URL = undefined;
   });
 
-  test("resolveOutlookWebhookUrl prefers explicit OUTLOOK_WEBHOOK_URL", async () => {
+  test("resolveWebhookUrl prefers explicit OUTLOOK_WEBHOOK_URL", async () => {
     process.env.OUTLOOK_WEBHOOK_URL = "https://hooks.example.com/outlook";
     process.env.WEBHOOK_BASE_URL = "https://ignored.example.com";
 
     const cacheBuster = `outlook-sub-url-explicit-${Date.now()}-${Math.random()}`;
-    const { resolveOutlookWebhookUrl } = await import(
+    const { resolveWebhookUrl } = await import(
       `../../../apps/trigger-dev/src/trigger/outlook-webhook-subscriptions.ts?${cacheBuster}`
     );
 
-    expect(resolveOutlookWebhookUrl()).toBe(
+    expect(resolveWebhookUrl()).toBe(
       "https://hooks.example.com/outlook"
     );
   });
 
-  test("resolveOutlookWebhookUrl builds from WEBHOOK_BASE_URL", async () => {
+  test("resolveWebhookUrl builds from WEBHOOK_BASE_URL and strips trailing slashes", async () => {
     process.env.WEBHOOK_BASE_URL = "https://webhooks.example.com/";
 
     const cacheBuster = `outlook-sub-url-base-${Date.now()}-${Math.random()}`;
-    const { resolveOutlookWebhookUrl } = await import(
+    const { resolveWebhookUrl } = await import(
       `../../../apps/trigger-dev/src/trigger/outlook-webhook-subscriptions.ts?${cacheBuster}`
     );
 
-    expect(resolveOutlookWebhookUrl()).toBe(
+    expect(resolveWebhookUrl()).toBe(
       "https://webhooks.example.com/functions/v1/outlook-webhook"
     );
   });
 
-  test("shouldRenewSubscription renews invalid or near-expiry timestamps", async () => {
+  test("shouldRenew returns true for invalid or near-expiry timestamps", async () => {
     const cacheBuster = `outlook-sub-renew-${Date.now()}-${Math.random()}`;
-    const { shouldRenewSubscription } = await import(
+    const { shouldRenew } = await import(
       `../../../apps/trigger-dev/src/trigger/outlook-webhook-subscriptions.ts?${cacheBuster}`
     );
 
     const now = new Date("2026-02-26T16:00:00.000Z");
-    expect(shouldRenewSubscription("not-a-date", now)).toBe(true);
-    expect(shouldRenewSubscription("2026-02-26T16:20:00.000Z", now, 60)).toBe(
-      true
-    );
-    expect(shouldRenewSubscription("2026-02-26T20:00:00.000Z", now, 60)).toBe(
-      false
-    );
+    // Invalid date → always renew
+    expect(shouldRenew("not-a-date", now)).toBe(true);
+    // Expires in 20 min, buffer is 60 min → renew
+    expect(shouldRenew("2026-02-26T16:20:00.000Z", now)).toBe(true);
+    // Expires in 4 hours, buffer is 60 min → skip
+    expect(shouldRenew("2026-02-26T20:00:00.000Z", now)).toBe(false);
   });
 
   test("task definitions expose expected IDs and schedule", async () => {
@@ -73,7 +72,7 @@ describe("outlook webhook subscription helpers", () => {
       "outlook-webhook-subscriptions"
     );
     expect((outlookWebhookSubscriptions as { cron?: string }).cron).toBe(
-      "*/30 * * * *"
+      "0 */6 * * *"
     );
     expect((outlookWebhookSubscriptionsSync as { id?: string }).id).toBe(
       "outlook-webhook-subscriptions-sync"

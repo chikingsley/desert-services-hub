@@ -9,7 +9,7 @@ import {
   searchParam,
   sortParam,
 } from "@/api/validation";
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import {
   clearContractsListInflight,
   getCachedContractsListResponse,
@@ -127,7 +127,7 @@ export async function listContracts(req: Request): Promise<Response> {
 
     const payloadPromise = (async (): Promise<ContractsListPayload> => {
       const conditions: string[] = ["e.bid_status = 'Won'"];
-      const params: unknown[] = [];
+      const params: SqlParam[] = [];
 
       if (status.length > 0) {
         const offset = params.length;

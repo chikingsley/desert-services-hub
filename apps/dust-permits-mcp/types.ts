@@ -26,6 +26,38 @@ export interface AccessPoint {
   longitude: string;
 }
 
+export interface GeometryPoint {
+  lat: number;
+  lng: number;
+}
+
+export type GeometrySource =
+  | {
+      accessPoints?: GeometryPoint[];
+      disturbedAcres?: number;
+      disturbedArea: GeometryPoint[];
+      kind: "manual";
+      targetParcel?: string;
+    }
+  | {
+      disturbedAcres?: number;
+      kind: "kml-file";
+      path: string;
+      targetParcel?: string;
+    }
+  | {
+      disturbedAcres?: number;
+      kind: "kml-text";
+      targetParcel?: string;
+      text: string;
+    }
+  | {
+      disturbedAcres?: number;
+      kind: "kml-url";
+      targetParcel?: string;
+      url: string;
+    };
+
 /** Complete scraped permit data from portal detail page. */
 export interface PermitData {
   accessPoints: AccessPoint[];
@@ -161,6 +193,8 @@ export interface CreateRequest {
   formData?: Record<string, unknown>;
   /** Path to overrides JSON on the permit-worker filesystem. */
   formDataPath?: string;
+  /** Optional explicit geometry override for Page 2 drawing. */
+  geometrySource?: GeometrySource;
 }
 
 export interface RenewRequest {
@@ -371,6 +405,8 @@ export interface NoiResolveRequest {
   disturbedAcres?: number;
   /** Force flow type (otherwise auto-determined from company check) */
   flow?: "new-company" | "existing-company";
+  /** Optional explicit geometry override for Page 2 drawing. */
+  geometrySource?: GeometrySource;
   /** NOI identifier: AZC#, LTF#, or bare digits */
   identifier: string;
 }
@@ -395,6 +431,7 @@ export interface NoiResolveResponse {
     copyFromApp?: string;
     flow: "new-company" | "existing-company";
     formData: Record<string, unknown>;
+    geometrySource?: GeometrySource;
   };
   noi: Record<string, unknown>;
   success: boolean;

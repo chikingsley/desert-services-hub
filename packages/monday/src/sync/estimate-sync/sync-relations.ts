@@ -223,13 +223,12 @@ async function resolveAccountRow(
     return { id: byDomain.id, inserted: false };
   }
 
-  const inserted = (await db.run(
+  const inserted = await db.query<{ id: number }>(
     `INSERT INTO accounts (
        domain, name, type, monday_account_id, monday_name, updated_at
      ) VALUES ($1, $2, 'contractor', $3, $4, now())
-     RETURNING id`,
-    [row.domain, row.name, row.mondayItemId, row.name]
-  )) as Array<{ id: number }>;
+     RETURNING id`
+  ).all(row.domain, row.name, row.mondayItemId, row.name);
 
   const insertedId = inserted[0]?.id;
   return insertedId ? { id: insertedId, inserted: true } : null;
@@ -387,7 +386,7 @@ export async function syncContactsToDb(
         normalizedEmail ? syntheticByEmail.get(normalizedEmail) : undefined;
 
       if (adoptedSynthetic) {
-        const adopted = (await db.run(
+        const adopted = await db.query<{ id: number }>(
           `UPDATE contacts
            SET monday_item_id = $1,
                name = $2,
@@ -406,8 +405,8 @@ export async function syncContactsToDb(
                synced_at = now(),
                updated_at = now()
            WHERE id = $15
-           RETURNING id`,
-          [
+           RETURNING id`
+        ).all(
             row.mondayItemId,
             row.name,
             row.email,
@@ -423,8 +422,7 @@ export async function syncContactsToDb(
             row.companyPhone,
             row.companyFax,
             adoptedSynthetic.id,
-          ]
-        )) as Array<{ id: number }>;
+          );
 
         const adoptedId = adopted[0]?.id ?? adoptedSynthetic.id;
         contactIdByMondayId.set(row.mondayItemId, adoptedId);
@@ -439,7 +437,7 @@ export async function syncContactsToDb(
         continue;
       }
 
-      const inserted = (await db.run(
+      const inserted = await db.query<{ id: number }>(
         `INSERT INTO contacts (
            monday_item_id, name, email, phone, title, priority,
            account_id, contractor_monday_id,
@@ -454,8 +452,8 @@ export async function syncContactsToDb(
            now(), now()
          )
          ON CONFLICT (monday_item_id) DO NOTHING
-         RETURNING id`,
-        [
+         RETURNING id`
+      ).all(
           row.mondayItemId,
           row.name,
           row.email,
@@ -470,8 +468,7 @@ export async function syncContactsToDb(
           row.officePhone,
           row.companyPhone,
           row.companyFax,
-        ]
-      )) as Array<{ id: number }>;
+        );
 
       const insertedId = inserted[0]?.id;
       if (insertedId) {

@@ -120,12 +120,14 @@ Present findings as a prioritized list with estimated impact:
    ```
 
 ### Medium Impact
+
 2. **Add debounce to `sync-user-data`** — 847 runs/day, often triggered in bursts.
    ```ts
    debounce: { key: `user-${userId}`, delay: "5s" }
    ```
 
 ### Low Impact / Best Practices
+
 3. **Add `maxDuration` to `generate-report`** — No timeout configured.
    ```ts
    maxDuration: 300  // 5 minutes

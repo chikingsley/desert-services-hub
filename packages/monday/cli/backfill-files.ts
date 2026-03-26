@@ -19,7 +19,7 @@
  *   BACKFILL_CONCURRENCY (default 2)
  */
 
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import { processItemFiles } from "@monday/sync/pipeline";
 
 interface EstimateRow {
@@ -92,7 +92,7 @@ async function getForceFailedTargets(options: {
   itemId: string | null;
   limit: number | null;
 }): Promise<Map<string, Set<string>>> {
-  const args: unknown[] = [];
+  const args: SqlParam[] = [];
   const where: string[] = [
     "source = 'monday_asset'",
     "extraction_status = 'failed'",

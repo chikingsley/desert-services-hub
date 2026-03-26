@@ -2,6 +2,7 @@ import { getPermitById } from "@dust-permits/db/dust-permit";
 import type { BrowserContext, Page } from "playwright";
 import type { DeepPartial, FormData } from "@/form-data";
 import { DEFAULTS, deepMerge, oneYearFromNow, today } from "@/form-data";
+import type { ResolvedGeometrySource } from "@/lib/geometry-source";
 import type { CreateResult, FullCreateResult } from "@/portal/types";
 import {
   clickNext,
@@ -105,6 +106,7 @@ export async function createApplicationFull(
   options: {
     companyName?: string;
     copyFromApp?: string;
+    geometry?: ResolvedGeometrySource;
   } = {}
 ): Promise<{
   success: boolean;
@@ -210,47 +212,69 @@ export async function createApplicationFull(
       };
     }
   } else {
-    const lat = formData.site.latitude;
-    const lng = formData.site.longitude;
-
-    if (typeof lat === "number" && typeof lng === "number") {
-      console.log("  Handling Page 2 (Project Location)...");
-
-      const { buildPermitMapDataFromSiteCoordinates } = await import(
-        "@/lib/site-drawing"
-      );
-
-      const { mapData, targetParcelDashed, parcel } =
-        await buildPermitMapDataFromSiteCoordinates({
-          acresDisturbed: formData.site.acresDisturbed,
-          latitude: lat,
-          longitude: lng,
-        });
-
+    if (options.geometry) {
       console.log(
-        `  Parcel from NOI point: ${targetParcelDashed}${parcel.owner ? ` (${parcel.owner})` : ""}`
+        `  Handling Page 2 (Project Location) from ${options.geometry.sourceKind} geometry...`
       );
 
       const page2Success = await fillPage2WithMapData(
         page,
         context,
-        mapData,
-        targetParcelDashed
+        options.geometry.mapData,
+        options.geometry.targetParcelDashed
       );
       if (!page2Success) {
         return {
           applicationId: createResult.applicationId,
           error:
-            "Page 2 failed: location/map data not confirmed. Application created but incomplete.",
+            "Page 2 failed: explicit geometry could not be drawn or confirmed. Application created but incomplete.",
           reachedPage5: false,
           success: false,
         };
       }
     } else {
-      console.log(
-        "  ⚠ No site latitude/longitude in FormData.site; skipping map drawing (manual required)."
-      );
-      await clickNext(page);
+      const lat = formData.site.latitude;
+      const lng = formData.site.longitude;
+
+      if (typeof lat === "number" && typeof lng === "number") {
+        console.log("  Handling Page 2 (Project Location)...");
+
+        const { buildPermitMapDataFromSiteCoordinates } = await import(
+          "@/lib/site-drawing"
+        );
+
+        const { mapData, targetParcelDashed, parcel } =
+          await buildPermitMapDataFromSiteCoordinates({
+            acresDisturbed: formData.site.acresDisturbed,
+            latitude: lat,
+            longitude: lng,
+          });
+
+        console.log(
+          `  Parcel from NOI point: ${targetParcelDashed}${parcel.owner ? ` (${parcel.owner})` : ""}`
+        );
+
+        const page2Success = await fillPage2WithMapData(
+          page,
+          context,
+          mapData,
+          targetParcelDashed
+        );
+        if (!page2Success) {
+          return {
+            applicationId: createResult.applicationId,
+            error:
+              "Page 2 failed: location/map data not confirmed. Application created but incomplete.",
+            reachedPage5: false,
+            success: false,
+          };
+        }
+      } else {
+        console.log(
+          "  ⚠ No site latitude/longitude in FormData.site; skipping map drawing (manual required)."
+        );
+        await clickNext(page);
+      }
     }
   }
 

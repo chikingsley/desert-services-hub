@@ -1,4 +1,4 @@
-import { db } from "@lib/db/client";
+import { db, type SqlParam } from "@lib/db/client";
 import {
   normalizeProjectAlias,
   normalizeProjectNameKey,
@@ -109,7 +109,7 @@ async function fetchProjectCandidateRows(context: {
     }
 
     const placeholders = context.nameKeys.map((_, i) => `$${i + 1}`).join(", ");
-    const params: unknown[] = [...context.nameKeys];
+    const params: SqlParam[] = [...context.nameKeys];
     const accountClause =
       accountId == null ? "" : ` AND account_id = $${params.push(accountId)}`;
 
@@ -134,7 +134,7 @@ async function fetchProjectCandidateRows(context: {
     }
 
     const whereParts: string[] = [];
-    const params: unknown[] = [];
+    const params: SqlParam[] = [];
     let paramIndex = 1;
 
     if (accountId != null) {

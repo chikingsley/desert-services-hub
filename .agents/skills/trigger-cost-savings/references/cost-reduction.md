@@ -1,7 +1,7 @@
 # Cost Reduction Strategies
 
 Detailed strategies for reducing Trigger.dev spend. For the latest version, fetch:
-https://trigger.dev/docs/how-to-reduce-your-spend
+<https://trigger.dev/docs/how-to-reduce-your-spend>
 
 ## 1. Monitor Usage
 

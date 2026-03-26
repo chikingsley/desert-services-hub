@@ -5,6 +5,7 @@
  * All placeholders use Postgres $1, $2 ... positional syntax.
  */
 import { db } from "@lib/db/client";
+import type { DbRow, SqlParam } from "@lib/db/client";
 
 /**
  * Build an ILIKE WHERE clause and its params.
@@ -44,7 +45,7 @@ export function likeWhere(
  *   limit: 50,
  * });
  */
-export async function likeSearch<T>(opts: {
+export async function likeSearch<T extends DbRow>(opts: {
   table: string;
   columns: string[];
   query: string;
@@ -55,7 +56,7 @@ export async function likeSearch<T>(opts: {
   limit?: number;
 }): Promise<T[]> {
   const { clause, params, nextIndex } = likeWhere(opts.columns, opts.query);
-  const allParams: unknown[] = [...params];
+  const allParams: SqlParam[] = [...params];
   let paramIndex = nextIndex;
 
   let sql = `SELECT ${opts.select ?? "*"} FROM ${opts.table}`;

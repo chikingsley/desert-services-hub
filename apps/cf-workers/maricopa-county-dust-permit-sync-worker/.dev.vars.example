@@ -1,6 +1,0 @@
-# Local-only: copy to `.dev.vars` in this directory (gitignored).
-# Wrangler loads these for `pnpm dev` / `wrangler dev`.
-# Same variables as apps/dust-permits `.env` (Maricopa Dust Permit Portal).
-
-DUST_PERMIT_USERNAME=your_email@example.com
-DUST_PERMIT_PASSWORD=your_portal_password

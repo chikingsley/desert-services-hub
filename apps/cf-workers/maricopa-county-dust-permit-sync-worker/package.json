@@ -4,10 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "wrangler dev --port 8787",
-    "deploy": "export $(cat .env) && wrangler deploy",
+    "deploy": "wrangler deploy",
+    "deploy:local": "set -a && . ./.env && set +a && wrangler deploy",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
     "d1:migrate:local": "wrangler d1 migrations apply desert-services-hub --local",
-    "d1:migrate:remote": "export $(cat .env) && wrangler d1 migrations apply desert-services-hub --remote",
+    "d1:migrate:remote": "wrangler d1 migrations apply desert-services-hub --remote",
+    "d1:migrate:remote:local": "set -a && . ./.env && set +a && wrangler d1 migrations apply desert-services-hub --remote",
     "cf-typegen": "wrangler types",
     "lint": "ultracite check",
     "lint:fix": "ultracite fix"
@@ -20,5 +24,6 @@
     "ultracite": "^7.3.2",
     "vitest": "^4.1.2",
     "wrangler": "^4.77.0"
-  }
+  },
+  "packageManager": "pnpm@10.33.0"
 }

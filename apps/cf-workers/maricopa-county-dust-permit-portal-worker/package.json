@@ -1,0 +1,28 @@
+{
+  "name": "maricopa-county-dust-permit-portal-worker",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "export $(cat .env) && wrangler dev --port 8788",
+    "deploy": "export $(cat .env) && wrangler deploy",
+    "deploy:secrets": "export $(cat .env) && cat .dev.vars | while IFS='=' read -r k v; do echo \"$v\" | wrangler secret put \"$k\"; done",
+    "test": "vitest run",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
+    "test:health:deployed": "curl -sf https://maricopa-county-dust-permit-portal-worker.cheez2012.workers.dev/api/health | jq .",
+    "cf-typegen": "wrangler types",
+    "lint": "ultracite check",
+    "lint:fix": "ultracite fix"
+  },
+  "dependencies": {
+    "@cloudflare/puppeteer": "^1.0.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "oxfmt": "^0.42.0",
+    "oxlint": "^1.57.0",
+    "typescript": "^6.0.2",
+    "ultracite": "^7.3.2",
+    "vitest": "^4.1.2",
+    "wrangler": "^4.77.0"
+  }
+}

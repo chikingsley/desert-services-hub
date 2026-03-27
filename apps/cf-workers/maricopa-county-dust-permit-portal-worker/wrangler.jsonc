@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "maricopa-county-dust-permit-portal-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-27",
+  "compatibility_flags": ["nodejs_compat_v2"],
+  "upload_source_maps": true,
+  "observability": {
+    "enabled": true,
+  },
+  "browser": {
+    "binding": "BROWSER",
+    "remote": true,
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "desert-services-hub",
+      "database_id": "d872d9ed-2732-455b-b125-b33b99a9e861",
+    },
+  ],
+}

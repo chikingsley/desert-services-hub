@@ -13,7 +13,8 @@
       "@outlook/config": ["./config"],
       "@outlook/config/*": ["./config/*"],
       "@outlook/types": ["./types"]
-    }
+    },
+    "strictNullChecks": true
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules"]

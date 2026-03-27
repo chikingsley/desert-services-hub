@@ -161,15 +161,3 @@ tests/apps/dust-permits/fixtures/pdfs/
 
 # packages/narratives
 packages/narratives/templates/output/
-
-# packages/documents/pdf-analysis-py
-packages/documents/pdf-analysis-py/.demo-validator-state
-packages/documents/pdf-analysis-py/ai_docs/
-packages/documents/pdf-analysis-py/justfile
-packages/documents/pdf-analysis-py/specs/
-packages/documents/pdf-analysis-py/scripts/dont_stop.py
-packages/contracts/langextract/
-opencode-gemini-session-2026-02-19.md
-packages/monday/lib/db/monday-files/
-# Trigger.dev build artifacts
-.trigger/

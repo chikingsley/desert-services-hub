@@ -1,0 +1,8 @@
+# Copy to `.dev.vars` in this directory (gitignored). Wrangler loads it for `bun run dev` / `bun run dev:remote`.
+# Same portal credentials as apps/dust-permits `.env` (Maricopa Dust Permit Portal).
+
+DUST_PERMIT_USERNAME=your_email@example.com
+DUST_PERMIT_PASSWORD=your_portal_password
+
+# Optional: only needed for `bun run deploy` / `bun run deploy:secrets` (same pattern as deploy scripts).
+# CLOUDFLARE_API_TOKEN=

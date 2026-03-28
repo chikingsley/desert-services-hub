@@ -3,7 +3,9 @@ import type { BrowserContext, Page } from "playwright";
 import { openMyDustApps } from "./create";
 import {
   PORTAL_TIMINGS,
+  clickInFrames,
   hasSelector,
+  log,
   pollUntil,
   settlePortalUi,
   waitForVisible,
@@ -30,425 +32,26 @@ export interface DeleteDraftOps {
   openDraft: (draft: DraftApplication) => Promise<boolean>;
 }
 
-type ClickStrategy = "force" | "standard";
+const DRAFT_ID_RE = /^D\d{7}$/i;
 
-const DUST_APPLICATION_ID_REGEX = /^D\d{7}$/i;
-const DUST_APPLICATION_DETAIL_URL_FRAGMENT =
-  "/applications/dustApplicationDetail.jsf";
-
-const selectors = {
-  deleteButton: 'img[alt="Delete Application"]',
-  deleteCancelButton: 'img[alt="Cancel"]',
-  deleteConfirmButtons: [
-    'img[alt="Delete"]',
-    'img[title="Delete"]',
-    'input[value="Delete"]',
-    'button:has-text("Delete")',
-    'a:has-text("Delete")',
-  ],
-  detailForm: "form#dustApplicationDetail",
-  detailFormAlt: "[id*='dustApplicationDetail']",
+const sel = {
+  deleteBtn: 'img[alt="Delete Application"]',
+  deleteConfirm:
+    'img[alt="Delete"], img[title="Delete"], input[value="Delete"]',
+  detailForm: "[id*='dustApplicationDetail']",
   draftSection: "text=Draft Dust Applications",
   draftTable: "div[id*='draftDustAppTable']",
-  newApplicationButton: 'img[alt="New Application"]',
+  newAppBtn: 'img[alt="New Application"]',
 } as const;
 
-const normalizeApplicationId = (value: string): string => {
-  const normalized = value.trim().toUpperCase();
-  if (normalized.length === 0) {
-    return normalized;
-  }
-
-  return normalized.startsWith("D") ? normalized : `D${normalized}`;
+const normalizeId = (id: string): string => {
+  const s = id.trim().toUpperCase();
+  return s.startsWith("D") ? s : `D${s}`;
 };
 
-const waitForPopup = async (
-  context: BrowserContext,
-  click: () => Promise<boolean>,
-  timeoutMs = PORTAL_TIMINGS.readyMs
-): Promise<Page | null> => {
-  const popupPromise = context
-    .waitForEvent("page", { timeout: timeoutMs })
-    .catch(() => null);
-
-  if (!(await click())) {
-    return null;
-  }
-
-  const popup = await popupPromise;
-  if (!popup) {
-    console.log("[DELETE] no popup was emitted after delete click");
-    return null;
-  }
-
-  return popup;
-};
-
-const getDraftLinkCandidates = (page: Page) =>
-  page.locator(selectors.draftTable).locator("a");
-
-const isDraftDetailPage = async (page: Page): Promise<boolean> =>
-  page.url().includes(DUST_APPLICATION_DETAIL_URL_FRAGMENT) ||
-  (await hasSelector(page, selectors.deleteButton)) ||
-  (await hasSelector(page, selectors.detailForm)) ||
-  (await hasSelector(page, selectors.detailFormAlt));
-
-const clickInFrames = async (
-  page: Page,
-  selector: string
-): Promise<boolean> => {
-  for (const frame of page.frames()) {
-    try {
-      const locator = frame.locator(selector).first();
-      if ((await locator.count()) === 0) {
-        continue;
-      }
-
-      await locator.click({
-        force: true,
-        timeout: PORTAL_TIMINGS.quickMs,
-      });
-      await settlePortalUi();
-      return true;
-    } catch {
-      // Try the next frame.
-    }
-  }
-
-  return false;
-};
-
-const clickAnySelectorInFrames = async (
-  page: Page,
-  selectorsList: readonly string[]
-): Promise<boolean> => {
-  for (const selector of selectorsList) {
-    if (await clickInFrames(page, selector)) {
-      return true;
-    }
-  }
-
-  return false;
-};
-
-const hasDeleteSuccessMessage = async (
-  page: Page,
-  applicationId?: string | null
-): Promise<boolean> => {
-  try {
-    const text = (
-      (await page.evaluate(() => document.body?.textContent)) ?? ""
-    ).toLowerCase();
-    const successPhrase = "successfully deleted the dust application";
-    if (!text.includes(successPhrase)) {
-      return false;
-    }
-
-    if (!applicationId) {
-      return true;
-    }
-
-    return text.includes(applicationId.toLowerCase());
-  } catch {
-    return false;
-  }
-};
-
-const closeNonMainPages = async (
-  context: BrowserContext,
-  mainPage: Page
-): Promise<void> => {
-  const popupPages = context.pages().filter((popup) => popup !== mainPage);
-  await Promise.all(
-    popupPages.map((popup) =>
-      popup.close().catch(() => {
-        // Ignore stale popup cleanup errors.
-      })
-    )
-  );
-};
-
-const waitForDeletionSuccess = async (
-  page: Page,
-  applicationId?: string | null,
-  timeoutMs = PORTAL_TIMINGS.operationMs
-): Promise<boolean> => {
-  const result = await pollUntil(
-    async () => await hasDeleteSuccessMessage(page, applicationId),
-    {
-      timeoutMs,
-      isDone: Boolean,
-    }
-  );
-  console.log("[DELETE] delete settle", Boolean(result), page.url());
-  return Boolean(result);
-};
-
-const waitForDraftDetailPage = async (
-  page: Page,
-  timeoutMs = PORTAL_TIMINGS.readyMs
-): Promise<boolean> =>
-  Boolean(
-    await pollUntil(
-      async () => await isDraftDetailPage(page),
-      {
-        timeoutMs,
-        isDone: Boolean,
-      }
-    )
-  );
-
-const listDraftApplications = async (
-  page: Page
-): Promise<DraftApplication[]> => {
-  if (
-    !(await waitForVisible(
-      page,
-      selectors.newApplicationButton,
-      PORTAL_TIMINGS.readyMs
-    )) &&
-    !(await waitForVisible(page, selectors.draftTable, PORTAL_TIMINGS.readyMs))
-  ) {
-    return [];
-  }
-
-  await settlePortalUi();
-  const links = getDraftLinkCandidates(page);
-  const draftApplications: DraftApplication[] = [];
-  const linkCount = await links.count();
-
-  for (let index = 0; index < linkCount; index += 1) {
-    const textContent = await links.nth(index).textContent();
-    const id = textContent?.trim() ?? "";
-    if (!DUST_APPLICATION_ID_REGEX.test(id)) {
-      continue;
-    }
-
-    draftApplications.push({ id, index });
-  }
-
-  return draftApplications;
-};
-
-const clickDraftLink = async (
-  page: Page,
-  index: number
-): Promise<boolean> => {
-  const strategies: ReadonlyArray<{
-    execute: (link: ReturnType<typeof page.locator>) => Promise<void>;
-    name: ClickStrategy;
-  }> = [
-    {
-      execute: (link) =>
-        link.click({
-          force: true,
-          noWaitAfter: true,
-          timeout: PORTAL_TIMINGS.quickMs,
-        }),
-      name: "force",
-    },
-    {
-      execute: (link) =>
-        link.click({
-          noWaitAfter: true,
-          timeout: PORTAL_TIMINGS.quickMs,
-        }),
-      name: "standard",
-    },
-  ];
-
-  for (const strategy of strategies) {
-    const links = getDraftLinkCandidates(page);
-    if ((await links.count()) <= index) {
-      return false;
-    }
-
-    try {
-      await strategy.execute(links.nth(index));
-      await settlePortalUi();
-      const reachedDetailPage = await isDraftDetailPage(page);
-      console.log("[DELETE] click strategy", strategy.name, reachedDetailPage);
-      if (reachedDetailPage) {
-        return true;
-      }
-    } catch {
-      // Try the next click strategy.
-    }
-  }
-
-  return false;
-};
-
-const deleteOpenedDraft = async (
-  page: Page,
-  context: BrowserContext,
-  applicationId?: string | null
-): Promise<boolean> => {
-  await closeNonMainPages(context, page);
-  await settlePortalUi();
-
-  const clickDeleteButton = async (): Promise<boolean> => {
-    const clicked = await page
-      .locator(selectors.deleteButton)
-      .first()
-      .click({ timeout: PORTAL_TIMINGS.quickMs })
-      .then(() => true)
-      .catch(() => false);
-    if (clicked) {
-      await settlePortalUi();
-      return true;
-    }
-
-    return await clickInFrames(page, selectors.deleteButton);
-  };
-
-  const popup = await waitForPopup(context, clickDeleteButton);
-  if (popup) {
-    console.log("[DELETE] confirmation popup opened", applicationId);
-    await popup
-      .waitForLoadState("domcontentloaded", {
-        timeout: PORTAL_TIMINGS.readyMs,
-      })
-      .catch(() => {});
-    await settlePortalUi();
-
-    if (!(await clickAnySelectorInFrames(popup, selectors.deleteConfirmButtons))) {
-      console.log("[DELETE] popup confirm selector not found", applicationId);
-      return false;
-    }
-
-    await settlePortalUi();
-    if (!popup.isClosed()) {
-      await clickAnySelectorInFrames(popup, [selectors.deleteCancelButton]);
-    }
-
-    return await waitForDeletionSuccess(page, applicationId);
-  }
-
-  console.log("[DELETE] popup did not open; trying inline confirm path");
-  if (!(await clickAnySelectorInFrames(page, selectors.deleteConfirmButtons))) {
-    console.log("[DELETE] inline confirm not possible");
-    return false;
-  }
-
-  return await waitForDeletionSuccess(page, applicationId);
-};
-
-const createDeleteDraftOps = (
-  page: Page,
-  context: BrowserContext
-): DeleteDraftOps => {
-  let activeDraftId: string | null = null;
-
-  return {
-    deleteOpenedDraft() {
-      console.log("[DELETE] deleting current draft");
-      return deleteOpenedDraft(page, context, activeDraftId);
-    },
-    async ensureDraftList() {
-      console.log("[DELETE] ensuring draft list");
-      await closeNonMainPages(context, page);
-      if (!(await openMyDustApps(page))) {
-        console.log("[DELETE] could not open dust apps");
-        return false;
-      }
-
-      const ready =
-        (await waitForVisible(
-          page,
-          selectors.newApplicationButton,
-          PORTAL_TIMINGS.readyMs
-        )) ||
-        (await waitForVisible(
-          page,
-          selectors.draftTable,
-          PORTAL_TIMINGS.readyMs
-        )) ||
-        (await waitForVisible(
-          page,
-          selectors.draftSection,
-          PORTAL_TIMINGS.readyMs
-        ));
-      if (!ready) {
-        console.log("[DELETE] draft list not ready");
-        return false;
-      }
-
-      await settlePortalUi();
-      console.log("[DELETE] draft list ready", page.url());
-      return true;
-    },
-    listDrafts() {
-      console.log("[DELETE] listing drafts");
-      return listDraftApplications(page);
-    },
-    async openDraft(draft) {
-      console.log("[DELETE] opening draft", draft.id, draft.index);
-      activeDraftId = draft.id;
-      if (!(await clickDraftLink(page, draft.index))) {
-        console.log("[DELETE] draft click failed", draft.id);
-        return false;
-      }
-
-      const detailReady = await waitForDraftDetailPage(page);
-      console.log("[DELETE] detail ready", draft.id, detailReady, page.url());
-      return detailReady;
-    },
-  };
-};
-
-const refreshDraftList = async (
-  ops: DeleteDraftOps
-): Promise<DraftApplication[] | null> => {
-  if (!(await ops.ensureDraftList())) {
-    return null;
-  }
-
-  return await ops.listDrafts();
-};
-
-const draftListContainsId = (
-  drafts: readonly DraftApplication[],
-  applicationId: string
-): boolean => {
-  const normalizedApplicationId = normalizeApplicationId(applicationId);
-  return drafts.some(
-    (draft) => normalizeApplicationId(draft.id) === normalizedApplicationId
-  );
-};
-
-const confirmDraftMissingFromList = async (
-  ops: DeleteDraftOps,
-  applicationId: string
-): Promise<{ confirmed: boolean; drafts: DraftApplication[] }> => {
-  const drafts = await pollUntil(
-    async () => await refreshDraftList(ops),
-    {
-      timeoutMs: PORTAL_TIMINGS.operationMs,
-      intervalMs: PORTAL_TIMINGS.settleMs,
-      isDone: (draftsOnList) =>
-        draftsOnList !== null &&
-        !draftListContainsId(draftsOnList, applicationId),
-    }
-  );
-  if (drafts) {
-    return { confirmed: true, drafts };
-  }
-
-  const finalDrafts = await refreshDraftList(ops);
-  if (!finalDrafts) {
-    return { confirmed: false, drafts: [] };
-  }
-
-  return {
-    confirmed: !draftListContainsId(finalDrafts, applicationId),
-    drafts: finalDrafts,
-  };
-};
-
-const buildSuccessResult = (
+const succeed = (
   deletedIds: string[],
-  failedIds: string[]
+  failedIds: string[],
 ): DeleteDraftsResult => ({
   deletedCount: deletedIds.length,
   deletedIds,
@@ -456,11 +59,11 @@ const buildSuccessResult = (
   success: true,
 });
 
-const buildFailureResult = (
+const fail = (
   code: NonNullable<DeleteDraftsResult["code"]>,
   error: string,
   deletedIds: string[],
-  failedIds: string[]
+  failedIds: string[],
 ): DeleteDraftsResult => ({
   code,
   deletedCount: deletedIds.length,
@@ -470,159 +73,303 @@ const buildFailureResult = (
   success: false,
 });
 
+const listDraftApplications = async (
+  page: Page,
+): Promise<DraftApplication[]> => {
+  const ready =
+    (await waitForVisible(page, sel.newAppBtn, PORTAL_TIMINGS.readyMs)) ||
+    (await waitForVisible(
+      page,
+      sel.draftTable,
+      PORTAL_TIMINGS.readyMs,
+    ));
+  if (!ready) return [];
+
+  await settlePortalUi();
+  const links = page.locator(sel.draftTable).locator("a");
+  const count = await links.count();
+  const drafts: DraftApplication[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const text = await links.nth(i).textContent();
+    const id = text?.trim() ?? "";
+    if (DRAFT_ID_RE.test(id)) drafts.push({ id, index: i });
+  }
+
+  log(
+    "DELETE",
+    `found ${drafts.length} drafts`,
+    drafts.map((d) => d.id),
+  );
+  return drafts;
+};
+
+const isDraftDetail = async (page: Page): Promise<boolean> =>
+  page.url().includes("dustApplicationDetail.jsf") ||
+  (await hasSelector(page, sel.deleteBtn)) ||
+  (await hasSelector(page, sel.detailForm));
+
+const openDraftDetail = async (
+  page: Page,
+  draft: DraftApplication,
+): Promise<boolean> => {
+  const links = page.locator(sel.draftTable).locator("a");
+  if ((await links.count()) <= draft.index) return false;
+
+  log("DELETE", "opening draft", draft.id);
+  try {
+    await links.nth(draft.index).click({
+      force: true,
+      noWaitAfter: true,
+      timeout: PORTAL_TIMINGS.quickMs,
+    });
+    await settlePortalUi();
+  } catch {
+    log("DELETE", "FAIL: click on draft link failed", draft.id);
+    return false;
+  }
+
+  const ready = Boolean(
+    await pollUntil(() => isDraftDetail(page), {
+      timeoutMs: PORTAL_TIMINGS.readyMs,
+      isDone: Boolean,
+    }),
+  );
+  log(
+    "DELETE",
+    ready
+      ? `opened ${draft.id}`
+      : `FAIL: detail page not reached for ${draft.id}`,
+  );
+  return ready;
+};
+
+const deleteCurrentDraft = async (
+  page: Page,
+  context: BrowserContext,
+  draftId?: string,
+): Promise<boolean> => {
+  for (const p of context.pages().filter((p) => p !== page)) {
+    await p.close().catch(() => {});
+  }
+  await settlePortalUi();
+
+  log("DELETE", "clicking Delete Application", draftId);
+
+  const popupPromise = context
+    .waitForEvent("page", { timeout: PORTAL_TIMINGS.readyMs })
+    .catch(() => null);
+
+  const clicked = await clickInFrames(page, sel.deleteBtn);
+  if (!clicked) {
+    log("DELETE", "FAIL: Delete button not found");
+    return false;
+  }
+
+  const popup = await popupPromise;
+
+  if (popup) {
+    log("DELETE", "confirmation popup opened");
+    try {
+      await popup.waitForLoadState("domcontentloaded", {
+        timeout: PORTAL_TIMINGS.readyMs,
+      });
+    } catch {
+      // Popup content may already be loaded.
+    }
+    await settlePortalUi();
+
+    if (
+      !(await clickInFrames(
+        popup,
+        sel.deleteConfirm,
+        PORTAL_TIMINGS.quickMs,
+      ))
+    ) {
+      log("DELETE", "FAIL: confirm click failed in popup");
+      return false;
+    }
+    await settlePortalUi();
+  } else {
+    log("DELETE", "no popup, trying inline confirm");
+    if (
+      !(await clickInFrames(
+        page,
+        sel.deleteConfirm,
+        PORTAL_TIMINGS.quickMs,
+      ))
+    ) {
+      log("DELETE", "FAIL: no confirm button found");
+      return false;
+    }
+  }
+
+  const success = Boolean(
+    await pollUntil(
+      async () => {
+        try {
+          const text = (
+            (await page.evaluate(() => document.body?.textContent)) ?? ""
+          ).toLowerCase();
+          return text.includes(
+            "successfully deleted the dust application",
+          );
+        } catch {
+          return false;
+        }
+      },
+      { timeoutMs: PORTAL_TIMINGS.operationMs, isDone: Boolean },
+    ),
+  );
+
+  log(
+    "DELETE",
+    success
+      ? `deleted ${draftId ?? "draft"}`
+      : `FAIL: no success message for ${draftId}`,
+  );
+  return success;
+};
+
+const createOps = (
+  page: Page,
+  context: BrowserContext,
+): DeleteDraftOps => {
+  let activeDraftId: string | null = null;
+
+  return {
+    deleteOpenedDraft: () =>
+      deleteCurrentDraft(page, context, activeDraftId ?? undefined),
+
+    async ensureDraftList() {
+      for (const p of context.pages().filter((p) => p !== page)) {
+        await p.close().catch(() => {});
+      }
+      if (!(await openMyDustApps(page))) return false;
+
+      const ready =
+        (await waitForVisible(
+          page,
+          sel.newAppBtn,
+          PORTAL_TIMINGS.readyMs,
+        )) ||
+        (await waitForVisible(
+          page,
+          sel.draftTable,
+          PORTAL_TIMINGS.readyMs,
+        )) ||
+        (await waitForVisible(
+          page,
+          sel.draftSection,
+          PORTAL_TIMINGS.readyMs,
+        ));
+      if (ready) await settlePortalUi();
+      return ready;
+    },
+
+    listDrafts: () => listDraftApplications(page),
+
+    async openDraft(draft) {
+      activeDraftId = draft.id;
+      return openDraftDetail(page, draft);
+    },
+  };
+};
+
 export const deleteAllDraftsWithOps = async (
-  ops: DeleteDraftOps
+  ops: DeleteDraftOps,
 ): Promise<DeleteDraftsResult> => {
   const deletedIds: string[] = [];
   const failedIds = new Set<string>();
 
-  for (let attempt = 0; attempt < 100; attempt += 1) {
-    console.log("[DELETE] loop", attempt + 1);
-
-    const availableDrafts = await refreshDraftList(ops);
-    if (!availableDrafts) {
-      return buildFailureResult(
+  for (let round = 0; round < 50; round++) {
+    if (!(await ops.ensureDraftList())) {
+      return fail(
         "navigate_failed",
-        "Could not reach the draft applications list",
+        "Could not reach draft list",
         deletedIds,
-        [...failedIds]
+        [...failedIds],
       );
     }
 
-    let pendingDrafts = availableDrafts.filter(
-      (draft) => !failedIds.has(draft.id) && !deletedIds.includes(draft.id)
+    const drafts = await ops.listDrafts();
+    const pending = drafts.filter(
+      (d) => !failedIds.has(d.id) && !deletedIds.includes(d.id),
     );
-    console.log("[DELETE] available drafts", availableDrafts);
+    log(
+      "DELETE",
+      `round ${round + 1}: ${pending.length} pending, ${drafts.length} total`,
+    );
 
-    if (pendingDrafts.length === 0) {
-      const confirmedDrafts = await refreshDraftList(ops);
-      if (!confirmedDrafts) {
-        return buildFailureResult(
-          "navigate_failed",
-          "Could not confirm the draft applications list was stable",
-          deletedIds,
-          [...failedIds]
-        );
-      }
+    if (pending.length === 0) return succeed(deletedIds, [...failedIds]);
 
-      pendingDrafts = confirmedDrafts.filter(
-        (draft) => !failedIds.has(draft.id) && !deletedIds.includes(draft.id)
-      );
-      console.log("[DELETE] confirmed drafts after empty read", pendingDrafts);
-      if (pendingDrafts.length === 0) {
-        return buildSuccessResult(deletedIds, [...failedIds]);
-      }
-    }
-
-    const [targetDraft] = pendingDrafts;
-    if (!targetDraft) {
-      return buildSuccessResult(deletedIds, [...failedIds]);
-    }
-
-    if (!(await ops.openDraft(targetDraft))) {
-      console.log("[DELETE] could not open draft", targetDraft.id);
-      failedIds.add(targetDraft.id);
+    const target = pending[0]!;
+    if (!(await ops.openDraft(target))) {
+      failedIds.add(target.id);
       continue;
     }
-
     if (!(await ops.deleteOpenedDraft())) {
-      console.log("[DELETE] could not delete draft", targetDraft.id);
-      failedIds.add(targetDraft.id);
+      failedIds.add(target.id);
       continue;
     }
-
-    const verification = await confirmDraftMissingFromList(ops, targetDraft.id);
-    if (!verification.confirmed) {
-      console.log(
-        "[DELETE] draft still visible after delete attempt",
-        targetDraft.id
-      );
-      console.log("[DELETE] visible draft IDs", verification.drafts);
-      failedIds.add(targetDraft.id);
-      continue;
-    }
-
-    deletedIds.push(targetDraft.id);
+    deletedIds.push(target.id);
   }
 
-  return buildFailureResult(
+  return fail(
     "delete_failed",
-    "Delete-all loop exceeded the iteration limit",
+    "Exceeded iteration limit",
     deletedIds,
-    [...failedIds]
+    [...failedIds],
   );
 };
 
 export const deleteDraftByApplicationIdWithOps = async (
   ops: DeleteDraftOps,
-  applicationId: string
+  applicationId: string,
 ): Promise<DeleteDraftsResult> => {
-  const availableDrafts = await refreshDraftList(ops);
-  if (!availableDrafts) {
-    return buildFailureResult(
-      "navigate_failed",
-      "Could not reach the draft applications list",
-      [],
-      []
-    );
+  if (!(await ops.ensureDraftList())) {
+    return fail("navigate_failed", "Could not reach draft list", [], []);
   }
 
-  const normalizedApplicationId = normalizeApplicationId(applicationId);
-  const targetDraft = availableDrafts.find(
-    (draft) => normalizeApplicationId(draft.id) === normalizedApplicationId
-  );
-  if (!targetDraft) {
-    return buildFailureResult(
-      "not_found",
-      `Draft ${normalizedApplicationId} was not found`,
-      [],
-      []
-    );
+  const drafts = await ops.listDrafts();
+  const normalized = normalizeId(applicationId);
+  const target = drafts.find((d) => normalizeId(d.id) === normalized);
+  if (!target) {
+    return fail("not_found", `Draft ${normalized} not found`, [], []);
   }
 
-  if (!(await ops.openDraft(targetDraft))) {
-    return buildFailureResult(
+  if (!(await ops.openDraft(target))) {
+    return fail(
       "delete_failed",
-      `Could not open draft ${targetDraft.id}`,
+      `Could not open ${target.id}`,
       [],
-      [targetDraft.id]
+      [target.id],
     );
   }
-
   if (!(await ops.deleteOpenedDraft())) {
-    return buildFailureResult(
+    return fail(
       "delete_failed",
-      `Could not delete draft ${targetDraft.id}`,
+      `Could not delete ${target.id}`,
       [],
-      [targetDraft.id]
+      [target.id],
     );
   }
 
-  const verification = await confirmDraftMissingFromList(ops, targetDraft.id);
-  if (!verification.confirmed) {
-    return buildFailureResult(
-      "delete_failed",
-      `Draft ${targetDraft.id} remained visible after delete`,
-      [],
-      [targetDraft.id]
-    );
-  }
-
-  return buildSuccessResult([targetDraft.id], []);
+  return succeed([target.id], []);
 };
 
 export const deleteAllDrafts = (
   page: Page,
-  context: BrowserContext
+  context: BrowserContext,
 ): Promise<DeleteDraftsResult> =>
-  deleteAllDraftsWithOps(createDeleteDraftOps(page, context));
+  deleteAllDraftsWithOps(createOps(page, context));
 
 export const deleteDraftByApplicationId = (
   page: Page,
   context: BrowserContext,
-  applicationId: string
+  applicationId: string,
 ): Promise<DeleteDraftsResult> =>
   deleteDraftByApplicationIdWithOps(
-    createDeleteDraftOps(page, context),
-    applicationId
+    createOps(page, context),
+    applicationId,
   );

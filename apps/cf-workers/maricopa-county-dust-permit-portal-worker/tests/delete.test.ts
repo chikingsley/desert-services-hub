@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { DeleteDraftOps, DraftApplication } from "../src/delete";
 import {
@@ -6,10 +6,13 @@ import {
   deleteDraftByApplicationIdWithOps,
 } from "../src/delete";
 
-const createDraft = (id: string, index = 0): DraftApplication => ({ id, index });
+const createDraft = (id: string, index = 0): DraftApplication => ({
+  id,
+  index,
+});
 
 const createOps = (
-  overrides: Partial<DeleteDraftOps> = {}
+  overrides: Partial<DeleteDraftOps> = {},
 ): DeleteDraftOps => ({
   deleteOpenedDraft: vi.fn().mockResolvedValue(true),
   ensureDraftList: vi.fn().mockResolvedValue(true),
@@ -18,71 +21,71 @@ const createOps = (
   ...overrides,
 });
 
-afterEach(() => {
-  vi.useRealTimers();
-});
-
 describe("delete draft flows", () => {
-  it("verifies by-id deletion by waiting for the draft to disappear", async () => {
-    const targetDraft = createDraft("D0065946");
-    let listCallCount = 0;
+  it("deletes a draft by application id", async () => {
+    const target = createDraft("D0065946");
     const ops = createOps({
-      listDrafts: vi.fn().mockImplementation(async () => {
-        listCallCount += 1;
-        return listCallCount >= 2 ? [] : [targetDraft];
-      }),
+      listDrafts: vi.fn().mockResolvedValue([target]),
     });
 
-    const result = await deleteDraftByApplicationIdWithOps(ops, targetDraft.id);
+    const result = await deleteDraftByApplicationIdWithOps(
+      ops,
+      target.id,
+    );
 
     expect(result).toMatchObject({
       deletedCount: 1,
-      deletedIds: [targetDraft.id],
+      deletedIds: [target.id],
       failedIds: [],
       success: true,
     });
-    expect(ops.openDraft).toHaveBeenCalledWith(targetDraft);
+    expect(ops.openDraft).toHaveBeenCalledWith(target);
     expect(ops.deleteOpenedDraft).toHaveBeenCalledTimes(1);
   });
 
-  it("fails by-id delete when the draft remains visible after delete", async () => {
-    vi.useFakeTimers();
-
-    const targetDraft = createDraft("D0065947");
+  it("fails by-id delete when deleteOpenedDraft returns false", async () => {
+    const target = createDraft("D0065947");
     const ops = createOps({
-      listDrafts: vi.fn().mockImplementation(async () => [targetDraft]),
+      deleteOpenedDraft: vi.fn().mockResolvedValue(false),
+      listDrafts: vi.fn().mockResolvedValue([target]),
     });
 
-    const resultPromise = deleteDraftByApplicationIdWithOps(ops, targetDraft.id);
-    await vi.runAllTimersAsync();
-    const result = await resultPromise;
+    const result = await deleteDraftByApplicationIdWithOps(
+      ops,
+      target.id,
+    );
 
     expect(result.success).toBe(false);
     expect(result.code).toBe("delete_failed");
-    expect(result.error).toContain("remained visible after delete");
-    expect(result.failedIds).toEqual([targetDraft.id]);
-    expect(ops.openDraft).toHaveBeenCalledWith(targetDraft);
-    expect(ops.deleteOpenedDraft).toHaveBeenCalledTimes(1);
+    expect(result.failedIds).toEqual([target.id]);
   });
 
-  it("re-checks the draft list before delete-all declares success", async () => {
-    const firstDraft = createDraft("D0065946");
-    const secondDraft = createDraft("D0065957");
+  it("reports not_found when target draft is missing", async () => {
+    const ops = createOps({
+      listDrafts: vi.fn().mockResolvedValue([]),
+    });
+
+    const result = await deleteDraftByApplicationIdWithOps(
+      ops,
+      "D9999999",
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.code).toBe("not_found");
+  });
+
+  it("deletes all drafts across multiple rounds", async () => {
+    const first = createDraft("D0065946");
+    const second = createDraft("D0065957");
     let listCallCount = 0;
     const ops = createOps({
       listDrafts: vi.fn().mockImplementation(async () => {
         listCallCount += 1;
         switch (listCallCount) {
           case 1:
-            return [firstDraft, secondDraft];
+            return [first, second];
           case 2:
-            return [secondDraft];
-          case 3:
-            return [];
-          case 4:
-            return [secondDraft];
-          case 5:
-            return [];
+            return [second];
           default:
             return [];
         }
@@ -93,12 +96,34 @@ describe("delete draft flows", () => {
 
     expect(result).toMatchObject({
       deletedCount: 2,
-      deletedIds: [firstDraft.id, secondDraft.id],
+      deletedIds: [first.id, second.id],
       failedIds: [],
       success: true,
     });
-    expect(ops.openDraft).toHaveBeenNthCalledWith(1, firstDraft);
-    expect(ops.openDraft).toHaveBeenNthCalledWith(2, secondDraft);
+    expect(ops.openDraft).toHaveBeenNthCalledWith(1, first);
+    expect(ops.openDraft).toHaveBeenNthCalledWith(2, second);
     expect(ops.deleteOpenedDraft).toHaveBeenCalledTimes(2);
+  });
+
+  it("skips drafts that fail to open and continues", async () => {
+    const good = createDraft("D0065946", 0);
+    const bad = createDraft("D0065947", 1);
+    let listCallCount = 0;
+    const ops = createOps({
+      listDrafts: vi.fn().mockImplementation(async () => {
+        listCallCount += 1;
+        if (listCallCount <= 2) return [good, bad];
+        return [];
+      }),
+      openDraft: vi.fn().mockImplementation(async (draft) => {
+        return draft.id !== bad.id;
+      }),
+    });
+
+    const result = await deleteAllDraftsWithOps(ops);
+
+    expect(result.success).toBe(true);
+    expect(result.deletedIds).toContain(good.id);
+    expect(result.failedIds).toContain(bad.id);
   });
 });

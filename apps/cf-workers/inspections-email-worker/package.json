@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "wrangler dev --remote",
     "deploy": "wrangler deploy",
-    "tail": "wrangler tail",
-    "test": "bun test"
+    "tail": "wrangler tail"
   },
   "dependencies": {
     "@azure/identity": "catalog:",

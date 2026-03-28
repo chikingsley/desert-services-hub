@@ -1,14 +1,21 @@
-import type { Browser } from "@cloudflare/playwright";
+import type { Browser, BrowserEndpoint } from "@cloudflare/playwright";
+import type { Page } from "playwright";
 
-import { type CreateFlow, ensureLoggedIn, openMyDustApps, runMinimalCreate } from "./create";
+import { type CreateFlow, ensureLoggedIn, openMyDustApps, runMinimalCreate } from "../create";
 import {
   deleteAllDrafts,
   deleteDraftByApplicationId,
   type DeleteDraftsResult,
-} from "./delete";
-import { launchPortalPage, type PortalEnv } from "./portal-shared";
+} from "../delete";
+import { PORTAL_TIMINGS } from "../portal-shared";
 
-const readJsonBody = async (
+interface PortalEnv {
+  BROWSER?: unknown;
+  DUST_PERMIT_PASSWORD?: string;
+  DUST_PERMIT_USERNAME?: string;
+}
+
+const readRequestBody = async (
   request: Request
 ): Promise<Record<string, unknown> | null> => {
   try {
@@ -21,7 +28,7 @@ const readJsonBody = async (
   }
 };
 
-const getString = (
+const readNonEmptyString = (
   body: Record<string, unknown> | null,
   key: string
 ): string | null => {
@@ -35,10 +42,10 @@ const getString = (
     : null;
 };
 
-const getCreateFlow = (value: string | null): CreateFlow["flow"] =>
+const readCreateFlow = (value: string | null): CreateFlow["flow"] =>
   value === "existing-company" ? "existing-company" : "new-company";
 
-const getDeleteFailureStatus = (result: DeleteDraftsResult): number => {
+const toDeleteFailureStatus = (result: DeleteDraftsResult): number => {
   switch (result.code) {
     case "navigate_failed": {
       return 500;
@@ -52,7 +59,7 @@ const getDeleteFailureStatus = (result: DeleteDraftsResult): number => {
   }
 };
 
-const getPortalCredentials = (
+const readPortalCredentials = (
   env: PortalEnv
 ): { password: string; username: string } | null => {
   const username = env.DUST_PERMIT_USERNAME?.trim();
@@ -64,7 +71,18 @@ const getPortalCredentials = (
   return { password, username };
 };
 
-export const handleMaricopaCreatePost = async (
+const launchPortalSession = async (
+  env: PortalEnv
+): Promise<{ browser: Browser; page: Page }> => {
+  const { launch } = await import("@cloudflare/playwright");
+  const browser = await launch(env.BROWSER as BrowserEndpoint);
+  const page = (await browser.newPage()) as unknown as Page;
+  page.setDefaultTimeout(PORTAL_TIMINGS.sessionMs);
+  page.setDefaultNavigationTimeout(PORTAL_TIMINGS.sessionMs);
+  return { browser, page };
+};
+
+export const handlePortalCreateRoute = async (
   request: Request,
   env: PortalEnv
 ): Promise<Response> => {
@@ -82,7 +100,7 @@ export const handleMaricopaCreatePost = async (
     );
   }
 
-  const credentials = getPortalCredentials(env);
+  const credentials = readPortalCredentials(env);
   if (!credentials) {
     return Response.json(
       {
@@ -94,26 +112,26 @@ export const handleMaricopaCreatePost = async (
     );
   }
 
-  const body = await readJsonBody(request);
+  const body = await readRequestBody(request);
   const options: CreateFlow = {
-    companyName: getString(body, "companyName") ?? undefined,
-    copyFromApp: getString(body, "copyFromApp") ?? undefined,
-    flow: getCreateFlow(getString(body, "flow")),
+    companyName: readNonEmptyString(body, "companyName") ?? undefined,
+    copyFromApp: readNonEmptyString(body, "copyFromApp") ?? undefined,
+    flow: readCreateFlow(readNonEmptyString(body, "flow")),
   };
 
   let browser: Browser | null = null;
   try {
-    const launched = await launchPortalPage(env);
-    browser = launched.browser;
+    const session = await launchPortalSession(env);
+    browser = session.browser;
 
-    if (!(await ensureLoggedIn(launched.page, credentials.username, credentials.password))) {
+    if (!(await ensureLoggedIn(session.page, credentials.username, credentials.password))) {
       return Response.json(
         { error: "Login failed", success: false },
         { status: 401 }
       );
     }
 
-    if (!(await openMyDustApps(launched.page))) {
+    if (!(await openMyDustApps(session.page))) {
       return Response.json(
         {
           error: "Could not reach My Dust Apps after login",
@@ -123,7 +141,7 @@ export const handleMaricopaCreatePost = async (
       );
     }
 
-    const result = await runMinimalCreate(launched.page, options);
+    const result = await runMinimalCreate(session.page, options);
     if (!result.permitId) {
       return Response.json(
         { error: result.error, success: false },
@@ -153,7 +171,7 @@ export const handleMaricopaCreatePost = async (
   }
 };
 
-export const handleMaricopaDeletePost = async (
+export const handlePortalDeleteRoute = async (
   request: Request,
   env: PortalEnv
 ): Promise<Response> => {
@@ -171,7 +189,7 @@ export const handleMaricopaDeletePost = async (
     );
   }
 
-  const credentials = getPortalCredentials(env);
+  const credentials = readPortalCredentials(env);
   if (!credentials) {
     return Response.json(
       {
@@ -183,15 +201,15 @@ export const handleMaricopaDeletePost = async (
     );
   }
 
-  const body = await readJsonBody(request);
-  const applicationId = getString(body, "applicationId");
+  const body = await readRequestBody(request);
+  const applicationId = readNonEmptyString(body, "applicationId");
 
   let browser: Browser | null = null;
   try {
-    const launched = await launchPortalPage(env);
-    browser = launched.browser;
+    const session = await launchPortalSession(env);
+    browser = session.browser;
 
-    if (!(await ensureLoggedIn(launched.page, credentials.username, credentials.password))) {
+    if (!(await ensureLoggedIn(session.page, credentials.username, credentials.password))) {
       return Response.json(
         { error: "Login failed", success: false },
         { status: 401 }
@@ -200,11 +218,11 @@ export const handleMaricopaDeletePost = async (
 
     const result = applicationId
       ? await deleteDraftByApplicationId(
-          launched.page,
-          launched.page.context(),
+          session.page,
+          session.page.context(),
           applicationId
         )
-      : await deleteAllDrafts(launched.page, launched.page.context());
+      : await deleteAllDrafts(session.page, session.page.context());
 
     if (!result.success) {
       return Response.json(
@@ -213,7 +231,7 @@ export const handleMaricopaDeletePost = async (
           applicationId: applicationId ?? null,
           success: false,
         },
-        { status: getDeleteFailureStatus(result) }
+        { status: toDeleteFailureStatus(result) }
       );
     }
 

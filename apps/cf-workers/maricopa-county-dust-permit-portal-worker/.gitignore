@@ -1,0 +1,8 @@
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
+.wrangler/
+coverage/
+output/
+worker-configuration.d.ts

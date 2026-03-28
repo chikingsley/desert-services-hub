@@ -1,8 +1,10 @@
 # Copy to `.dev.vars` in this directory (gitignored). Wrangler loads it for `bun run dev` / `bun run dev:remote`.
+# Headed Playwright (`bun run test:portal:headed`) also reads these keys from `.dev.vars` when set here.
 # Same portal credentials as apps/dust-permits `.env` (Maricopa Dust Permit Portal).
 
 DUST_PERMIT_USERNAME=your_email@example.com
 DUST_PERMIT_PASSWORD=your_portal_password
 
-# Optional: only needed for `bun run deploy` / `bun run deploy:secrets` (same pattern as deploy scripts).
+# Optional: only needed for `bun run deploy` / `bun run deploy:secrets`.
+# `deploy:secrets` filters this key out so it stays local to the Wrangler CLI.
 # CLOUDFLARE_API_TOKEN=

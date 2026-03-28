@@ -1,6 +1,17 @@
+import { queryParcelByAPN, queryParcelByCoordinates } from "./assessor";
+import {
+  parseNoiAcres,
+  parseNoiCoordinates,
+  resolveNoiRecord,
+} from "./noi-endpoints";
+import { handleMaricopaCreatePost, handleMaricopaDeletePost } from "./portal-http";
+
 /**
- * Shared map-data types and helpers for Maricopa dust permit Page 2 flows.
+ * Maricopa permit-map types, GIS helpers, KML parsing, FeatureServer queries,
+ * and the worker routes that expose them.
  */
+
+type JsonBody = Record<string, unknown>;
 
 export interface LatLng {
   lat: number;
@@ -40,6 +51,59 @@ export interface BuildPermitMapDataFromPolygonOptions {
   polygonAttributes?: Record<string, unknown>;
 }
 
+interface FeatureQueryResponse {
+  error?: { message: string };
+  features?: {
+    attributes?: Record<string, unknown>;
+    geometry?: {
+      paths?: number[][][];
+      rings?: number[][][];
+      x?: number;
+      y?: number;
+    };
+  }[];
+}
+
+interface KmlPolygon {
+  coordinates: LatLng[];
+  name: string | null;
+}
+
+interface KmlPoint {
+  coordinate: LatLng;
+  name: string | null;
+}
+
+export interface ParsedKml {
+  points: KmlPoint[];
+  polygons: KmlPolygon[];
+}
+
+const FEATURE_SERVER_URL =
+  "https://gis.maricopa.gov/arcgis/rest/services/AQD/DustControl/FeatureServer";
+
+const FEATURE_SERVER_LAYER_INDICES = {
+  all: [0, 1, 2, 3, 4, 5],
+  polygons: 3,
+} as const;
+
+const PLACEMARK_REGEX = /<Placemark[^>]*>([\s\S]*?)<\/Placemark>/gi;
+const NAME_REGEX = /<name>([\s\S]*?)<\/name>/i;
+const POLYGON_COORDS_REGEX =
+  /<Polygon[\s\S]*?<coordinates[^>]*>([\s\S]*?)<\/coordinates>/i;
+const POINT_COORDS_REGEX =
+  /<Point[\s\S]*?<coordinates[^>]*>([\s\S]*?)<\/coordinates>/i;
+
+const jsonOk = (data: JsonBody): Response =>
+  Response.json({
+    success: true,
+    timestamp: new Date().toISOString(),
+    ...data,
+  });
+
+const jsonError = (error: string, status = 400): Response =>
+  Response.json({ error, success: false }, { status });
+
 export const webMercatorToLatLng = (x: number, y: number): LatLng => {
   const lng = (x * 180) / 20_037_508.34;
   const lat =
@@ -63,22 +127,16 @@ export const getPolygonCentroid = (
   if (coords.length === 0) {
     return { x: 0, y: 0 };
   }
+
   let sumX = 0;
   let sumY = 0;
-  for (const c of coords) {
-    sumX += c.x;
-    sumY += c.y;
+  for (const coord of coords) {
+    sumX += coord.x;
+    sumY += coord.y;
   }
+
   return { x: sumX / coords.length, y: sumY / coords.length };
 };
-
-const FEATURE_SERVER_URL =
-  "https://gis.maricopa.gov/arcgis/rest/services/AQD/DustControl/FeatureServer";
-
-const FEATURE_SERVER_LAYER_INDICES = {
-  all: [0, 1, 2, 3, 4, 5],
-  polygons: 3,
-} as const;
 
 const buildPointFeature = (
   latLng: LatLng,
@@ -137,18 +195,87 @@ export const buildPermitMapDataFromPolygon = (
   };
 };
 
-interface FeatureQueryResponse {
-  error?: { message: string };
-  features?: {
-    attributes?: Record<string, unknown>;
-    geometry?: {
-      paths?: number[][][];
-      rings?: number[][][];
-      x?: number;
-      y?: number;
+const parseCoordinateText = (text: string): LatLng[] => {
+  const points: LatLng[] = [];
+  for (const token of text.trim().split(/[\s\n\r\t]+/)) {
+    if (token.length === 0) {
+      continue;
+    }
+
+    const [lngStr, latStr] = token.split(",");
+    const lng = Number.parseFloat(lngStr ?? "");
+    const lat = Number.parseFloat(latStr ?? "");
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      points.push({ lat, lng });
+    }
+  }
+
+  return points;
+};
+
+export const parseKml = (kml: string): ParsedKml => {
+  const polygons: KmlPolygon[] = [];
+  const points: KmlPoint[] = [];
+
+  for (const match of kml.matchAll(PLACEMARK_REGEX)) {
+    const body = match[1] ?? "";
+    const name = body.match(NAME_REGEX)?.[1]?.trim() ?? null;
+
+    const polygonMatch = body.match(POLYGON_COORDS_REGEX);
+    if (polygonMatch?.[1]) {
+      const coordinates = parseCoordinateText(polygonMatch[1]);
+      if (coordinates.length >= 3) {
+        polygons.push({ coordinates, name });
+      }
+      continue;
+    }
+
+    const pointMatch = body.match(POINT_COORDS_REGEX);
+    if (pointMatch?.[1]) {
+      const [coordinate] = parseCoordinateText(pointMatch[1]);
+      if (coordinate) {
+        points.push({ coordinate, name });
+      }
+    }
+  }
+
+  return { points, polygons };
+};
+
+export const kmlToPermitMapData = (kml: string): PermitMapData => {
+  const { points, polygons } = parseKml(kml);
+
+  const [firstPolygon, ...restPolygons] = polygons;
+  if (!firstPolygon) {
+    throw new Error("No polygon found in KML");
+  }
+
+  let largestPolygon = firstPolygon;
+  for (const polygon of restPolygons) {
+    if (polygon.coordinates.length > largestPolygon.coordinates.length) {
+      largestPolygon = polygon;
+    }
+  }
+
+  const mapData = buildPermitMapDataFromPolygon(largestPolygon.coordinates, {
+    includeCentroidPoint: false,
+    polygonAttributes: { name: largestPolygon.name, source: "kml" },
+  });
+
+  for (const { coordinate, name } of points) {
+    const feature: MapFeature = {
+      attributes: { name, source: "kml" },
+      coordinates: [latLngToWebMercator(coordinate.lat, coordinate.lng)],
+      latLngCoordinates: [coordinate],
+      layerIndex: 0,
+      type: "point",
     };
-  }[];
-}
+    mapData.points.push(feature);
+    mapData.accessPoints.push(feature);
+  }
+
+  return mapData;
+};
 
 const categorizeFeatures = (
   features: MapFeature[]
@@ -157,26 +284,29 @@ const categorizeFeatures = (
   polygons: MapFeature[];
   polylines: MapFeature[];
 } => ({
-  points: features.filter((f) => f.type === "point"),
-  polygons: features.filter((f) => f.type === "polygon"),
-  polylines: features.filter((f) => f.type === "polyline"),
+  points: features.filter((feature) => feature.type === "point"),
+  polygons: features.filter((feature) => feature.type === "polygon"),
+  polylines: features.filter((feature) => feature.type === "polyline"),
 });
 
 const findLargestPolygon = (polygons: MapFeature[]): MapFeature | null => {
-  const [first] = polygons;
-  if (!first) {
+  const [firstPolygon] = polygons;
+  if (!firstPolygon) {
     return null;
   }
 
-  let largest = first;
-  for (let i = 1; i < polygons.length; i += 1) {
-    const current = polygons[i];
-    if (current && current.coordinates.length > largest.coordinates.length) {
-      largest = current;
+  let largestPolygon = firstPolygon;
+  for (let index = 1; index < polygons.length; index += 1) {
+    const polygon = polygons[index];
+    if (
+      polygon &&
+      polygon.coordinates.length > largestPolygon.coordinates.length
+    ) {
+      largestPolygon = polygon;
     }
   }
 
-  return largest;
+  return largestPolygon;
 };
 
 const extractAcreage = (attributes: Record<string, unknown>): number | null => {
@@ -199,8 +329,8 @@ const parseCoordinateArray = (
   coords: WebMercatorCoord[];
   latLng: LatLng[];
 } => {
-  const coords = coordinates.map((coord) => {
-    const [x = 0, y = 0] = coord;
+  const coords = coordinates.map((coordinate) => {
+    const [x = 0, y = 0] = coordinate;
     return { x, y };
   });
   const latLng = coords.map((coord) => webMercatorToLatLng(coord.x, coord.y));
@@ -365,3 +495,183 @@ export const permitHasMapData = async (permitId: string): Promise<boolean> => {
 
   return (data.count ?? 0) > 0;
 };
+
+const readJson = async (request: Request): Promise<JsonBody | null> => {
+  try {
+    const body = await request.json();
+    return typeof body === "object" && body !== null
+      ? (body as JsonBody)
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+const getString = (body: JsonBody | null, key: string): string | null => {
+  if (!body) {
+    return null;
+  }
+
+  const value = body[key];
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : null;
+};
+
+const handlePage2MapKmlPost = async (request: Request): Promise<Response> => {
+  if (request.method !== "POST") {
+    return jsonError("Method not allowed", 405);
+  }
+
+  const body = await readJson(request);
+  const kml = getString(body, "kml");
+  if (!kml) {
+    return jsonError("Body must include a non-empty 'kml' string", 400);
+  }
+
+  try {
+    return jsonOk({ mapData: kmlToPermitMapData(kml) });
+  } catch (error) {
+    return jsonError(
+      error instanceof Error ? error.message : String(error),
+      422
+    );
+  }
+};
+
+const handlePage2MapRenewalPost = async (
+  request: Request
+): Promise<Response> => {
+  if (request.method !== "POST") {
+    return jsonError("Method not allowed", 405);
+  }
+
+  const body = await readJson(request);
+  const sourcePermitId = getString(body, "sourcePermitId");
+  if (!sourcePermitId) {
+    return jsonError("Body must include 'sourcePermitId'", 400);
+  }
+
+  try {
+    const permitId = normalizeDustApplicationId(sourcePermitId);
+    const mapData = await queryPermitMapFeatures(permitId);
+
+    if (!mapData.disturbedArea) {
+      return jsonError(`No map data found for ${permitId}`, 404);
+    }
+
+    const parcel = mapData.centroid
+      ? await queryParcelByCoordinates(
+          mapData.centroid.lat,
+          mapData.centroid.lng
+        )
+      : null;
+
+    return jsonOk({ mapData, parcel, sourcePermitId: permitId });
+  } catch (error) {
+    return jsonError(
+      error instanceof Error ? error.message : String(error),
+      422
+    );
+  }
+};
+
+const handlePage2MapParcelPost = async (
+  request: Request
+): Promise<Response> => {
+  if (request.method !== "POST") {
+    return jsonError("Method not allowed", 405);
+  }
+
+  const body = await readJson(request);
+  if (!body) {
+    return jsonError("Invalid JSON body", 400);
+  }
+
+  const apn = getString(body, "apn");
+  const noiIdentifier = getString(body, "noiIdentifier");
+
+  if (!apn && !noiIdentifier) {
+    return jsonError("Provide 'apn' or 'noiIdentifier'", 400);
+  }
+
+  try {
+    if (apn) {
+      const parcel = await queryParcelByAPN(apn);
+      if (!parcel) {
+        return jsonError(`No parcel found for APN ${apn}`, 404);
+      }
+
+      return jsonOk({ parcel, source: "apn" });
+    }
+
+    const { record } = await resolveNoiRecord(noiIdentifier ?? "");
+    if (!record) {
+      return jsonError(`No NOI record found for ${noiIdentifier}`, 404);
+    }
+
+    const { latitude, longitude } = parseNoiCoordinates(record);
+    const acres = parseNoiAcres(record);
+    const parcel =
+      latitude !== null && longitude !== null
+        ? await queryParcelByCoordinates(latitude, longitude)
+        : null;
+
+    return jsonOk({
+      acres,
+      coordinates: { latitude, longitude },
+      parcel,
+      record,
+      source: "noi",
+    });
+  } catch (error) {
+    return jsonError(
+      error instanceof Error ? error.message : String(error),
+      422
+    );
+  }
+};
+
+const worker = {
+  async fetch(
+    request: Request,
+    env: Env,
+    _ctx: ExecutionContext
+  ): Promise<Response> {
+    const url = new URL(request.url);
+
+    try {
+      switch (url.pathname) {
+        case "/api/health": {
+          return Response.json({
+            ok: true,
+            service: "maricopa-county-dust-permit-portal-worker",
+          });
+        }
+        case "/api/page2-map/kml": {
+          return await handlePage2MapKmlPost(request);
+        }
+        case "/api/page2-map/renewal": {
+          return await handlePage2MapRenewalPost(request);
+        }
+        case "/api/page2-map/parcel": {
+          return await handlePage2MapParcelPost(request);
+        }
+        case "/api/create": {
+          return await handleMaricopaCreatePost(request, env);
+        }
+        case "/api/delete": {
+          return await handleMaricopaDeletePost(request, env);
+        }
+        default: {
+          return new Response("Not Found", { status: 404 });
+        }
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return jsonError(message, 500);
+    }
+  },
+};
+
+export default worker satisfies ExportedHandler<Env>;

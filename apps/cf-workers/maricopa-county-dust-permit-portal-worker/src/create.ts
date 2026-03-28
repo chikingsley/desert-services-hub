@@ -1,762 +1,640 @@
-import { launch } from "@cloudflare/puppeteer";
+import type { Page } from "playwright";
 
-interface RuntimeDomNode {
-  checked?: boolean;
-  click?: () => void;
-  closest?: (selector: string) => RuntimeDomNode | null;
-  dispatchEvent?: (event: RuntimeDomEvent) => void;
-  options?: ArrayLike<RuntimeDomOption>;
-  outerHTML?: string;
-  parentElement?: RuntimeDomNode | null;
+import {
+  type PortalContext,
+  PORTAL_TIMINGS,
+  hasSelector,
+  isVisible,
+  pollUntil,
+  settlePortalUi,
+  waitForVisible,
+} from "./portal-shared";
+
+/**
+ * Maricopa portal creation flow and the shared browser automation used by both
+ * the worker handler and the local headed Playwright specs.
+ */
+
+interface RuntimeOption {
   textContent?: string | null;
   value?: string;
 }
 
-type RuntimeDomNodeWithOptions = RuntimeDomNode & {
-  options: readonly RuntimeDomOption[];
-};
+interface RuntimeSelectNode {
+  options?: Iterable<RuntimeOption> & ArrayLike<RuntimeOption>;
+}
 
-interface RuntimeDomOption {
+interface RuntimeTextContainer {
   textContent?: string | null;
-  value: string;
 }
 
-interface RuntimeDomEvent {
-  bubbles?: boolean;
-  type: string;
+interface RuntimeRadioNode {
+  closest?: (selector: string) => RuntimeTextContainer | null;
 }
 
-declare const document: {
-  body?: {
-    textContent?: string | null;
-  };
-  querySelector: (selector: string) => RuntimeDomNode | null;
-  querySelectorAll: (selector: string) => RuntimeDomNode[];
-};
+interface RuntimeClickableNode {
+  click?: () => void;
+}
 
 const DUST_PERMIT_BASE_URL = "https://dm.maricopa.gov/";
-const DUST_PERMIT_LOGIN_TIMEOUT_MS = 60_000;
-const DEFAULT_TIMEOUT_MS = 15_000;
-const CREATE_TIMEOUT_MS = 30_000;
 
 const selectors = {
   applicationIdField: '[id="ThePage:applicationId"]',
+  companyRadioButtons: 'input[name="RadioButtons"]',
   continueButton: 'img[alt="Continue"]',
   copyFromSelect: '[id="newDustApplcation:_idJsp24"]',
-  createButton: '[id="newDustApplcation:createNewApplication"], [alt="Create"]',
+  createButton:
+    '[id="newDustApplcation:createNewApplication"], a:has(img[alt="Create"]), img[alt="Create"]',
   disclaimerAgreeBtn: '[onclick*="agree"]',
-  loginButton:
-    'a[id*="loginBtn"], input[type="submit"][value="Login"], input[type="submit"]',
-  /** Match the login form in the main document or an iframe (same as dust-permits portal). */
-  loginPasswordInput: 'input[id*="password"], input[type="password"]',
-  loginUserInput: 'input[id*="userName"], input[type="text"]',
+  draftSection: "text=Draft Dust Applications",
+  loginButtons: [
+    'a[id*="loginBtn"]',
+    'a:has(img[alt="Login"])',
+    'input[type="submit"][value="Login"]',
+    'input[type="submit"]',
+  ],
+  loginPasswordInputs: ['input[id*="password"]', 'input[type="password"]'],
+  loginUserInputs: ['input[id*="userName"]', 'input[type="text"]'],
+  logoutLink: 'a:has-text("Logout")',
+  myDustAppsLink: "text=My Dust Control Applications",
   newApplicationButton: 'img[alt="New Application"]',
   newCompanyCheckbox: '[id="newDustApplcation:newCompany"]',
+  page1ApplicantInfo: "text=Applicant Information",
+  page1EmailMarker:
+    "text=Provide an email address where we can send the permit",
   reapplicationCheckbox: '[id="newDustApplcation:copyApplication"]',
   showAllCompaniesDropdown:
     '[id="newDustApplcation:assoicatedCompanies-nb__xc_c"]',
-};
+  welcomeText: "text=Welcome,",
+} as const;
 
-interface PortalEnv {
-  BROWSER: unknown;
-  DUST_PERMIT_USERNAME?: string;
-  DUST_PERMIT_PASSWORD?: string;
-}
-
-interface CreateFlow {
+export interface CreateFlow {
   flow: "new-company" | "existing-company";
   copyFromApp?: string;
   companyName?: string;
 }
 
-const sleep = (ms: number): Promise<void> =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-
-const createDomEvent = (type: string): RuntimeDomEvent => ({
-  bubbles: true,
-  type,
-});
-
-const toRuntimeDomArray = <T>(
-  value: readonly T[] | ArrayLike<T> | undefined
-): T[] => (value ? [...value] : []);
-
-const readJson = async (
-  request: Request
-): Promise<Record<string, unknown> | null> => {
-  try {
-    const body = await request.json();
-    return typeof body === "object" && body !== null
-      ? (body as Record<string, unknown>)
-      : null;
-  } catch {
-    return null;
-  }
-};
-
-const getString = (
-  body: Record<string, unknown> | null,
-  key: string
-): string | null => {
-  if (!body) {
-    return null;
-  }
-
-  const value = body[key];
-  return typeof value === "string" && value.trim().length > 0
-    ? value.trim()
-    : null;
-};
-
-const getFlow = (flowValue: string | null): CreateFlow["flow"] | null =>
-  flowValue === "existing-company" || flowValue === "new-company"
-    ? flowValue
-    : null;
-
-type PuppeteerBrowser = Awaited<ReturnType<typeof launch>>;
-type PuppeteerPage = Awaited<ReturnType<PuppeteerBrowser["newPage"]>>;
-type PuppeteerFrame = ReturnType<PuppeteerPage["mainFrame"]>;
-
-const toPuppeteerContext = (
-  page: PuppeteerPage
-): PuppeteerPage | PuppeteerFrame => page;
-
-const getAllContexts = (
-  page: PuppeteerPage
-): (PuppeteerPage | PuppeteerFrame)[] => {
+const getContexts = (page: Page): PortalContext[] => {
   const mainFrame = page.mainFrame();
-  const frames = page.frames();
-  return [
-    toPuppeteerContext(page),
-    ...frames.filter((frame) => frame !== mainFrame),
-  ];
+  return [page, ...page.frames().filter((frame) => frame !== mainFrame)];
 };
 
-const firstContextWithSelector = async (
-  page: PuppeteerPage,
+const findContextWithSelector = async (
+  page: Page,
   selector: string,
-  timeoutMs = DEFAULT_TIMEOUT_MS
-): Promise<PuppeteerPage | PuppeteerFrame | null> => {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const contexts = getAllContexts(page);
-    for (const context of contexts) {
-      const found = await context.$(selector);
-      if (found) {
-        return context;
+  timeoutMs = PORTAL_TIMINGS.readyMs
+): Promise<PortalContext | null> =>
+  await pollUntil(
+    async () => {
+      for (const ctx of getContexts(page)) {
+        if (await hasSelector(ctx, selector)) {
+          return ctx;
+        }
       }
-    }
-    await sleep(250);
-  }
-  return null;
-};
 
-const waitForText = async (
-  page: PuppeteerPage,
-  predicate: string,
-  timeoutMs = CREATE_TIMEOUT_MS
+      return null;
+    },
+    {
+      timeoutMs,
+      isDone: (ctx) => ctx !== null,
+    }
+  );
+
+const findContextWithAnySelector = async (
+  page: Page,
+  selectorList: readonly string[],
+  timeoutMs = PORTAL_TIMINGS.readyMs
+): Promise<PortalContext | null> =>
+  await pollUntil(
+    async () => {
+      for (const ctx of getContexts(page)) {
+        for (const selector of selectorList) {
+          if (await hasSelector(ctx, selector)) {
+            return ctx;
+          }
+        }
+      }
+
+      return null;
+    },
+    {
+      timeoutMs,
+      isDone: (ctx) => ctx !== null,
+    }
+  );
+
+const clickFirstVisible = async (
+  ctx: PortalContext,
+  selectorList: readonly string[],
+  timeoutMs = PORTAL_TIMINGS.readyMs
 ): Promise<boolean> => {
-  const deadline = Date.now() + timeoutMs;
-  const target = predicate.toLowerCase();
+  for (const selector of selectorList) {
+    try {
+      const locator = ctx.locator(selector).first();
+      if ((await locator.count()) === 0) {
+        continue;
+      }
 
-  while (Date.now() < deadline) {
-    const found = await page.evaluate((needle) => {
-      const bodyText = (document.body?.textContent ?? "").toLowerCase();
-      const hasAnchor = [...document.querySelectorAll("a")].some(
-        (anchor) => (anchor.textContent ?? "").toLowerCase() === needle
-      );
-      return bodyText.includes(needle) || hasAnchor;
-    }, target);
+      try {
+        await locator.waitFor({ state: "visible", timeout: timeoutMs });
+      } catch {
+        continue;
+      }
 
-    if (found) {
-      return true;
+      try {
+        await locator.scrollIntoViewIfNeeded();
+      } catch {
+        // Some portal nodes do not support scrolling cleanly.
+      }
+
+      for (const click of [
+        async () => await locator.click({ timeout: timeoutMs }),
+        async () => await locator.click({ force: true, timeout: timeoutMs }),
+        async () =>
+          await locator.evaluate((node) => {
+            const clickable = node as RuntimeClickableNode;
+            clickable.click?.();
+          }),
+      ]) {
+        try {
+          await click();
+          await settlePortalUi();
+          return true;
+        } catch {
+          // Try a stronger click strategy against the same node.
+        }
+      }
+    } catch {
+      // Try the next selector variant.
     }
-    await sleep(250);
   }
 
   return false;
 };
 
-const clickBestEffort = async (
-  page: PuppeteerPage,
-  selectorsToTry: string[]
+const fillFirstVisible = async (
+  ctx: PortalContext,
+  selectorList: readonly string[],
+  value: string,
+  timeoutMs = PORTAL_TIMINGS.readyMs
 ): Promise<boolean> => {
-  for (const selector of selectorsToTry) {
+  for (const selector of selectorList) {
     try {
-      await page.waitForSelector(selector, { timeout: 5000 });
-      await page.click(selector);
+      const locator = ctx.locator(selector).first();
+      if ((await locator.count()) === 0) {
+        continue;
+      }
+      await locator.fill(value, { timeout: timeoutMs });
+      await settlePortalUi();
       return true;
     } catch {
-      // Not every selector variant exists on every page state.
+      // Try the next selector variant.
     }
   }
 
-  try {
-    const clicked = await page.evaluate((selectorList) => {
-      const selectorCandidates = selectorList as string[];
-      const nodes = document.querySelectorAll(
-        "a, button, input[type='submit'], input[type='button']"
-      );
-      for (const selector of selectorCandidates) {
-        const element = document.querySelector(selector);
-        if (element) {
-          element.click?.();
-          return true;
-        }
-      }
-      const match = nodes.find((node) =>
-        selectorCandidates.some((selector) =>
-          (node.outerHTML ?? "").includes(selector)
-        )
-      );
-      if (match) {
-        match.click?.();
-        return true;
-      }
-      return false;
-    }, selectorsToTry);
+  return false;
+};
 
-    return Boolean(clicked);
+const readFirstInputValue = async (
+  ctx: PortalContext,
+  selectorList: readonly string[]
+): Promise<string | null> => {
+  for (const selector of selectorList) {
+    try {
+      const locator = ctx.locator(selector).first();
+      if ((await locator.count()) === 0) {
+        continue;
+      }
+      return await locator.inputValue();
+    } catch {
+      // Try the next selector variant.
+    }
+  }
+
+  return null;
+};
+
+const setCheckboxState = async (
+  ctx: PortalContext,
+  selector: string,
+  checked: boolean
+): Promise<boolean> => {
+  try {
+    const locator = ctx.locator(selector).first();
+    await locator.waitFor({
+      state: "visible",
+      timeout: PORTAL_TIMINGS.readyMs,
+    });
+
+    const current = await locator.isChecked();
+    if (current !== checked) {
+      await locator.click({ force: true });
+      await settlePortalUi();
+    }
+
+    return true;
   } catch {
     return false;
   }
 };
 
-const handleDisclaimer = async (page: PuppeteerPage): Promise<boolean> => {
+const selectOptionByPartialLabel = async (
+  ctx: PortalContext,
+  selector: string,
+  partialLabel: string
+): Promise<boolean> => {
+  try {
+    const locator = ctx.locator(selector).first();
+    await locator.waitFor({
+      state: "visible",
+      timeout: PORTAL_TIMINGS.readyMs,
+    });
+
+    const optionValue = await locator.evaluate((node, needle) => {
+      const select = node as RuntimeSelectNode;
+      const target = String(needle).toLowerCase();
+
+      for (const option of select.options ??
+        ([] as Iterable<RuntimeOption> & ArrayLike<RuntimeOption>)) {
+        if ((option.textContent ?? "").toLowerCase().includes(target)) {
+          return option.value ?? null;
+        }
+      }
+
+      return null;
+    }, partialLabel);
+
+    if (!optionValue) {
+      return false;
+    }
+
+    await locator.selectOption(optionValue);
+    await settlePortalUi();
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const clickInAnyContext = async (
+  page: Page,
+  selectorList: readonly string[]
+): Promise<boolean> => {
+  for (const selector of selectorList) {
+    const ctx = await findContextWithSelector(
+      page,
+      selector,
+      PORTAL_TIMINGS.readyMs
+    );
+    if (!ctx) {
+      continue;
+    }
+    if (await clickFirstVisible(ctx, [selector])) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const waitForLoginSuccess = async (
+  page: Page,
+  timeoutMs = PORTAL_TIMINGS.operationMs
+): Promise<boolean> =>
+  Boolean(
+    await pollUntil(
+      async () =>
+        (await isVisible(page, selectors.myDustAppsLink)) ||
+        (await isVisible(page, selectors.welcomeText)) ||
+        (await isVisible(page, selectors.logoutLink)) ||
+        (await isVisible(page, selectors.newApplicationButton)),
+      {
+        timeoutMs,
+        isDone: Boolean,
+      }
+    )
+  );
+
+const handleDisclaimer = async (page: Page): Promise<boolean> => {
   if (!page.url().includes("disclaimer")) {
     return true;
   }
 
-  const clicked = await clickBestEffort(page, [selectors.disclaimerAgreeBtn]);
-  if (!clicked) {
-    return false;
-  }
-
-  await sleep(300);
-  return true;
-};
-
-const _fillText = async (
-  page: PuppeteerPage,
-  selector: string,
-  value: string
-): Promise<boolean> => {
-  const context = await firstContextWithSelector(page, selector);
-  if (!context) {
-    return false;
-  }
-
   try {
-    await context.$eval(
-      selector,
-      (el, nextValue) => {
-        if (!el) {
-          return;
-        }
-        el.value = nextValue;
-        el.dispatchEvent?.(createDomEvent("input"));
-        el.dispatchEvent?.(createDomEvent("change"));
-      },
-      value
-    );
+    await page.locator(selectors.disclaimerAgreeBtn).first().click();
+    await page.waitForURL((url) => !url.href.includes("disclaimer"), {
+      timeout: PORTAL_TIMINGS.readyMs,
+    });
     return true;
   } catch {
-    return false;
+    return !page.url().includes("disclaimer");
   }
 };
 
-const clickInFrames = async (
-  page: PuppeteerPage,
-  selector: string
-): Promise<boolean> => {
-  const context = await firstContextWithSelector(page, selector, 12_000);
-  if (!context) {
-    return false;
-  }
-
-  try {
-    await context.evaluate((sel) => {
-      const node = document.querySelector(sel);
-      if (!node) {
-        return;
-      }
-      node.click?.();
-    }, selector);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const setCheckboxInFrames = async (
-  page: PuppeteerPage,
-  selector: string,
-  checked: boolean
-): Promise<boolean> => {
-  const context = await firstContextWithSelector(page, selector);
-  if (!context) {
-    return false;
-  }
-
-  try {
-    await context.$eval(
-      selector,
-      (el, target) => {
-        if (!el) {
-          return;
-        }
-        el.checked = Boolean(target);
-        el.dispatchEvent?.(createDomEvent("change"));
-      },
-      checked
-    );
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const pickOptionInFrames = async (
-  page: PuppeteerPage,
-  selector: string,
-  text: string
-): Promise<boolean> => {
-  const context = await firstContextWithSelector(page, selector);
-  if (!context) {
-    return false;
-  }
-
-  const optionNode = await context.$(selector);
-  if (!optionNode) {
-    return false;
-  }
-
-  const selected = await optionNode.evaluate((node, needle) => {
-    const select = node as unknown as RuntimeDomNodeWithOptions;
-    if (!select.options?.length) {
-      return false;
-    }
-
-    const target = String(needle).toLowerCase();
-    const option = toRuntimeDomArray(select.options).find((candidate) =>
-      (candidate.textContent ?? "").toLowerCase().includes(target)
-    );
-    if (!option) {
-      return false;
-    }
-
-    select.value = option.value;
-    select.dispatchEvent?.({ bubbles: true, type: "change" });
-    return true;
-  }, text);
-
-  return Boolean(selected);
-};
-
-const selectNewCompany = async (popup: PuppeteerPage): Promise<boolean> => {
-  await sleep(250);
-  return setCheckboxInFrames(popup, selectors.newCompanyCheckbox, true);
-};
+const findLoginContext = (page: Page): Promise<PortalContext | null> =>
+  findContextWithAnySelector(
+    page,
+    selectors.loginPasswordInputs,
+    PORTAL_TIMINGS.readyMs
+  );
 
 const selectCompanyByName = async (
-  popup: PuppeteerPage,
+  popupPage: Page,
   companyName: string
 ): Promise<boolean> => {
-  const context = await firstContextWithSelector(
-    popup,
+  const showAllContext = await findContextWithSelector(
+    popupPage,
     selectors.showAllCompaniesDropdown,
-    8000
+    PORTAL_TIMINGS.readyMs
   );
-  if (!context) {
+  if (showAllContext) {
+    try {
+      await showAllContext
+        .locator(selectors.showAllCompaniesDropdown)
+        .first()
+        .selectOption("all");
+      await settlePortalUi();
+    } catch {
+      // Some portal states do not expose the dropdown immediately.
+    }
+  }
+
+  const radioContext = await findContextWithSelector(
+    popupPage,
+    selectors.companyRadioButtons,
+    PORTAL_TIMINGS.readyMs
+  );
+  if (!radioContext) {
     return false;
   }
 
-  await context.$eval(
-    selectors.showAllCompaniesDropdown,
-    (sel) => {
-      const select = document.querySelector(sel);
-      if (select) {
-        select.value = "all";
-        select.dispatchEvent?.(createDomEvent("change"));
-      }
-    },
-    selectors.showAllCompaniesDropdown
-  );
+  const radios = radioContext.locator(selectors.companyRadioButtons);
+  const radioCount = await radios.count();
+  const target = companyName.toLowerCase();
 
-  await sleep(250);
+  for (let index = 0; index < radioCount; index += 1) {
+    const radio = radios.nth(index);
+    const rowText = await radio.evaluate((node) => {
+      const runtimeNode = node as RuntimeRadioNode;
+      return runtimeNode.closest?.("tr")?.textContent ?? "";
+    });
 
-  const found = await popup.evaluate((name) => {
-    const radios = [...document.querySelectorAll('input[name="RadioButtons"]')];
-    const target = String(name).toLowerCase();
-    for (const radio of radios) {
-      const rowText = (radio.closest?.("tr")?.textContent ?? "").toLowerCase();
-      if (!target || !rowText.includes(target)) {
-        continue;
-      }
-      radio.checked = true;
-      radio.dispatchEvent?.(createDomEvent("change"));
-      return true;
+    if (!rowText.toLowerCase().includes(target)) {
+      continue;
     }
-    return false;
-  }, companyName);
 
-  return found;
+    try {
+      await radio.check({ force: true });
+    } catch {
+      await radio.click({ force: true });
+    }
+    await settlePortalUi();
+    return true;
+  }
+
+  return false;
 };
 
-const getApplicationId = async (
-  page: PuppeteerPage
-): Promise<string | null> => {
-  const raw = await page.evaluate((selector) => {
-    const node = document.querySelector(selector);
-    return node?.textContent?.trim() ?? null;
-  }, selectors.applicationIdField);
+const selectNewCompany = async (popupPage: Page): Promise<boolean> => {
+  const ctx = await findContextWithSelector(
+    popupPage,
+    selectors.newCompanyCheckbox
+  );
+  if (!ctx) {
+    return false;
+  }
 
-  if (!raw || !/^D\d{7}$/i.test(raw)) {
+  return await setCheckboxState(ctx, selectors.newCompanyCheckbox, true);
+};
+
+const getApplicationId = async (page: Page): Promise<string | null> => {
+  try {
+    const raw = await page
+      .locator(selectors.applicationIdField)
+      .first()
+      .textContent();
+
+    const value = raw?.trim() ?? "";
+    return /^D\d{7}$/i.test(value) ? value.toUpperCase() : null;
+  } catch {
     return null;
   }
-
-  return raw.toUpperCase();
 };
 
-const waitForApplicationId = async (
-  page: PuppeteerPage
-): Promise<string | null> => {
-  const deadline = Date.now() + CREATE_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    const appId = await getApplicationId(page);
-    if (appId) {
-      return appId;
+const waitForApplicationCreated = async (
+  page: Page
+): Promise<string | null> =>
+  await pollUntil(
+    async () => {
+      const permitId = await getApplicationId(page);
+      if (permitId) {
+        return permitId;
+      }
+
+      const hasApplicationMarkers =
+        (await isVisible(page, selectors.page1ApplicantInfo)) ||
+        (await isVisible(page, selectors.page1EmailMarker));
+      if (!hasApplicationMarkers) {
+        return null;
+      }
+
+      return await getApplicationId(page);
+    },
+    {
+      timeoutMs: PORTAL_TIMINGS.operationMs,
+      isDone: (permitId) => permitId !== null,
     }
-    await sleep(500);
-  }
-  return null;
-};
+  );
 
-const fillInContext = async (
-  ctx: PuppeteerPage | PuppeteerFrame,
-  selector: string,
-  value: string
-): Promise<boolean> => {
-  try {
-    await ctx.$eval(
-      selector,
-      (el, nextValue) => {
-        if (!el) {
-          return;
-        }
-        el.value = nextValue;
-        el.dispatchEvent?.(createDomEvent("input"));
-        el.dispatchEvent?.(createDomEvent("change"));
-      },
-      value
-    );
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const findLoginContext = async (
-  page: PuppeteerPage
-): Promise<PuppeteerPage | PuppeteerFrame | null> => {
-  const pwdSelector = selectors.loginPasswordInput;
-  const contexts = getAllContexts(page);
-  for (const context of contexts) {
-    const found = await context.$(pwdSelector);
-    if (found) {
-      return context;
-    }
-  }
-  return null;
-};
-
-const fillLoginCredentialsInContext = async (
-  ctx: PuppeteerPage | PuppeteerFrame,
+export const ensureLoggedIn = async (
+  page: Page,
   username: string,
   password: string
 ): Promise<boolean> => {
-  const userSelectors = ['input[id*="userName"]', 'input[type="text"]'];
-  let userOk = false;
-  for (const sel of userSelectors) {
-    userOk = await fillInContext(ctx, sel, username);
-    if (userOk) {
-      break;
-    }
+  console.log("[LOGIN] checking if already logged in...");
+  if (await waitForLoginSuccess(page, PORTAL_TIMINGS.quickMs)) {
+    console.log("[LOGIN] already logged in");
+    return true;
   }
-  const passOk =
-    (await fillInContext(ctx, 'input[id*="password"]', password)) ||
-    (await fillInContext(ctx, 'input[type="password"]', password));
-  return userOk && passOk;
+
+  console.log("[LOGIN] navigating to portal...");
+  await page.goto(DUST_PERMIT_BASE_URL, {
+    timeout: PORTAL_TIMINGS.sessionMs,
+    waitUntil: "load",
+  });
+  console.log("[LOGIN] page loaded, url:", page.url());
+
+  if (!(await handleDisclaimer(page))) {
+    console.log("[LOGIN] FAIL: disclaimer");
+    return false;
+  }
+  console.log("[LOGIN] disclaimer passed, url:", page.url());
+
+  if (await waitForLoginSuccess(page, PORTAL_TIMINGS.quickMs)) {
+    console.log("[LOGIN] already logged in after disclaimer");
+    return true;
+  }
+
+  console.log("[LOGIN] finding login context...");
+  const loginCtx = await findLoginContext(page);
+  if (!loginCtx) {
+    console.log("[LOGIN] FAIL: no login context found");
+    return false;
+  }
+
+  console.log("[LOGIN] found login context, filling credentials...");
+  const userOk = await fillFirstVisible(
+    loginCtx,
+    selectors.loginUserInputs,
+    username
+  );
+  const passwordOk = await fillFirstVisible(
+    loginCtx,
+    selectors.loginPasswordInputs,
+    password
+  );
+
+  if (!(userOk && passwordOk)) {
+    console.log("[LOGIN] FAIL: could not fill credentials");
+    return false;
+  }
+
+  const userValue =
+    (await readFirstInputValue(loginCtx, selectors.loginUserInputs)) ?? "";
+  const passwordValue =
+    (await readFirstInputValue(loginCtx, selectors.loginPasswordInputs)) ?? "";
+  if (!(userValue.trim() && passwordValue.trim())) {
+    console.log("[LOGIN] FAIL: credentials did not populate");
+    return false;
+  }
+
+  console.log("[LOGIN] credentials filled, clicking login...");
+  if (!(await clickFirstVisible(loginCtx, selectors.loginButtons))) {
+    const successAfterFailedClick = await waitForLoginSuccess(
+      page,
+      PORTAL_TIMINGS.quickMs
+    );
+    console.log(
+      "[LOGIN]",
+      successAfterFailedClick
+        ? "click reported failure but login already succeeded"
+        : "FAIL: could not click login button"
+    );
+    return successAfterFailedClick;
+  }
+
+  console.log("[LOGIN] waiting for login success...");
+  const success = await waitForLoginSuccess(page);
+  console.log(
+    "[LOGIN]",
+    success ? "SUCCESS" : "FAIL: timed out waiting for success indicators"
+  );
+  return success;
 };
 
-const credentialsPopulatedInContext = async (
-  ctx: PuppeteerPage | PuppeteerFrame
-): Promise<boolean> =>
-  await ctx.evaluate(() => {
-    const emailEl =
-      (document.querySelector(
-        'input[id*="userName"]'
-      ) as RuntimeDomNode | null) ||
-      (document.querySelector('input[type="text"]') as RuntimeDomNode | null);
-    const passEl =
-      (document.querySelector(
-        'input[id*="password"]'
-      ) as RuntimeDomNode | null) ||
-      (document.querySelector(
-        'input[type="password"]'
-      ) as RuntimeDomNode | null);
-    return Boolean(
-      (emailEl?.value ?? "").trim() && (passEl?.value ?? "").trim()
-    );
-  });
+export const openMyDustApps = async (page: Page): Promise<boolean> => {
+  const isOnDustAppsPage = async (): Promise<boolean> =>
+    page.url().includes("/applications/dustApplications.jsf") ||
+    (await isVisible(page, selectors.newApplicationButton)) ||
+    (await isVisible(page, selectors.draftSection));
 
-const clickLoginInContext = async (
-  ctx: PuppeteerPage | PuppeteerFrame
-): Promise<boolean> => {
-  const simple = [
-    'a[id*="loginBtn"]',
-    'input[type="submit"][value="Login"]',
-    'input[type="submit"]',
-  ];
-  for (const sel of simple) {
+  if (await isOnDustAppsPage()) {
+    return true;
+  }
+
+  const navLink = page.locator(selectors.myDustAppsLink).first();
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      const el = await ctx.$(sel);
-      if (el) {
-        await el.click();
+      if (attempt === 1) {
+        await navLink.click({
+          noWaitAfter: true,
+          timeout: PORTAL_TIMINGS.readyMs,
+        });
+      } else if (attempt === 2) {
+        await navLink.click({
+          force: true,
+          noWaitAfter: true,
+          timeout: PORTAL_TIMINGS.readyMs,
+        });
+      } else {
+        await navLink.evaluate((node) => {
+          const clickable = node as RuntimeClickableNode;
+          clickable.click?.();
+        });
+      }
+
+      const ready = await pollUntil(isOnDustAppsPage, {
+        timeoutMs: PORTAL_TIMINGS.readyMs,
+        isDone: Boolean,
+      });
+      if (ready) {
+        await settlePortalUi();
         return true;
       }
     } catch {
-      // try next selector
+      // Retry with a stronger click strategy.
     }
-  }
-  return await ctx.evaluate(() => {
-    const loginAnchor = document.querySelector(
-      'a[id*="loginBtn"]'
-    ) as RuntimeDomNode | null;
-    const anchor = loginAnchor as unknown as { offsetParent?: unknown } | null;
-    if (anchor && anchor.offsetParent !== null) {
-      loginAnchor?.click?.();
-      return true;
-    }
-    const nodes = [
-      ...document.querySelectorAll(
-        "input[type=submit], input[type=button], button, a"
-      ),
-    ];
-    const visible = nodes.filter(
-      (el) =>
-        (el as unknown as { offsetParent?: unknown }).offsetParent !== null
-    );
-    const match = visible.find((el) => {
-      const tag = ((el as { tagName?: string }).tagName ?? "").toLowerCase();
-      if (tag === "input") {
-        return (
-          ((el as RuntimeDomNode).value || "").trim().toLowerCase() === "login"
-        );
-      }
-      return (el.textContent || "").trim().toLowerCase() === "login";
-    });
-    if (match) {
-      (match as RuntimeDomNode).click?.();
-      return true;
-    }
-    return false;
-  });
-};
 
-const waitForLoginSuccess = async (
-  page: PuppeteerPage,
-  timeoutMs = 25_000
-): Promise<boolean> => {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const ok = await page.evaluate(() => {
-      const body = (document.body?.textContent ?? "").toLowerCase();
-      if (body.includes("my dust control applications")) {
-        return true;
-      }
-      if (body.includes("welcome,")) {
-        return true;
-      }
-      const anchors = [...document.querySelectorAll("a")];
-      const logout = anchors.some(
-        (a) => (a.textContent ?? "").trim().toLowerCase() === "logout"
-      );
-      if (logout) {
-        return true;
-      }
-      return false;
-    });
-    if (ok) {
-      return true;
-    }
-    await sleep(250);
-  }
-  return false;
-};
-
-const ensureLoggedIn = async (
-  page: PuppeteerPage,
-  username: string,
-  password: string
-): Promise<boolean> => {
-  const alreadyLoggedIn = await waitForText(
-    page,
-    "my dust control applications",
-    5000
-  );
-  if (alreadyLoggedIn) {
-    return true;
-  }
-
-  await page.goto(DUST_PERMIT_BASE_URL, {
-    timeout: DUST_PERMIT_LOGIN_TIMEOUT_MS,
-    waitUntil: "load",
-  });
-
-  if (!(await handleDisclaimer(page))) {
-    return false;
-  }
-
-  if (await waitForText(page, "my dust control applications", 5000)) {
-    return true;
-  }
-
-  const loginCtx = await (async () => {
-    const deadline = Date.now() + 15_000;
-    while (Date.now() < deadline) {
-      const ctx = await findLoginContext(page);
-      if (ctx) {
-        return ctx;
-      }
-      await sleep(250);
-    }
-    return null;
-  })();
-
-  if (!loginCtx) {
-    return false;
-  }
-
-  if (!(await fillLoginCredentialsInContext(loginCtx, username, password))) {
-    return false;
-  }
-
-  if (!(await credentialsPopulatedInContext(loginCtx))) {
-    return false;
-  }
-
-  if (!(await clickLoginInContext(loginCtx))) {
-    return false;
-  }
-
-  await sleep(300);
-  return await waitForLoginSuccess(page, 25_000);
-};
-
-const openMyDustApps = async (page: PuppeteerPage): Promise<boolean> => {
-  if (await waitForText(page, "my dust control applications", 5000)) {
-    return true;
-  }
-
-  const hasMyDustApps = await page.evaluate(() => {
-    const links = [...document.querySelectorAll("a")];
-    const link = links.find(
-      (item) =>
-        (item.textContent ?? "").trim() === "My Dust Control Applications"
-    );
-    if (!link) {
-      return false;
-    }
-    link.click?.();
-    return true;
-  });
-  if (hasMyDustApps) {
-    return await waitForText(page, "new application", 10_000);
+    await settlePortalUi();
   }
 
   return false;
 };
 
-const launchAndLogin = async (
-  env: PortalEnv
-): Promise<{ browser: PuppeteerBrowser; page: PuppeteerPage }> => {
-  const browser = await launch(
-    env.BROWSER as unknown as Parameters<typeof launch>[0]
-  );
-  const page = await browser.newPage();
-  page.setDefaultTimeout(DUST_PERMIT_LOGIN_TIMEOUT_MS);
-  page.setDefaultNavigationTimeout(DUST_PERMIT_LOGIN_TIMEOUT_MS);
-
-  return { browser, page };
-};
-
-const runMinimalCreate = async (
-  page: PuppeteerPage,
+export const runMinimalCreate = async (
+  page: Page,
   options: CreateFlow
 ): Promise<{ permitId: string | null; error?: string }> => {
-  const createFlow = options.flow;
-  await page.goto(DUST_PERMIT_BASE_URL, {
-    timeout: DUST_PERMIT_LOGIN_TIMEOUT_MS,
-    waitUntil: "domcontentloaded",
-  });
-
-  const newAppButtonReady = await firstContextWithSelector(
-    page,
-    selectors.newApplicationButton,
-    5000
-  );
-  if (!newAppButtonReady) {
-    const opened = await openMyDustApps(page);
-    if (!opened) {
-      return { error: "Could not open My Dust Apps list", permitId: null };
-    }
+  if (!(await openMyDustApps(page))) {
+    return { error: "Could not open My Dust Apps list", permitId: null };
   }
 
-  if (!(await firstContextWithSelector(page, selectors.newApplicationButton))) {
+  if (
+    !(await waitForVisible(
+      page,
+      selectors.newApplicationButton,
+      PORTAL_TIMINGS.readyMs
+    ))
+  ) {
     return { error: "New Application button missing", permitId: null };
   }
 
-  if (!(await clickInFrames(page, selectors.newApplicationButton))) {
+  let popupPage: Page;
+  try {
+    [popupPage] = await Promise.all([
+      page.context().waitForEvent("page", {
+        timeout: PORTAL_TIMINGS.readyMs,
+      }),
+      page.locator(selectors.newApplicationButton).first().click({
+        timeout: PORTAL_TIMINGS.readyMs,
+      }),
+    ]);
+  } catch {
     return { error: "Could not click New Application", permitId: null };
   }
 
-  const popupTarget = await page
-    .browser()
-    .waitForTarget(
-      (target) =>
-        target.opener() === page.target() &&
-        target.type() === "page" &&
-        target.url().length > 0,
-      { timeout: 15_000 }
-    );
-  const popupPage = await popupTarget.page();
-  if (!popupPage) {
-    return { error: "New Application popup did not open", permitId: null };
+  try {
+    await popupPage.waitForLoadState("domcontentloaded");
+  } catch {
+    // The popup is sometimes already stable before the wait begins.
   }
+  await settlePortalUi();
 
-  await popupPage
-    .waitForNavigation({
-      timeout: 10_000,
-      waitUntil: "domcontentloaded",
-    })
-    .catch(() => {
-      // Popup may already be stable and not navigating.
-    });
-  await sleep(500);
-
-  if (!(await clickInFrames(popupPage, selectors.continueButton))) {
+  if (!(await clickInAnyContext(popupPage, [selectors.continueButton]))) {
     return { error: "Failed to click Continue in popup", permitId: null };
   }
 
   const usingCopy =
-    createFlow === "existing-company" || Boolean(options.copyFromApp);
+    options.flow === "existing-company" || Boolean(options.copyFromApp);
   if (usingCopy) {
+    const reapplicationContext = await findContextWithSelector(
+      popupPage,
+      selectors.reapplicationCheckbox
+    );
     if (
-      !(await setCheckboxInFrames(
-        popupPage,
+      !reapplicationContext ||
+      !(await setCheckboxState(
+        reapplicationContext,
         selectors.reapplicationCheckbox,
         true
       ))
@@ -764,150 +642,50 @@ const runMinimalCreate = async (
       return { error: "Failed to check re-application", permitId: null };
     }
 
-    if (
-      options.copyFromApp &&
-      !(await pickOptionInFrames(
+    if (options.copyFromApp) {
+      const dropdownContext = await findContextWithSelector(
         popupPage,
-        selectors.copyFromSelect,
-        options.copyFromApp
-      ))
-    ) {
-      return {
-        error: `Could not select copy-from app "${options.copyFromApp}"`,
-        permitId: null,
-      };
+        selectors.copyFromSelect
+      );
+      if (
+        !dropdownContext ||
+        !(await selectOptionByPartialLabel(
+          dropdownContext,
+          selectors.copyFromSelect,
+          options.copyFromApp
+        ))
+      ) {
+        return {
+          error: `Could not select copy-from app "${options.copyFromApp}"`,
+          permitId: null,
+        };
+      }
     }
   }
 
-  if (createFlow === "existing-company" && options.companyName) {
-    const found = await selectCompanyByName(popupPage, options.companyName);
-    if (!found && !(await selectNewCompany(popupPage))) {
+  if (options.flow === "existing-company" && options.companyName) {
+    const foundCompany = await selectCompanyByName(
+      popupPage,
+      options.companyName
+    );
+    if (!foundCompany && !(await selectNewCompany(popupPage))) {
       return { error: "Could not select company in popup", permitId: null };
     }
   } else if (!(await selectNewCompany(popupPage))) {
     return { error: "Could not select new company option", permitId: null };
   }
 
-  if (!(await clickInFrames(popupPage, selectors.createButton))) {
+  if (!(await clickInAnyContext(popupPage, [selectors.createButton]))) {
     return { error: "Could not click Create", permitId: null };
   }
 
-  await sleep(500);
-
-  if (page.isClosed()) {
-    return {
-      error: "Main page closed unexpectedly while creating",
-      permitId: null,
-    };
-  }
-
-  const permitId = await waitForApplicationId(page);
+  const permitId = await waitForApplicationCreated(page);
   if (!permitId) {
     return {
       error: "Create timed out before application id became available",
       permitId: null,
     };
   }
+
   return { permitId };
-};
-
-export const handleMaricopaCreatePost = async (
-  request: Request,
-  env: PortalEnv
-): Promise<Response> => {
-  if (request.method !== "POST") {
-    return Response.json(
-      { error: "Method not allowed", success: false },
-      { status: 405 }
-    );
-  }
-
-  if (!env.BROWSER) {
-    return Response.json(
-      { error: "BROWSER binding is not configured", success: false },
-      { status: 500 }
-    );
-  }
-
-  const username = env.DUST_PERMIT_USERNAME?.trim();
-  const password = env.DUST_PERMIT_PASSWORD?.trim();
-  if (!username || !password) {
-    return Response.json(
-      {
-        error:
-          "Missing DUST_PERMIT_USERNAME and/or DUST_PERMIT_PASSWORD environment variables",
-        success: false,
-      },
-      { status: 400 }
-    );
-  }
-
-  const body = await readJson(request);
-  const flow = getFlow(getString(body, "flow")) ?? "new-company";
-  const options: CreateFlow = {
-    companyName: getString(body, "companyName") ?? undefined,
-    copyFromApp: getString(body, "copyFromApp") ?? undefined,
-    flow,
-  };
-
-  let browser: PuppeteerBrowser | null = null;
-  try {
-    const createSession = await launchAndLogin(env);
-    ({ browser } = createSession);
-    if (!browser) {
-      throw new Error("Browser launch returned no browser instance");
-    }
-
-    const [page] = await browser.pages();
-    if (!page) {
-      throw new Error("Browser session did not produce a page");
-    }
-
-    const loggedIn = await ensureLoggedIn(page, username, password);
-    if (!loggedIn) {
-      return Response.json(
-        { error: "Login failed", success: false },
-        { status: 401 }
-      );
-    }
-
-    const opened = await openMyDustApps(page);
-    if (!opened) {
-      return Response.json(
-        {
-          error: "Could not reach My Dust Apps after login",
-          success: false,
-        },
-        { status: 500 }
-      );
-    }
-
-    const result = await runMinimalCreate(page, options);
-    if (!result.permitId) {
-      return Response.json(
-        { error: result.error, success: false },
-        { status: 422 }
-      );
-    }
-
-    return Response.json({
-      applicationId: result.permitId,
-      permitId: result.permitId,
-      success: true,
-    });
-  } catch (error) {
-    return Response.json(
-      {
-        error: error instanceof Error ? error.message : String(error),
-        success: false,
-      },
-      { status: 500 }
-    );
-  } finally {
-    if (browser) {
-      await browser.close().catch(() => {
-        // ignore teardown errors
-      });
-    }
-  }
 };

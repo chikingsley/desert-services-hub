@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
-import { kmlToPermitMapData, parseKml } from "../../src/kml";
+import { kmlToPermitMapData, parseKml } from "../../src/permit-map";
 
 const fixtureDir = dirname(fileURLToPath(import.meta.url));
 

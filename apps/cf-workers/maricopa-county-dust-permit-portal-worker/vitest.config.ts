@@ -1,16 +1,18 @@
 import { defineConfig } from "vitest/config";
 
-/**
- * Default: real integration tests only (AZDEQ NOI + Maricopa Assessor over the network).
- * Fast offline checks: `bun run test:unit`
- */
 export default defineConfig({
   test: {
+    coverage: {
+      include: ["src/**/*.ts"],
+      provider: "v8",
+      reportOnFailure: true,
+      reporter: ["text", "html"],
+    },
     environment: "node",
     exclude: ["**/node_modules/**", "**/dist/**"],
     fileParallelism: false,
     hookTimeout: 60_000,
-    include: ["tests/**/*-live.test.ts"],
+    include: ["tests/**/*.test.ts"],
     passWithNoTests: false,
     pool: "forks",
     testTimeout: 60_000,

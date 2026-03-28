@@ -1,0 +1,33 @@
+{
+  "name": "communications-worker",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --port 8789",
+    "dev:remote": "wrangler dev --remote --port 8789",
+    "deploy": "wrangler deploy --env-file .dev.vars",
+    "profile:mailbox-graph": "bun run src/profile-mailbox-backfill-from-graph.ts",
+    "profile:mailbox-d1": "bun run src/profile-mailbox-write-amplification.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config vitest.config.ts",
+    "cf-typegen": "wrangler types",
+    "lint": "ultracite check package.json src tests tsconfig.json vitest.config.ts wrangler.jsonc",
+    "lint:fix": "ultracite fix package.json src tests tsconfig.json vitest.config.ts wrangler.jsonc",
+    "check": "bun run lint && bun run typecheck && bun run test"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260317.1",
+    "@types/node": "^25.5.0",
+    "miniflare": "^4.20260317.2",
+    "oxfmt": "^0.42.0",
+    "oxlint": "^1.57.0",
+    "typescript": "^6.0.2",
+    "ultracite": "^7.3.2",
+    "vitest": "^4.1.2",
+    "wrangler": "^4.77.0"
+  },
+  "packageManager": "bun@1.3.11"
+}

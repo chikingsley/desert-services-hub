@@ -59,7 +59,6 @@ Files:
 - `apps/dust-permits/src/api/pima.ts`
 - `apps/dust-permits/src/lib/pima-gis.ts`
 - `apps/dust-permits/src/index.ts`
-- `apps/dust-permits/tests/api/noi-triage.test.ts`
 - `apps/dust-permits/scripts/county-lookup.ts`
 - `apps/dust-permits-mcp/client.ts`
 - `apps/dust-permits-mcp/src/tools.ts`

@@ -40,6 +40,7 @@ import {
   listCheckpoints,
   respondCheckpoint,
 } from "@/api/checkpoints";
+import { postSubmittedBillingContext } from "@/api/communications/submitted-billing";
 // -- Contracts --
 import {
   getArchiveIndex,
@@ -138,7 +139,9 @@ const h = (handler: unknown) => handler as never;
 
 const homepage = file("./apps/web/frontend/index.html");
 
-await buildWebFrontendBundle();
+if (process.env.SKIP_WEB_BUNDLE !== "1") {
+  await buildWebFrontendBundle();
+}
 
 const server = serve({
   port: process.env.PORT || 3000,
@@ -268,6 +271,11 @@ const server = serve({
     "/api/checkpoints/:id": {
       GET: h(getCheckpoint),
       PUT: h(respondCheckpoint),
+    },
+
+    // Internal communications prep endpoints
+    "/api/internal/communications/dust-permit/submitted-billing-context": {
+      POST: h(postSubmittedBillingContext),
     },
 
     // Contracts (Won estimates)

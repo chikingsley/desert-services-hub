@@ -1,10 +1,13 @@
 import { queryParcelByAPN, queryParcelByCoordinates } from "./assessor";
 import {
+  handlePortalCreateRoute,
+  handlePortalDeleteRoute,
+} from "./api/portal-routes";
+import {
   parseNoiAcres,
   parseNoiCoordinates,
   resolveNoiRecord,
 } from "./noi-endpoints";
-import { handleMaricopaCreatePost, handleMaricopaDeletePost } from "./portal-http";
 
 /**
  * Maricopa permit-map types, GIS helpers, KML parsing, FeatureServer queries,
@@ -658,10 +661,10 @@ const worker = {
           return await handlePage2MapParcelPost(request);
         }
         case "/api/create": {
-          return await handleMaricopaCreatePost(request, env);
+          return await handlePortalCreateRoute(request, env);
         }
         case "/api/delete": {
-          return await handleMaricopaDeletePost(request, env);
+          return await handlePortalDeleteRoute(request, env);
         }
         default: {
           return new Response("Not Found", { status: 404 });

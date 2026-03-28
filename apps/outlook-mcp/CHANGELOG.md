@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `mailbox` required parameter on every tool that accesses Outlook data — specifies which mailbox to operate on in app-only context
 - Calendar `list-events` now uses `calendarView` endpoint instead of `events` — correctly expands recurring event instances within a 30-day window
-- Test suite: `tests/mailbox-permissions.test.ts`, `tests/tool-schemas.test.ts`, `tests/error-responses.test.ts`, `tests/mock-mode.test.ts` (114 tests)
+- Former local test suite covered mailbox permissions, tool schemas, error responses, and mock mode (114 tests)
 - Updated SDK to `@modelcontextprotocol/sdk` v1.26.0
 
 ### Removed

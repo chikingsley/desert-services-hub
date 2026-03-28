@@ -1,0 +1,26 @@
+{
+  "name": "pima-county-dust-permit-portal-worker",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --port 8791",
+    "dev:remote": "wrangler dev --remote --port 8791",
+    "typecheck": "tsc --noEmit",
+    "test": "playwright test -c playwright.portal.config.ts",
+    "test:portal:headless:start": "playwright test -c playwright.portal.config.ts tests/portal-headless/start-application.spec.ts",
+    "playwright:install": "playwright install chromium",
+    "cf-typegen": "wrangler types",
+    "check": "ultracite check",
+    "fix": "ultracite fix"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.5.0",
+    "oxfmt": "^0.42.0",
+    "oxlint": "^1.57.0",
+    "playwright": "^1.58.2",
+    "typescript": "^6.0.2",
+    "ultracite": "^7.3.2",
+    "wrangler": "^4.78.0"
+  }
+}

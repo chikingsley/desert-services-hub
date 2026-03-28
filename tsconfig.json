@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@/api/*": ["apps/web/api/*"],
+      "@/apps/dust-permits-mcp/*": ["apps/dust-permits-mcp/*"],
+      "@/apps/web/*": ["apps/web/*"],
+      "@/hooks/*": ["apps/web/frontend/hooks/*"],
+      "@/lib/*": ["apps/web/frontend/lib/*"],
+      "@/packages/*": ["packages/*"],
+      "@documents/*": ["packages/documents/pdf-generation/src/*"],
+      "@lib/*": ["lib/*"],
+      "@takeoff/*": ["packages/*"]
+    },
+    "jsx": "react-jsx"
+  }
+}

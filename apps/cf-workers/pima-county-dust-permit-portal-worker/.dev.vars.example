@@ -1,0 +1,5 @@
+# Copy to `.dev.vars` in this directory for local runs.
+# Playwright and Wrangler both read these values.
+
+PIMA_PORTAL_USERNAME=your_username
+PIMA_PORTAL_PASSWORD=your_password

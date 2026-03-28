@@ -1,0 +1,26 @@
+- generic [ref=e3]:
+  - application [ref=e4]
+  - generic:
+    - generic [ref=e5]:
+      - button "Zoom in" [ref=e6] [cursor=pointer]:
+        - generic [ref=e7]: 
+        - generic [ref=e8]: Zoom in
+      - button "Zoom out" [ref=e9] [cursor=pointer]:
+        - generic [ref=e10]: 
+        - generic [ref=e11]: Zoom out
+    - generic:
+      - generic [ref=e12]:
+        - generic [ref=e26]: Earthstar Geographics | CONANP, Esri, TomTom, Garmin, SafeGraph, METI/NASA, USGS, Bureau of Land Management, EPA, NPS, USDA, USFWS
+        - generic [ref=e13]:
+          - text: Powered by
+          - link "Esri" [ref=e14] [cursor=pointer]:
+            - /url: http://www.esri.com/
+      - generic [ref=e16]:
+        - button "Search in" [ref=e17] [cursor=pointer]:
+          - generic [ref=e18]: 
+          - text: 
+          - generic [ref=e19]: All
+        - search [ref=e21]:
+          - combobox "Search" [ref=e22]
+        - button "Search" [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: 

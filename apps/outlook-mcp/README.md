@@ -46,11 +46,6 @@ Certified by MCPHub <https://mcphub.com/mcp-servers/ryaker/outlook-mcp>
 │   ├── index.ts             # Rules exports and tool schemas
 │   ├── list.ts              # List rules
 │   └── create.ts            # Create rule
-├── tests/                   # Test suite
-│   ├── mailbox-permissions.test.ts
-│   ├── tool-schemas.test.ts
-│   ├── error-responses.test.ts
-│   └── mock-mode.test.ts
 └── utils/                   # Utility functions
     ├── graph-api.ts         # Microsoft Graph API helper
     └── mock-data.ts         # Test mode data
@@ -209,18 +204,16 @@ All other mailboxes are **read-only**. Attempting write operations from an unlis
 
 ```bash
 bun run start        # Start the MCP server
-bun test             # Run tests (114 pass)
 bun run typecheck    # TypeScript type checking
 bun run lint         # Check formatting (Biome/Ultracite)
 bun run lint:fix     # Auto-fix formatting
 bun run inspect      # Open MCP Inspector for interactive testing
 ```
 
-### Test Mode
+### Mock Mode
 
 ```bash
 USE_TEST_MODE=true bun run start           # Start with mock data
-USE_TEST_MODE=true bun test tests/mock-mode.test.ts  # Run integration tests
 ```
 
 ## Troubleshooting

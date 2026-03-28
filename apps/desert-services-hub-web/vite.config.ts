@@ -1,8 +1,9 @@
-import path from "path";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig, loadEnv } from "vite";
-import { fileURLToPath } from "node:url";
+import { defineConfig, loadEnv } from "vite-plus";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,7 +29,6 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       allowedHosts: publicTunnelHost ? [publicTunnelHost] : undefined,
-      host: "0.0.0.0",
       hmr: publicTunnelHost
         ? {
             clientPort: Number.isFinite(hmrClientPort) ? hmrClientPort : 443,
@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => {
             protocol: hmrProtocol,
           }
         : undefined,
+      host: "0.0.0.0",
       origin: publicTunnelHost ? `https://${publicTunnelHost}` : undefined,
       port: 4173,
       proxy: {
@@ -46,6 +47,9 @@ export default defineConfig(({ mode }) => {
         },
       },
       strictPort: true,
+    },
+    test: {
+      include: ["src/**/*.test.ts"],
     },
   };
 });

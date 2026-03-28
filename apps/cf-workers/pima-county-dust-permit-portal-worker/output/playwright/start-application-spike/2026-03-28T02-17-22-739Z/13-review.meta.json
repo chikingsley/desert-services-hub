@@ -1,0 +1,21 @@
+{
+  "frames": [
+    {
+      "name": "",
+      "url": "https://aca-prod.accela.com/PIMA/Cap/CapConfirm.aspx?stepNumber=4&pageNumber=1&currentStep=2&currentPage=0&Module=DEQ&isRenewal=N&isFromShoppingCart=&isFromSpearForm=Y&agencyCode=PIMA"
+    },
+    {
+      "name": "iframeExport",
+      "url": "about:blank"
+    },
+    {
+      "name": "votingFrame",
+      "url": "about:blank"
+    },
+    {
+      "name": "walkme-native-functions",
+      "url": "about:blank"
+    }
+  ],
+  "pageUrl": "https://aca-prod.accela.com/PIMA/Cap/CapConfirm.aspx?stepNumber=4&pageNumber=1&currentStep=2&currentPage=0&Module=DEQ&isRenewal=N&isFromShoppingCart=&isFromSpearForm=Y&agencyCode=PIMA"
+}

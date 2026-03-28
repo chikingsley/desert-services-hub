@@ -1,0 +1,131 @@
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" lang="en-US"><head><meta http-equiv="origin-trial" content="A7vZI3v+Gz7JfuRolKNM4Aff6zaGuT7X0mf3wtoZTnKv6497cVMnhy03KDqX7kBz/q/iidW7srW31oQbBt4VhgoAAACUeyJvcmlnaW4iOiJodHRwczovL3d3dy5nb29nbGUuY29tOjQ0MyIsImZlYXR1cmUiOiJEaXNhYmxlVGhpcmRQYXJ0eVN0b3JhZ2VQYXJ0aXRpb25pbmczIiwiZXhwaXJ5IjoxNzU3OTgwODAwLCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ==">
+    
+    <base href="/PIMA/AngularUI/CommunityView">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+    <meta name="theme-color" content="#1976d2">
+    <title> </title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <!-- Styles -->
+    <link rel="stylesheet" type="text/css" href="../App_Themes/Default/style.css">
+    <link href="/PIMA/bundles/communityViewCss-en-US?v=CCgVlCOfYD-JOVfXrdW7iQWlk9TfR3H9dGXZIpdVbnk1" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" id="customizedCss" href="../Handlers/CustomizedCssStyle.ashx?agencyCode=PIMA">
+    <link href="https://fonts.googleapis.com/css2?family=Chivo:ital,wght@0,100;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&amp;display=swap" rel="stylesheet" media="all" onload="this.media='all'">
+    <style>
+        @font-face {
+            font-family: "accelicons";
+            src: url("../dist/CommunityView/en-US/assets/fonts/accelicons.eot");
+            src: url("../dist/CommunityView/en-US/assets/fonts/accelicons.woff") format("woff"),url("../dist/CommunityView/en-US/assets/fonts/accelicons.ttf") format("truetype"),url("../dist/CommunityView/en-US/assets/fonts/accelicons.svg#accelicons") format("svg");
+            font-weight: normal;
+            font-style: normal;
+          }
+
+        iframe{
+            clear:both;
+        }
+        body{
+            margin:0px;
+        }
+        .ACA_FRight, 
+        .ACA_RegisterLogin > table,
+        #divHistoryList
+        .gs_top_table {
+            float: right;
+        }
+	    #gsContainer {
+		    min-width: 85%;
+	    }
+
+        .p-tooltip-text p{
+          color:white !important;
+        }
+
+    </style>
+    
+    <link rel="stylesheet" type="text/css" id="customCssStyle" href="/PIMA/Customization/PIMA/GlobalCustomScriptBefore.css"><link media="screen" href="/PIMA/customization/common/css/headerfooter.css" rel="stylesheet"><link media="screen" href="/PIMA/customization/common/css/iframe.css" rel="stylesheet"><link media="screen" rel="stylesheet" as="font" href="https://fonts.googleapis.com/icon?family=Material+Icons"><link media="screen" rel="stylesheet" as="font" href="/PIMA/customization/common/css/gq-fa-all.min.css"><link media="screen" rel="stylesheet" as="font" href="https://fonts.googleapis.com/css?family=Open+Sans:600,700,regular|Poppins:500,500italic,600,600italic,700,700italic,800,800italic,italic,regular&amp;display=swap">
+    
+<style>[_nghost-tdq-c68]     div.ng-invalid{margin-left:.5em;margin-right:.5em}[_nghost-tdq-c68]     .validationFeedback small, [_nghost-tdq-c68]     .validationFeedback label{color:#bc2f46}[_nghost-tdq-c68]     .textinput .ng-invalid.ng-dirty.p-inputtext{border:1px solid #BC2F46!important}[_nghost-tdq-c68]     .background{background-color:#f5f5f5;padding:10% 30%;height:100%;width:100%}[_nghost-tdq-c68]     .embeddedBackground{padding-top:1em;padding-bottom:1em;height:100%;width:100%}[_nghost-tdq-c68]     .p-card.app-frame{width:auto!important;height:auto!important;margin-left:auto!important;margin-right:auto}[_nghost-tdq-c68]     .p-card{background-color:#fff}[_nghost-tdq-c68]     .p-card .p-card-body{padding:1.25em!important;text-align:left}[_nghost-tdq-c68]     .p-card .p-card-body i{font-size:1rem}[_nghost-tdq-c68]     .p-tooltip-text p{color:#fff!important}.p-card.app-frame[_ngcontent-tdq-c68]   .p-button[_ngcontent-tdq-c68]{padding:.429rem 1rem!important}[_nghost-tdq-c68]     .ACA_Title_Bar{border-bottom:none;padding-bottom:0;margin-bottom:0}[_nghost-tdq-c68]     .textinput input.ng-invalid.ng-pristine+label{color:#000}[_nghost-tdq-c68]     .textinput .required{color:#a52652}[_nghost-tdq-c68]     .textinput label{z-index:auto}[_nghost-tdq-c68]     .textinput .dropdown label{z-index:9}[_nghost-tdq-c68]     .required{color:#a52652}[_nghost-tdq-c68]     div.accelaControl{margin-top:1em;margin-bottom:.5em;margin-right:0rem!important;margin-left:0rem!important;padding:0!important}[_nghost-tdq-c68]     fieldset.accelaControl{margin-top:1em;margin-bottom:.5em;margin-right:0rem!important;margin-left:0rem!important}[_nghost-tdq-c68]     .p-card .p-card-header{padding:1em 2.5em;text-align:left}[_nghost-tdq-c68]     .p-button.p-button-outlined{background-color:transparent!important;border:1px solid!important}[_nghost-tdq-c68]     .ACA_Button.button-secondary button, [_nghost-tdq-c68]     .p-button.p-button-outlined.button-secondary, [_nghost-tdq-c68]     .button-secondary:enabled:hover{border-color:#0074d9!important;color:#0074d9!important;background-color:transparent!important}[_nghost-tdq-c68]     p-inputmask.ng-dirty.ng-invalid>.p-inputtext, [_nghost-tdq-c68]     p-calendar.ng-dirty.ng-invalid>.p-calendar>.p-inputtext, [_nghost-tdq-c68]     p-inputnumber.ng-dirty.ng-invalid>.p-inputnumber>.p-inputtext, [_nghost-tdq-c68]     textarea.ng-dirty.ng-invalid{border:1px solid #bc2f46!important}@media only screen and (max-device-width: 768px),(max-width: 768px){[_nghost-tdq-c68]     .background{background-color:#f5f5f5;padding:5% 6%;height:100%;width:100%}}[_nghost-tdq-c68]     .textinput input.ng-invalid+label{color:#000!important}@media only screen and (min-device-width: 769px),(min-width: 769px){[_nghost-tdq-c68]     .background{background-color:#f5f5f5;padding:5% 6%;height:100%;width:100%}}@media only screen and (max-device-width: 660px),(max-width: 600px){[_nghost-tdq-c68]     .p-card{min-width:100%}[_nghost-tdq-c68]     .p-card.app-frame{min-width:auto}[_nghost-tdq-c68]     .background{padding:0;height:100%;width:100%}}</style><style>.p-toast{position:fixed;width:25rem}.p-toast-message{overflow:hidden}.p-toast-message-content{display:flex;align-items:flex-start}.p-toast-message-text{flex:1 1 auto}.p-toast-top-right{top:20px;right:20px}.p-toast-top-left{top:20px;left:20px}.p-toast-bottom-left{bottom:20px;left:20px}.p-toast-bottom-right{bottom:20px;right:20px}.p-toast-top-center{top:20px;left:50%;transform:translate(-50%)}.p-toast-bottom-center{bottom:20px;left:50%;transform:translate(-50%)}.p-toast-center{left:50%;top:50%;min-width:20vw;transform:translate(-50%,-50%)}.p-toast-icon-close{display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}.p-toast-icon-close.p-link{cursor:pointer}
+</style><style>.ds-beta[_ngcontent-tdq-c64]   .textinput[_ngcontent-tdq-c64]   .p-inputtext[_ngcontent-tdq-c64]{width:95%}[_nghost-tdq-c64]     .p-card .p-card-body{padding:0!important;text-align:left}</style><meta name="viewport" content="width=device-width"><style>.p-card-header img{width:100%}
+</style><style>[_nghost-tdq-c62]     p-header>h1{padding-top:1em;padding-right:1em;padding-left:1em}.loginPanel[_ngcontent-tdq-c62]{display:block;height:80vw}.forgotPassLink[_ngcontent-tdq-c62]{text-align:left}.p-inputtext[_ngcontent-tdq-c62]{width:100%}.textinput[_ngcontent-tdq-c62]{margin-bottom:1rem}.textinput[_ngcontent-tdq-c62]   label[_ngcontent-tdq-c62]{top:.8rem}.p-card-footer[_ngcontent-tdq-c62]{border-top:1px black}.pointCursor[_ngcontent-tdq-c62]{cursor:pointer}[_nghost-tdq-c62]     .p-button, p-button[_ngcontent-tdq-c62]{width:100%;text-align:center}[_nghost-tdq-c62]     .buttonText{width:100%}[_nghost-tdq-c62]     .forgotPassLink, [_nghost-tdq-c62]     .footerText{color:#0074d9!important}[_nghost-tdq-c62]     .p-dialog{height:99%;max-height:99%}[_nghost-tdq-c62]     .captcha{padding:0;max-width:15em}.text-upper[_ngcontent-tdq-c62]{text-transform:uppercase}.text-center[_ngcontent-tdq-c62]{text-align:center;margin:1em 0}.signin-xlarge[_ngcontent-tdq-c62]{font-size:x-large;margin-bottom:.6em}[_nghost-tdq-c62]     .p-dialog .p-dialog-content{height:100%;width:100%;overflow:visible}
+/*# sourceMappingURL=login-panel.component.css.map*/</style><style>.p-dialog-mask{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;justify-content:center;align-items:center;pointer-events:none}.p-dialog-mask.p-component-overlay{pointer-events:auto}.p-dialog{display:flex;flex-direction:column;pointer-events:auto;max-height:90%;transform:scale(1);position:relative}.p-dialog-content{overflow-y:auto;flex-grow:1}.p-dialog-header{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}.p-dialog-draggable .p-dialog-header{cursor:move}.p-dialog-footer{flex-shrink:0}.p-dialog .p-dialog-header-icons{display:flex;align-items:center}.p-dialog .p-dialog-header-icon{display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}.p-fluid .p-dialog-footer .p-button{width:auto}.p-dialog-top .p-dialog,.p-dialog-bottom .p-dialog,.p-dialog-left .p-dialog,.p-dialog-right .p-dialog,.p-dialog-top-left .p-dialog,.p-dialog-top-right .p-dialog,.p-dialog-bottom-left .p-dialog,.p-dialog-bottom-right .p-dialog{margin:.75rem;transform:translateZ(0)}.p-dialog-maximized{transition:none;transform:none;width:100vw!important;height:100vh!important;top:0!important;left:0!important;max-height:100%;height:100%}.p-dialog-maximized .p-dialog-content{flex-grow:1}.p-dialog-left{justify-content:flex-start}.p-dialog-right{justify-content:flex-end}.p-dialog-top{align-items:flex-start}.p-dialog-top-left{justify-content:flex-start;align-items:flex-start}.p-dialog-top-right{justify-content:flex-end;align-items:flex-start}.p-dialog-bottom{align-items:flex-end}.p-dialog-bottom-left{justify-content:flex-start;align-items:flex-end}.p-dialog-bottom-right{justify-content:flex-end;align-items:flex-end}.p-dialog .p-resizable-handle{position:absolute;font-size:.1px;display:block;cursor:se-resize;width:12px;height:12px;right:1px;bottom:1px}.p-confirm-dialog .p-dialog-content{display:flex;align-items:center}
+</style><style>.p-button[_ngcontent-tdq-c6]{height:40px}button[_ngcontent-tdq-c6]{border:none}@media only screen and (max-device-width: 480px),(max-width: 480px){.p-button[_ngcontent-tdq-c6]{width:100%}}
+/*# sourceMappingURL=accela-button-primary.component.css.map*/</style><style>.p-checkbox{display:inline-flex;cursor:pointer;-webkit-user-select:none;user-select:none;vertical-align:bottom;position:relative}.p-checkbox-disabled{cursor:default!important;pointer-events:none}.p-checkbox-box{display:flex;justify-content:center;align-items:center}p-checkbox{display:inline-flex;vertical-align:bottom;align-items:center}.p-checkbox-label{line-height:1}
+</style><style>.accelaControl[_ngcontent-tdq-c36]{margin-right:0!important;margin-left:0!important}[_nghost-tdq-c36]     .separator{line-height:2px;margin-top:10px;margin-bottom:6px;color:gray;background-color:gray;height:2px;border-width:0;width:100%}
+/*# sourceMappingURL=accela-separator.component.css.map*/</style><style>.p-editor-container .p-editor-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-options .ql-picker-item{width:auto;height:auto}
+</style></head>
+<body class="ds-beta backgroundColor" style="background-color: transparent">
+    <main>
+        <app-root _nghost-tdq-c68="" ng-version="15.2.10"><aca-alert-message _ngcontent-tdq-c68="" _nghost-tdq-c57=""><p-toast _ngcontent-tdq-c57="" position="top-center" modal="false" class="p-element ng-tns-c56-0"><div class="ng-tns-c56-0 p-toast p-component p-toast-top-center"><!----></div></p-toast></aca-alert-message><div _ngcontent-tdq-c68="" id="FirstAnchorInACAMainContent" class="ds-beta embeddedBackground"><router-outlet _ngcontent-tdq-c68=""></router-outlet><app-login-screen _nghost-tdq-c64="" class="ng-star-inserted"><aca-alert-message _ngcontent-tdq-c64="" _nghost-tdq-c57=""><p-toast _ngcontent-tdq-c57="" position="top-center" modal="false" class="p-element ng-tns-c56-1 ng-star-inserted"><div class="ng-tns-c56-1 p-toast p-component p-toast-top-center"><!----></div></p-toast></aca-alert-message><div _ngcontent-tdq-c64="" class="loginBackground"><p-card _ngcontent-tdq-c64="" styleclass="app-frame ds-beta" class="p-element loginPanel ng-star-inserted"><div class="app-frame ds-beta p-card p-component"><!----><div class="p-card-body"><!----><!----><div class="p-card-content"><aca-login-panel _ngcontent-tdq-c64="" _nghost-tdq-c62="" class="ng-star-inserted"><form _ngcontent-tdq-c62="" novalidate="" class="ng-dirty ng-valid ng-touched ng-submitted"><div _ngcontent-tdq-c62="" class="col-12 signin-xlarge">Sign In</div><div _ngcontent-tdq-c62="" class="textinput accelaControl col-12"><input _ngcontent-tdq-c62="" name="username" id="username" type="text" pinputtext="" inputtrim="" aria-required="true" tooltipposition="bottom" tooltipevent="hover|focus" aria-labelledby="user-name" required="" class="p-inputtext p-component p-element ng-dirty ng-valid p-filled ng-touched" placeholder="" style=""><label _ngcontent-tdq-c62="" id="user-name" for="username"><span _ngcontent-tdq-c62="" class="required p-ml-1">*</span></label></div><div _ngcontent-tdq-c62="" class="textinput accelaControl col-12"><input _ngcontent-tdq-c62="" name="password" id="passwordRequired" type="password" ppassword="" aria-required="true" tooltipposition="bottom" tooltipevent="hover|focus" class="p-inputtext p-component p-element ng-valid ng-dirty p-filled ng-touched" placeholder="" style=""><label _ngcontent-tdq-c62="" for="passwordRequired" id="pwd">Password:<span _ngcontent-tdq-c62="" class="required p-ml-1">*</span></label></div><p-dialog _ngcontent-tdq-c62="" modal="true" closable="true" showheader="false" class="p-element ng-tns-c60-2 ng-star-inserted"><!----></p-dialog><div _ngcontent-tdq-c62="" class="col-12"><a _ngcontent-tdq-c62="" tabindex="0" class="col-12 forgotPassLink pl-1 pointCursor">Forgot Password?</a></div><!----><div _ngcontent-tdq-c62="" class="col-12"><accela-button-primary _ngcontent-tdq-c62="" pripple="" label="Sign In" _nghost-tdq-c6=""><div _ngcontent-tdq-c6="" class="ACA_Button button-primary"><button _ngcontent-tdq-c6="" pbutton="" class="p-element ACA_Button p-button p-component"><span class="p-button-label">Sign In</span></button></div></accela-button-primary><input _ngcontent-tdq-c62="" type="submit" value="submit" style="visibility: hidden;"></div><div _ngcontent-tdq-c62="" class="col-12"><p-checkbox _ngcontent-tdq-c62="" name="cbRememerMe" id="cbRememerMe" label="" pripple="" class="p-element ng-untouched ng-pristine ng-valid"><div class="p-checkbox p-component"><div class="p-hidden-accessible"><input type="checkbox" value="undefined" name="cbRememerMe" aria-checked="false" style=""></div><div class="p-checkbox-box"><!----></div></div><!----></p-checkbox><label _ngcontent-tdq-c62="" for="cbRememerMe" class="pl-2">Remember me on this device</label></div><accela-separator _ngcontent-tdq-c62="" style="background-color: #e4dddd;" _nghost-tdq-c36=""><div _ngcontent-tdq-c36="" class="accelaControl"><hr _ngcontent-tdq-c36="" class="separator"></div></accela-separator></form><p-footer _ngcontent-tdq-c62=""><div _ngcontent-tdq-c62="" class="text-center ng-star-inserted">Not Registered?</div><!----><!----><!----><!----></p-footer></aca-login-panel><!----><!----><!----><!----></div><!----></div></div></p-card><!----></div></app-login-screen><!----></div></app-root>
+    </main>
+    <script type="text/javascript" async="" charset="utf-8" src="https://www.gstatic.com/recaptcha/releases/79clEdOi5xQbrrpL2L8kGmK3/recaptcha__en.js" crossorigin="anonymous" integrity="sha384-8ttzcqn1x3spzHELLkLBHjQJV6/TydNHFuVP0+hKYrIsPW/qumOm8LQWdez/Qzbi"></script><script>
+        window.DATA = { 'vdir': '/PIMA/' };
+    </script>
+
+        <script src="/PIMA/bundles/communityView-en-US?v=srAz5zi8240ppLB4Cp-SpE0eU_GSVNz0ecuec9fLKnQ1"></script>
+
+
+<footer>
+    <div ng-non-bindable="true" class="scriptFooter">
+        <script type="text/javascript" src="/PIMA/Scripts/lib/iFrameResizer/iframeResizer.contentWindow.min.js"></script>
+        <script src="https://www.google.com/recaptcha/api.js?render=explicit" async="" defer=""></script>
+    </div>
+    
+            <script type="text/javascript" src="/PIMA/Scripts/lib/jquery/dist/jquery.min.js"></script>
+            <script type="text/javascript" src="/PIMA/Scripts/aca.jquery.etxensions.js"></script>
+            <script type="text/javascript" src="/PIMA/Scripts/GlobalConst.aspx"></script>
+            <script type="text/javascript" src="/PIMA/Scripts/global.js"></script>
+
+
+        <form name="ctl00" method="post" action="./login-panel?inLegacyUI=true&amp;ReturnUrl=%2fPima%2fCustomization%2fcommon%2fhome.aspx" id="ctl00">
+<div>
+<input type="hidden" name="ACA_CS_FIELD" id="ACA_CS_FIELD" value="9a7d3ac096dc4dd5b4c3223f5ba48add" style="">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" style="">
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" style="">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="HhaMiC09ctKFRsreos2QUWSkiHW0mE7grmg89are1bYdOfWyYt/YJI3/SjMf9rG6tKYNbTAK4NqqUQG56Wv1ePH5VhmACgqszrfuyVp2L9+JGuUNsWergs1IZjDvBa+0fihlJQ==" style="">
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['ctl00'];
+if (!theForm) {
+    theForm = document.ctl00;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/PIMA/WebResource.axd?d=UK81IePOXTVsZN--6ZX3g4RlFAr7RgxiI7uqyim-g-VIvVHR4zblhbi9p-YGgBbvi5g5sUcNtYyJSdSIpy9_SFG--4U1&amp;t=638901356248157332" type="text/javascript"></script>
+
+
+<script src="/PIMA/Customization/PIMA/globalcustomscriptbefore.js" type="text/javascript"></script>
+<script src="/PIMA/ScriptResource.axd?d=BuJKyuMlQ9ihDHkKRspv5-_M9_7RuSRHVkgkhfGbmJu2rtTtHDfNysfQHNQ_nnJJbmLH8R_ActQjxmw2InzKeIXmKhnezDeaW1LhYxtTwLLTvJoriHX9JQHnf8_EKPHAlVhdwpGPUOSmXUe4QcTUqXNH6J81&amp;t=5c0e0825" type="text/javascript"></script>
+<script src="/PIMA/ScriptResource.axd?d=dw-rli8fVv9LQT7sT_P_ykkYemDq5tURAhS13SdOcVmy6E7hYiOLbpG1GbTdxR7JPnldq_rjiy3OuTVLEk_D32KC2QqiyFsRMzqbnhXYUVFtYS6oIU08w0K38iwj8uRxWCTs2qe9GTFvEEiFeR_bb6gYSfc_6KSGg_IKPSB1wT5wLwW40&amp;t=5c0e0825" type="text/javascript"></script>
+<div>
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="499AE302" style="">
+	<input type="hidden" name="__VIEWSTATEENCRYPTED" id="__VIEWSTATEENCRYPTED" value="" style="">
+</div>
+            <script type="text/javascript">
+//<![CDATA[
+Sys.WebForms.PageRequestManager._initialize('ScriptManager1', 'ctl00', [], [], [], 90, '');
+//]]>
+</script>
+
+        </form>
+    
+</footer>
+
+<div style="clear: both; display: block; height: 0px;"></div></body></html>

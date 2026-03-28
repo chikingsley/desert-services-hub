@@ -1,0 +1,21 @@
+{
+  "frames": [
+    {
+      "name": "",
+      "url": "https://aca-prod.accela.com/PIMA/Cap/CapEdit.aspx?stepNumber=3&pageNumber=1&currentStep=1&currentPage=0&Module=DEQ&isRenewal=N&isFromShoppingCart=&isFromConfirmPage=,N,N,N&confirmStepNumber=0&isFromConfirmPage=N&agencyCode=PIMA"
+    },
+    {
+      "name": "ctl00_PlaceHolderMain_ctl07_iFrame1",
+      "url": "https://pima.usw.digeplan.app/dpc/cases/PIMA-26EST-00000-05122?token=ea0e289e-69d2-4667-9695-1ccf864b9f92&lang=EN&theme="
+    },
+    {
+      "name": "walkme-native-functions",
+      "url": "about:blank"
+    },
+    {
+      "name": "votingFrame",
+      "url": "about:blank"
+    }
+  ],
+  "pageUrl": "https://aca-prod.accela.com/PIMA/Cap/CapEdit.aspx?stepNumber=3&pageNumber=1&currentStep=1&currentPage=0&Module=DEQ&isRenewal=N&isFromShoppingCart=&isFromConfirmPage=,N,N,N&confirmStepNumber=0&isFromConfirmPage=N&agencyCode=PIMA"
+}

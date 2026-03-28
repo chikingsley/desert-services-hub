@@ -1,0 +1,21 @@
+{
+  "frames": [
+    {
+      "name": "",
+      "url": "https://aca-prod.accela.com/Pima/Customization/common/home.aspx?module=#"
+    },
+    {
+      "name": "votingFrame",
+      "url": "about:blank"
+    },
+    {
+      "name": "ACAFrameWizard",
+      "url": "https://gwiz.grayquarter.com/deploy/tree.php?z=embed&tree_id=972885620&variables=publicUserID%7cstartNodeID&values=chikingsley%7cnone&session_id=fb547e421de54877aa0898f77237b4bb#1"
+    },
+    {
+      "name": "esriMap",
+      "url": "https://cdn.grayquarter.com/content/gwiz/pima/application-wizard/map-combo.html?v=8"
+    }
+  ],
+  "pageUrl": "https://aca-prod.accela.com/Pima/Customization/common/home.aspx?module=#"
+}

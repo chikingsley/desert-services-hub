@@ -1,5 +1,5 @@
 const worker = {
-  async fetch(request: Request): Promise<Response> {
+  fetch(request: Request): Response {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/health") {

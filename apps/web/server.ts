@@ -40,7 +40,9 @@ import {
   listCheckpoints,
   respondCheckpoint,
 } from "@/api/checkpoints";
+import { postIssuedClientContext } from "@/api/communications/issued-client";
 import { postSubmittedBillingContext } from "@/api/communications/submitted-billing";
+import { postSubmittedClientContext } from "@/api/communications/submitted-client";
 // -- Contracts --
 import {
   getArchiveIndex,
@@ -276,6 +278,12 @@ const server = serve({
     // Internal communications prep endpoints
     "/api/internal/communications/dust-permit/submitted-billing-context": {
       POST: h(postSubmittedBillingContext),
+    },
+    "/api/internal/communications/dust-permit/submitted-client-context": {
+      POST: h(postSubmittedClientContext),
+    },
+    "/api/internal/communications/dust-permit/issued-client-context": {
+      POST: h(postIssuedClientContext),
     },
 
     // Contracts (Won estimates)

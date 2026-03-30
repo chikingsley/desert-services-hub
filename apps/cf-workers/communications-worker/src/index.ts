@@ -1,29 +1,64 @@
 import { ZodError } from "zod";
-import { AppClientError, fetchSubmittedBillingContext } from "./lib/app-client";
+import type { ZodType } from "zod";
 import { fetchGraphMessageSummary } from "./lib/graph-mail";
 import {
-  dayOneMailboxEmails,
-  isDayOneMailboxEmail,
-  isKnownMailboxEmail,
-  plannedMailboxEmails,
-} from "./lib/mailboxes";
-import {
+  issuedClientContextSchema,
   mailboxEventTriggerRequestSchema,
   mailboxQueueMessageSchema,
+  submittedBillingContextSchema,
   submittedBillingTriggerRequestSchema,
+  submittedClientContextSchema,
 } from "./lib/schemas";
-import type { MailboxQueueMessage, SubmittedBillingTriggerRequest } from "./lib/schemas";
+import type {
+  IssuedClientContext,
+  MailboxQueueMessage,
+  SubmittedBillingContext,
+  SubmittedBillingTriggerRequest,
+  SubmittedClientContext,
+} from "./lib/schemas";
+import { IssuedClientWorkflow } from "./workflows/issued-client";
 import { SubmittedBillingWorkflow } from "./workflows/submitted-billing";
+import { SubmittedClientWorkflow } from "./workflows/submitted-client";
+import type { IssuedClientWorkflowEnv } from "./workflows/issued-client";
 import type { SubmittedBillingWorkflowEnv } from "./workflows/submitted-billing";
+import type { SubmittedClientWorkflowEnv } from "./workflows/submitted-client";
 
+export { IssuedClientWorkflow } from "./workflows/issued-client";
 export { SubmittedBillingWorkflow } from "./workflows/submitted-billing";
+export { SubmittedClientWorkflow } from "./workflows/submitted-client";
 
-interface Env extends SubmittedBillingWorkflowEnv {
+const ENABLED_MAILBOXES = ["chi@desertservices.net", "contracts@desertservices.net"] as const;
+
+type NotificationTriggerRequest = SubmittedBillingTriggerRequest;
+
+class RequestError extends Error {
+  readonly details: unknown;
+  readonly status: number;
+
+  constructor(status: number, message: string, details: unknown = null) {
+    super(message);
+    this.name = "RequestError";
+    this.status = status;
+    this.details = details;
+  }
+}
+
+interface Env
+  extends SubmittedBillingWorkflowEnv, SubmittedClientWorkflowEnv, IssuedClientWorkflowEnv {
   COMMUNICATIONS_APP_BASE_URL: string;
   COMMUNICATIONS_INGEST_TOKEN?: string;
   MAILBOX_EVENTS_QUEUE: Queue<MailboxQueueMessage>;
+  ISSUED_CLIENT_WORKFLOW: Workflow;
   SUBMITTED_BILLING_WORKFLOW: Workflow;
+  SUBMITTED_CLIENT_WORKFLOW: Workflow;
 }
+
+const enabledMailboxSet = new Set<string>(ENABLED_MAILBOXES);
+
+const normalizeMailboxEmail = (mailboxEmail: string): string => mailboxEmail.trim().toLowerCase();
+
+const isEnabledMailboxEmail = (mailboxEmail: string): boolean =>
+  enabledMailboxSet.has(normalizeMailboxEmail(mailboxEmail));
 
 const jsonResponse = (body: unknown, init?: ResponseInit): Response => Response.json(body, init);
 
@@ -69,7 +104,7 @@ const isAuthorized = (
   return parseBearerToken(authorizationHeader) === normalizedExpectedToken;
 };
 
-const summarizeTrigger = (payload: SubmittedBillingTriggerRequest): Record<string, unknown> => {
+const summarizeTrigger = (payload: NotificationTriggerRequest): Record<string, unknown> => {
   if (payload.mode === "payment-email") {
     return {
       draft: payload.draft,
@@ -97,20 +132,93 @@ const parseJsonBody = async (request: Request): Promise<unknown> => {
   try {
     return await request.json();
   } catch {
-    throw new AppClientError(400, "Invalid JSON body");
+    throw new RequestError(400, "Invalid JSON body");
   }
+};
+
+const parseResponseBody = async (response: Response): Promise<unknown> => {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    return await response.json();
+  }
+
+  const text = await response.text();
+  return text.length > 0 ? text : null;
+};
+
+const resolveBaseUrl = (baseUrl: string): string => {
+  const normalizedBaseUrl = baseUrl.trim().replace(/\/+$/, "");
+  if (normalizedBaseUrl.length === 0) {
+    throw new RequestError(500, "COMMUNICATIONS_APP_BASE_URL is not configured");
+  }
+
+  return normalizedBaseUrl;
+};
+
+const fetchContext = async <T>(
+  env: Env,
+  path: string,
+  payload: NotificationTriggerRequest,
+  schema: ZodType<T>,
+): Promise<T> => {
+  const response = await fetch(`${resolveBaseUrl(env.COMMUNICATIONS_APP_BASE_URL)}${path}`, {
+    body: JSON.stringify(payload),
+    headers: {
+      "content-type": "application/json",
+    },
+    method: "POST",
+  });
+  const responseBody = await parseResponseBody(response);
+
+  if (!response.ok) {
+    const message =
+      responseBody &&
+      typeof responseBody === "object" &&
+      "error" in responseBody &&
+      typeof responseBody.error === "string"
+        ? responseBody.error
+        : `Context request failed with status ${response.status}`;
+    throw new RequestError(response.status, message, responseBody);
+  }
+
+  const parsedResponse = schema.safeParse(responseBody);
+  if (!parsedResponse.success) {
+    throw new RequestError(502, "Invalid response payload", parsedResponse.error.flatten());
+  }
+
+  return parsedResponse.data;
+};
+
+const createWorkflowResponse = async <T>(
+  request: Request,
+  trigger: NotificationTriggerRequest,
+  workflow: Workflow,
+  context: T,
+): Promise<Response> => {
+  const instance = await workflow.create({
+    id: crypto.randomUUID(),
+    params: context,
+  });
+
+  return jsonResponse({
+    instanceId: instance.id,
+    status: "queued",
+    statusUrl: statusUrl(request, instance.id),
+    trigger: summarizeTrigger(trigger),
+  });
 };
 
 const handleHealth = (): Response =>
   jsonResponse({
-    mailboxes: {
-      dayOne: dayOneMailboxEmails,
-      planned: plannedMailboxEmails,
-    },
+    mailboxes: [...ENABLED_MAILBOXES],
     ok: true,
     queues: ["communications-mailbox-events"],
     service: "communications-worker",
-    workflows: ["communications-submitted-billing"],
+    workflows: [
+      "communications-submitted-billing",
+      "communications-submitted-client",
+      "communications-issued-client",
+    ],
   });
 
 const handleMailboxEventEnqueue = async (request: Request, env: Env): Promise<Response> => {
@@ -124,22 +232,17 @@ const handleMailboxEventEnqueue = async (request: Request, env: Env): Promise<Re
     return jsonError("Invalid request", 400, parsedRequest.error.flatten());
   }
 
-  if (!isKnownMailboxEmail(parsedRequest.data.mailboxEmail)) {
-    return jsonError("Mailbox is not configured", 400, {
+  if (!isEnabledMailboxEmail(parsedRequest.data.mailboxEmail)) {
+    return jsonError("Mailbox is not enabled", 400, {
       mailboxEmail: parsedRequest.data.mailboxEmail,
-    });
-  }
-
-  if (!isDayOneMailboxEmail(parsedRequest.data.mailboxEmail)) {
-    return jsonError("Mailbox is configured but not enabled yet", 409, {
-      mailboxEmail: parsedRequest.data.mailboxEmail,
+      supportedMailboxes: [...ENABLED_MAILBOXES],
     });
   }
 
   const queueMessage: MailboxQueueMessage = {
     changeType: parsedRequest.data.changeType,
     kind: "message-event",
-    mailboxEmail: parsedRequest.data.mailboxEmail,
+    mailboxEmail: normalizeMailboxEmail(parsedRequest.data.mailboxEmail),
     messageId: parsedRequest.data.messageId,
     queuedAt: new Date().toISOString(),
     source: parsedRequest.data.source,
@@ -159,25 +262,50 @@ const handleMailboxEventEnqueue = async (request: Request, env: Env): Promise<Re
   );
 };
 
-const handleSubmittedBillingTrigger = async (request: Request, env: Env): Promise<Response> => {
+const parseNotificationTrigger = async (request: Request): Promise<NotificationTriggerRequest> => {
   const requestBody = await parseJsonBody(request);
   const parsedRequest = submittedBillingTriggerRequestSchema.safeParse(requestBody);
   if (!parsedRequest.success) {
-    return jsonError("Invalid request", 400, parsedRequest.error.flatten());
+    throw new RequestError(400, "Invalid request", parsedRequest.error.flatten());
   }
 
-  const context = await fetchSubmittedBillingContext(env, parsedRequest.data);
-  const instance = await env.SUBMITTED_BILLING_WORKFLOW.create({
-    id: crypto.randomUUID(),
-    params: context,
-  });
+  return parsedRequest.data;
+};
 
-  return jsonResponse({
-    instanceId: instance.id,
-    status: "queued",
-    statusUrl: statusUrl(request, instance.id),
-    trigger: summarizeTrigger(parsedRequest.data),
-  });
+const handleSubmittedBillingTrigger = async (request: Request, env: Env): Promise<Response> => {
+  const trigger = await parseNotificationTrigger(request);
+  const context = await fetchContext<SubmittedBillingContext>(
+    env,
+    "/api/internal/communications/dust-permit/submitted-billing-context",
+    trigger,
+    submittedBillingContextSchema,
+  );
+
+  return await createWorkflowResponse(request, trigger, env.SUBMITTED_BILLING_WORKFLOW, context);
+};
+
+const handleSubmittedClientTrigger = async (request: Request, env: Env): Promise<Response> => {
+  const trigger = await parseNotificationTrigger(request);
+  const context = await fetchContext<SubmittedClientContext>(
+    env,
+    "/api/internal/communications/dust-permit/submitted-client-context",
+    trigger,
+    submittedClientContextSchema,
+  );
+
+  return await createWorkflowResponse(request, trigger, env.SUBMITTED_CLIENT_WORKFLOW, context);
+};
+
+const handleIssuedClientTrigger = async (request: Request, env: Env): Promise<Response> => {
+  const trigger = await parseNotificationTrigger(request);
+  const context = await fetchContext<IssuedClientContext>(
+    env,
+    "/api/internal/communications/dust-permit/issued-client-context",
+    trigger,
+    issuedClientContextSchema,
+  );
+
+  return await createWorkflowResponse(request, trigger, env.ISSUED_CLIENT_WORKFLOW, context);
 };
 
 const handleWorkflowStatus = async (request: Request, env: Env): Promise<Response> => {
@@ -186,17 +314,34 @@ const handleWorkflowStatus = async (request: Request, env: Env): Promise<Respons
     return jsonError("Workflow instance ID is required", 400);
   }
 
-  const instance = await env.SUBMITTED_BILLING_WORKFLOW.get(instanceId);
-  const status = await instance.status();
+  const submittedBillingInstance = await env.SUBMITTED_BILLING_WORKFLOW.get(instanceId);
+  const submittedBillingStatus = await submittedBillingInstance.status();
+  if (submittedBillingStatus.status !== "unknown") {
+    return jsonResponse({
+      instanceId,
+      ...submittedBillingStatus,
+    });
+  }
 
+  const submittedClientInstance = await env.SUBMITTED_CLIENT_WORKFLOW.get(instanceId);
+  const submittedClientStatus = await submittedClientInstance.status();
+  if (submittedClientStatus.status !== "unknown") {
+    return jsonResponse({
+      instanceId,
+      ...submittedClientStatus,
+    });
+  }
+
+  const issuedClientInstance = await env.ISSUED_CLIENT_WORKFLOW.get(instanceId);
+  const issuedClientStatus = await issuedClientInstance.status();
   return jsonResponse({
     instanceId,
-    ...status,
+    ...issuedClientStatus,
   });
 };
 
 const errorResponse = (error: unknown): Response => {
-  if (error instanceof AppClientError) {
+  if (error instanceof RequestError) {
     return jsonError(error.message, error.status, error.details);
   }
 
@@ -219,7 +364,7 @@ export const handleQueue = async (
       continue;
     }
 
-    if (!isDayOneMailboxEmail(parsedMessage.data.mailboxEmail)) {
+    if (!isEnabledMailboxEmail(parsedMessage.data.mailboxEmail)) {
       message.ack();
       continue;
     }
@@ -243,6 +388,14 @@ export const handleRequest = async (request: Request, env: Env): Promise<Respons
 
     if (request.method === "POST" && pathname === "/api/drafts/dust-permit/submitted-billing") {
       return await handleSubmittedBillingTrigger(request, env);
+    }
+
+    if (request.method === "POST" && pathname === "/api/drafts/dust-permit/submitted-client") {
+      return await handleSubmittedClientTrigger(request, env);
+    }
+
+    if (request.method === "POST" && pathname === "/api/drafts/dust-permit/issued-client") {
+      return await handleIssuedClientTrigger(request, env);
     }
 
     if (request.method === "POST" && pathname === "/api/mailbox/events") {

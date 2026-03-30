@@ -24,7 +24,7 @@ interface ArcGisFeature<Attributes, Geometry = unknown> {
 
 interface ArcGisQueryResponse<Attributes, Geometry = unknown> {
   error?: ArcGisError;
-  features?: Array<ArcGisFeature<Attributes, Geometry>>;
+  features?: ArcGisFeature<Attributes, Geometry>[];
 }
 
 interface ArcGisPolygonGeometry {
@@ -84,7 +84,8 @@ const parseNumber = (
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-const normalizeParcelId = (value: string): string => value.replace(/\D/g, "");
+const normalizeParcelId = (value: string): string =>
+  value.replaceAll(/\D/g, "");
 
 const parseConnectionString = (
   value: string | null | undefined

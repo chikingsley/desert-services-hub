@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import { expect, test } from "@playwright/test";
 import type { Frame, Page } from "playwright";
+
 import { installPimaMapHooks } from "../../src/portal";
 
 interface PimaTestHookResult {
@@ -46,7 +47,7 @@ const ACCOUNT_AGENT = {
 } as const;
 
 const sanitize = (value: string): string =>
-  value.replace(/[^a-zA-Z0-9._-]/g, "_");
+  value.replaceAll(/[^a-zA-Z0-9._-]/g, "_");
 
 const formatPortalDate = (value: Date): string =>
   `${String(value.getMonth() + 1).padStart(2, "0")}/${String(
@@ -82,7 +83,11 @@ const dumpFrame = async (
   const html = await frame
     .content()
     .catch(() => "<!-- frame content unavailable -->");
-  await writeFile(join(artifactDir, `${label}.frame-${index}.html`), html, "utf8");
+  await writeFile(
+    join(artifactDir, `${label}.frame-${index}.html`),
+    html,
+    "utf8"
+  );
 };
 
 const dumpState = async (
@@ -135,7 +140,7 @@ const wait = async (page: Page, ms: number): Promise<void> => {
 
 const clickWizardContinue = async (wizardFrame: Frame): Promise<void> => {
   const clicked = await wizardFrame.evaluate(() => {
-    const nodes = Array.from(document.querySelectorAll("a,button,[role=button]"));
+    const nodes = [...document.querySelectorAll("a,button,[role=button]")];
     const match = nodes.find((node) =>
       /^Continue(?:\s|$)/i.test((node.textContent ?? "").trim())
     );
@@ -158,9 +163,9 @@ const clickWizardCardByTitle = async (
 ): Promise<void> => {
   const clicked = await wizardFrame.evaluate((patternSource) => {
     const matcher = new RegExp(patternSource, "i");
-    const nodes = Array.from(
-      document.querySelectorAll("a,button,div,span,h1,h2,h3,h4,h5")
-    );
+    const nodes = [
+      ...document.querySelectorAll("a,button,div,span,h1,h2,h3,h4,h5"),
+    ];
     const match = nodes.find((node) =>
       matcher.test((node.textContent ?? "").trim())
     );
@@ -204,7 +209,7 @@ test("headless spike reaches Step 3 review", async ({ page }) => {
 
   const { endDate, startDate } = getSpikeDates();
 
-  const runId = new Date().toISOString().replace(/[:.]/g, "-");
+  const runId = new Date().toISOString().replaceAll(/[:.]/g, "-");
   const artifactDir = join(
     process.cwd(),
     "output",
@@ -224,14 +229,17 @@ test("headless spike reaches Step 3 review", async ({ page }) => {
   await loginFrame.locator("#username").fill(username);
   await loginFrame.locator("#passwordRequired").fill(password);
   await loginFrame.getByRole("button", { name: /sign in/i }).click();
-  await wait(page, 4_000);
+  await wait(page, 4000);
   await dumpState(page, artifactDir, "01-logged-in");
 
   await page.goto(GATEWAY_URL, { timeout: 60_000, waitUntil: "load" });
-  await wait(page, 4_000);
-  await page.locator("#close-announcement").click({ timeout: 5_000 }).catch(() => {});
+  await wait(page, 4000);
+  await page
+    .locator("#close-announcement")
+    .click({ timeout: 5000 })
+    .catch(() => {});
   await page.evaluate(() => {
-    const anchors = Array.from(document.querySelectorAll("a.card-link.circle_color"));
+    const anchors = [...document.querySelectorAll("a.card-link.circle_color")];
     const candidate = anchors.find((node) =>
       (node.getAttribute("onclick") ?? "").includes("openWizard()")
     );
@@ -239,7 +247,7 @@ test("headless spike reaches Step 3 review", async ({ page }) => {
       candidate.click();
     }
   });
-  await wait(page, 4_000);
+  await wait(page, 4000);
   await dumpState(page, artifactDir, "02-gateway-opened");
 
   const wizardFrame = page.frame({ name: "ACAFrameWizard" });
@@ -247,13 +255,17 @@ test("headless spike reaches Step 3 review", async ({ page }) => {
     throw new Error("ACAFrameWizard not found");
   }
 
-  await wizardFrame.locator("a").filter({ hasText: /i know my exact permit type/i }).first().click();
-  await wait(page, 3_000);
+  await wizardFrame
+    .locator("a")
+    .filter({ hasText: /i know my exact permit type/i })
+    .first()
+    .click();
+  await wait(page, 3000);
   await dumpState(page, artifactDir, "03-exact-permit-step");
 
-  const mapFrame = wizardFrame.childFrames().find((frame) =>
-    frame.url().includes("map-combo.html")
-  );
+  const mapFrame = wizardFrame
+    .childFrames()
+    .find((frame) => frame.url().includes("map-combo.html"));
   if (!mapFrame) {
     throw new Error("map-combo frame not found");
   }
@@ -288,28 +300,30 @@ test("headless spike reaches Step 3 review", async ({ page }) => {
   expect(mapSelectionResult.success).toBe(true);
   await wait(page, 1500);
   await clickWizardContinue(wizardFrame);
-  await wait(page, 2_000);
+  await wait(page, 2000);
   await dumpState(page, artifactDir, "04-parcel-selected");
 
   await clickWizardContinue(wizardFrame);
-  await wait(page, 2_000);
+  await wait(page, 2000);
   await dumpState(page, artifactDir, "05-incorporated-warning");
 
   await clickWizardCardByTitle(wizardFrame, /^Fugitive Dust\b/);
-  await wait(page, 2_500);
+  await wait(page, 2500);
   await dumpState(page, artifactDir, "06-fugitive-dust-choice");
 
-  const recordLinkUrl = await wizardFrame.locator("a.record-link").getAttribute("href");
+  const recordLinkUrl = await wizardFrame
+    .locator("a.record-link")
+    .getAttribute("href");
   if (!recordLinkUrl) {
     throw new Error("record-link href missing");
   }
 
   await page.goto(recordLinkUrl, { timeout: 60_000, waitUntil: "load" });
-  await wait(page, 4_000);
+  await wait(page, 4000);
   await dumpState(page, artifactDir, "07-capedit-basic-info");
 
   await page.click("#ctl00_PlaceHolderMain_AppSpec8DA3EF3DEdit_PIMA_rdo_0_3_0");
-  await wait(page, 1_500);
+  await wait(page, 1500);
   await page
     .selectOption("#ctl00_PlaceHolderMain_AppSpec8DA3EF3DEdit_PIMA_ddl_0_8", {
       label: "1 to 10 acres",
@@ -317,9 +331,12 @@ test("headless spike reaches Step 3 review", async ({ page }) => {
     .catch(() => {
       // The field is hidden until multi-activity is enabled, but still present.
     });
-  await page.selectOption("#ctl00_PlaceHolderMain_AppSpec8DA3EF3DEdit_PIMA_ddl_0_9", {
-    label: "Commercial",
-  });
+  await page.selectOption(
+    "#ctl00_PlaceHolderMain_AppSpec8DA3EF3DEdit_PIMA_ddl_0_9",
+    {
+      label: "Commercial",
+    }
+  );
   await fillByTyping(
     page,
     "#ctl00_PlaceHolderMain_AppSpec8DA3EF3DEdit_PIMA_txt_0_2",
@@ -352,19 +369,19 @@ test("headless spike reaches Step 3 review", async ({ page }) => {
     endDate
   );
   await page.click("#ctl00_PlaceHolderMain_actionBarBottom_btnContinue");
-  await wait(page, 4_000);
+  await wait(page, 4000);
   await dumpState(page, artifactDir, "08-certification");
 
   await page.locator('input[type="checkbox"]').first().check();
   await page.click("#ctl00_PlaceHolderMain_actionBarBottom_btnContinue");
-  await wait(page, 8_000);
+  await wait(page, 8000);
   await dumpState(page, artifactDir, "09-applicant-info");
 
   await page.click("#ctl00_PlaceHolderMain_Contact1_354Edit_btnEdit");
-  await wait(page, 4_000);
-  let dialogFrame = page.frames().find((frame) =>
-    frame.url().includes("/People/ContactAddNew.aspx")
-  );
+  await wait(page, 4000);
+  let dialogFrame = page
+    .frames()
+    .find((frame) => frame.url().includes("/People/ContactAddNew.aspx"));
   if (!dialogFrame) {
     throw new Error("DEQ applicant contact dialog missing");
   }
@@ -397,24 +414,24 @@ test("headless spike reaches Step 3 review", async ({ page }) => {
     .locator("#ctl00_phPopup_ucContactInfo_txtAppEmail")
     .fill(DEQ_APPLICANT.email);
   await dialogFrame.locator("#ctl00_phPopup_btnSave").click();
-  await wait(page, 6_000);
+  await wait(page, 6000);
 
   await page.click("#ctl00_PlaceHolderMain_Contact2_440Edit_btnAddFromSaved");
-  await wait(page, 4_000);
-  dialogFrame = page.frames().find((frame) =>
-    frame.url().includes("/People/ContactLookUp.aspx")
-  );
+  await wait(page, 4000);
+  dialogFrame = page
+    .frames()
+    .find((frame) => frame.url().includes("/People/ContactLookUp.aspx"));
   if (!dialogFrame) {
     throw new Error("Applicant Agent select-account dialog missing");
   }
 
   await dialogFrame.locator(ACCOUNT_AGENT.firstSavedAddressCheckbox).check();
   await dialogFrame.locator("#ctl00_phPopup_btnContinueContactAddress").click();
-  await wait(page, 4_000);
+  await wait(page, 4000);
 
-  dialogFrame = page.frames().find((frame) =>
-    frame.url().includes("/People/ContactAddNew.aspx")
-  );
+  dialogFrame = page
+    .frames()
+    .find((frame) => frame.url().includes("/People/ContactAddNew.aspx"));
   if (!dialogFrame) {
     throw new Error("Applicant Agent address dialog missing");
   }
@@ -435,15 +452,15 @@ test("headless spike reaches Step 3 review", async ({ page }) => {
     .locator("#ctl00_phPopup_ucContactInfo_txtAppEmail")
     .fill(ACCOUNT_AGENT.email);
   await dialogFrame.locator("#ctl00_phPopup_btnSave").click();
-  await wait(page, 8_000);
+  await wait(page, 8000);
   await dumpState(page, artifactDir, "10-applicant-info-complete");
 
   await page.click("#ctl00_PlaceHolderMain_actionBarBottom_btnContinue");
-  await wait(page, 8_000);
+  await wait(page, 8000);
   await dumpState(page, artifactDir, "11-specific-location");
 
   await page.click("#ctl00_PlaceHolderMain_actionBarBottom_btnContinue");
-  await wait(page, 8_000);
+  await wait(page, 8000);
   await dumpState(page, artifactDir, "12-attachments");
 
   await page.click("#ctl00_PlaceHolderMain_actionBarBottom_btnContinue");
@@ -465,7 +482,10 @@ test("headless spike reaches Step 3 review", async ({ page }) => {
     "utf8"
   );
 
-  const bodyText = ((await page.textContent("body")) ?? "").replace(/\s+/g, " ");
+  const bodyText = ((await page.textContent("body")) ?? "").replaceAll(
+    /\s+/g,
+    " "
+  );
   expect(page.url()).toContain("/CapConfirm.aspx");
   expect(bodyText).toMatch(/Step 3\s*:\s*Review/);
   expect(bodyText).toContain("LTX5555");

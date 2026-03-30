@@ -55,7 +55,7 @@ export default defineConfig({
     navigationTimeout: 60_000,
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
-    viewport: { width: 1400, height: 900 },
+    viewport: { height: 900, width: 1400 },
   },
   workers: 1,
 });

@@ -30,5 +30,15 @@
       "binding": "SUBMITTED_BILLING_WORKFLOW",
       "class_name": "SubmittedBillingWorkflow",
     },
+    {
+      "name": "communications-submitted-client",
+      "binding": "SUBMITTED_CLIENT_WORKFLOW",
+      "class_name": "SubmittedClientWorkflow",
+    },
+    {
+      "name": "communications-issued-client",
+      "binding": "ISSUED_CLIENT_WORKFLOW",
+      "class_name": "IssuedClientWorkflow",
+    },
   ],
 }

@@ -29,6 +29,18 @@ export interface AddFileAttachmentParams {
   userId: string;
 }
 
+export interface CreateReplyAllDraftParams {
+  messageId: string;
+  userId: string;
+}
+
+export interface UpdateDraftParams {
+  body: string;
+  bodyType: "html" | "text";
+  draftId: string;
+  userId: string;
+}
+
 interface GraphDraftMessage {
   id: string;
   subject: string;
@@ -40,8 +52,10 @@ interface GraphDraftAttachment {
 
 export interface GraphComposeClient {
   createDraft(params: CreateDraftParams): Promise<GraphDraftMessage>;
+  createReplyAllDraft(params: CreateReplyAllDraftParams): Promise<GraphDraftMessage>;
   addFileAttachment(params: AddFileAttachmentParams): Promise<GraphDraftAttachment>;
   sendDraft(draftId: string, mailbox: string): Promise<void>;
+  updateDraft(params: UpdateDraftParams): Promise<void>;
 }
 
 export class GraphApiError extends Error {
@@ -158,6 +172,20 @@ const graphPost = async function graphPost<T>(
   return (await response.json()) as T;
 };
 
+const graphPatch = async (
+  env: GraphAuthEnv,
+  path: string,
+  body: Record<string, unknown>,
+): Promise<void> => {
+  await graphRequest(env, path, {
+    body: JSON.stringify(body),
+    headers: {
+      "content-type": "application/json",
+    },
+    method: "PATCH",
+  });
+};
+
 export const createComposeClient = (env: GraphAuthEnv): GraphComposeClient => ({
   async addFileAttachment(params: AddFileAttachmentParams): Promise<GraphDraftAttachment> {
     const user = encodeURIComponent(params.userId);
@@ -190,9 +218,30 @@ export const createComposeClient = (env: GraphAuthEnv): GraphComposeClient => ({
     });
   },
 
+  async createReplyAllDraft(params: CreateReplyAllDraftParams): Promise<GraphDraftMessage> {
+    const user = encodeURIComponent(params.userId);
+    const messageId = encodeURIComponent(params.messageId);
+    return await graphPost<GraphDraftMessage>(
+      env,
+      `users/${user}/messages/${messageId}/createReplyAll`,
+      {},
+    );
+  },
+
   async sendDraft(draftId: string, mailbox: string): Promise<void> {
     const user = encodeURIComponent(mailbox);
     const encodedDraftId = encodeURIComponent(draftId);
     await graphPost(env, `users/${user}/messages/${encodedDraftId}/send`, {});
+  },
+
+  async updateDraft(params: UpdateDraftParams): Promise<void> {
+    const user = encodeURIComponent(params.userId);
+    const draftId = encodeURIComponent(params.draftId);
+    await graphPatch(env, `users/${user}/messages/${draftId}`, {
+      body: {
+        content: params.body,
+        contentType: params.bodyType === "html" ? "HTML" : "Text",
+      },
+    });
   },
 });

@@ -9,21 +9,33 @@ interface TestEnv {
   AZURE_TENANT_ID: string;
   COMMUNICATIONS_APP_BASE_URL: string;
   COMMUNICATIONS_INGEST_TOKEN?: string;
+  ISSUED_CLIENT_WORKFLOW: {
+    create: MockFunction;
+    get: MockFunction;
+  };
   MAILBOX_EVENTS_QUEUE: {
     send: MockFunction;
+  };
+  SUBMITTED_CLIENT_WORKFLOW: {
+    create: MockFunction;
+    get: MockFunction;
   };
   SUBMITTED_BILLING_WORKFLOW: {
     create: MockFunction;
     get: MockFunction;
   };
+  __issuedClientWorkflowCreate: MockFunction;
+  __issuedClientWorkflowGet: MockFunction;
   __queueSend: MockFunction;
+  __submittedClientWorkflowCreate: MockFunction;
+  __submittedClientWorkflowGet: MockFunction;
   __workflowCreate: MockFunction;
   __workflowGet: MockFunction;
   __workflowStatus: MockFunction;
 }
 
 const createEnv = (overrides: Partial<TestEnv> = {}): TestEnv => {
-  const workflowStatus = vi.fn().mockResolvedValue({
+  const completeWorkflowStatus = vi.fn().mockResolvedValue({
     output: {
       classification: "new",
       draftId: "draft-123",
@@ -35,12 +47,27 @@ const createEnv = (overrides: Partial<TestEnv> = {}): TestEnv => {
     status: "complete",
   });
 
+  const unknownWorkflowStatus = vi.fn().mockResolvedValue({
+    status: "unknown",
+  });
+
   const workflowCreate = vi.fn().mockResolvedValue({
     id: "instance-123",
   });
-
+  const submittedClientWorkflowCreate = vi.fn().mockResolvedValue({
+    id: "instance-submitted-client",
+  });
+  const issuedClientWorkflowCreate = vi.fn().mockResolvedValue({
+    id: "instance-issued-client",
+  });
   const workflowGet = vi.fn().mockResolvedValue({
-    status: workflowStatus,
+    status: completeWorkflowStatus,
+  });
+  const submittedClientWorkflowGet = vi.fn().mockResolvedValue({
+    status: unknownWorkflowStatus,
+  });
+  const issuedClientWorkflowGet = vi.fn().mockResolvedValue({
+    status: unknownWorkflowStatus,
   });
   const queueSend = vi.fn().mockResolvedValue(null);
 
@@ -50,6 +77,10 @@ const createEnv = (overrides: Partial<TestEnv> = {}): TestEnv => {
     AZURE_TENANT_ID: "tenant",
     COMMUNICATIONS_APP_BASE_URL: "https://app.example.com",
     COMMUNICATIONS_INGEST_TOKEN: "ingest-token",
+    ISSUED_CLIENT_WORKFLOW: {
+      create: issuedClientWorkflowCreate,
+      get: issuedClientWorkflowGet,
+    },
     MAILBOX_EVENTS_QUEUE: {
       send: queueSend,
     },
@@ -57,10 +88,18 @@ const createEnv = (overrides: Partial<TestEnv> = {}): TestEnv => {
       create: workflowCreate,
       get: workflowGet,
     },
+    SUBMITTED_CLIENT_WORKFLOW: {
+      create: submittedClientWorkflowCreate,
+      get: submittedClientWorkflowGet,
+    },
+    __issuedClientWorkflowCreate: issuedClientWorkflowCreate,
+    __issuedClientWorkflowGet: issuedClientWorkflowGet,
     __queueSend: queueSend,
+    __submittedClientWorkflowCreate: submittedClientWorkflowCreate,
+    __submittedClientWorkflowGet: submittedClientWorkflowGet,
     __workflowCreate: workflowCreate,
     __workflowGet: workflowGet,
-    __workflowStatus: workflowStatus,
+    __workflowStatus: completeWorkflowStatus,
     ...overrides,
   };
 };
@@ -158,25 +197,23 @@ describe("communications-worker", () => {
     });
   });
 
-  it("accepts manual mode requests without auth headers", async () => {
+  it("triggers the submitted client workflow", async () => {
     const env = createEnv();
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
         Response.json(
           {
-            bodyHtml: "<html>hello</html>",
-            cc: [{ email: "don@desertservices.net" }],
-            classification: "new",
-            invoiceNumber: "IV123",
-            kind: "dust-permit-submitted-billing",
+            bodyHtml: "<html>submitted client</html>",
+            kind: "dust-permit-submitted-client",
             mailbox: "chi@desertservices.net",
-            paymentDate: "2026-03-27",
             permitId: "D1234567",
-            scheduleCharge: "$1,070",
+            route: {
+              mode: "compose-new",
+              subject: "Dust Permit Submitted - Client",
+              to: [{ email: "chi@desertservices.net" }],
+            },
             send: false,
-            subject: "Dust Permit Billing - Project",
-            to: [{ email: "eva@desertservices.net" }],
           },
           { status: 200 },
         ),
@@ -184,7 +221,7 @@ describe("communications-worker", () => {
     );
 
     const response = await handleRequest(
-      new Request("https://worker.example.com/api/drafts/dust-permit/submitted-billing", {
+      new Request("https://worker.example.com/api/drafts/dust-permit/submitted-client", {
         body: JSON.stringify({
           draft: true,
           mode: "manual",
@@ -199,6 +236,82 @@ describe("communications-worker", () => {
     );
 
     expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      instanceId: "instance-submitted-client",
+      status: "queued",
+      statusUrl: "https://worker.example.com/api/workflows/instance-submitted-client",
+      trigger: {
+        draft: true,
+        mode: "manual",
+        permitId: "D1234567",
+      },
+    });
+    expect(env.__submittedClientWorkflowCreate.mock.calls[0]?.[0]).toMatchObject({
+      params: {
+        kind: "dust-permit-submitted-client",
+        permitId: "D1234567",
+      },
+    });
+  });
+
+  it("triggers the issued client workflow", async () => {
+    const env = createEnv();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json(
+          {
+            attachments: [],
+            bodyHtml: "<html>issued client</html>",
+            kind: "dust-permit-issued-client",
+            mailbox: "chi@desertservices.net",
+            permitId: "D1234567",
+            route: {
+              mode: "compose-new",
+              subject: "Dust Permit Issued - Client",
+              to: [{ email: "chi@desertservices.net" }],
+            },
+            send: false,
+            type: "issued",
+          },
+          { status: 200 },
+        ),
+      ),
+    );
+
+    const response = await handleRequest(
+      new Request("https://worker.example.com/api/drafts/dust-permit/issued-client", {
+        body: JSON.stringify({
+          draft: true,
+          mode: "manual",
+          permitId: "D1234567",
+        }),
+        headers: {
+          "content-type": "application/json",
+        },
+        method: "POST",
+      }),
+      env as never,
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      instanceId: "instance-issued-client",
+      status: "queued",
+      statusUrl: "https://worker.example.com/api/workflows/instance-issued-client",
+      trigger: {
+        draft: true,
+        mode: "manual",
+        permitId: "D1234567",
+      },
+    });
+    expect(env.__issuedClientWorkflowCreate.mock.calls[0]?.[0]).toMatchObject({
+      params: {
+        kind: "dust-permit-issued-client",
+        permitId: "D1234567",
+        type: "issued",
+      },
+    });
   });
 
   it("queues a day-one mailbox event", async () => {
@@ -238,7 +351,7 @@ describe("communications-worker", () => {
     });
   });
 
-  it("rejects planned but not enabled mailbox events", async () => {
+  it("rejects unsupported mailbox events", async () => {
     const env = createEnv();
 
     const response = await handleRequest(
@@ -257,7 +370,7 @@ describe("communications-worker", () => {
       env as never,
     );
 
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(400);
     expect(env.__queueSend).not.toHaveBeenCalled();
   });
 

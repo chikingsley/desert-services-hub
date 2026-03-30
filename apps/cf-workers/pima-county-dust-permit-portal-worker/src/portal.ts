@@ -368,18 +368,15 @@ const attemptEmbeddedMapHandlerSelection = async (
     }
 
     const result = (await mapFrame
-      .evaluate(
-        (targetParcel) => {
-          const mapWindow = window as PimaTestHooksWindow;
-          return (
-            mapWindow.__PIMA_TEST_HOOKS?.selectParcel?.(targetParcel) ?? {
-              error: "hooks missing",
-              success: false,
-            }
-          );
-        },
-        parcelId
-      )
+      .evaluate((targetParcel) => {
+        const mapWindow = window as PimaTestHooksWindow;
+        return (
+          mapWindow.__PIMA_TEST_HOOKS?.selectParcel?.(targetParcel) ?? {
+            error: "hooks missing",
+            success: false,
+          }
+        );
+      }, parcelId)
       .catch(() => ({ success: false }))) as {
       error?: string;
       success: boolean;
@@ -531,7 +528,9 @@ export const chooseExactPermitType = async (page: Page): Promise<void> => {
 export const selectParcelInWizard = async (
   page: Page,
   parcelId: string
-): Promise<"embedded-map-handler" | "native-click" | "postmessage-fallback"> => {
+): Promise<
+  "embedded-map-handler" | "native-click" | "postmessage-fallback"
+> => {
   const wizardFrame = await getWizardFrame(page);
 
   if (await attemptEmbeddedMapHandlerSelection(page, wizardFrame, parcelId)) {

@@ -1,6 +1,8 @@
 import { auditHandlers } from "./audit";
 import { backfillHandlers } from "./backfill";
 import { contractHandlers } from "./contract";
+import { duplicatesHandlers } from "./duplicates";
+import { estimatingListHandlers } from "./estimating-list";
 import { itemHandlers } from "./item";
 import { metadataHandlers } from "./metadata";
 import { searchHandlers } from "./search";
@@ -13,6 +15,8 @@ export const commandHandlers: Record<string, CommandHandler> = {
   ...searchHandlers,
   ...metadataHandlers,
   ...contractHandlers,
+  ...estimatingListHandlers,
+  ...duplicatesHandlers,
   ...updateHandlers,
   ...auditHandlers,
 };

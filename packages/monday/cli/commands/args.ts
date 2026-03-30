@@ -25,6 +25,26 @@ export function getJsonArg(args: string[]): string {
   return json;
 }
 
+/** Parse `--key value` and boolean `--flag` from argv (only `--long` options). */
+export function parseLongFlags(args: string[]): Record<string, string | boolean> {
+  const out: Record<string, string | boolean> = {};
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (!a.startsWith("--")) {
+      continue;
+    }
+    const key = a.slice(2);
+    const next = args[i + 1];
+    if (next && !next.startsWith("-")) {
+      out[key] = next;
+      i++;
+    } else {
+      out[key] = true;
+    }
+  }
+  return out;
+}
+
 export function showHelp(): void {
   console.log(`
 Desert Monday CLI
@@ -44,6 +64,9 @@ Commands:
                                   Add --active-only to skip known non-production groups where configured
   backfill-rel [scope]            Backfill direct Monday relations from resolvable relation chains
                                   Add --dry-run, --limit N, --active-only
+  estimating-list [flags]         Filter Estimating board: --contract open|executed --q --contractor --group
+                                  --open-contracts --include-all-groups --limit N --json
+  contractors-duplicates [--json] Find duplicate contractor (account) names on the Contractors board
 
 Boards: ${getBoardKeys().join(", ")}
 
@@ -60,5 +83,8 @@ Examples:
   bun packages/monday/cli/cli.ts audit-rel all
   bun packages/monday/cli/cli.ts audit-rel estimating-account --active-only
   bun packages/monday/cli/cli.ts backfill-rel estimating-account --dry-run --active-only --limit 5
+  bun packages/monday/cli/cli.ts estimating-list --contract open --contractor "core construction"
+  bun packages/monday/cli/cli.ts estimating-list --open-contracts --json
+  bun packages/monday/cli/cli.ts contractors-duplicates
 `);
 }

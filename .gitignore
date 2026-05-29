@@ -11,6 +11,12 @@ node_modules/
 .next/
 out/
 
+# turbo
+.turbo/
+
+# prisma generated client (regenerated from schema)
+**/generated/prisma/
+
 # production
 build/
 dist/

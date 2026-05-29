@@ -1,0 +1,34 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": [
+    "ultracite/biome/core",
+    "ultracite/biome/react",
+    "ultracite/biome/next"
+  ],
+  "linter": {
+    "rules": {
+      "a11y": {
+        // Label components use Base UI primitives with implicit control association
+        "noLabelWithoutControl": "off"
+      },
+      "complexity": {
+        // Form submission handlers naturally have branching logic
+        "noExcessiveCognitiveComplexity": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      // Dropdown menus use mouse/focus events on wrapper divs intentionally
+      "includes": ["src/components/layout/site-header.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noNoninteractiveElementInteractions": "off",
+            "noStaticElementInteractions": "off"
+          }
+        }
+      }
+    }
+  ]
+}

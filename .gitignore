@@ -74,6 +74,9 @@ temp/
 # Monday estimates
 services/monday/estimates.token-cache.json
 
+# Monday downloaded board files (local data artifacts, not source)
+packages/monday/lib/db/monday-files/
+
 # Project data folders (local only)
 projects/*/data/
 services/monday/estimates/
@@ -106,8 +109,9 @@ var/
 wheels/
 .installed.cfg
 
-# Wrangler/Workers
+# Wrangler/Workers (never commit local secrets/state)
 .dev.vars
+!.dev.vars.example
 .wrangler/
 
 # Playwright / E2E
@@ -125,7 +129,8 @@ debug/
 
 # Internal tool configs
 .gemini/
-.cursor/
+.cursor/*
+!.cursor/mcp.json
 .husky/
 .mcp.json
 

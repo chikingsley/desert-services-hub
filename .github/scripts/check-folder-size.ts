@@ -40,7 +40,6 @@ const EXCLUDED_DIRS = new Set([
 const SKIP_DIR_NAMES = new Set([
   "node_modules",
   ".git",
-  ".wrangler",
   "dist",
   "out",
   "build",

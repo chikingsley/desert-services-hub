@@ -178,16 +178,6 @@ extensions: [
 
 Only use this for installing CLI tools, NOT packages you import in your code.
 
-```ts
-import { additionalPackages } from "@trigger.dev/build/extensions/core";
-
-extensions: [
-  additionalPackages({
-    packages: ["wrangler"], // CLI tools and specific versions
-  }),
-];
-```
-
 #### Additional Files
 
 ```ts
@@ -195,7 +185,7 @@ import { additionalFiles } from "@trigger.dev/build/extensions/core";
 
 extensions: [
   additionalFiles({
-    files: ["wrangler.toml", "./assets/**", "./fonts/**"], // Glob patterns supported
+    files: ["./assets/**", "./fonts/**"], // Glob patterns supported
   }),
 ];
 ```
@@ -321,7 +311,6 @@ extensions: [
     requirementsFile: "./requirements.txt",
   }),
   ffmpeg({ version: "7" }),
-  additionalPackages({ packages: ["wrangler"] }),
 ];
 ```
 

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "desert-permits": {
+      "command": "bun",
+      "args": ["run", "apps/dust-permits-mcp/index.ts"],
+      "env": {
+        "PERMIT_WORKER_URL": "http://localhost:47822"
+      }
+    }
+  }
+}

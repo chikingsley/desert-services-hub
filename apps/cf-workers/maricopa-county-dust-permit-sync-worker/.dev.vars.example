@@ -1,6 +1,0 @@
-# Copy to `.dev.vars` in this directory (gitignored).
-# This worker does not require runtime variables for `bun run dev`.
-#
-# Optional: only needed for `bun run deploy` / `bun run d1:migrate:remote`
-# when you want Wrangler CLI auth to come from a local file.
-# CLOUDFLARE_API_TOKEN=

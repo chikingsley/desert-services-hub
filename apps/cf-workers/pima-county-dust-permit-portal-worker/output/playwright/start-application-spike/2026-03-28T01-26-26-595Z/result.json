@@ -1,6 +1,0 @@
-{
-  "finalReviewUrl": "https://aca-prod.accela.com/PIMA/Cap/CapConfirm.aspx?stepNumber=4&pageNumber=1&currentStep=2&currentPage=0&Module=DEQ&isRenewal=N&isFromShoppingCart=&isFromSpearForm=Y&agencyCode=PIMA",
-  "mapSelectionMethod": "postmessage-fallback",
-  "recordLinkUrl": "https://aca-prod.accela.com/pima/urlrouting.ashx?type=1005&Module=DEQ&capID1=26EST&capID2=00000&capID3=05119&agencyCode=PIMA&FromACA=Y&stepNumber=2&pageNumber=1",
-  "targetParcel": "303091060"
-}

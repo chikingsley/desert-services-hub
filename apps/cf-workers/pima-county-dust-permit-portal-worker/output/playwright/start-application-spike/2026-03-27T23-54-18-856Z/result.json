@@ -1,6 +1,0 @@
-{
-  "finalResumeUrl": "https://aca-prod.accela.com/PIMA/Cap/CapEdit.aspx?permitType=resume&agencyCode=PIMA&Module=DEQ&capID1=26EST&capID2=00000&capID3=05104&isFeeEstimator=N&FilterName=&stepNumber=2&pageNumber=1&resume=False&type=1005&FromACA=Y",
-  "mapSelectionMethod": "postmessage-fallback",
-  "recordLinkUrl": "https://aca-prod.accela.com/pima/urlrouting.ashx?type=1005&Module=DEQ&capID1=26EST&capID2=00000&capID3=05104&agencyCode=PIMA&FromACA=Y&stepNumber=2&pageNumber=1",
-  "targetParcel": "303091060"
-}

@@ -12,6 +12,7 @@ import {
   getSessionStatus,
   keepBrowserSessionAlive,
 } from "@/portal/utils/browser";
+import { getCurrentPage } from "@/portal/utils/helpers";
 
 function jsonSuccess(data: Record<string, unknown>): Response {
   return Response.json({
@@ -41,6 +42,69 @@ export function handleBrowserStatus(): Response {
     ...status,
     timestamp: new Date().toISOString(),
   });
+}
+
+/**
+ * GET /api/browser/debug - Inspect the active browser page for validation/debugging
+ */
+export async function handleBrowserDebug(): Promise<Response> {
+  try {
+    const session = await ensureBrowserSessionReady();
+    const { page } = session.instance;
+    const currentPage = await getCurrentPage(page);
+    const debug = await page.evaluate(() => {
+      const selectors = [
+        '[class*="message"]',
+        '[class*="error"]',
+        '[role="alert"]',
+        "td.x1q, span.x1q, div.x1q",
+      ];
+
+      const messages = new Set<string>();
+      for (const selector of selectors) {
+        const nodes = document.querySelectorAll<HTMLElement>(selector);
+        for (const node of nodes) {
+          const text = node.innerText?.trim();
+          if (!text) {
+            continue;
+          }
+          if (text.length < 3) {
+            continue;
+          }
+          if (node.offsetParent === null) {
+            continue;
+          }
+          messages.add(text);
+        }
+      }
+
+      const bodyText = document.body.innerText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .slice(0, 120);
+
+      return {
+        applicationId:
+          document
+            .querySelector('[id="ThePage:applicationId"]')
+            ?.textContent?.trim() || null,
+        bodyText,
+        messages: [...messages].slice(0, 40),
+        pageTitle: document.title,
+      };
+    });
+
+    return jsonSuccess({
+      currentPage,
+      currentUrl: page.url(),
+      debug,
+      status: getSessionStatus(),
+    });
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    return jsonError(errorMsg);
+  }
 }
 
 /**

@@ -11,6 +11,7 @@ import {
   parseNoiCoordinates,
   resolveNoiRecord,
 } from "@/lib/noi-endpoints";
+import { getParcelAcres, resolveParcelFromNoiRecord } from "@/lib/noi-location";
 
 const maricopaLookupSchema = z
   .object({
@@ -170,17 +171,13 @@ export async function handleMaricopaLookup(body: unknown): Promise<Response> {
       }
 
       const { latitude, longitude } = parseNoiCoordinates(record);
-      if (latitude === null || longitude === null) {
-        return jsonError("NOI does not contain usable coordinates", 422, {
-          identifier: resolved.identifier,
-        });
-      }
-
-      const parcel = await queryParcelByCoordinates(latitude, longitude);
+      const parcelResolution = await resolveParcelFromNoiRecord(record);
+      const parcel = parcelResolution.parcel;
       if (!parcel) {
         return jsonError("No Maricopa parcel found at NOI coordinates", 422, {
           latitude,
           longitude,
+          searchedAddress: parcelResolution.searchedAddress,
         });
       }
 
@@ -193,6 +190,7 @@ export async function handleMaricopaLookup(body: unknown): Promise<Response> {
           latitude,
           longitude,
           ltfIdno: clean(record.ltfIdno),
+          parcelLookupSource: parcelResolution.parcelLookupSource,
           permitAuthCode: clean(record.permitAuthCode),
         },
         parcels: [normalizeParcel(parcel, input.includeGeometry)],
@@ -200,6 +198,8 @@ export async function handleMaricopaLookup(body: unknown): Promise<Response> {
           identifier: input.identifier,
           includeGeometry: input.includeGeometry,
           mode: "identifier",
+          parcelAcres: getParcelAcres(parcel),
+          parcelLookupSource: parcelResolution.parcelLookupSource,
         },
       });
     }

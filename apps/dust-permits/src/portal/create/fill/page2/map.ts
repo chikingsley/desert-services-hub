@@ -20,7 +20,13 @@
 
 import type { BrowserContext, Frame, Page } from "playwright";
 import { goToPage } from "@/portal/create/navigation";
-import { sleep, waitForElement, waitForPopup } from "@/portal/utils/helpers";
+import {
+  clickNext,
+  getCurrentPage,
+  sleep,
+  waitForElement,
+  waitForPopup,
+} from "@/portal/utils/helpers";
 import { portal } from "@/portal/utils/selectors";
 import { esriMap, mapPopup } from "@/portal/utils/selectors/page2";
 
@@ -59,11 +65,25 @@ async function hasSiteDrawingAction(page: Page): Promise<boolean> {
   return addVisible || editVisible;
 }
 
-async function waitForSiteDrawingAction(page: Page): Promise<boolean> {
-  if (await waitForElement(page, portal.page2.editSiteDrawingBtn, 3_000)) {
+async function waitForSiteDrawingAction(
+  page: Page,
+  timeoutMs = 8_000
+): Promise<boolean> {
+  const perButtonTimeout = Math.max(3_000, Math.floor(timeoutMs / 2));
+  if (
+    await waitForElement(
+      page,
+      portal.page2.editSiteDrawingBtn,
+      perButtonTimeout
+    )
+  ) {
     return true;
   }
-  return await waitForElement(page, portal.page2.addSiteDrawingBtn, 3_000);
+  return await waitForElement(
+    page,
+    portal.page2.addSiteDrawingBtn,
+    perButtonTimeout
+  );
 }
 
 async function ensureOnProjectLocationPage(page: Page): Promise<boolean> {
@@ -71,10 +91,28 @@ async function ensureOnProjectLocationPage(page: Page): Promise<boolean> {
     return true;
   }
 
+  if (await waitForSiteDrawingAction(page)) {
+    console.log("  ✓ Page 2 controls appeared after settling");
+    return true;
+  }
+
   console.log("  Navigating to Page 2 (Project Location)...");
   const navigation = await goToPage(page, 2);
   if (!navigation.success) {
     console.log(`    ✗ ${navigation.debug}`);
+
+    const currentPage = await getCurrentPage(page);
+    if (currentPage === 1) {
+      console.log("    Retrying via Next button from Page 1...");
+      const advanced = await clickNext(page);
+      if (advanced) {
+        if (await waitForSiteDrawingAction(page, 10_000)) {
+          console.log("    ✓ Reached Page 2 via Next button fallback");
+          return true;
+        }
+      }
+    }
+
     return false;
   }
   return await waitForSiteDrawingAction(page);
@@ -150,6 +188,9 @@ export async function openMapPopup(
   }
 
   // 2. Click site drawing action
+  const popupPromise = page
+    .waitForEvent("popup", { timeout: 20_000 })
+    .catch(() => null);
   const clicked = await clickSiteDrawingButton(page);
   if (!clicked) {
     return null;
@@ -157,7 +198,10 @@ export async function openMapPopup(
 
   // 3. Wait for popup
   console.log("  Waiting for map popup...");
-  const mapPopup = await waitForPopup(context);
+  let mapPopup = await popupPromise;
+  if (!mapPopup) {
+    mapPopup = (await waitForPopup(context)) ?? null;
+  }
   if (!mapPopup) {
     console.log("    ✗ Map popup did not open");
     return null;

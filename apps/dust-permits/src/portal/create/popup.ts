@@ -33,10 +33,17 @@ export async function clickNewApplicationButton(
   await sleep(SETTLE_MS);
 
   const pagesBefore = context.pages().length;
+  const popupPromise = page
+    .waitForEvent("popup", { timeout: 20_000 })
+    .catch(() => null);
+
   await page.locator(portal.dustApps.newApplicationBtn).first().click();
 
   console.log("  Clicked New Application, waiting for popup...");
-  const popup = await waitForPopup(context, pagesBefore);
+  let popup = await popupPromise;
+  if (!popup) {
+    popup = (await waitForPopup(context, pagesBefore)) ?? null;
+  }
   if (!popup) {
     return null;
   }

@@ -8,6 +8,7 @@
 import { serve } from "bun";
 import {
   handleBrowserAbort,
+  handleBrowserDebug,
   handleBrowserKeepAlive,
   handleBrowserReady,
   handleBrowserStart,
@@ -177,6 +178,9 @@ serve({
     // Browser API
     "/api/browser/status": {
       GET: handleBrowserStatus,
+    },
+    "/api/browser/debug": {
+      GET: handleBrowserDebug,
     },
     "/api/browser/start": {
       POST() {

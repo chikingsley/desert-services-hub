@@ -14,7 +14,6 @@ import {
   GeometrySourceSchema,
   resolveGeometrySource,
 } from "@/lib/geometry-source";
-import { queryParcelByCoordinates } from "@/lib/assessor";
 import type { AzdeqCgpRecord } from "@/lib/noi-endpoints";
 import {
   isMaricopaCountyCode,
@@ -23,10 +22,18 @@ import {
   resolveNoiRecord,
 } from "@/lib/noi-endpoints";
 import {
+  getNoiAddressCandidate,
+  getNoiCoordinateCandidates,
+  getParcelAcres,
+  resolveParcelFromNoiRecord,
+  shouldSkipParcelMapDraw,
+  type NoiParcelLookupSource,
+} from "@/lib/noi-location";
+import {
   evaluateParcelAcreageDecision,
   getMaricopaPermitPricingTier,
 } from "@/lib/noi-triage";
-import { approximatePolygonAreaM2, m2ToAcres } from "@/lib/site-drawing";
+import { formatApnDashed } from "@/lib/site-drawing";
 
 const resolveNoiSchema = z.object({
   identifier: z.string().min(1),
@@ -113,17 +120,6 @@ function normalizeNoiPermitId(record: AzdeqCgpRecord): string | null {
   }
   const digits = upper.replaceAll(NON_DIGIT_RE, "");
   return digits.length > 0 ? `AZC${digits}` : upper;
-}
-
-function parcelAcresFromGeometry(
-  polygon: { lat: number; lng: number }[] | null | undefined
-): number | null {
-  if (!polygon || polygon.length < 3) {
-    return null;
-  }
-  const areaM2 = approximatePolygonAreaM2(polygon);
-  const acres = m2ToAcres(areaM2);
-  return Number.isFinite(acres) && acres > 0 ? acres : null;
 }
 
 function getCountyCode(record: AzdeqCgpRecord): string | null {
@@ -260,6 +256,54 @@ function buildGeometryChecks(
   };
 }
 
+function parseBooleanEnv(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+
+  return /^(1|true|yes|on)$/i.test(value.trim());
+}
+
+function parsePositiveNumberEnv(value: string | undefined): number | null {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function getNoiMapAcreageRatioLimit(): number {
+  if (parseBooleanEnv(process.env.PERMIT_ALLOW_FULL_PARCEL_DRAW)) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return parsePositiveNumberEnv(process.env.PERMIT_MAP_MAX_ACREAGE_RATIO) ?? 2;
+}
+
+function buildNoParcelFallbackChecks(params: {
+  disturbedAcres: number;
+  lookupSource: NoiParcelLookupSource;
+  searchedAddress: string | null;
+}): Record<string, unknown> {
+  const disturbedTier = getMaricopaPermitPricingTier(params.disturbedAcres);
+
+  return {
+    approved: disturbedTier !== null,
+    disturbedAcres: params.disturbedAcres,
+    disturbedTier,
+    manualMapRequired: true,
+    manualMapReason:
+      "No parcel found from NOI facility coordinates, outfalls, or facility address",
+    parcelAcres: null,
+    parcelAtLeastDisturbed: null,
+    parcelLookupSource: params.lookupSource,
+    parcelTier: null,
+    samePricingTier: null,
+    searchedAddress: params.searchedAddress,
+  };
+}
+
 async function resolveNoiAndChecks(
   input: z.infer<typeof resolveNoiSchema>
 ): Promise<
@@ -299,15 +343,7 @@ async function resolveNoiAndChecks(
 
   const record = resolved.record;
   const { latitude, longitude } = parseNoiCoordinates(record);
-  if (latitude === null || longitude === null) {
-    return {
-      error: jsonError("NOI does not contain usable coordinates", 422, {
-        identifier: resolved.identifier,
-      }),
-      ok: false,
-    };
-  }
-
+  const coordinateCandidates = getNoiCoordinateCandidates(record);
   let resolvedGeometry: ResolvedGeometrySource | undefined;
   if (input.geometrySource) {
     try {
@@ -322,6 +358,23 @@ async function resolveNoiAndChecks(
         ok: false,
       };
     }
+  }
+
+  if (
+    !resolvedGeometry &&
+    coordinateCandidates.length === 0 &&
+    !getNoiAddressCandidate(record)
+  ) {
+    return {
+      error: jsonError(
+        "NOI does not contain usable coordinates or facility address",
+        422,
+        {
+          identifier: resolved.identifier,
+        }
+      ),
+      ok: false,
+    };
   }
 
   const disturbedAcres =
@@ -349,56 +402,101 @@ async function resolveNoiAndChecks(
     };
   }
 
-  const siteLatitude = resolvedGeometry?.centroid?.lat ?? latitude;
-  const siteLongitude = resolvedGeometry?.centroid?.lng ?? longitude;
+  const fallbackLatitude = latitude ?? coordinateCandidates[0]?.latitude ?? 0;
+  const fallbackLongitude = longitude ?? coordinateCandidates[0]?.longitude ?? 0;
+  let siteLatitude = resolvedGeometry?.centroid?.lat ?? fallbackLatitude;
+  let siteLongitude = resolvedGeometry?.centroid?.lng ?? fallbackLongitude;
+  let manualMapRequired = false;
+  let manualMapReason: string | null = null;
+  let parcelLookupSource: NoiParcelLookupSource | null = null;
+  let searchedAddress: string | null = null;
+  let targetParcelDashed: string | null = null;
+  let checks: Record<string, unknown>;
 
-  const parcel = await queryParcelByCoordinates(siteLatitude, siteLongitude);
-  if (!parcel && !resolvedGeometry) {
-    return {
-      error: jsonError("No parcel found at NOI coordinates", 422, {
-        latitude: siteLatitude,
-        longitude: siteLongitude,
-      }),
-      ok: false,
-    };
-  }
-
-  let decision: ReturnType<typeof evaluateParcelAcreageDecision> | ReturnType<typeof buildGeometryChecks>;
   if (resolvedGeometry && input.geometrySource) {
-    decision = buildGeometryChecks(input.geometrySource, resolvedGeometry);
+    checks = {
+      ...buildGeometryChecks(input.geometrySource, resolvedGeometry),
+      countyCode,
+    };
   } else {
+    const parcelResolution = await resolveParcelFromNoiRecord(record);
+    const parcel = parcelResolution.parcel;
+    parcelLookupSource = parcelResolution.parcelLookupSource;
+    searchedAddress = parcelResolution.searchedAddress;
+
     if (!parcel) {
-      return {
-        error: jsonError("No parcel found at NOI coordinates", 422, {
-          latitude: siteLatitude,
-          longitude: siteLongitude,
+      manualMapRequired = true;
+      manualMapReason =
+        "No parcel found from NOI facility coordinates, outfalls, or facility address";
+      checks = {
+        ...buildNoParcelFallbackChecks({
+          disturbedAcres,
+          lookupSource: parcelResolution.parcelLookupSource,
+          searchedAddress,
         }),
-        ok: false,
+        countyCode,
+        latitude,
+        longitude,
+      };
+    } else {
+      const parcelAcres = getParcelAcres(parcel);
+      if (!parcelAcres || parcelAcres <= 0) {
+        return {
+          error: jsonError(
+            "Unable to resolve parcel acreage from assessor data",
+            422,
+            {
+              apn: parcel.apn,
+            }
+          ),
+          ok: false,
+        };
+      }
+
+      const decision = evaluateParcelAcreageDecision(
+        disturbedAcres,
+        parcelAcres
+      );
+      targetParcelDashed = formatApnDashed(parcel.apn);
+      siteLatitude = parcel.centroid.lat;
+      siteLongitude = parcel.centroid.lng;
+
+      manualMapRequired = shouldSkipParcelMapDraw({
+        disturbedAcres,
+        maxAcreageRatio: getNoiMapAcreageRatioLimit(),
+        parcelAcres,
+      });
+      if (manualMapRequired) {
+        manualMapReason = `Parcel acreage (~${parcelAcres.toFixed(
+          2
+        )} ac) is much larger than NOI disturbed acreage (${disturbedAcres} ac); manual Page 2 map required`;
+      }
+
+      checks = {
+        ...decision,
+        countyCode,
+        manualMapRequired,
+        parcelLookupSource,
+        searchedAddress,
+        targetParcelDashed,
+        ...(manualMapReason ? { manualMapReason } : {}),
       };
     }
-    const geometryAcres = parcelAcresFromGeometry(parcel.polygon);
-    const parcelAcres =
-      typeof parcel.acres === "number" &&
-      Number.isFinite(parcel.acres) &&
-      parcel.acres > 0
-        ? parcel.acres
-        : geometryAcres;
-    if (!parcelAcres || parcelAcres <= 0) {
-      return {
-        error: jsonError("Unable to resolve parcel acreage from assessor data", 422, {
-          apn: parcel.apn,
-        }),
-        ok: false,
-      };
-    }
-    decision = evaluateParcelAcreageDecision(disturbedAcres, parcelAcres);
   }
 
   // Company check: look up the NOI company in our permits database
   const noiCompanyName = clean(input.companyName) ?? clean(record.companyName);
   let companyMatch: CompanyMatch | null = null;
   if (noiCompanyName) {
-    companyMatch = await findCompanyByName(noiCompanyName);
+    try {
+      companyMatch = await findCompanyByName(noiCompanyName);
+    } catch (error) {
+      console.warn(
+        `[noi] Company lookup unavailable for "${noiCompanyName}": ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
   }
 
   // Use the portal-known company name if we found a match
@@ -413,6 +511,10 @@ async function resolveNoiAndChecks(
     siteLatitude,
     siteLongitude
   );
+  if (manualMapRequired) {
+    delete formData.site?.latitude;
+    delete formData.site?.longitude;
+  }
 
   const createPayload = {
     ...(resolvedCompanyName ? { companyName: resolvedCompanyName } : {}),
@@ -425,11 +527,8 @@ async function resolveNoiAndChecks(
   return {
     ok: true,
     result: {
-      approvedForCreate: decision.approved,
-      checks: {
-        ...decision,
-        countyCode,
-      },
+      approvedForCreate: Boolean(checks.approved),
+      checks,
       companyMatch: companyMatch
         ? {
             matchedName: companyMatch.companyName,
@@ -447,6 +546,11 @@ async function resolveNoiAndChecks(
         longitude: siteLongitude,
         identifier: resolved.identifier,
         ltfIdno: clean(record.ltfIdno),
+        manualMapRequired,
+        manualMapReason,
+        parcelLookupSource,
+        searchedAddress,
+        targetParcelDashed,
         permitAuthCode: clean(record.permitAuthCode),
       },
     },
